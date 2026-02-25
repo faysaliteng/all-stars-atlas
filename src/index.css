@@ -15,13 +15,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 10%;
 
-    --primary: 217 91% 50%;
+    --primary: 213 94% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 28 95% 55%;
+    --secondary: 24 95% 53%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 214 20% 94%;
+    --muted: 214 18% 95%;
     --muted-foreground: 215 16% 47%;
 
     --accent: 172 66% 40%;
@@ -30,9 +30,9 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 217 91% 50%;
+    --border: 214 18% 91%;
+    --input: 214 18% 91%;
+    --ring: 213 94% 48%;
 
     --radius: 0.75rem;
 
@@ -42,65 +42,48 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --hero-gradient-start: 217 91% 50%;
-    --hero-gradient-end: 230 70% 35%;
-
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 25% 10%;
-    --sidebar-primary: 217 91% 50%;
+    --sidebar-primary: 213 94% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 20% 94%;
+    --sidebar-accent: 214 18% 95%;
     --sidebar-accent-foreground: 220 25% 10%;
-    --sidebar-border: 214 20% 90%;
-    --sidebar-ring: 217 91% 50%;
+    --sidebar-border: 214 18% 91%;
+    --sidebar-ring: 213 94% 48%;
   }
 
   .dark {
     --background: 222 30% 8%;
     --foreground: 210 20% 95%;
-
     --card: 222 25% 12%;
     --card-foreground: 210 20% 95%;
-
     --popover: 222 25% 12%;
     --popover-foreground: 210 20% 95%;
-
-    --primary: 217 91% 55%;
+    --primary: 213 94% 55%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 28 95% 55%;
+    --secondary: 24 95% 55%;
     --secondary-foreground: 0 0% 100%;
-
     --muted: 220 20% 18%;
     --muted-foreground: 215 15% 60%;
-
     --accent: 172 66% 45%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 220 20% 18%;
     --input: 220 20% 18%;
-    --ring: 217 91% 55%;
-
+    --ring: 213 94% 55%;
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-
-    --hero-gradient-start: 217 91% 45%;
-    --hero-gradient-end: 230 70% 25%;
-
     --sidebar-background: 222 25% 12%;
     --sidebar-foreground: 210 20% 95%;
-    --sidebar-primary: 217 91% 55%;
+    --sidebar-primary: 213 94% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 20% 18%;
     --sidebar-accent-foreground: 210 20% 95%;
     --sidebar-border: 220 20% 18%;
-    --sidebar-ring: 217 91% 55%;
+    --sidebar-ring: 213 94% 55%;
   }
 }
 
@@ -110,7 +93,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   }
 
@@ -119,21 +102,66 @@
   }
 }
 
-@layer utilities {
+@layer components {
   .hero-gradient {
-    background: linear-gradient(135deg, hsl(var(--hero-gradient-start)), hsl(var(--hero-gradient-end)));
+    background: linear-gradient(135deg, hsl(213 94% 48%), hsl(220 70% 32%));
   }
 
+  .glass-card {
+    background: hsl(var(--card) / 0.95);
+    backdrop-filter: blur(24px);
+    border: 1px solid hsl(var(--border) / 0.6);
+    box-shadow:
+      0 4px 6px -1px hsl(var(--foreground) / 0.03),
+      0 20px 40px -8px hsl(var(--foreground) / 0.08);
+  }
+
+  .search-tab {
+    @apply flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/60;
+  }
+
+  .search-tab-active {
+    @apply text-primary bg-primary/8 shadow-sm;
+  }
+
+  .search-field {
+    @apply flex items-center gap-3 px-4 py-3 border-r border-border last:border-r-0 cursor-pointer hover:bg-muted/40 transition-colors;
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold tracking-tight;
+  }
+
+  .destination-card {
+    @apply relative overflow-hidden rounded-2xl group cursor-pointer;
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+
+  .airline-card {
+    @apply flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card;
+    @apply hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer;
+  }
+
+  .offer-card {
+    @apply relative overflow-hidden rounded-2xl cursor-pointer group;
+    @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
+  }
+
+  .story-link * {
+    @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+}
+
+@layer utilities {
   .text-gradient {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-
-  .glass-card {
-    background: hsl(var(--card) / 0.8);
-    backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--border) / 0.5);
   }
 }
