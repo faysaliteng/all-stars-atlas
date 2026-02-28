@@ -34,7 +34,7 @@ const DashboardLayout = () => {
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
         <Link to="/" className="flex items-center gap-2 mr-8">
-          <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-8 w-auto" />
+          <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-10 w-auto drop-shadow-[0_0_12px_rgba(29,106,229,0.5)]" />
         </Link>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
