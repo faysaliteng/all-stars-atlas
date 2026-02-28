@@ -73,7 +73,7 @@ const Header = () => {
           <div className="flex items-center justify-between h-14 lg:h-[60px]">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 lg:gap-2.5 group">
-              <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-8 lg:h-10 w-auto" />
+              <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-8 lg:h-10 w-auto drop-shadow-[0_0_8px_rgba(29,106,229,0.5)]" />
             </Link>
 
             {/* Desktop Nav */}
@@ -159,7 +159,7 @@ const Header = () => {
                 <div className="flex flex-col h-full">
                   <div className="p-5 border-b border-border">
                     <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-                      <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-8 w-auto" />
+                      <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-8 w-auto drop-shadow-[0_0_8px_rgba(29,106,229,0.5)]" />
                     </Link>
                   </div>
                   <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
