@@ -1,19 +1,56 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plane, Mail, Lock, User, Phone, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, User, Phone, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName || !lastName || !email || !phone || !password) {
+      toast({ title: "Error", description: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+    if (password.length < 8) {
+      toast({ title: "Error", description: "Password must be at least 8 characters", variant: "destructive" });
+      return;
+    }
+    if (!agreed) {
+      toast({ title: "Error", description: "Please agree to the Terms & Privacy Policy", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      await register({ firstName, lastName, email, phone, password });
+      toast({ title: "Account Created!", description: "Welcome to Seven Trip" });
+      navigate("/dashboard", { replace: true });
+    } catch (err: any) {
+      toast({ title: "Registration Failed", description: err?.message || "Please try again", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-muted/30">
-      {/* Left side - branding */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-[hsl(167,72%,41%)] to-[hsl(217,91%,50%)] items-center justify-center p-12">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE0VjBoLTJWMTRIMjBWMGgtMnYxNEgwdjJoMTR2MTRIMHYyaDE0djE0aDJ2LTE0aDE0djE0aDJ2LTE0aDE0di0ySDM2VjE2aDEydi0ySDM2eiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
         <div className="relative text-white max-w-md">
@@ -21,21 +58,17 @@ const Register = () => {
             <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-10 w-auto brightness-0 invert" />
           </Link>
           <h2 className="text-3xl font-black mb-4 leading-tight">Start Your Journey With Us Today</h2>
-          <p className="text-white/60 text-sm mb-8 leading-relaxed">
-            Join 500,000+ travellers who trust Seven Trip for their travel needs. Create your free account in under a minute.
-          </p>
+          <p className="text-white/60 text-sm mb-8 leading-relaxed">Join 500,000+ travellers who trust Seven Trip for their travel needs.</p>
           <div className="space-y-3">
             {["No booking fees ever", "Exclusive member-only deals", "Save traveller profiles for faster booking", "Track all bookings in one place"].map((f, i) => (
               <div key={i} className="flex items-center gap-2 text-white/80 text-sm">
-                <CheckCircle2 className="w-4 h-4 text-secondary" />
-                {f}
+                <CheckCircle2 className="w-4 h-4 text-secondary" />{f}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right side - form */}
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md border-0 shadow-none bg-transparent">
           <CardHeader className="text-center pb-2">
@@ -45,68 +78,61 @@ const Register = () => {
             <CardTitle className="text-2xl">Create Account</CardTitle>
             <CardDescription>Start booking with Seven Trip today</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>First Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="John" className="pl-10 h-11" />
+          <CardContent className="pt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>First Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input placeholder="John" className="pl-10 h-11" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Last Name</Label>
+                  <Input placeholder="Doe" className="h-11" value={lastName} onChange={e => setLastName(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>Last Name</Label>
-                <Input placeholder="Doe" className="h-11" />
+                <Label>Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input type="email" placeholder="you@example.com" className="pl-10 h-11" value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="email" placeholder="you@example.com" className="pl-10 h-11" />
+              <div className="space-y-1.5">
+                <Label>Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input type="tel" placeholder="+880 1XXX-XXXXXX" className="pl-10 h-11" value={phone} onChange={e => setPhone(e.target.value)} />
+                </div>
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Phone Number</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="tel" placeholder="+880 1XXX-XXXXXX" className="pl-10 h-11" />
+              <div className="space-y-1.5">
+                <Label>Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input type={showPassword ? "text" : "password"} placeholder="Min 8 characters" className="pl-10 pr-10 h-11" value={password} onChange={e => setPassword(e.target.value)} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Min 8 characters"
-                  className="pl-10 pr-10 h-11"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
 
-            <div className="flex items-start gap-2">
-              <Checkbox id="terms" className="mt-0.5" />
-              <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                I agree to the <Link to="#" className="text-primary font-medium hover:underline">Terms of Service</Link> and{" "}
-                <Link to="#" className="text-primary font-medium hover:underline">Privacy Policy</Link>
-              </label>
-            </div>
+              <div className="flex items-start gap-2">
+                <Checkbox id="terms" className="mt-0.5" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} />
+                <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                  I agree to the <Link to="/terms" className="text-primary font-medium hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-primary font-medium hover:underline">Privacy Policy</Link>
+                </label>
+              </div>
 
-            <Button className="w-full h-11 font-bold shadow-lg shadow-primary/20">Create Account</Button>
+              <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20" disabled={loading}>
+                {loading ? "Creating Account..." : "Create Account"}
+              </Button>
+            </form>
 
-            <div className="relative">
+            <div className="relative my-4">
               <Separator />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">
-                or sign up with
-              </span>
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">or sign up with</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -120,9 +146,8 @@ const Register = () => {
               </Button>
             </div>
 
-            <p className="text-center text-sm text-muted-foreground pt-2">
-              Already have an account?{" "}
-              <Link to="/auth/login" className="text-primary font-semibold hover:underline">Sign In</Link>
+            <p className="text-center text-sm text-muted-foreground pt-4">
+              Already have an account? <Link to="/auth/login" className="text-primary font-semibold hover:underline">Sign In</Link>
             </p>
           </CardContent>
         </Card>

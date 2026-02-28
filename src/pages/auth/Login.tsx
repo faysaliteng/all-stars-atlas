@@ -1,18 +1,45 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Plane, Mail, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({ title: "Error", description: "Please enter email and password", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      await login({ email, password });
+      toast({ title: "Welcome back!", description: "You've been signed in successfully" });
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      toast({ title: "Login Failed", description: err?.message || "Invalid credentials", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-muted/30">
-      {/* Left side - branding (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-[hsl(217,91%,50%)] to-[hsl(224,70%,28%)] items-center justify-center p-12">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE0VjBoLTJWMTRIMjBWMGgtMnYxNEgwdjJoMTR2MTRIMHYyaDE0djE0aDJ2LTE0aDE0djE0aDJ2LTE0aDE0di0ySDM2VjE2aDEydi0ySDM2eiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
         <div className="relative text-white max-w-md">
@@ -20,21 +47,17 @@ const Login = () => {
             <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-10 w-auto brightness-0 invert" />
           </Link>
           <h2 className="text-3xl font-black mb-4 leading-tight">Welcome back to Bangladesh's #1 Travel Platform</h2>
-          <p className="text-white/60 text-sm mb-8 leading-relaxed">
-            Book flights, hotels, holidays & visa services with the best prices and 24/7 support.
-          </p>
+          <p className="text-white/60 text-sm mb-8 leading-relaxed">Book flights, hotels, holidays & visa services with the best prices and 24/7 support.</p>
           <div className="space-y-3">
             {["500K+ happy travellers", "Best price guarantee", "24/7 customer support", "Instant confirmation"].map((f, i) => (
               <div key={i} className="flex items-center gap-2 text-white/80 text-sm">
-                <CheckCircle2 className="w-4 h-4 text-accent" />
-                {f}
+                <CheckCircle2 className="w-4 h-4 text-accent" />{f}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right side - form */}
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md border-0 shadow-none bg-transparent">
           <CardHeader className="text-center pb-2">
@@ -44,42 +67,36 @@ const Login = () => {
             <CardTitle className="text-2xl">Sign In</CardTitle>
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <Label>Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="email" placeholder="you@example.com" className="pl-10 h-11" />
+          <CardContent className="pt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input type="email" placeholder="you@example.com" className="pl-10 h-11" value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <Label>Password</Label>
-                <Link to="/auth/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot Password?</Link>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <Label>Password</Label>
+                  <Link to="/auth/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot Password?</Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="pl-10 pr-10 h-11" value={password} onChange={e => setPassword(e.target.value)} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 h-11"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-            <Button className="w-full h-11 font-bold shadow-lg shadow-primary/20">Sign In</Button>
+              <Button type="submit" className="w-full h-11 font-bold shadow-lg shadow-primary/20" disabled={loading}>
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
 
-            <div className="relative">
+            <div className="relative my-4">
               <Separator />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">
-                or continue with
-              </span>
+              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">or continue with</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -93,9 +110,8 @@ const Login = () => {
               </Button>
             </div>
 
-            <p className="text-center text-sm text-muted-foreground pt-2">
-              Don't have an account?{" "}
-              <Link to="/auth/register" className="text-primary font-semibold hover:underline">Create Account</Link>
+            <p className="text-center text-sm text-muted-foreground pt-4">
+              Don't have an account? <Link to="/auth/register" className="text-primary font-semibold hover:underline">Create Account</Link>
             </p>
           </CardContent>
         </Card>

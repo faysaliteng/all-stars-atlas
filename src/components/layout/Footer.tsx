@@ -62,7 +62,9 @@ const Footer = React.forwardRef<HTMLElement>((_, ref) => {
                 { label: "Visa Processing", href: "/visa" },
                 { label: "Holiday Packages", href: "/holidays" },
                 { label: "Travel Insurance", href: "#" },
-                { label: "eSIM", href: "#" },
+                { label: "eSIM", href: "/esim" },
+                { label: "Car Rental", href: "/cars" },
+                { label: "Medical Tourism", href: "/medical" },
               ].map((item) => (
                 <li key={item.label}>
                   <Link to={item.href} className="hover:text-white transition-colors flex items-center gap-1 group">
@@ -82,7 +84,8 @@ const Footer = React.forwardRef<HTMLElement>((_, ref) => {
                 { label: "About Us", href: "/about" },
                 { label: "Contact", href: "/contact" },
                 { label: "Blog", href: "#" },
-                { label: "Careers", href: "#" },
+                { label: "Careers", href: "/careers" },
+                { label: "FAQ", href: "/faq" },
                 { label: "Terms & Conditions", href: "/terms" },
                 { label: "Privacy Policy", href: "/privacy" },
                 { label: "Refund Policy", href: "/refund-policy" },

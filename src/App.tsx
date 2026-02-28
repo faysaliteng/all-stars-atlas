@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Layouts
 import PublicLayout from "@/components/layout/PublicLayout";
@@ -29,6 +30,8 @@ import Contact from "@/pages/static/Contact";
 import Terms from "@/pages/static/Terms";
 import Privacy from "@/pages/static/Privacy";
 import RefundPolicy from "@/pages/static/RefundPolicy";
+import FAQ from "@/pages/static/FAQ";
+import Careers from "@/pages/static/Careers";
 import FlightBooking from "@/pages/flights/FlightBooking";
 import HotelDetail from "@/pages/hotels/HotelDetail";
 import HolidayDetail from "@/pages/holidays/HolidayDetail";
@@ -52,6 +55,8 @@ import DashboardTransactions from "@/pages/dashboard/DashboardTransactions";
 import DashboardPayments from "@/pages/dashboard/DashboardPayments";
 import DashboardTravellers from "@/pages/dashboard/DashboardTravellers";
 import DashboardSettings from "@/pages/dashboard/DashboardSettings";
+import DashboardTickets from "@/pages/dashboard/DashboardTickets";
+import DashboardWishlist from "@/pages/dashboard/DashboardWishlist";
 
 // Admin Pages
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -72,85 +77,91 @@ import AdminSettings from "@/pages/admin/AdminSettings";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider>
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/flights" element={<FlightResults />} />
-              <Route path="/flights/book" element={<FlightBooking />} />
-              <Route path="/hotels" element={<HotelResults />} />
-              <Route path="/hotels/:id" element={<HotelDetail />} />
-              <Route path="/visa" element={<VisaServices />} />
-              <Route path="/visa/apply" element={<VisaApplication />} />
-              <Route path="/holidays" element={<HolidayPackages />} />
-              <Route path="/holidays/:id" element={<HolidayDetail />} />
-              <Route path="/booking/confirmation" element={<BookingConfirmation />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/refund-policy" element={<RefundPolicy />} />
-              {/* New Service Routes */}
-              <Route path="/medical" element={<MedicalServices />} />
-              <Route path="/medical/book" element={<MedicalBooking />} />
-              <Route path="/cars" element={<CarRental />} />
-              <Route path="/cars/book" element={<CarBooking />} />
-              <Route path="/esim" element={<ESIMPlans />} />
-              <Route path="/esim/purchase" element={<ESIMPurchase />} />
-              <Route path="/recharge" element={<RechargePage />} />
-              <Route path="/paybill" element={<PayBillPage />} />
-            </Route>
+  <ErrorBoundary>
+    <ThemeProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/flights" element={<FlightResults />} />
+                <Route path="/flights/book" element={<FlightBooking />} />
+                <Route path="/hotels" element={<HotelResults />} />
+                <Route path="/hotels/:id" element={<HotelDetail />} />
+                <Route path="/visa" element={<VisaServices />} />
+                <Route path="/visa/apply" element={<VisaApplication />} />
+                <Route path="/holidays" element={<HolidayPackages />} />
+                <Route path="/holidays/:id" element={<HolidayDetail />} />
+                <Route path="/booking/confirmation" element={<BookingConfirmation />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/careers" element={<Careers />} />
+                {/* New Service Routes */}
+                <Route path="/medical" element={<MedicalServices />} />
+                <Route path="/medical/book" element={<MedicalBooking />} />
+                <Route path="/cars" element={<CarRental />} />
+                <Route path="/cars/book" element={<CarBooking />} />
+                <Route path="/esim" element={<ESIMPlans />} />
+                <Route path="/esim/purchase" element={<ESIMPurchase />} />
+                <Route path="/recharge" element={<RechargePage />} />
+                <Route path="/paybill" element={<PayBillPage />} />
+              </Route>
 
-            {/* User Auth (public) */}
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/register" element={<Register />} />
-            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-            <Route path="/auth/verify-otp" element={<VerifyOTP />} />
+              {/* User Auth (public) */}
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/auth/register" element={<Register />} />
+              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth/verify-otp" element={<VerifyOTP />} />
 
-            {/* Hidden Admin Login */}
-            <Route path="/admin/login" element={<AdminLogin />} />
+              {/* Hidden Admin Login */}
+              <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Customer Dashboard — Protected */}
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-              <Route index element={<DashboardHome />} />
-              <Route path="bookings" element={<DashboardBookings />} />
-              <Route path="transactions" element={<DashboardTransactions />} />
-              <Route path="payments" element={<DashboardPayments />} />
-              <Route path="travellers" element={<DashboardTravellers />} />
-              <Route path="settings" element={<DashboardSettings />} />
-            </Route>
+              {/* Customer Dashboard — Protected */}
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                <Route index element={<DashboardHome />} />
+                <Route path="bookings" element={<DashboardBookings />} />
+                <Route path="transactions" element={<DashboardTransactions />} />
+                <Route path="payments" element={<DashboardPayments />} />
+                <Route path="travellers" element={<DashboardTravellers />} />
+                <Route path="settings" element={<DashboardSettings />} />
+                <Route path="tickets" element={<DashboardTickets />} />
+                <Route path="wishlist" element={<DashboardWishlist />} />
+              </Route>
 
-            {/* Admin Dashboard — Admin Protected */}
-            <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="bookings" element={<AdminBookings />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="payments" element={<AdminPayments />} />
-              <Route path="reports" element={<AdminReports />} />
-              <Route path="cms/pages" element={<CMSPages />} />
-              <Route path="cms/promotions" element={<CMSPromotions />} />
-              <Route path="cms/media" element={<CMSMedia />} />
-              <Route path="cms/blog" element={<CMSBlog />} />
-              <Route path="cms/email-templates" element={<CMSEmailTemplates />} />
-              <Route path="cms/destinations" element={<CMSDestinations />} />
-              <Route path="visa" element={<AdminVisa />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
+              {/* Admin Dashboard — Admin Protected */}
+              <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="bookings" element={<AdminBookings />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="payments" element={<AdminPayments />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="cms/pages" element={<CMSPages />} />
+                <Route path="cms/promotions" element={<CMSPromotions />} />
+                <Route path="cms/media" element={<CMSMedia />} />
+                <Route path="cms/blog" element={<CMSBlog />} />
+                <Route path="cms/email-templates" element={<CMSEmailTemplates />} />
+                <Route path="cms/destinations" element={<CMSDestinations />} />
+                <Route path="visa" element={<AdminVisa />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </AuthProvider>
-  </ThemeProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
 );
 
 export default App;
