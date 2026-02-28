@@ -251,29 +251,28 @@ const Index = () => {
           </div>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {offers.map((offer, i) => (
-              <motion.div
-                key={i}
-                variants={staggerChild}
-                className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${offer.gradient} p-5 sm:p-6 text-white min-h-[180px] sm:min-h-[200px] flex flex-col justify-between cursor-pointer hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-500`}
-              >
-                <div className="absolute top-0 right-0 w-36 sm:w-44 h-36 sm:h-44 bg-white/5 rounded-full -translate-y-14 translate-x-14 group-hover:scale-125 transition-transform duration-700" />
-                <div className="absolute bottom-0 left-0 w-24 sm:w-28 h-24 sm:h-28 bg-white/5 rounded-full translate-y-10 -translate-x-10" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-2.5 sm:mb-3">
-                    <span className="text-xl sm:text-2xl">{offer.emoji}</span>
-                    <span className="px-2 sm:px-2.5 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[11px] sm:text-xs font-bold">
-                      {offer.discount}
-                    </span>
+              <Link key={i} to="/flights" className="block">
+                <motion.div
+                  variants={staggerChild}
+                  className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${offer.gradient} p-5 sm:p-6 text-white min-h-[180px] sm:min-h-[200px] flex flex-col justify-between cursor-pointer hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-500`}
+                >
+                  <div className="absolute top-0 right-0 w-36 sm:w-44 h-36 sm:h-44 bg-white/5 rounded-full -translate-y-14 translate-x-14 group-hover:scale-125 transition-transform duration-700" />
+                  <div className="absolute bottom-0 left-0 w-24 sm:w-28 h-24 sm:h-28 bg-white/5 rounded-full translate-y-10 -translate-x-10" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2.5 sm:mb-3">
+                      <span className="text-xl sm:text-2xl">{offer.emoji}</span>
+                      <span className="px-2 sm:px-2.5 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-[11px] sm:text-xs font-bold">
+                        {offer.discount}
+                      </span>
+                    </div>
+                    <h3 className="text-[15px] sm:text-[17px] font-bold mb-1 leading-snug">{offer.title}</h3>
+                    <p className="text-[13px] sm:text-sm text-white/65">{offer.desc}</p>
                   </div>
-                  <h3 className="text-[15px] sm:text-[17px] font-bold mb-1 leading-snug">{offer.title}</h3>
-                  <p className="text-[13px] sm:text-sm text-white/65">{offer.desc}</p>
-                </div>
-                <Link to="/flights">
-                  <Button size="sm" variant="secondary" className="relative z-10 w-fit mt-3 sm:mt-4 font-bold shadow-lg text-xs sm:text-sm">
+                  <Button size="sm" variant="secondary" className="relative z-10 w-fit mt-3 sm:mt-4 font-bold shadow-lg text-xs sm:text-sm pointer-events-none">
                     Book Now <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
-                </Link>
-              </motion.div>
+                </motion.div>
+              </Link>
             ))}
           </motion.div>
         </div>
