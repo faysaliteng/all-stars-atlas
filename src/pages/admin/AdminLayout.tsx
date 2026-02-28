@@ -23,6 +23,7 @@ const sidebarGroups = [
     items: [
       { label: "Payments", href: "/admin/payments", icon: CreditCard },
       { label: "Payment Approvals", href: "/admin/payment-approvals", icon: FileText },
+      { label: "Discounts & Pricing", href: "/admin/discounts", icon: Megaphone },
       { label: "Invoices", href: "/admin/invoices", icon: FileText },
       { label: "Reports", href: "/admin/reports", icon: BarChart3 },
     ],

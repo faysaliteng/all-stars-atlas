@@ -82,6 +82,7 @@ import AdminVisa from "@/pages/admin/AdminVisa";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminInvoices from "@/pages/admin/AdminInvoices";
 import AdminPaymentApprovals from "@/pages/admin/AdminPaymentApprovals";
+import AdminDiscounts from "@/pages/admin/AdminDiscounts";
 
 const queryClient = new QueryClient();
 
@@ -170,6 +171,7 @@ const App = () => (
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="invoices" element={<AdminInvoices />} />
                 <Route path="payment-approvals" element={<AdminPaymentApprovals />} />
+                <Route path="discounts" element={<AdminDiscounts />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
