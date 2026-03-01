@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { AIRPORTS, type Airport } from "@/lib/airports";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,105 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { TREATMENT_TYPES, RECHARGE_OPERATORS, BILL_CATEGORIES } from "@/lib/constants";
 
-// === AIRPORT DATABASE (Bangladesh + major international) ===
-const AIRPORTS = [
-  // Bangladesh
-  { code: "DAC", city: "Dhaka", name: "Hazrat Shahjalal Intl Airport", country: "BD" },
-  { code: "CXB", city: "Cox's Bazar", name: "Cox's Bazar Airport", country: "BD" },
-  { code: "CGP", city: "Chattogram", name: "Shah Amanat Intl Airport", country: "BD" },
-  { code: "ZYL", city: "Sylhet", name: "Osmani Intl Airport", country: "BD" },
-  { code: "JSR", city: "Jashore", name: "Jashore Airport", country: "BD" },
-  { code: "RJH", city: "Rajshahi", name: "Shah Makhdum Airport", country: "BD" },
-  { code: "SPD", city: "Saidpur", name: "Saidpur Airport", country: "BD" },
-  { code: "BZL", city: "Barisal", name: "Barisal Airport", country: "BD" },
-  // Middle East
-  { code: "DXB", city: "Dubai", name: "Dubai Intl Airport", country: "AE" },
-  { code: "AUH", city: "Abu Dhabi", name: "Zayed Intl Airport", country: "AE" },
-  { code: "SHJ", city: "Sharjah", name: "Sharjah Intl Airport", country: "AE" },
-  { code: "DOH", city: "Doha", name: "Hamad Intl Airport", country: "QA" },
-  { code: "JED", city: "Jeddah", name: "King Abdulaziz Intl Airport", country: "SA" },
-  { code: "RUH", city: "Riyadh", name: "King Khalid Intl Airport", country: "SA" },
-  { code: "DMM", city: "Dammam", name: "King Fahd Intl Airport", country: "SA" },
-  { code: "MED", city: "Madinah", name: "Prince Mohammad Airport", country: "SA" },
-  { code: "MCT", city: "Muscat", name: "Muscat Intl Airport", country: "OM" },
-  { code: "BAH", city: "Bahrain", name: "Bahrain Intl Airport", country: "BH" },
-  { code: "KWI", city: "Kuwait City", name: "Kuwait Intl Airport", country: "KW" },
-  // South Asia
-  { code: "CCU", city: "Kolkata", name: "Netaji Subhas Chandra Bose Airport", country: "IN" },
-  { code: "DEL", city: "New Delhi", name: "Indira Gandhi Intl Airport", country: "IN" },
-  { code: "BOM", city: "Mumbai", name: "Chhatrapati Shivaji Intl Airport", country: "IN" },
-  { code: "MAA", city: "Chennai", name: "Chennai Intl Airport", country: "IN" },
-  { code: "BLR", city: "Bangalore", name: "Kempegowda Intl Airport", country: "IN" },
-  { code: "HYD", city: "Hyderabad", name: "Rajiv Gandhi Intl Airport", country: "IN" },
-  { code: "GOI", city: "Goa", name: "Manohar Intl Airport", country: "IN" },
-  { code: "AMD", city: "Ahmedabad", name: "Sardar Vallabhbhai Patel Airport", country: "IN" },
-  { code: "KTM", city: "Kathmandu", name: "Tribhuvan Intl Airport", country: "NP" },
-  { code: "CMB", city: "Colombo", name: "Bandaranaike Intl Airport", country: "LK" },
-  { code: "MLE", city: "Malé", name: "Velana Intl Airport", country: "MV" },
-  { code: "ISB", city: "Islamabad", name: "Islamabad Intl Airport", country: "PK" },
-  { code: "KHI", city: "Karachi", name: "Jinnah Intl Airport", country: "PK" },
-  { code: "LHE", city: "Lahore", name: "Allama Iqbal Intl Airport", country: "PK" },
-  // Southeast Asia
-  { code: "SIN", city: "Singapore", name: "Changi Airport", country: "SG" },
-  { code: "BKK", city: "Bangkok", name: "Suvarnabhumi Airport", country: "TH" },
-  { code: "DMK", city: "Bangkok", name: "Don Mueang Airport", country: "TH" },
-  { code: "HKT", city: "Phuket", name: "Phuket Intl Airport", country: "TH" },
-  { code: "KUL", city: "Kuala Lumpur", name: "KLIA Airport", country: "MY" },
-  { code: "PEN", city: "Penang", name: "Penang Intl Airport", country: "MY" },
-  { code: "CGK", city: "Jakarta", name: "Soekarno-Hatta Intl Airport", country: "ID" },
-  { code: "DPS", city: "Bali", name: "Ngurah Rai Intl Airport", country: "ID" },
-  { code: "MNL", city: "Manila", name: "Ninoy Aquino Intl Airport", country: "PH" },
-  { code: "SGN", city: "Ho Chi Minh City", name: "Tan Son Nhat Intl Airport", country: "VN" },
-  { code: "HAN", city: "Hanoi", name: "Noi Bai Intl Airport", country: "VN" },
-  { code: "RGN", city: "Yangon", name: "Yangon Intl Airport", country: "MM" },
-  { code: "PNH", city: "Phnom Penh", name: "Phnom Penh Intl Airport", country: "KH" },
-  // East Asia
-  { code: "HKG", city: "Hong Kong", name: "Hong Kong Intl Airport", country: "HK" },
-  { code: "CAN", city: "Guangzhou", name: "Baiyun Intl Airport", country: "CN" },
-  { code: "PEK", city: "Beijing", name: "Beijing Capital Intl Airport", country: "CN" },
-  { code: "PVG", city: "Shanghai", name: "Pudong Intl Airport", country: "CN" },
-  { code: "NRT", city: "Tokyo", name: "Narita Intl Airport", country: "JP" },
-  { code: "HND", city: "Tokyo", name: "Haneda Airport", country: "JP" },
-  { code: "KIX", city: "Osaka", name: "Kansai Intl Airport", country: "JP" },
-  { code: "ICN", city: "Seoul", name: "Incheon Intl Airport", country: "KR" },
-  { code: "TPE", city: "Taipei", name: "Taiwan Taoyuan Intl Airport", country: "TW" },
-  // Europe
-  { code: "LHR", city: "London", name: "Heathrow Airport", country: "GB" },
-  { code: "LGW", city: "London", name: "Gatwick Airport", country: "GB" },
-  { code: "MAN", city: "Manchester", name: "Manchester Airport", country: "GB" },
-  { code: "CDG", city: "Paris", name: "Charles de Gaulle Airport", country: "FR" },
-  { code: "FRA", city: "Frankfurt", name: "Frankfurt Airport", country: "DE" },
-  { code: "MUC", city: "Munich", name: "Munich Airport", country: "DE" },
-  { code: "AMS", city: "Amsterdam", name: "Schiphol Airport", country: "NL" },
-  { code: "FCO", city: "Rome", name: "Fiumicino Airport", country: "IT" },
-  { code: "MXP", city: "Milan", name: "Malpensa Airport", country: "IT" },
-  { code: "BCN", city: "Barcelona", name: "El Prat Airport", country: "ES" },
-  { code: "MAD", city: "Madrid", name: "Barajas Airport", country: "ES" },
-  { code: "IST", city: "Istanbul", name: "Istanbul Airport", country: "TR" },
-  { code: "ATH", city: "Athens", name: "Eleftherios Venizelos Airport", country: "GR" },
-  { code: "ZRH", city: "Zurich", name: "Zurich Airport", country: "CH" },
-  { code: "VIE", city: "Vienna", name: "Vienna Intl Airport", country: "AT" },
-  // Americas
-  { code: "JFK", city: "New York", name: "John F. Kennedy Intl Airport", country: "US" },
-  { code: "LAX", city: "Los Angeles", name: "Los Angeles Intl Airport", country: "US" },
-  { code: "ORD", city: "Chicago", name: "O'Hare Intl Airport", country: "US" },
-  { code: "SFO", city: "San Francisco", name: "San Francisco Intl Airport", country: "US" },
-  { code: "MIA", city: "Miami", name: "Miami Intl Airport", country: "US" },
-  { code: "IAD", city: "Washington DC", name: "Dulles Intl Airport", country: "US" },
-  { code: "ATL", city: "Atlanta", name: "Hartsfield-Jackson Airport", country: "US" },
-  { code: "DFW", city: "Dallas", name: "Dallas/Fort Worth Intl Airport", country: "US" },
-  { code: "YYZ", city: "Toronto", name: "Pearson Intl Airport", country: "CA" },
-  { code: "YVR", city: "Vancouver", name: "Vancouver Intl Airport", country: "CA" },
-  { code: "GRU", city: "São Paulo", name: "Guarulhos Intl Airport", country: "BR" },
-  // Africa & Oceania
-  { code: "CAI", city: "Cairo", name: "Cairo Intl Airport", country: "EG" },
-  { code: "JNB", city: "Johannesburg", name: "O.R. Tambo Intl Airport", country: "ZA" },
-  { code: "NBO", city: "Nairobi", name: "Jomo Kenyatta Intl Airport", country: "KE" },
-  { code: "ADD", city: "Addis Ababa", name: "Bole Intl Airport", country: "ET" },
-  { code: "SYD", city: "Sydney", name: "Kingsford Smith Airport", country: "AU" },
-  { code: "MEL", city: "Melbourne", name: "Tullamarine Airport", country: "AU" },
-  { code: "AKL", city: "Auckland", name: "Auckland Airport", country: "NZ" },
-];
+
 
 const HOTEL_CITIES = [
   "Cox's Bazar", "Dhaka", "Chittagong", "Sylhet", "Sreemangal", "Gazipur", "Rajshahi", "Rangpur",
