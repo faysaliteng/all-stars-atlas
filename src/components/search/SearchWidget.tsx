@@ -472,7 +472,7 @@ const SearchWidget = () => {
         </div>
 
         {/* Search Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
           <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
             <AirportInput label="From" value={fromAirport} onChange={setFromAirport} placeholder="Type city or airport..." />
           </div>
@@ -545,7 +545,7 @@ const SearchWidget = () => {
 
     // ====== HOTEL ======
     hotel: (
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
         <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
           <CityInput
             label="Destination"
@@ -638,7 +638,7 @@ const SearchWidget = () => {
 
     // ====== VISA ======
     visa: (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
         <div className="sm:col-span-2 md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Country</div>
           <div className="flex items-center gap-2 w-full">
@@ -724,7 +724,7 @@ const SearchWidget = () => {
     // ====== HOLIDAY ======
     holiday: (
       <div className="space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
           <div className="md:col-span-5 search-field border-b md:border-b-0 flex-col items-start">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Destination</div>
             <div className="flex items-center gap-2 w-full">
@@ -764,7 +764,7 @@ const SearchWidget = () => {
 
     // ====== MEDICAL TOURISM ======
     medical: (
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
         <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Destination</div>
           <div className="flex items-center gap-2 w-full">
@@ -844,7 +844,7 @@ const SearchWidget = () => {
 
     // ====== CAR RENTAL ======
     cars: (
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
         <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
           <CityInput
             label="Pickup Location"
@@ -899,7 +899,7 @@ const SearchWidget = () => {
 
     // ====== eSIM ======
     esim: (
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
         <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Destination Country</div>
           <div className="flex items-center gap-2 w-full">
@@ -974,7 +974,7 @@ const SearchWidget = () => {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
           <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Operator</div>
             <Select value={rechargeOperator} onValueChange={setRechargeOperator}>
@@ -1025,7 +1025,7 @@ const SearchWidget = () => {
 
     // ====== PAY BILL ======
     paybill: (
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
         <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Category</div>
           <div className="flex items-center gap-2 w-full">
@@ -1070,7 +1070,7 @@ const SearchWidget = () => {
   };
 
   return (
-    <div className="glass-card-hero rounded-2xl overflow-hidden">
+    <div className="glass-card-hero rounded-2xl">
       {/* Tabs */}
       <div className="flex items-center gap-0 px-2 sm:px-3 pt-2 sm:pt-3 overflow-x-auto scrollbar-none border-b border-border/40 -webkit-overflow-scrolling-touch">
         {tabs.map((tab) => (
