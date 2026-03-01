@@ -31,7 +31,7 @@ const sidebarGroups = [
   {
     label: "CMS",
     items: [
-      { label: "Pages", href: "/admin/cms/pages", icon: FileText },
+      { label: "All Pages", href: "/admin/cms/pages", icon: FileText },
       { label: "Homepage", href: "/admin/cms/homepage", icon: Home },
       { label: "Footer", href: "/admin/cms/footer", icon: PanelBottom },
       { label: "SEO", href: "/admin/cms/seo", icon: SearchIcon },

@@ -1,21 +1,37 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { FAQ_DATA } from "@/lib/content-data";
+import { useCmsPageContent } from "@/hooks/useCmsContent";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const FAQ = () => {
   const [open, setOpen] = useState<string | null>("0-0");
   const [activeCategory, setActiveCategory] = useState("All");
+  const { data: content, isLoading } = useCmsPageContent("/faq");
 
-  const categories = ["All", ...FAQ_DATA.map(c => c.category)];
-  const filteredCategories = activeCategory === "All" ? FAQ_DATA : FAQ_DATA.filter(c => c.category === activeCategory);
+  const hero = content?.hero || { title: "Frequently Asked Questions", subtitle: "Find quick answers to common questions about our services" };
+  const faqData = content?.faqCategories || [];
+  const categories = ["All", ...faqData.map(c => c.category)];
+  const filteredCategories = activeCategory === "All" ? faqData : faqData.filter(c => c.category === activeCategory);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <div className="bg-gradient-to-br from-[hsl(217,91%,50%)] to-[hsl(224,70%,28%)] pt-24 lg:pt-32 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <Skeleton className="h-10 w-72 mx-auto mb-3 bg-white/20" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <section className="relative bg-gradient-to-br from-[hsl(217,91%,50%)] to-[hsl(224,70%,28%)] pt-24 lg:pt-32 pb-16">
+      <section className={`relative bg-gradient-to-br ${hero.gradient || "from-[hsl(217,91%,50%)] to-[hsl(224,70%,28%)]"} pt-24 lg:pt-32 pb-16`}>
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">Frequently Asked Questions</h1>
-          <p className="text-white/60 text-sm sm:text-base max-w-lg mx-auto">Find quick answers to common questions about our services</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">{hero.title}</h1>
+          <p className="text-white/60 text-sm sm:text-base max-w-lg mx-auto">{hero.subtitle}</p>
         </div>
       </section>
 

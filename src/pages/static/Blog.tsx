@@ -4,96 +4,17 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Clock, User, Search } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-
-const posts = [
-  {
-    id: 1,
-    title: "Top 10 Things to Do in Cox's Bazar in 2026",
-    excerpt: "From the world's longest natural sea beach to hidden waterfalls and local seafood, discover the best experiences Cox's Bazar has to offer this year.",
-    category: "Destinations",
-    author: "Rafiq Ahmed",
-    date: "Feb 25, 2026",
-    readTime: "5 min read",
-    img: "https://tbbd-flight.s3.ap-southeast-1.amazonaws.com/promotion/Cox%27s_Bazar.jpg",
-  },
-  {
-    id: 2,
-    title: "Complete Guide to Thailand Tourist Visa for Bangladeshis",
-    excerpt: "Everything you need to know about applying for a Thailand tourist visa — requirements, documents, processing time, and tips for approval.",
-    category: "Visa Guide",
-    author: "Nusrat Jahan",
-    date: "Feb 20, 2026",
-    readTime: "7 min read",
-    img: "https://tbbd-flight.s3.ap-southeast-1.amazonaws.com/promotion/Bangkok.jpg",
-  },
-  {
-    id: 3,
-    title: "How to Find the Cheapest Flights from Dhaka",
-    excerpt: "Expert tips on booking affordable flights — from flexible dates and fare alerts to student discounts and the best time to book.",
-    category: "Travel Tips",
-    author: "Tanvir Hasan",
-    date: "Feb 15, 2026",
-    readTime: "4 min read",
-    img: "https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=600&q=80",
-  },
-  {
-    id: 4,
-    title: "Best Hotels in Sylhet for a Tea Garden Getaway",
-    excerpt: "Explore our handpicked selection of resorts and boutique hotels near Sylhet's famous tea gardens, perfect for a relaxing weekend escape.",
-    category: "Hotels",
-    author: "Sabrina Akter",
-    date: "Feb 10, 2026",
-    readTime: "6 min read",
-    img: "https://tbbd-flight.s3.ap-southeast-1.amazonaws.com/promotion/AzOSQlJV2UD8QhKVOKLteYWlrI9brl.png",
-  },
-  {
-    id: 5,
-    title: "Medical Tourism in India: A Complete Guide for Bangladeshis",
-    excerpt: "Why thousands of Bangladeshis travel to India for medical treatment each year, and how Seven Trip makes it hassle-free.",
-    category: "Medical",
-    author: "Kamal Hossain",
-    date: "Feb 5, 2026",
-    readTime: "8 min read",
-    img: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&q=80",
-  },
-  {
-    id: 6,
-    title: "eSIM vs Physical SIM: Which Should You Choose for Travel?",
-    excerpt: "A comparison of eSIM and traditional SIM cards for international travel — convenience, cost, coverage, and compatibility explained.",
-    category: "Travel Tips",
-    author: "Tanvir Hasan",
-    date: "Jan 28, 2026",
-    readTime: "5 min read",
-    img: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=600&q=80",
-  },
-  {
-    id: 7,
-    title: "Maldives on a Budget: Is It Possible from Bangladesh?",
-    excerpt: "Yes! Discover how to plan an affordable Maldives trip from Dhaka — budget guesthouses, local island tips, and package deals.",
-    category: "Destinations",
-    author: "Rafiq Ahmed",
-    date: "Jan 22, 2026",
-    readTime: "6 min read",
-    img: "https://tbbd-flight.s3.ap-southeast-1.amazonaws.com/promotion/Maafushi.jpg",
-  },
-  {
-    id: 8,
-    title: "What to Pack for a Umrah Trip: Essential Checklist",
-    excerpt: "A comprehensive packing list for Umrah travellers from Bangladesh — from ihram clothing to travel essentials and important documents.",
-    category: "Travel Tips",
-    author: "Nusrat Jahan",
-    date: "Jan 15, 2026",
-    readTime: "5 min read",
-    img: "https://images.unsplash.com/photo-1591604129939-f1efa4d99f7e?w=600&q=80",
-  },
-];
-
-const categories = ["All", "Destinations", "Travel Tips", "Visa Guide", "Hotels", "Medical"];
+import { useCmsPageContent } from "@/hooks/useCmsContent";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Blog = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const { data: content, isLoading } = useCmsPageContent("/blog");
+
+  const hero = content?.hero || { title: "Travel Blog", subtitle: "Tips, guides, and inspiration for your next adventure" };
+  const posts = content?.blogPosts || [];
+  const categories = content?.blogCategories || ["All", "Destinations", "Travel Tips", "Visa Guide", "Hotels", "Medical"];
 
   const filtered = posts.filter(p => {
     if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.excerpt.toLowerCase().includes(search.toLowerCase())) return false;
@@ -101,20 +22,29 @@ const Blog = () => {
     return true;
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <div className="bg-gradient-to-br from-[hsl(217,91%,50%)] to-[hsl(224,70%,28%)] pt-24 lg:pt-32 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <Skeleton className="h-10 w-48 mx-auto mb-3 bg-white/20" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/30">
-      <section className="relative bg-gradient-to-br from-[hsl(217,91%,50%)] to-[hsl(224,70%,28%)] pt-24 lg:pt-32 pb-16 overflow-hidden">
+      <section className={`relative bg-gradient-to-br ${hero.gradient || "from-[hsl(217,91%,50%)] to-[hsl(224,70%,28%)]"} pt-24 lg:pt-32 pb-16 overflow-hidden`}>
         <div className="container mx-auto px-4 relative text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">Travel Blog</h1>
-          <p className="text-white/60 text-sm sm:text-base max-w-lg mx-auto">
-            Tips, guides, and inspiration for your next adventure
-          </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">{hero.title}</h1>
+          <p className="text-white/60 text-sm sm:text-base max-w-lg mx-auto">{hero.subtitle}</p>
         </div>
       </section>
 
       <section className="py-10 sm:py-16">
         <div className="container mx-auto px-4">
-          {/* Search & Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -122,22 +52,14 @@ const Blog = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                    activeCategory === cat
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
-                  }`}
-                >
+                <button key={cat} onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${activeCategory === cat ? "bg-primary text-primary-foreground border-primary" : "bg-transparent text-muted-foreground border-border hover:border-primary/40"}`}>
                   {cat}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Featured Post */}
           {filtered.length > 0 && activeCategory === "All" && !search && (
             <Card className="mb-8 overflow-hidden">
               <div className="grid md:grid-cols-2">
@@ -161,7 +83,6 @@ const Blog = () => {
             </Card>
           )}
 
-          {/* Posts Grid */}
           {filtered.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground">No articles found matching your search.</p>
