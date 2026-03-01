@@ -224,6 +224,40 @@ const SearchWidget = () => {
   const [fareType, setFareType] = useState("regular");
   const [flightScope, setFlightScope] = useState<"domestic" | "international">("domestic");
 
+  // Multi-city segments
+  interface FlightSegment {
+    from: typeof AIRPORTS[0] | null;
+    to: typeof AIRPORTS[0] | null;
+    date?: Date;
+  }
+  const [multiCitySegments, setMultiCitySegments] = useState<FlightSegment[]>([
+    { from: AIRPORTS[0], to: AIRPORTS[1], date: undefined },
+    { from: AIRPORTS[1], to: null, date: undefined },
+  ]);
+
+  const updateSegment = useCallback((index: number, field: keyof FlightSegment, value: any) => {
+    setMultiCitySegments(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      // Auto-set next segment's "from" to this segment's "to"
+      if (field === "to" && index < updated.length - 1) {
+        updated[index + 1] = { ...updated[index + 1], from: value };
+      }
+      return updated;
+    });
+  }, []);
+
+  const addSegment = useCallback(() => {
+    if (multiCitySegments.length >= 5) return;
+    const lastSeg = multiCitySegments[multiCitySegments.length - 1];
+    setMultiCitySegments(prev => [...prev, { from: lastSeg.to, to: null, date: undefined }]);
+  }, [multiCitySegments]);
+
+  const removeSegment = useCallback((index: number) => {
+    if (multiCitySegments.length <= 2) return;
+    setMultiCitySegments(prev => prev.filter((_, i) => i !== index));
+  }, [multiCitySegments.length]);
+
   const domesticAirports = useMemo(() => AIRPORTS.filter(a => a.country === "BD"), []);
 
   const scopedFromAirports = AIRPORTS;
@@ -295,6 +329,21 @@ const SearchWidget = () => {
 
   // ====== SEARCH HANDLERS ======
   const handleFlightSearch = () => {
+    if (tripType === "multicity") {
+      const validSegments = multiCitySegments.filter(s => s.from && s.to);
+      if (validSegments.length < 2) return;
+      const params = new URLSearchParams({
+        tripType: "multicity",
+        adults: String(passengers.adults), children: String(passengers.children), infants: String(passengers.infants),
+        cabin: cabinClass, fare: fareType,
+        segments: JSON.stringify(validSegments.map(s => ({
+          from: s.from!.code, to: s.to!.code,
+          date: s.date ? format(s.date, 'yyyy-MM-dd') : undefined,
+        }))),
+      });
+      navigate(`/flights?${params.toString()}`);
+      return;
+    }
     if (!fromAirport || !toAirport) return;
     const params = new URLSearchParams({
       from: fromAirport.code, to: toAirport.code, tripType,
@@ -475,58 +524,108 @@ const SearchWidget = () => {
         </div>
 
         {/* Search Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
-          <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
-            <AirportInput label="From" value={fromAirport} onChange={setFromAirport} placeholder="Type city or airport..." airports={scopedFromAirports} />
-          </div>
+        {tripType === "multicity" ? (
+          <div className="space-y-3">
+            {multiCitySegments.map((segment, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm relative">
+                <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
+                  <AirportInput label={`From (Flight ${index + 1})`} value={segment.from} onChange={(a) => updateSegment(index, 'from', a)} placeholder="Type city or airport..." airports={AIRPORTS} />
+                </div>
 
-          <div className="flex md:hidden items-center justify-center py-1">
-            <button onClick={swapAirports} className="w-9 h-9 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm">
-              <ArrowLeftRight className="w-4 h-4 rotate-90" />
-            </button>
-          </div>
-          <div className="hidden md:flex items-center justify-center -mx-4 z-10">
-            <button onClick={swapAirports} className="w-10 h-10 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-md hover:shadow-lg hover:scale-110">
-              <ArrowLeftRight className="w-4 h-4" />
-            </button>
-          </div>
+                <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
+                  <AirportInput label={`To (Flight ${index + 1})`} value={segment.to} onChange={(a) => updateSegment(index, 'to', a)} placeholder="Where to?" airports={AIRPORTS} />
+                </div>
 
-          <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
-            <AirportInput label="To" value={toAirport} onChange={setToAirport} placeholder="Where to?" airports={scopedToAirports} />
-          </div>
+                <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Departure</div>
+                  <Popover>
+                    <PopoverTrigger className="w-full text-left">
+                      <DateDisplay date={segment.date} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={segment.date} onSelect={(d) => updateSegment(index, 'date', d)} initialFocus disabled={(date) => date < new Date()} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-          <div className={`${tripType === "roundtrip" ? "col-span-1 sm:col-span-1" : ""} md:col-span-2 search-field border-b md:border-b-0 flex-col items-start`}>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Departure</div>
-            <Popover>
-              <PopoverTrigger className="w-full text-left">
-                <DateDisplay date={departDate} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={departDate} onSelect={setDepartDate} initialFocus disabled={(date) => date < new Date()} />
-              </PopoverContent>
-            </Popover>
-          </div>
+                {multiCitySegments.length > 2 && (
+                  <div className="md:col-span-1 flex items-center justify-center p-2">
+                    <button
+                      onClick={() => removeSegment(index)}
+                      className="w-8 h-8 rounded-full border border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all text-sm font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
 
-          {tripType === "roundtrip" && (
-            <div className="md:col-span-2 search-field border-b md:border-b-0 flex-col items-start">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Return</div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {multiCitySegments.length < 5 && (
+                <Button variant="outline" size="sm" onClick={addSegment} className="rounded-xl text-xs font-semibold gap-1.5">
+                  + Add Another City
+                </Button>
+              )}
+              <Button onClick={handleFlightSearch} className="flex-1 sm:flex-none h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-base font-extrabold shadow-xl shadow-secondary/25 hover:shadow-secondary/40 transition-all active:scale-[0.98]">
+                <Search className="w-5 h-5 mr-2" /> Search
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
+            <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
+              <AirportInput label="From" value={fromAirport} onChange={setFromAirport} placeholder="Type city or airport..." airports={scopedFromAirports} />
+            </div>
+
+            <div className="flex md:hidden items-center justify-center py-1">
+              <button onClick={swapAirports} className="w-9 h-9 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm">
+                <ArrowLeftRight className="w-4 h-4 rotate-90" />
+              </button>
+            </div>
+            <div className="hidden md:flex items-center justify-center -mx-4 z-10">
+              <button onClick={swapAirports} className="w-10 h-10 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-md hover:shadow-lg hover:scale-110">
+                <ArrowLeftRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
+              <AirportInput label="To" value={toAirport} onChange={setToAirport} placeholder="Where to?" airports={scopedToAirports} />
+            </div>
+
+            <div className={`${tripType === "roundtrip" ? "col-span-1 sm:col-span-1" : ""} md:col-span-2 search-field border-b md:border-b-0 flex-col items-start`}>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Departure</div>
               <Popover>
                 <PopoverTrigger className="w-full text-left">
-                  <DateDisplay date={returnDate} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
+                  <DateDisplay date={departDate} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={returnDate} onSelect={setReturnDate} initialFocus disabled={(date) => date < (departDate || new Date())} />
+                  <Calendar mode="single" selected={departDate} onSelect={setDepartDate} initialFocus disabled={(date) => date < new Date()} />
                 </PopoverContent>
               </Popover>
             </div>
-          )}
 
-          <div className={`${tripType === "roundtrip" ? "md:col-span-2" : "md:col-span-4"} flex items-center justify-center p-3`}>
-            <Button onClick={handleFlightSearch} className="w-full h-12 md:h-full md:min-h-[56px] rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-base font-extrabold shadow-xl shadow-secondary/25 hover:shadow-secondary/40 transition-all active:scale-[0.98]">
-              <Search className="w-5 h-5 mr-2" /> Search
-            </Button>
+            {tripType === "roundtrip" && (
+              <div className="md:col-span-2 search-field border-b md:border-b-0 flex-col items-start">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Return</div>
+                <Popover>
+                  <PopoverTrigger className="w-full text-left">
+                    <DateDisplay date={returnDate} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={returnDate} onSelect={setReturnDate} initialFocus disabled={(date) => date < (departDate || new Date())} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+
+            <div className={`${tripType === "roundtrip" ? "md:col-span-2" : "md:col-span-4"} flex items-center justify-center p-3`}>
+              <Button onClick={handleFlightSearch} className="w-full h-12 md:h-full md:min-h-[56px] rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-base font-extrabold shadow-xl shadow-secondary/25 hover:shadow-secondary/40 transition-all active:scale-[0.98]">
+                <Search className="w-5 h-5 mr-2" /> Search
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Fare Type */}
         <div className="flex flex-wrap gap-4 sm:gap-5">
