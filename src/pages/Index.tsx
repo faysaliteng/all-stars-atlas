@@ -148,15 +148,7 @@ const StatCard = React.forwardRef<HTMLDivElement, { value: number; suffix: strin
 StatCard.displayName = "StatCard";
 
 const Index = () => {
-  // Lazy load hero video — only load after component mounts
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-
-  useEffect(() => {
-    // Delay video load slightly to prioritize above-fold content
-    const timer = setTimeout(() => setVideoLoaded(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
+  // Hero uses a static optimized image for fast loading
 
   return (
     <div>
