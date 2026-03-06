@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import React from "react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   ArrowRight, Star, MapPin, Shield, Headphones, BadgePercent,
   Smartphone, Plane, Award, TrendingUp,
