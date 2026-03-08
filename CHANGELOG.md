@@ -49,7 +49,7 @@ All notable changes to this project are documented in this file.
   - Homepage editor (sections, visibility, ordering)
   - Footer editor
   - SEO settings (meta, robots.txt, JSON-LD schema)
-  - Blog posts CRUD
+  - **Blog editor** — WordPress-style full-page visual editor with rich text toolbar, HTML mode, live preview, SEO fields, tags, featured image, word count, permalink editor
   - Promotions CRUD
   - Destinations CRUD
   - Media library (upload, delete, preview)
