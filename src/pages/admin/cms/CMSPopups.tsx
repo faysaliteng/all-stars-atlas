@@ -1,0 +1,439 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, MoreHorizontal, Edit2, Trash2, Eye, Megaphone, Bell, Image, MonitorSmartphone, Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { getCollection, addToCollection, removeFromCollection, updateInCollection } from "@/lib/local-store";
+
+const POPUP_KEY = "cms_popups";
+const BANNER_KEY = "cms_banners";
+const PUSH_KEY = "cms_push_notifications";
+
+const statusColors: Record<string, string> = {
+  active: "bg-success/10 text-success",
+  scheduled: "bg-primary/10 text-primary",
+  draft: "bg-muted text-muted-foreground",
+  expired: "bg-warning/10 text-warning",
+};
+
+const defaultPopups = [
+  { id: "POP-001", title: "Welcome Offer — ৳500 Off!", content: "New to Seven Trip? Get ৳500 off your first booking. Use code WELCOME500 at checkout.", imageUrl: "", ctaText: "Book Now", ctaUrl: "/flights", trigger: "on_load", delay: 3, frequency: "once_per_session", status: "active", startDate: "2026-01-01", endDate: "2026-12-31", pages: "homepage" },
+  { id: "POP-002", title: "Eid Holiday Packages 🎉", content: "Exclusive Eid packages starting from ৳15,000. Cox's Bazar, Maldives, Bangkok & more!", imageUrl: "", ctaText: "View Packages", ctaUrl: "/holidays", trigger: "exit_intent", delay: 0, frequency: "once_per_day", status: "active", startDate: "2026-03-01", endDate: "2026-04-15", pages: "all" },
+  { id: "POP-003", title: "Subscribe to Newsletter", content: "Get weekly deals, travel guides, and exclusive offers straight to your inbox.", imageUrl: "", ctaText: "Subscribe", ctaUrl: "#newsletter", trigger: "scroll_50", delay: 0, frequency: "once_per_week", status: "draft", startDate: "", endDate: "", pages: "blog" },
+];
+
+const defaultBanners = [
+  { id: "BNR-001", title: "Flash Sale — 40% Off International Flights", position: "top_bar", bgColor: "#3b82f6", textColor: "#ffffff", ctaText: "Shop Now →", ctaUrl: "/flights", status: "active", startDate: "2026-03-01", endDate: "2026-03-31", dismissible: true },
+  { id: "BNR-002", title: "Download Our App — Get ৳200 Cashback", position: "homepage_hero", bgColor: "#8b5cf6", textColor: "#ffffff", ctaText: "Download", ctaUrl: "#app", status: "active", startDate: "2026-01-01", endDate: "2026-12-31", dismissible: false },
+  { id: "BNR-003", title: "Umrah 2026 Early Bird — Book Before Mar 15", position: "homepage_mid", bgColor: "#059669", textColor: "#ffffff", ctaText: "View Packages", ctaUrl: "/holidays", status: "scheduled", startDate: "2026-03-10", endDate: "2026-03-15", dismissible: true },
+];
+
+const defaultPush = [
+  { id: "PUSH-001", title: "Your trip to Bangkok is in 3 days!", body: "Don't forget to check visa requirements and download your e-ticket.", type: "booking_reminder", status: "active", audience: "booked_users", scheduledAt: "Auto — 3 days before departure" },
+  { id: "PUSH-002", title: "Flash Sale: 50% Off Cox's Bazar Hotels 🏖️", body: "Limited time offer! Book before midnight.", type: "promotional", status: "active", audience: "all_users", scheduledAt: "Mar 15, 2026 — 10:00 AM" },
+  { id: "PUSH-003", title: "Payment Approved ✅", body: "Your payment of ৳32,000 for BK-260303 has been approved.", type: "transactional", status: "active", audience: "specific_user", scheduledAt: "Automatic on approval" },
+  { id: "PUSH-004", title: "Price Drop Alert 📉", body: "DAC → BKK fare dropped by 20%! Book now before prices go back up.", type: "price_alert", status: "draft", audience: "wishlist_users", scheduledAt: "On price change detection" },
+];
+
+const emptyPopup = { title: "", content: "", imageUrl: "", ctaText: "", ctaUrl: "", trigger: "on_load", delay: 3, frequency: "once_per_session", status: "draft", startDate: "", endDate: "", pages: "all" };
+const emptyBanner = { title: "", position: "top_bar", bgColor: "#3b82f6", textColor: "#ffffff", ctaText: "", ctaUrl: "", status: "draft", startDate: "", endDate: "", dismissible: true };
+const emptyPush = { title: "", body: "", type: "promotional", status: "draft", audience: "all_users", scheduledAt: "" };
+
+const CMSPopups = () => {
+  const { toast } = useToast();
+  const [popups, setPopups] = useState(() => getCollection(POPUP_KEY, defaultPopups));
+  const [banners, setBanners] = useState(() => getCollection(BANNER_KEY, defaultBanners));
+  const [pushNotifs, setPushNotifs] = useState(() => getCollection(PUSH_KEY, defaultPush));
+
+  // Popup state
+  const [showPopupDialog, setShowPopupDialog] = useState(false);
+  const [editingPopup, setEditingPopup] = useState<any>(null);
+  const [popupForm, setPopupForm] = useState(emptyPopup);
+
+  // Banner state
+  const [showBannerDialog, setShowBannerDialog] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<any>(null);
+  const [bannerForm, setBannerForm] = useState(emptyBanner);
+
+  // Push state
+  const [showPushDialog, setShowPushDialog] = useState(false);
+  const [editingPush, setEditingPush] = useState<any>(null);
+  const [pushForm, setPushForm] = useState(emptyPush);
+
+  // ── Popup CRUD ──
+  const savePopup = () => {
+    if (!popupForm.title) { toast({ title: "Error", description: "Title is required", variant: "destructive" }); return; }
+    if (editingPopup) {
+      const updated = updateInCollection(POPUP_KEY, defaultPopups, editingPopup.id, popupForm);
+      setPopups([...updated]);
+      toast({ title: "Updated", description: `Popup "${popupForm.title}" updated.` });
+    } else {
+      const newItem = { ...popupForm, id: `POP-${Date.now()}` };
+      const updated = addToCollection(POPUP_KEY, defaultPopups, newItem);
+      setPopups([...updated]);
+      toast({ title: "Created", description: `Popup "${popupForm.title}" created.` });
+    }
+    setShowPopupDialog(false); setEditingPopup(null); setPopupForm(emptyPopup);
+  };
+  const deletePopup = (p: any) => { setPopups([...removeFromCollection(POPUP_KEY, defaultPopups, p.id)]); toast({ title: "Deleted", description: `"${p.title}" removed.` }); };
+
+  // ── Banner CRUD ──
+  const saveBanner = () => {
+    if (!bannerForm.title) { toast({ title: "Error", description: "Title is required", variant: "destructive" }); return; }
+    if (editingBanner) {
+      const updated = updateInCollection(BANNER_KEY, defaultBanners, editingBanner.id, bannerForm);
+      setBanners([...updated]);
+      toast({ title: "Updated", description: `Banner "${bannerForm.title}" updated.` });
+    } else {
+      const newItem = { ...bannerForm, id: `BNR-${Date.now()}` };
+      const updated = addToCollection(BANNER_KEY, defaultBanners, newItem);
+      setBanners([...updated]);
+      toast({ title: "Created", description: `Banner "${bannerForm.title}" created.` });
+    }
+    setShowBannerDialog(false); setEditingBanner(null); setBannerForm(emptyBanner);
+  };
+  const deleteBanner = (b: any) => { setBanners([...removeFromCollection(BANNER_KEY, defaultBanners, b.id)]); toast({ title: "Deleted", description: `"${b.title}" removed.` }); };
+
+  // ── Push CRUD ──
+  const savePush = () => {
+    if (!pushForm.title) { toast({ title: "Error", description: "Title is required", variant: "destructive" }); return; }
+    if (editingPush) {
+      const updated = updateInCollection(PUSH_KEY, defaultPush, editingPush.id, pushForm);
+      setPushNotifs([...updated]);
+      toast({ title: "Updated", description: `Notification "${pushForm.title}" updated.` });
+    } else {
+      const newItem = { ...pushForm, id: `PUSH-${Date.now()}` };
+      const updated = addToCollection(PUSH_KEY, defaultPush, newItem);
+      setPushNotifs([...updated]);
+      toast({ title: "Created", description: `Notification "${pushForm.title}" created.` });
+    }
+    setShowPushDialog(false); setEditingPush(null); setPushForm(emptyPush);
+  };
+  const deletePush = (p: any) => { setPushNotifs([...removeFromCollection(PUSH_KEY, defaultPush, p.id)]); toast({ title: "Deleted", description: `"${p.title}" removed.` }); };
+
+  const stats = {
+    activePopups: popups.filter(p => p.status === "active").length,
+    activeBanners: banners.filter(b => b.status === "active").length,
+    activePush: pushNotifs.filter(p => p.status === "active").length,
+    totalItems: popups.length + banners.length + pushNotifs.length,
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold">Popups, Banners & Notifications</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage promotional popups, announcement banners, and push notifications</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Active Popups", value: stats.activePopups, icon: MonitorSmartphone, color: "text-primary" },
+          { label: "Active Banners", value: stats.activeBanners, icon: Image, color: "text-success" },
+          { label: "Push Templates", value: stats.activePush, icon: Bell, color: "text-warning" },
+          { label: "Total Items", value: stats.totalItems, icon: Megaphone, color: "text-accent" },
+        ].map((s, i) => (
+          <Card key={i}><CardContent className="flex items-center gap-3 p-4">
+            <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center ${s.color}`}><s.icon className="w-5 h-5" /></div>
+            <div><p className="text-xs text-muted-foreground">{s.label}</p><p className="text-xl font-bold">{s.value}</p></div>
+          </CardContent></Card>
+        ))}
+      </div>
+
+      <Tabs defaultValue="popups" className="space-y-4">
+        <TabsList><TabsTrigger value="popups">Popups</TabsTrigger><TabsTrigger value="banners">Ad Banners</TabsTrigger><TabsTrigger value="push">Push Notifications</TabsTrigger></TabsList>
+
+        {/* ═══ POPUPS TAB ═══ */}
+        <TabsContent value="popups" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => { setEditingPopup(null); setPopupForm(emptyPopup); setShowPopupDialog(true); }}><Plus className="w-4 h-4 mr-1.5" /> New Popup</Button>
+          </div>
+          <Card><CardContent className="p-0 table-responsive">
+            <Table>
+              <TableHeader><TableRow><TableHead>Title</TableHead><TableHead className="hidden md:table-cell">Trigger</TableHead><TableHead className="hidden md:table-cell">Pages</TableHead><TableHead>Status</TableHead><TableHead className="hidden lg:table-cell">Validity</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+              <TableBody>
+                {popups.length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">No popups created</TableCell></TableRow>
+                ) : popups.map(p => (
+                  <TableRow key={p.id}>
+                    <TableCell><div><p className="text-sm font-medium">{p.title}</p><p className="text-[10px] text-muted-foreground line-clamp-1">{p.content}</p></div></TableCell>
+                    <TableCell className="hidden md:table-cell text-sm capitalize">{p.trigger?.replace(/_/g, ' ')}</TableCell>
+                    <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px] capitalize">{p.pages}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[p.status] || ''}`}>{p.status}</Badge></TableCell>
+                    <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">{p.startDate || '—'} → {p.endDate || '—'}</TableCell>
+                    <TableCell>
+                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditingPopup(p); setPopupForm({ title: p.title, content: p.content, imageUrl: p.imageUrl || "", ctaText: p.ctaText || "", ctaUrl: p.ctaUrl || "", trigger: p.trigger, delay: p.delay || 3, frequency: p.frequency || "once_per_session", status: p.status, startDate: p.startDate || "", endDate: p.endDate || "", pages: p.pages || "all" }); setShowPopupDialog(true); }}><Edit2 className="w-4 h-4 mr-2" /> Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => deletePopup(p)}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+
+        {/* ═══ BANNERS TAB ═══ */}
+        <TabsContent value="banners" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => { setEditingBanner(null); setBannerForm(emptyBanner); setShowBannerDialog(true); }}><Plus className="w-4 h-4 mr-1.5" /> New Banner</Button>
+          </div>
+          <Card><CardContent className="p-0 table-responsive">
+            <Table>
+              <TableHeader><TableRow><TableHead>Title</TableHead><TableHead className="hidden md:table-cell">Position</TableHead><TableHead className="hidden md:table-cell">Preview</TableHead><TableHead>Status</TableHead><TableHead className="hidden lg:table-cell">Validity</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+              <TableBody>
+                {banners.length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">No banners created</TableCell></TableRow>
+                ) : banners.map(b => (
+                  <TableRow key={b.id}>
+                    <TableCell><div><p className="text-sm font-medium">{b.title}</p><p className="text-[10px] text-muted-foreground">{b.ctaText}</p></div></TableCell>
+                    <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px] capitalize">{b.position?.replace(/_/g, ' ')}</Badge></TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="h-6 w-24 rounded text-[9px] flex items-center justify-center font-bold" style={{ backgroundColor: b.bgColor, color: b.textColor }}>Preview</div>
+                    </TableCell>
+                    <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[b.status] || ''}`}>{b.status}</Badge></TableCell>
+                    <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">{b.startDate || '—'} → {b.endDate || '—'}</TableCell>
+                    <TableCell>
+                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditingBanner(b); setBannerForm({ title: b.title, position: b.position, bgColor: b.bgColor, textColor: b.textColor, ctaText: b.ctaText || "", ctaUrl: b.ctaUrl || "", status: b.status, startDate: b.startDate || "", endDate: b.endDate || "", dismissible: b.dismissible ?? true }); setShowBannerDialog(true); }}><Edit2 className="w-4 h-4 mr-2" /> Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => deleteBanner(b)}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+
+        {/* ═══ PUSH NOTIFICATIONS TAB ═══ */}
+        <TabsContent value="push" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => { setEditingPush(null); setPushForm(emptyPush); setShowPushDialog(true); }}><Plus className="w-4 h-4 mr-1.5" /> New Notification</Button>
+          </div>
+          <Card><CardContent className="p-0 table-responsive">
+            <Table>
+              <TableHeader><TableRow><TableHead>Title</TableHead><TableHead className="hidden md:table-cell">Type</TableHead><TableHead className="hidden md:table-cell">Audience</TableHead><TableHead>Status</TableHead><TableHead className="hidden lg:table-cell">Schedule</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+              <TableBody>
+                {pushNotifs.length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">No notifications created</TableCell></TableRow>
+                ) : pushNotifs.map(p => (
+                  <TableRow key={p.id}>
+                    <TableCell><div><p className="text-sm font-medium">{p.title}</p><p className="text-[10px] text-muted-foreground line-clamp-1">{p.body}</p></div></TableCell>
+                    <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px] capitalize">{p.type?.replace(/_/g, ' ')}</Badge></TableCell>
+                    <TableCell className="hidden md:table-cell text-sm capitalize">{p.audience?.replace(/_/g, ' ')}</TableCell>
+                    <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[p.status] || ''}`}>{p.status}</Badge></TableCell>
+                    <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">{p.scheduledAt || '—'}</TableCell>
+                    <TableCell>
+                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditingPush(p); setPushForm({ title: p.title, body: p.body, type: p.type, status: p.status, audience: p.audience, scheduledAt: p.scheduledAt || "" }); setShowPushDialog(true); }}><Edit2 className="w-4 h-4 mr-2" /> Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => deletePush(p)}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* ═══ POPUP DIALOG ═══ */}
+      <Dialog open={showPopupDialog} onOpenChange={(o) => { setShowPopupDialog(o); if (!o) { setEditingPopup(null); setPopupForm(emptyPopup); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingPopup ? "Edit Popup" : "Create Popup"}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1.5"><Label>Title *</Label><Input value={popupForm.title} onChange={e => setPopupForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Welcome Offer — ৳500 Off!" /></div>
+            <div className="space-y-1.5"><Label>Content</Label><Textarea value={popupForm.content} onChange={e => setPopupForm(f => ({ ...f, content: e.target.value }))} rows={3} placeholder="Popup message content..." /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>CTA Button Text</Label><Input value={popupForm.ctaText} onChange={e => setPopupForm(f => ({ ...f, ctaText: e.target.value }))} placeholder="Book Now" /></div>
+              <div className="space-y-1.5"><Label>CTA URL</Label><Input value={popupForm.ctaUrl} onChange={e => setPopupForm(f => ({ ...f, ctaUrl: e.target.value }))} placeholder="/flights" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Trigger</Label>
+                <Select value={popupForm.trigger} onValueChange={v => setPopupForm(f => ({ ...f, trigger: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="on_load">On Page Load</SelectItem>
+                    <SelectItem value="exit_intent">Exit Intent</SelectItem>
+                    <SelectItem value="scroll_50">Scroll 50%</SelectItem>
+                    <SelectItem value="time_delay">Time Delay</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><Label>Frequency</Label>
+                <Select value={popupForm.frequency} onValueChange={v => setPopupForm(f => ({ ...f, frequency: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="once_per_session">Once Per Session</SelectItem>
+                    <SelectItem value="once_per_day">Once Per Day</SelectItem>
+                    <SelectItem value="once_per_week">Once Per Week</SelectItem>
+                    <SelectItem value="every_visit">Every Visit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Show On Pages</Label>
+                <Select value={popupForm.pages} onValueChange={v => setPopupForm(f => ({ ...f, pages: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Pages</SelectItem>
+                    <SelectItem value="homepage">Homepage Only</SelectItem>
+                    <SelectItem value="blog">Blog Pages</SelectItem>
+                    <SelectItem value="booking">Booking Pages</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><Label>Status</Label>
+                <Select value={popupForm.status} onValueChange={v => setPopupForm(f => ({ ...f, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="scheduled">Scheduled</SelectItem><SelectItem value="draft">Draft</SelectItem></SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Start Date</Label><Input type="date" value={popupForm.startDate} onChange={e => setPopupForm(f => ({ ...f, startDate: e.target.value }))} /></div>
+              <div className="space-y-1.5"><Label>End Date</Label><Input type="date" value={popupForm.endDate} onChange={e => setPopupForm(f => ({ ...f, endDate: e.target.value }))} /></div>
+            </div>
+            <div className="space-y-1.5"><Label>Image URL (optional)</Label><Input value={popupForm.imageUrl} onChange={e => setPopupForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="https://..." /></div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={savePopup}>{editingPopup ? "Update" : "Create"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══ BANNER DIALOG ═══ */}
+      <Dialog open={showBannerDialog} onOpenChange={(o) => { setShowBannerDialog(o); if (!o) { setEditingBanner(null); setBannerForm(emptyBanner); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingBanner ? "Edit Banner" : "Create Banner"}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1.5"><Label>Title *</Label><Input value={bannerForm.title} onChange={e => setBannerForm(f => ({ ...f, title: e.target.value }))} placeholder="Flash Sale — 40% Off!" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Position</Label>
+                <Select value={bannerForm.position} onValueChange={v => setBannerForm(f => ({ ...f, position: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top_bar">Top Announcement Bar</SelectItem>
+                    <SelectItem value="homepage_hero">Homepage Hero Overlay</SelectItem>
+                    <SelectItem value="homepage_mid">Homepage Mid-Section</SelectItem>
+                    <SelectItem value="sidebar">Sidebar Banner</SelectItem>
+                    <SelectItem value="footer_above">Above Footer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><Label>Status</Label>
+                <Select value={bannerForm.status} onValueChange={v => setBannerForm(f => ({ ...f, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="scheduled">Scheduled</SelectItem><SelectItem value="draft">Draft</SelectItem></SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Background Color</Label><div className="flex gap-2"><Input type="color" value={bannerForm.bgColor} onChange={e => setBannerForm(f => ({ ...f, bgColor: e.target.value }))} className="w-12 h-11 p-1 cursor-pointer" /><Input value={bannerForm.bgColor} onChange={e => setBannerForm(f => ({ ...f, bgColor: e.target.value }))} className="flex-1" /></div></div>
+              <div className="space-y-1.5"><Label>Text Color</Label><div className="flex gap-2"><Input type="color" value={bannerForm.textColor} onChange={e => setBannerForm(f => ({ ...f, textColor: e.target.value }))} className="w-12 h-11 p-1 cursor-pointer" /><Input value={bannerForm.textColor} onChange={e => setBannerForm(f => ({ ...f, textColor: e.target.value }))} className="flex-1" /></div></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>CTA Text</Label><Input value={bannerForm.ctaText} onChange={e => setBannerForm(f => ({ ...f, ctaText: e.target.value }))} placeholder="Shop Now →" /></div>
+              <div className="space-y-1.5"><Label>CTA URL</Label><Input value={bannerForm.ctaUrl} onChange={e => setBannerForm(f => ({ ...f, ctaUrl: e.target.value }))} placeholder="/flights" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Start Date</Label><Input type="date" value={bannerForm.startDate} onChange={e => setBannerForm(f => ({ ...f, startDate: e.target.value }))} /></div>
+              <div className="space-y-1.5"><Label>End Date</Label><Input type="date" value={bannerForm.endDate} onChange={e => setBannerForm(f => ({ ...f, endDate: e.target.value }))} /></div>
+            </div>
+            <div className="flex items-center gap-2"><Switch checked={bannerForm.dismissible} onCheckedChange={v => setBannerForm(f => ({ ...f, dismissible: v }))} /><Label>User can dismiss</Label></div>
+            {/* Live Preview */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Preview</Label>
+              <div className="rounded-lg px-4 py-3 text-center font-bold text-sm" style={{ backgroundColor: bannerForm.bgColor, color: bannerForm.textColor }}>
+                {bannerForm.title || "Banner Preview"} {bannerForm.ctaText && <span className="ml-2 underline">{bannerForm.ctaText}</span>}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={saveBanner}>{editingBanner ? "Update" : "Create"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══ PUSH DIALOG ═══ */}
+      <Dialog open={showPushDialog} onOpenChange={(o) => { setShowPushDialog(o); if (!o) { setEditingPush(null); setPushForm(emptyPush); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editingPush ? "Edit Notification" : "Create Push Notification"}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1.5"><Label>Title *</Label><Input value={pushForm.title} onChange={e => setPushForm(f => ({ ...f, title: e.target.value }))} placeholder="Flash Sale: 50% Off!" /></div>
+            <div className="space-y-1.5"><Label>Body</Label><Textarea value={pushForm.body} onChange={e => setPushForm(f => ({ ...f, body: e.target.value }))} rows={2} placeholder="Notification message..." /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Type</Label>
+                <Select value={pushForm.type} onValueChange={v => setPushForm(f => ({ ...f, type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="promotional">Promotional</SelectItem>
+                    <SelectItem value="transactional">Transactional</SelectItem>
+                    <SelectItem value="booking_reminder">Booking Reminder</SelectItem>
+                    <SelectItem value="price_alert">Price Alert</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><Label>Audience</Label>
+                <Select value={pushForm.audience} onValueChange={v => setPushForm(f => ({ ...f, audience: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all_users">All Users</SelectItem>
+                    <SelectItem value="booked_users">Users with Bookings</SelectItem>
+                    <SelectItem value="wishlist_users">Wishlist Users</SelectItem>
+                    <SelectItem value="specific_user">Specific User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5"><Label>Schedule</Label><Input value={pushForm.scheduledAt} onChange={e => setPushForm(f => ({ ...f, scheduledAt: e.target.value }))} placeholder="Mar 15, 2026 — 10:00 AM" /></div>
+              <div className="space-y-1.5"><Label>Status</Label>
+                <Select value={pushForm.status} onValueChange={v => setPushForm(f => ({ ...f, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="draft">Draft</SelectItem></SelectContent>
+                </Select>
+              </div>
+            </div>
+            {/* Push Preview */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Preview</Label>
+              <div className="border rounded-lg p-3 flex items-start gap-3 bg-muted/30">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Bell className="w-5 h-5 text-primary" /></div>
+                <div><p className="text-sm font-bold">{pushForm.title || "Notification Title"}</p><p className="text-xs text-muted-foreground mt-0.5">{pushForm.body || "Notification body text..."}</p></div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={savePush}>{editingPush ? "Update" : "Create"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default CMSPopups;

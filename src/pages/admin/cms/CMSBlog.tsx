@@ -74,9 +74,13 @@ const emptyPost: BlogPost = {
   allowComments: true,
 };
 
+function generateDefaultContent(post: any): string {
+  return `<h2>${post.title}</h2>\n<p>${post.excerpt}</p>\n<p>Written by <strong>${post.author}</strong> — ${post.readTime} read.</p>\n<h3>Introduction</h3>\n<p>This article covers everything you need to know about ${post.title.toLowerCase().replace(/^top \d+ /, '').replace(/^complete guide to /, '').replace(/^how to /, '')}. Whether you're a first-time traveller or a seasoned explorer, you'll find valuable tips and insights here.</p>\n<h3>Key Highlights</h3>\n<ul>\n<li>Comprehensive travel information and insider tips</li>\n<li>Budget-friendly options and premium experiences</li>\n<li>Practical advice for Bangladeshi travellers</li>\n<li>Updated information for 2026</li>\n</ul>\n<h3>Getting Started</h3>\n<p>Planning your trip starts with understanding what to expect. From visa requirements to the best time to visit, we've compiled everything in one place to make your journey seamless.</p>\n<blockquote>Pro Tip: Book early through Seven Trip to get the best deals and exclusive discounts on flights, hotels, and packages.</blockquote>\n<h3>Conclusion</h3>\n<p>We hope this guide helps you plan an unforgettable experience. For personalized assistance, contact our travel experts at Seven Trip — Bangladesh's #1 travel platform.</p>`;
+}
+
 function defaultPosts(): BlogPost[] {
   return BLOG_POSTS.map(p => ({
-    ...p, id: String(p.id), content: "", tags: [] as string[], seoTitle: "", seoDescription: "", seoKeywords: "", slug: slugify(p.title), featured: false, allowComments: true,
+    ...p, id: String(p.id), content: generateDefaultContent(p), tags: [p.category] as string[], seoTitle: p.title, seoDescription: p.excerpt, seoKeywords: p.category.toLowerCase(), slug: slugify(p.title), featured: false, allowComments: true,
   } as BlogPost));
 }
 
