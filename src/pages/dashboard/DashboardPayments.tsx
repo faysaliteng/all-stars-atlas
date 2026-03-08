@@ -382,7 +382,7 @@ const DashboardPayments = () => {
                       <Badge variant="outline" className="text-[10px]">{txn.channel || 'Web'}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="h-7 text-xs"><Eye className="w-3.5 h-3.5 mr-1" /> View</Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setViewPayment(txn)}><Eye className="w-3.5 h-3.5 mr-1" /> View</Button>
                     </TableCell>
                   </TableRow>
                 ))}
