@@ -30,10 +30,10 @@ const AdminDashboard = () => {
             const Icon = statIcons[i % statIcons.length];
             return (
               <Card key={i} className="hover:shadow-lg transition-shadow">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className={`w-12 h-12 rounded-xl ${statBgs[i % statBgs.length]} flex items-center justify-center ${statColors[i % statColors.length]}`}><Icon className="w-6 h-6" /></div>
-                  <div className="flex-1"><p className="text-xs text-muted-foreground">{stat.label}</p><p className="text-2xl font-bold">{stat.value}</p></div>
-                  <div className="flex items-center gap-0.5 text-xs font-semibold text-success"><ArrowUpRight className="w-3.5 h-3.5" /> {stat.change}</div>
+                <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${statBgs[i % statBgs.length]} flex items-center justify-center ${statColors[i % statColors.length]}`}><Icon className="w-5 h-5 sm:w-6 sm:h-6" /></div>
+                  <div className="flex-1 min-w-0"><p className="text-xs text-muted-foreground truncate">{stat.label}</p><p className="text-xl sm:text-2xl font-bold">{stat.value}</p></div>
+                  <div className="flex items-center gap-0.5 text-xs font-semibold text-success shrink-0"><ArrowUpRight className="w-3.5 h-3.5" /> {stat.change}</div>
                 </CardContent>
               </Card>
             );
