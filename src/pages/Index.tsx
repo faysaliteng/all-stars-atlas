@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback, memo } from "react";
 import {
   ArrowRight, Star, MapPin, Shield, Headphones, BadgePercent,
   Smartphone, Plane, Award, TrendingUp,
-  CheckCircle2, Quote, Heart, ArrowUpRight
+  CheckCircle2, Quote, Heart, ArrowUpRight, Zap, Globe, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
