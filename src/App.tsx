@@ -79,6 +79,7 @@ const AdminPayments = lazy(() => import("@/pages/admin/AdminPayments"));
 const AdminReports = lazy(() => import("@/pages/admin/AdminReports"));
 const CMSPages = lazy(() => import("@/pages/admin/cms/CMSPages"));
 const CMSPromotions = lazy(() => import("@/pages/admin/cms/CMSPromotions"));
+const CMSPopups = lazy(() => import("@/pages/admin/cms/CMSPopups"));
 const CMSMedia = lazy(() => import("@/pages/admin/cms/CMSMedia"));
 const CMSBlog = lazy(() => import("@/pages/admin/cms/CMSBlog"));
 const CMSEmailTemplates = lazy(() => import("@/pages/admin/cms/CMSEmailTemplates"));
@@ -183,6 +184,7 @@ const App = () => (
                 <Route path="cms/footer" element={<CMSFooter />} />
                 <Route path="cms/seo" element={<CMSSeo />} />
                 <Route path="cms/promotions" element={<CMSPromotions />} />
+                <Route path="cms/popups" element={<CMSPopups />} />
                 <Route path="cms/media" element={<CMSMedia />} />
                 <Route path="cms/blog" element={<CMSBlog />} />
                 <Route path="cms/email-templates" element={<CMSEmailTemplates />} />
