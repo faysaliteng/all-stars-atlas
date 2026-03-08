@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { authenticate, requireAdmin, formatUser } = require('../middleware/auth');
+const { notifyBookingStatus, notifyPayment } = require('../services/notify');
 
 const router = express.Router();
 router.use(authenticate, requireAdmin);
