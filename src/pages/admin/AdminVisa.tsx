@@ -212,7 +212,7 @@ const AdminVisa = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-bold">Visa Management</h1>
-        {tab !== "form-settings" && <Button className="w-full sm:w-auto"><Plus className="w-4 h-4 mr-1.5" /> Add Country</Button>}
+        {tab !== "form-settings" && <Button className="w-full sm:w-auto" onClick={() => setTab("form-settings")}><Plus className="w-4 h-4 mr-1.5" /> Add Country</Button>}
       </div>
 
       {/* Stats cards */}
