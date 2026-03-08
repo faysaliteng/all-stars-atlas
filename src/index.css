@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === Performance: GPU hints & smooth rendering === */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeSpeed;
+}
+img, video {
+  content-visibility: auto;
+}
+
+
 @layer base {
   :root {
     --background: 210 20% 98%;
