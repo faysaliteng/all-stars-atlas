@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -545,17 +545,21 @@ const VisaFormSettingsEditor = () => {
   const { toast } = useToast();
 
   const [editData, setEditData] = useState<CmsPageContent | null>(null);
+  const [initialized, setInitialized] = useState(false);
+
+  // Properly initialize editData from fetched page using useEffect
+  useEffect(() => {
+    if (page && !initialized) {
+      setEditData(JSON.parse(JSON.stringify(page)));
+      setInitialized(true);
+    }
+  }, [page, initialized]);
 
   const current = editData || page;
   const visaConfig = current?.visaConfig;
 
   if (isLoading || !current || !visaConfig) {
     return <div className="py-12 text-center text-muted-foreground">Loading form settings...</div>;
-  }
-
-  if (!editData && page) {
-    setTimeout(() => setEditData(JSON.parse(JSON.stringify(page))), 0);
-    return null;
   }
 
   const updateConfig = (updater: (cfg: typeof visaConfig) => void) => {
