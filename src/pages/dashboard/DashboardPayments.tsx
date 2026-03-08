@@ -112,7 +112,7 @@ const DashboardPayments = () => {
         </Button>
       </div>
 
-      <DataLoader isLoading={isLoading} error={error} skeleton="dashboard" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={effectiveError} skeleton="dashboard" retry={refetch}>
         {/* Make Payment Form */}
         {showMakePayment && (
           <Card className="border-primary/30">
