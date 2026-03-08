@@ -57,7 +57,7 @@ const DashboardTransactions = () => {
         }}><Download className="w-4 h-4 mr-1.5" /> Export</Button>
       </div>
 
-      <DataLoader isLoading={isLoading} error={effectiveError} skeleton="dashboard" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="dashboard" retry={refetch}>
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Total Spent</p><p className="text-2xl font-bold mt-1">{summary.totalSpent || '৳0'}</p></CardContent></Card>
