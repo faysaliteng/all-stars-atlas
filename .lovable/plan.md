@@ -70,15 +70,15 @@ All features are production-ready. Zero placeholders. Zero "Coming Soon". Every 
 ## ✅ Phase 5: CMS Suite (Complete — 10 Modules)
 
 - ✅ Homepage Editor — section reorder, visibility, content editing
-- ✅ Pages Editor — all static page content
-- ✅ Blog Manager — CRUD
-- ✅ Promotions — CRUD
-- ✅ Media Library — upload, preview, copy, download, delete
-- ✅ Email Templates — CRUD
-- ✅ Destinations — CRUD
-- ✅ Booking Form Editor — per-service form field configuration
-- ✅ Footer Editor
-- ✅ SEO Editor
+- ✅ Pages Editor — all static page content (About, Contact, FAQ, Terms, Privacy, Refund, Careers)
+- ✅ Blog Manager — WordPress-style full-page visual editor with rich text toolbar, HTML source, SEO panel, tags, categories, featured image, read time, permalink/slug
+- ✅ Promotions — CRUD with usage tracking, status management
+- ✅ Media Library — upload, preview, copy, download, delete, drag-and-drop
+- ✅ Email Templates — CRUD with preview, active toggle
+- ✅ Destinations — CRUD with domestic/international filters, featured toggle
+- ✅ Booking Form Editor — per-service form field configuration (flights, cars, medical, eSIM)
+- ✅ Footer Editor — navigation links, social media, newsletter, brand info, payment methods, badges
+- ✅ SEO Editor — global meta, per-page SEO (15 pages), Open Graph, JSON-LD, robots.txt
 
 ## ✅ Phase 6: Polish & Production (Complete)
 
