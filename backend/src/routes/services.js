@@ -45,9 +45,9 @@ router.get('/holidays/:id', async (req, res) => {
     res.json({
       id: r.id, title: r.title, destination: r.destination, country: r.country,
       duration: r.duration, price: parseFloat(r.price), currency: r.currency,
-      discountPct: r.discount_pct, images: JSON.parse(r.images || '[]'),
-      highlights: JSON.parse(r.highlights || '[]'), itinerary: JSON.parse(r.itinerary || '[]'),
-      inclusions: JSON.parse(r.inclusions || '[]'), exclusions: JSON.parse(r.exclusions || '[]'),
+      discountPct: r.discount_pct, images: safeJsonParse(r.images, []),
+      highlights: safeJsonParse(r.highlights, []), itinerary: safeJsonParse(r.itinerary, []),
+      inclusions: safeJsonParse(r.inclusions, []), exclusions: safeJsonParse(r.exclusions, []),
       category: r.category, rating: r.rating ? parseFloat(r.rating) : null, reviewCount: r.review_count,
     });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
