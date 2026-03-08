@@ -3,18 +3,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Plus, MoreHorizontal, Edit2, Trash2, Copy, Eye, Percent, Tag, DollarSign, TrendingDown, TicketCheck, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getCollection, addToCollection, removeFromCollection, updateInCollection } from "@/lib/local-store";
 
-// Mock data for discounts
-const mockDiscounts = [
+const defaultDiscounts = [
   { id: "DSC-001", name: "Early Bird Flight Discount", code: "EARLYBIRD25", type: "percentage", value: 25, minOrder: 5000, maxDiscount: 3000, service: "Flights", status: "active", usageCount: 342, usageLimit: 1000, startDate: "2026-01-01", endDate: "2026-06-30" },
   { id: "DSC-002", name: "Hotel Weekend Special", code: "WEEKEND15", type: "percentage", value: 15, minOrder: 3000, maxDiscount: 2000, service: "Hotels", status: "active", usageCount: 189, usageLimit: 500, startDate: "2026-02-01", endDate: "2026-04-30" },
   { id: "DSC-003", name: "Flat ৳500 Off Visa", code: "VISA500", type: "fixed", value: 500, minOrder: 2000, maxDiscount: 500, service: "Visa", status: "active", usageCount: 76, usageLimit: 200, startDate: "2026-01-15", endDate: "2026-12-31" },
@@ -24,8 +24,7 @@ const mockDiscounts = [
   { id: "DSC-007", name: "Car Rental Summer Offer", code: "CARSUMMER", type: "percentage", value: 12, minOrder: 2000, maxDiscount: 1000, service: "Cars", status: "draft", usageCount: 0, usageLimit: 150, startDate: "2026-06-01", endDate: "2026-08-31" },
 ];
 
-// Mock data for price rules
-const mockPriceRules = [
+const defaultPriceRules = [
   { id: "PR-001", name: "Flight Base Markup", service: "Flights", type: "markup", value: 5, basis: "percentage", status: "active", appliedTo: "All flights" },
   { id: "PR-002", name: "Hotel Commission", service: "Hotels", type: "commission", value: 8, basis: "percentage", status: "active", appliedTo: "All hotels" },
   { id: "PR-003", name: "Holiday Package Margin", service: "Holidays", type: "markup", value: 12, basis: "percentage", status: "active", appliedTo: "All packages" },
@@ -35,13 +34,16 @@ const mockPriceRules = [
   { id: "PR-007", name: "Medical Tourism Markup", service: "Medical", type: "markup", value: 7, basis: "percentage", status: "paused", appliedTo: "All hospitals" },
 ];
 
+const DISCOUNT_KEY = "admin_discounts";
+const RULE_KEY = "admin_price_rules";
+
 const statusColors: Record<string, string> = {
-  active: "bg-success/10 text-success",
-  scheduled: "bg-primary/10 text-primary",
-  expired: "bg-muted text-muted-foreground",
-  draft: "bg-warning/10 text-warning",
-  paused: "bg-warning/10 text-warning",
+  active: "bg-success/10 text-success", scheduled: "bg-primary/10 text-primary",
+  expired: "bg-muted text-muted-foreground", draft: "bg-warning/10 text-warning", paused: "bg-warning/10 text-warning",
 };
+
+const emptyDiscount = { name: "", code: "", type: "percentage", value: "", minOrder: "", maxDiscount: "", service: "All Services", startDate: "", endDate: "", activate: true };
+const emptyRule = { name: "", service: "Flights", type: "markup", value: "", basis: "percentage", appliedTo: "", active: true };
 
 const AdminDiscounts = () => {
   const { toast } = useToast();
@@ -50,27 +52,76 @@ const AdminDiscounts = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showCreateDiscount, setShowCreateDiscount] = useState(false);
   const [showCreateRule, setShowCreateRule] = useState(false);
+  const [discounts, setDiscounts] = useState(() => getCollection(DISCOUNT_KEY, defaultDiscounts));
+  const [priceRules, setPriceRules] = useState(() => getCollection(RULE_KEY, defaultPriceRules));
+  const [dForm, setDForm] = useState(emptyDiscount);
+  const [rForm, setRForm] = useState(emptyRule);
 
-  const filteredDiscounts = mockDiscounts.filter(d => {
+  const filteredDiscounts = discounts.filter(d => {
     if (search && !d.name.toLowerCase().includes(search.toLowerCase()) && !d.code.toLowerCase().includes(search.toLowerCase())) return false;
     if (serviceFilter !== "all" && d.service !== serviceFilter) return false;
     if (statusFilter !== "all" && d.status !== statusFilter) return false;
     return true;
   });
 
-  const filteredRules = mockPriceRules.filter(r => {
+  const filteredRules = priceRules.filter(r => {
     if (search && !r.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (serviceFilter !== "all" && r.service !== serviceFilter) return false;
     return true;
   });
 
-  const totalActive = mockDiscounts.filter(d => d.status === "active").length;
-  const totalRedemptions = mockDiscounts.reduce((sum, d) => sum + d.usageCount, 0);
-  const avgDiscount = Math.round(mockDiscounts.filter(d => d.type === "percentage").reduce((sum, d) => sum + d.value, 0) / mockDiscounts.filter(d => d.type === "percentage").length);
+  const totalActive = discounts.filter(d => d.status === "active").length;
+  const totalRedemptions = discounts.reduce((sum, d) => sum + d.usageCount, 0);
+  const pctDiscounts = discounts.filter(d => d.type === "percentage");
+  const avgDiscount = pctDiscounts.length > 0 ? Math.round(pctDiscounts.reduce((sum, d) => sum + d.value, 0) / pctDiscounts.length) : 0;
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast({ title: "Copied!", description: `Code "${code}" copied to clipboard.` });
+  const copyCode = (code: string) => { navigator.clipboard.writeText(code); toast({ title: "Copied!", description: `Code "${code}" copied.` }); };
+
+  const createDiscount = () => {
+    if (!dForm.name || !dForm.code) { toast({ title: "Error", description: "Name and code are required", variant: "destructive" }); return; }
+    const newD = {
+      id: `DSC-${Date.now()}`, name: dForm.name, code: dForm.code.toUpperCase(), type: dForm.type,
+      value: Number(dForm.value) || 0, minOrder: Number(dForm.minOrder) || 0, maxDiscount: Number(dForm.maxDiscount) || 0,
+      service: dForm.service, status: dForm.activate ? "active" : "draft", usageCount: 0,
+      usageLimit: 500, startDate: dForm.startDate || "2026-01-01", endDate: dForm.endDate || "2026-12-31",
+    };
+    const updated = addToCollection(DISCOUNT_KEY, defaultDiscounts, newD);
+    setDiscounts([...updated]);
+    toast({ title: "Discount Created", description: `"${newD.code}" created successfully.` });
+    setShowCreateDiscount(false);
+    setDForm(emptyDiscount);
+  };
+
+  const deleteDiscount = (d: any) => {
+    const updated = removeFromCollection(DISCOUNT_KEY, defaultDiscounts, d.id);
+    setDiscounts([...updated]);
+    toast({ title: "Deleted", description: `"${d.code}" removed.`, variant: "destructive" });
+  };
+
+  const createRule = () => {
+    if (!rForm.name) { toast({ title: "Error", description: "Name is required", variant: "destructive" }); return; }
+    const newR = {
+      id: `PR-${Date.now()}`, name: rForm.name, service: rForm.service, type: rForm.type,
+      value: Number(rForm.value) || 0, basis: rForm.basis, status: rForm.active ? "active" : "paused", appliedTo: rForm.appliedTo || "All",
+    };
+    const updated = addToCollection(RULE_KEY, defaultPriceRules, newR);
+    setPriceRules([...updated]);
+    toast({ title: "Price Rule Created", description: `"${newR.name}" saved.` });
+    setShowCreateRule(false);
+    setRForm(emptyRule);
+  };
+
+  const deleteRule = (r: any) => {
+    const updated = removeFromCollection(RULE_KEY, defaultPriceRules, r.id);
+    setPriceRules([...updated]);
+    toast({ title: "Deleted", description: `"${r.name}" removed.`, variant: "destructive" });
+  };
+
+  const toggleRule = (r: any) => {
+    const newStatus = r.status === "active" ? "paused" : "active";
+    const updated = updateInCollection(RULE_KEY, defaultPriceRules, r.id, { status: newStatus });
+    setPriceRules([...updated]);
+    toast({ title: newStatus === "active" ? "Activated" : "Paused", description: `${r.name} is now ${newStatus}.` });
   };
 
   return (
@@ -82,408 +133,145 @@ const AdminDiscounts = () => {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Active Discounts", value: totalActive, icon: Tag, color: "text-success" },
           { label: "Total Redemptions", value: totalRedemptions.toLocaleString(), icon: TicketCheck, color: "text-primary" },
           { label: "Avg. Discount", value: `${avgDiscount}%`, icon: Percent, color: "text-warning" },
-          { label: "Price Rules", value: mockPriceRules.filter(r => r.status === "active").length, icon: DollarSign, color: "text-accent" },
+          { label: "Price Rules", value: priceRules.filter(r => r.status === "active").length, icon: DollarSign, color: "text-accent" },
         ].map((s, i) => (
-          <Card key={i}>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center ${s.color}`}>
-                <s.icon className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className="text-xl font-bold">{s.value}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <Card key={i}><CardContent className="flex items-center gap-3 p-4">
+            <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center ${s.color}`}><s.icon className="w-5 h-5" /></div>
+            <div><p className="text-xs text-muted-foreground">{s.label}</p><p className="text-xl font-bold">{s.value}</p></div>
+          </CardContent></Card>
         ))}
       </div>
 
       <Tabs defaultValue="discounts" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="discounts">Discount Codes</TabsTrigger>
-          <TabsTrigger value="pricing">Price Rules</TabsTrigger>
-        </TabsList>
+        <TabsList><TabsTrigger value="discounts">Discount Codes</TabsTrigger><TabsTrigger value="pricing">Price Rules</TabsTrigger></TabsList>
 
-        {/* ===== DISCOUNT CODES TAB ===== */}
         <TabsContent value="discounts" className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search discounts or codes..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
-              </div>
-              <Select value={serviceFilter} onValueChange={setServiceFilter}>
-                <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Service" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Services</SelectItem>
-                  <SelectItem value="Flights">Flights</SelectItem>
-                  <SelectItem value="Hotels">Hotels</SelectItem>
-                  <SelectItem value="Holidays">Holidays</SelectItem>
-                  <SelectItem value="Visa">Visa</SelectItem>
-                  <SelectItem value="Medical">Medical</SelectItem>
-                  <SelectItem value="Cars">Cars</SelectItem>
-                  <SelectItem value="All Services">Universal</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search discounts or codes..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+              <Select value={serviceFilter} onValueChange={setServiceFilter}><SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Service" /></SelectTrigger><SelectContent><SelectItem value="all">All Services</SelectItem><SelectItem value="Flights">Flights</SelectItem><SelectItem value="Hotels">Hotels</SelectItem><SelectItem value="Holidays">Holidays</SelectItem><SelectItem value="Visa">Visa</SelectItem><SelectItem value="Medical">Medical</SelectItem><SelectItem value="Cars">Cars</SelectItem><SelectItem value="All Services">Universal</SelectItem></SelectContent></Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full sm:w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All Status</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="scheduled">Scheduled</SelectItem><SelectItem value="expired">Expired</SelectItem><SelectItem value="draft">Draft</SelectItem></SelectContent></Select>
             </div>
-
-            {/* Create Discount Dialog */}
             <Dialog open={showCreateDiscount} onOpenChange={setShowCreateDiscount}>
-              <DialogTrigger asChild>
-                <Button><Plus className="w-4 h-4 mr-1.5" /> New Discount</Button>
-              </DialogTrigger>
+              <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-1.5" /> New Discount</Button></DialogTrigger>
               <DialogContent className="max-w-lg">
                 <DialogHeader><DialogTitle>Create Discount Code</DialogTitle></DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label>Discount Name</Label>
-                    <Input placeholder="e.g. Summer Flight Sale" />
+                  <div className="grid gap-2"><Label>Discount Name *</Label><Input value={dForm.name} onChange={e => setDForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Summer Flight Sale" /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2"><Label>Code *</Label><Input value={dForm.code} onChange={e => setDForm(f => ({ ...f, code: e.target.value }))} placeholder="e.g. SUMMER30" className="uppercase font-mono" /></div>
+                    <div className="grid gap-2"><Label>Type</Label><Select value={dForm.type} onValueChange={v => setDForm(f => ({ ...f, type: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="percentage">Percentage (%)</SelectItem><SelectItem value="fixed">Fixed Amount (৳)</SelectItem></SelectContent></Select></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Code</Label>
-                      <Input placeholder="e.g. SUMMER30" className="uppercase font-mono" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Discount Type</Label>
-                      <Select defaultValue="percentage">
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="percentage">Percentage (%)</SelectItem>
-                          <SelectItem value="fixed">Fixed Amount (৳)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <div className="grid gap-2"><Label>Value</Label><Input type="number" value={dForm.value} onChange={e => setDForm(f => ({ ...f, value: e.target.value }))} placeholder="25" /></div>
+                    <div className="grid gap-2"><Label>Max Discount (৳)</Label><Input type="number" value={dForm.maxDiscount} onChange={e => setDForm(f => ({ ...f, maxDiscount: e.target.value }))} placeholder="3000" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Discount Value</Label>
-                      <Input type="number" placeholder="e.g. 25" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Max Discount (৳)</Label>
-                      <Input type="number" placeholder="e.g. 3000" />
-                    </div>
+                    <div className="grid gap-2"><Label>Min Order (৳)</Label><Input type="number" value={dForm.minOrder} onChange={e => setDForm(f => ({ ...f, minOrder: e.target.value }))} placeholder="5000" /></div>
+                    <div className="grid gap-2"><Label>Service</Label><Select value={dForm.service} onValueChange={v => setDForm(f => ({ ...f, service: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="All Services">All Services</SelectItem><SelectItem value="Flights">Flights</SelectItem><SelectItem value="Hotels">Hotels</SelectItem><SelectItem value="Holidays">Holidays</SelectItem><SelectItem value="Visa">Visa</SelectItem></SelectContent></Select></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Min Order (৳)</Label>
-                      <Input type="number" placeholder="e.g. 5000" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Usage Limit</Label>
-                      <Input type="number" placeholder="e.g. 500" />
-                    </div>
+                    <div className="grid gap-2"><Label>Start Date</Label><Input type="date" value={dForm.startDate} onChange={e => setDForm(f => ({ ...f, startDate: e.target.value }))} /></div>
+                    <div className="grid gap-2"><Label>End Date</Label><Input type="date" value={dForm.endDate} onChange={e => setDForm(f => ({ ...f, endDate: e.target.value }))} /></div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label>Applicable Service</Label>
-                    <Select defaultValue="All Services">
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All Services">All Services</SelectItem>
-                        <SelectItem value="Flights">Flights</SelectItem>
-                        <SelectItem value="Hotels">Hotels</SelectItem>
-                        <SelectItem value="Holidays">Holidays</SelectItem>
-                        <SelectItem value="Visa">Visa</SelectItem>
-                        <SelectItem value="Medical">Medical</SelectItem>
-                        <SelectItem value="Cars">Cars</SelectItem>
-                        <SelectItem value="eSIM">eSIM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Start Date</Label>
-                      <Input type="date" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>End Date</Label>
-                      <Input type="date" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch id="activate-now" defaultChecked />
-                    <Label htmlFor="activate-now" className="text-sm">Activate immediately</Label>
-                  </div>
+                  <div className="flex items-center gap-2"><Switch id="activate-now" checked={dForm.activate} onCheckedChange={v => setDForm(f => ({ ...f, activate: v }))} /><Label htmlFor="activate-now" className="text-sm">Activate immediately</Label></div>
                 </div>
-                <DialogFooter>
-                  <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                  <Button onClick={() => { setShowCreateDiscount(false); toast({ title: "Discount Created", description: "New discount code has been created successfully." }); }}>
-                    Create Discount
-                  </Button>
-                </DialogFooter>
+                <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button onClick={createDiscount}>Create Discount</Button></DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
 
-          {/* Discounts Table */}
-          <Card>
-            <CardContent className="p-0 table-responsive">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Discount</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead className="hidden md:table-cell">Value</TableHead>
-                    <TableHead className="hidden md:table-cell">Service</TableHead>
-                    <TableHead className="hidden lg:table-cell">Usage</TableHead>
-                    <TableHead className="hidden lg:table-cell">Min / Max</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Validity</TableHead>
-                    <TableHead className="w-10"></TableHead>
+          <Card><CardContent className="p-0 table-responsive">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Discount</TableHead><TableHead>Code</TableHead><TableHead className="hidden md:table-cell">Value</TableHead><TableHead className="hidden md:table-cell">Service</TableHead><TableHead className="hidden lg:table-cell">Usage</TableHead><TableHead>Status</TableHead><TableHead className="hidden md:table-cell">Validity</TableHead><TableHead className="w-10"></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {filteredDiscounts.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">No discounts found</TableCell></TableRow>
+                ) : filteredDiscounts.map(d => (
+                  <TableRow key={d.id}>
+                    <TableCell><div><p className="text-sm font-medium">{d.name}</p><p className="text-xs text-muted-foreground font-mono">{d.id}</p></div></TableCell>
+                    <TableCell><div className="flex items-center gap-1.5"><code className="text-xs bg-muted px-2 py-0.5 rounded font-bold">{d.code}</code><button onClick={() => copyCode(d.code)} className="text-muted-foreground hover:text-foreground transition-colors"><Copy className="w-3.5 h-3.5" /></button></div></TableCell>
+                    <TableCell className="hidden md:table-cell"><span className="text-sm font-semibold">{d.type === "percentage" ? `${d.value}%` : `৳${d.value.toLocaleString()}`}</span></TableCell>
+                    <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px]">{d.service}</Badge></TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm">{d.usageCount}/{d.usageLimit}</TableCell>
+                    <TableCell><Badge variant="outline" className={`text-[10px] capitalize ${statusColors[d.status] || ""}`}>{d.status}</Badge></TableCell>
+                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground"><div className="flex items-center gap-1"><Calendar className="w-3 h-3" />{d.endDate}</div></TableCell>
+                    <TableCell>
+                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => copyCode(d.code)}><Copy className="w-4 h-4 mr-2" /> Copy Code</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => deleteDiscount(d)}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDiscounts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
-                        No discounts found matching your criteria
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredDiscounts.map(d => (
-                    <TableRow key={d.id}>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm font-medium">{d.name}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{d.id}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <code className="text-xs bg-muted px-2 py-0.5 rounded font-bold">{d.code}</code>
-                          <button onClick={() => copyCode(d.code)} className="text-muted-foreground hover:text-foreground transition-colors">
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className="text-sm font-semibold">
-                          {d.type === "percentage" ? `${d.value}%` : `৳${d.value.toLocaleString()}`}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant="outline" className="text-[10px]">{d.service}</Badge>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm">
-                        {d.usageCount}/{d.usageLimit}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
-                        ৳{d.minOrder.toLocaleString()} / ৳{d.maxDiscount.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`text-[10px] capitalize ${statusColors[d.status] || ""}`}>
-                          {d.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {d.endDate}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => toast({ title: "View Discount", description: `Viewing details for ${d.name}` })}>
-                              <Eye className="w-4 h-4 mr-2" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast({ title: "Edit Discount", description: `Editing ${d.name}` })}>
-                              <Edit2 className="w-4 h-4 mr-2" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => copyCode(d.code)}>
-                              <Copy className="w-4 h-4 mr-2" /> Copy Code
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => toast({ title: "Discount Deleted", description: `"${d.code}" has been removed.`, variant: "destructive" })}>
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
         </TabsContent>
 
-        {/* ===== PRICE RULES TAB ===== */}
         <TabsContent value="pricing" className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search price rules..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
-
-            {/* Create Price Rule Dialog */}
+            <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search price rules..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
             <Dialog open={showCreateRule} onOpenChange={setShowCreateRule}>
-              <DialogTrigger asChild>
-                <Button><Plus className="w-4 h-4 mr-1.5" /> New Price Rule</Button>
-              </DialogTrigger>
+              <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-1.5" /> New Price Rule</Button></DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>Create Price Rule</DialogTitle></DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label>Rule Name</Label>
-                    <Input placeholder="e.g. Flight Base Markup" />
+                  <div className="grid gap-2"><Label>Rule Name *</Label><Input value={rForm.name} onChange={e => setRForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Flight Base Markup" /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2"><Label>Service</Label><Select value={rForm.service} onValueChange={v => setRForm(f => ({ ...f, service: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Flights">Flights</SelectItem><SelectItem value="Hotels">Hotels</SelectItem><SelectItem value="Holidays">Holidays</SelectItem><SelectItem value="Visa">Visa</SelectItem><SelectItem value="Medical">Medical</SelectItem><SelectItem value="Cars">Cars</SelectItem><SelectItem value="eSIM">eSIM</SelectItem></SelectContent></Select></div>
+                    <div className="grid gap-2"><Label>Type</Label><Select value={rForm.type} onValueChange={v => setRForm(f => ({ ...f, type: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="markup">Markup</SelectItem><SelectItem value="commission">Commission</SelectItem><SelectItem value="fixed_fee">Fixed Fee</SelectItem><SelectItem value="convenience">Convenience Fee</SelectItem></SelectContent></Select></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Service</Label>
-                      <Select defaultValue="Flights">
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Flights">Flights</SelectItem>
-                          <SelectItem value="Hotels">Hotels</SelectItem>
-                          <SelectItem value="Holidays">Holidays</SelectItem>
-                          <SelectItem value="Visa">Visa</SelectItem>
-                          <SelectItem value="Medical">Medical</SelectItem>
-                          <SelectItem value="Cars">Cars</SelectItem>
-                          <SelectItem value="eSIM">eSIM</SelectItem>
-                          <SelectItem value="Recharge">Recharge</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Rule Type</Label>
-                      <Select defaultValue="markup">
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="markup">Markup</SelectItem>
-                          <SelectItem value="commission">Commission</SelectItem>
-                          <SelectItem value="fixed_fee">Fixed Fee</SelectItem>
-                          <SelectItem value="convenience">Convenience Fee</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <div className="grid gap-2"><Label>Value</Label><Input type="number" value={rForm.value} onChange={e => setRForm(f => ({ ...f, value: e.target.value }))} placeholder="5" /></div>
+                    <div className="grid gap-2"><Label>Basis</Label><Select value={rForm.basis} onValueChange={v => setRForm(f => ({ ...f, basis: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="percentage">Percentage (%)</SelectItem><SelectItem value="fixed">Fixed (৳)</SelectItem></SelectContent></Select></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label>Value</Label>
-                      <Input type="number" placeholder="e.g. 5" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Basis</Label>
-                      <Select defaultValue="percentage">
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="percentage">Percentage (%)</SelectItem>
-                          <SelectItem value="fixed">Fixed (৳)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Apply To</Label>
-                    <Input placeholder="e.g. All flights, Domestic only" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch id="rule-active" defaultChecked />
-                    <Label htmlFor="rule-active" className="text-sm">Active</Label>
-                  </div>
+                  <div className="grid gap-2"><Label>Apply To</Label><Input value={rForm.appliedTo} onChange={e => setRForm(f => ({ ...f, appliedTo: e.target.value }))} placeholder="e.g. All flights" /></div>
+                  <div className="flex items-center gap-2"><Switch id="rule-active" checked={rForm.active} onCheckedChange={v => setRForm(f => ({ ...f, active: v }))} /><Label htmlFor="rule-active" className="text-sm">Active</Label></div>
                 </div>
-                <DialogFooter>
-                  <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                  <Button onClick={() => { setShowCreateRule(false); toast({ title: "Price Rule Created", description: "New pricing rule has been saved." }); }}>
-                    Save Rule
-                  </Button>
-                </DialogFooter>
+                <DialogFooter><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><Button onClick={createRule}>Save Rule</Button></DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
 
-          {/* Price Rules Table */}
-          <Card>
-            <CardContent className="p-0 table-responsive">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rule Name</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Value</TableHead>
-                    <TableHead className="hidden md:table-cell">Applied To</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-10"></TableHead>
+          <Card><CardContent className="p-0 table-responsive">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Rule Name</TableHead><TableHead>Service</TableHead><TableHead>Type</TableHead><TableHead>Value</TableHead><TableHead className="hidden md:table-cell">Applied To</TableHead><TableHead>Status</TableHead><TableHead className="w-10"></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {filteredRules.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">No price rules found</TableCell></TableRow>
+                ) : filteredRules.map(r => (
+                  <TableRow key={r.id}>
+                    <TableCell><div><p className="text-sm font-medium">{r.name}</p><p className="text-xs text-muted-foreground font-mono">{r.id}</p></div></TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{r.service}</Badge></TableCell>
+                    <TableCell className="text-sm capitalize">{r.type.replace("_", " ")}</TableCell>
+                    <TableCell><span className="text-sm font-semibold">{r.basis === "percentage" ? `${r.value}%` : `৳${r.value}`}</span></TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{r.appliedTo}</TableCell>
+                    <TableCell><Badge variant="outline" className={`text-[10px] capitalize ${statusColors[r.status] || ""}`}>{r.status}</Badge></TableCell>
+                    <TableCell>
+                      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => toggleRule(r)}><TrendingDown className="w-4 h-4 mr-2" /> {r.status === "active" ? "Pause" : "Activate"}</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => deleteRule(r)}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRules.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                        No price rules found
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredRules.map(r => (
-                    <TableRow key={r.id}>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm font-medium">{r.name}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{r.id}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-[10px]">{r.service}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm capitalize">{r.type.replace("_", " ")}</TableCell>
-                      <TableCell>
-                        <span className="text-sm font-semibold">
-                          {r.basis === "percentage" ? `${r.value}%` : `৳${r.value}`}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{r.appliedTo}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`text-[10px] capitalize ${statusColors[r.status] || ""}`}>
-                          {r.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => toast({ title: "Edit Rule", description: `Editing ${r.name}` })}>
-                              <Edit2 className="w-4 h-4 mr-2" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast({ title: r.status === "active" ? "Rule Paused" : "Rule Activated", description: `${r.name} has been ${r.status === "active" ? "paused" : "activated"}.` })}>
-                              <TrendingDown className="w-4 h-4 mr-2" /> {r.status === "active" ? "Pause" : "Activate"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => toast({ title: "Rule Deleted", description: `"${r.name}" has been removed.`, variant: "destructive" })}>
-                              <Trash2 className="w-4 h-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
         </TabsContent>
       </Tabs>
     </div>

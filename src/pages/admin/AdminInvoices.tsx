@@ -12,6 +12,7 @@ import { Search, FileText, Download, Eye, Send, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { mockAdminInvoices } from "@/lib/mock-data";
 import { getCollection, addToCollection } from "@/lib/local-store";
+import { generateInvoicePDF } from "@/lib/pdf-generator";
 
 const STORE_KEY = "admin_invoices";
 const defaultInvoices = mockAdminInvoices.data;
@@ -69,12 +70,18 @@ const AdminInvoices = () => {
       tax,
       discount: 0,
       status: "Unpaid" as const,
+      serviceType: newInvoice.serviceType,
     };
     const updated = addToCollection(STORE_KEY, defaultInvoices, inv);
     setInvoices([...updated]);
     toast({ title: "Invoice Generated", description: `${inv.invoiceNo} created for ${inv.customerName} — ৳${inv.amount.toLocaleString()}` });
     setShowGenerate(false);
     setNewInvoice({ customerName: "", customerEmail: "", bookingRef: "", amount: "", serviceType: "flight" });
+  };
+
+  const downloadPDF = (inv: any) => {
+    generateInvoicePDF(inv);
+    toast({ title: "Downloaded", description: `${inv.invoiceNo}.pdf saved` });
   };
 
   return (
@@ -204,13 +211,13 @@ const AdminInvoices = () => {
                             </div>
                             <Badge variant="outline" className={`${statusColors[inv.status] || ''}`}>{inv.status}</Badge>
                             <div className="flex gap-2 pt-2">
-                              <Button className="flex-1 font-bold" onClick={() => toast({ title: "Downloading...", description: "Invoice PDF is being prepared." })}><Download className="w-4 h-4 mr-1" /> Download PDF</Button>
+                              <Button className="flex-1 font-bold" onClick={() => downloadPDF(inv)}><Download className="w-4 h-4 mr-1" /> Download PDF</Button>
                               <Button variant="outline" className="flex-1" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1" /> Print</Button>
                             </div>
                           </div>
                         </DialogContent>
                       </Dialog>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Downloading...", description: "Invoice PDF is being prepared." })}><Download className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadPDF(inv)}><Download className="w-4 h-4" /></Button>
                       {(inv.status === "Unpaid" || inv.status === "Overdue") && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Reminder Sent", description: "Payment reminder sent to customer" })}>
                           <Send className="w-4 h-4" />
