@@ -19,9 +19,9 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">Admin Dashboard</h1><p className="text-sm text-muted-foreground mt-0.5">Welcome back, Super Admin</p></div>
-        <Badge variant="outline" className="bg-success/10 text-success text-xs">System Online</Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div><h1 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h1><p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Welcome back, Super Admin</p></div>
+        <Badge variant="outline" className="bg-success/10 text-success text-xs w-fit">System Online</Badge>
       </div>
 
       <DataLoader isLoading={isLoading} error={error} skeleton="dashboard" retry={refetch}>
