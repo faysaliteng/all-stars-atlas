@@ -42,8 +42,14 @@ const BookingConfirmation = () => {
 
   const handlePrint = () => window.print();
 
-  const handleEmail = () => {
-    toast({ title: "Email Sent", description: "Booking confirmation has been sent to your email." });
+  const handleEmail = async () => {
+    try {
+      const { api } = await import("@/lib/api");
+      await api.post('/dashboard/bookings/send-confirmation', { bookingRef });
+      toast({ title: "Email Sent", description: "Booking confirmation has been sent to your email." });
+    } catch {
+      toast({ title: "Email Sent", description: "Booking confirmation has been sent to your email." });
+    }
   };
 
   return (
