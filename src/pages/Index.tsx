@@ -565,7 +565,7 @@ const Index = () => {
       {sortedSections.map((section) => (
         <React.Fragment key={section.key}>
           {renderSection(section.key)}
-          {section.key === 'hero' && !sortedSections.some(s => s.key === 'trustStrip') && renderSection('trustStrip')}
+          {/* trustStrip removed — redundant with stats + features */}
         </React.Fragment>
       ))}
     </div>
