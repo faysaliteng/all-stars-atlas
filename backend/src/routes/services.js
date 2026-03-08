@@ -128,6 +128,7 @@ router.post('/medical/book', authenticate, async (req, res) => {
       `INSERT INTO bookings (id, user_id, booking_type, booking_ref, status, total_amount, payment_method, payment_status, details, passenger_info, contact_info) VALUES (?, ?, 'medical', ?, 'confirmed', 0, ?, 'paid', ?, ?, ?)`,
       [bookingId, req.user.sub, bookingRef, paymentMethod || 'card', JSON.stringify({ hospitalId, treatmentType }), JSON.stringify(patientInfo || {}), JSON.stringify(contactInfo || {})]
     );
+    notifyBookingConfirm(req.user.sub, { bookingRef, type: 'Medical', amount: 0 }).catch(console.error);
     res.status(201).json({ id: bookingId, bookingRef, status: 'confirmed', bookingType: 'medical', createdAt: new Date().toISOString() });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
