@@ -144,10 +144,24 @@ const AdminUsers = () => {
                 <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">No users found</TableCell></TableRow>
               ) : filtered.map((u: any) => (
                 <TableRow key={u.id}>
-                  <TableCell><p className="text-sm font-medium">{u.name}</p><p className="text-xs text-muted-foreground">{u.email}</p></TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="text-sm font-medium">{u.name}</p>
+                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                    </div>
+                  </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{u.phone}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{u.joined}</TableCell>
                   <TableCell className="hidden sm:table-cell text-sm">{u.bookings}</TableCell>
+                  <TableCell>
+                    {u.idDocument ? (
+                      u.idVerified
+                        ? <Badge className="bg-success/10 text-success text-[10px]"><CheckCircle2 className="w-3 h-3 mr-0.5" /> Verified</Badge>
+                        : <Badge className="bg-warning/10 text-warning text-[10px]"><FileText className="w-3 h-3 mr-0.5" /> Pending</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-muted-foreground">No ID</Badge>
+                    )}
+                  </TableCell>
                   <TableCell><Badge variant="outline" className={`text-[11px] capitalize ${u.status === "active" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{u.status}</Badge></TableCell>
                   <TableCell>
                     <DropdownMenu modal={false}><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
