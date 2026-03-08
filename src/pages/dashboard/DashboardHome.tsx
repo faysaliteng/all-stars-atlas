@@ -80,7 +80,7 @@ const DashboardHome = () => {
                     <Badge className="bg-white/20 text-white border-0 text-xs font-bold">{upcomingTrip.daysLeft} days left</Badge>
                     <span className="text-xs text-white/60">Next Trip</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-1">{upcomingTrip.title}</h3>
+                  <h3 className="text-lg sm:text-xl font-bold mb-1">{upcomingTrip.title}</h3>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/70">
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {upcomingTrip.date}</span>
                     {upcomingTrip.flight && <span className="flex items-center gap-1"><Plane className="w-3.5 h-3.5" /> {upcomingTrip.flight}</span>}

@@ -82,7 +82,7 @@ const AdminDashboard = () => {
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                       {b.type === "Flight" ? <Plane className="w-4 h-4" /> : b.type === "Hotel" ? <Building2 className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
                     </div>
-                    <div className="flex-1 min-w-0"><p className="text-sm font-medium">{b.customer}</p><p className="text-xs text-muted-foreground">{b.id} • {b.route}</p></div>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{b.customer}</p><p className="text-xs text-muted-foreground truncate">{b.id} • {b.route}</p></div>
                     <Badge variant="outline" className={`text-[10px] capitalize hidden sm:inline-flex ${statusColors[b.status] || ''}`}>{b.status}</Badge>
                     <span className="text-sm font-semibold">{b.amount}</span>
                   </div>
