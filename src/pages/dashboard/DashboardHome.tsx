@@ -61,7 +61,7 @@ const DashboardHome = () => {
                     </div>
                     <TrendingUp className="w-4 h-4 text-success" />
                   </div>
-                  <p className="text-2xl font-black">{stat.value}</p>
+                  <p className="text-xl sm:text-2xl font-black">{stat.value}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
                   {stat.change && <p className="text-[10px] text-success font-medium mt-1">{stat.change}</p>}
                 </CardContent>
