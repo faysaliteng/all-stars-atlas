@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { notifyBookingConfirm, notifyContactSubmission } = require('../services/notify');
+const { safeJsonParse } = require('../utils/json');
 
 const router = express.Router();
 
@@ -28,8 +29,8 @@ router.get('/holidays/search', async (req, res) => {
     const data = rows.map(r => ({
       id: r.id, title: r.title, destination: r.destination, country: r.country,
       duration: r.duration, price: parseFloat(r.price), currency: r.currency,
-      discountPct: r.discount_pct, images: JSON.parse(r.images || '[]'),
-      highlights: JSON.parse(r.highlights || '[]'), category: r.category,
+      discountPct: r.discount_pct, images: safeJsonParse(r.images, []),
+      highlights: safeJsonParse(r.highlights, []), category: r.category,
       rating: r.rating ? parseFloat(r.rating) : null, reviewCount: r.review_count,
     }));
     res.json({ data, total: countResult[0].total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(countResult[0].total / parseInt(limit)) });
@@ -44,9 +45,9 @@ router.get('/holidays/:id', async (req, res) => {
     res.json({
       id: r.id, title: r.title, destination: r.destination, country: r.country,
       duration: r.duration, price: parseFloat(r.price), currency: r.currency,
-      discountPct: r.discount_pct, images: JSON.parse(r.images || '[]'),
-      highlights: JSON.parse(r.highlights || '[]'), itinerary: JSON.parse(r.itinerary || '[]'),
-      inclusions: JSON.parse(r.inclusions || '[]'), exclusions: JSON.parse(r.exclusions || '[]'),
+      discountPct: r.discount_pct, images: safeJsonParse(r.images, []),
+      highlights: safeJsonParse(r.highlights, []), itinerary: safeJsonParse(r.itinerary, []),
+      inclusions: safeJsonParse(r.inclusions, []), exclusions: safeJsonParse(r.exclusions, []),
       category: r.category, rating: r.rating ? parseFloat(r.rating) : null, reviewCount: r.review_count,
     });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -91,9 +92,9 @@ router.get('/medical/hospitals', async (req, res) => {
     const [rows] = await db.query(sql, params);
     const data = rows.map(r => ({
       id: r.id, name: r.name, city: r.city, country: r.country,
-      specialties: JSON.parse(r.specialties || '[]'), accreditations: JSON.parse(r.accreditations || '[]'),
+      specialties: safeJsonParse(r.specialties, []), accreditations: safeJsonParse(r.accreditations, []),
       rating: r.rating ? parseFloat(r.rating) : null, priceRange: r.price_range, description: r.description,
-      images: JSON.parse(r.images || '[]'), contact: JSON.parse(r.contact || '{}'),
+      images: safeJsonParse(r.images, []), contact: safeJsonParse(r.contact, {}),
     }));
     res.json({ data, total: countResult[0].total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(countResult[0].total / parseInt(limit)) });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -112,8 +113,8 @@ router.get('/medical/search', async (req, res) => {
     const [rows] = await db.query(sql, params);
     const data = rows.map(r => ({
       id: r.id, name: r.name, city: r.city, country: r.country,
-      specialties: JSON.parse(r.specialties || '[]'), accreditations: JSON.parse(r.accreditations || '[]'),
-      rating: r.rating ? parseFloat(r.rating) : null, priceRange: r.price_range, description: r.description, images: JSON.parse(r.images || '[]'),
+      specialties: safeJsonParse(r.specialties, []), accreditations: safeJsonParse(r.accreditations, []),
+      rating: r.rating ? parseFloat(r.rating) : null, priceRange: r.price_range, description: r.description, images: safeJsonParse(r.images, []),
     }));
     res.json({ data, total: countResult[0].total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(countResult[0].total / parseInt(limit)) });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -152,7 +153,7 @@ router.get('/cars/search', async (req, res) => {
       id: r.id, name: r.name, type: r.type, brand: r.brand, model: r.model, year: r.year,
       seats: r.seats, transmission: r.transmission, fuelType: r.fuel_type,
       pricePerDay: parseFloat(r.price_per_day), currency: r.currency,
-      images: JSON.parse(r.images || '[]'), features: JSON.parse(r.features || '[]'), city: r.city,
+      images: safeJsonParse(r.images, []), features: safeJsonParse(r.features, []), city: r.city,
     }));
     res.json({ data, total: countResult[0].total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(countResult[0].total / parseInt(limit)) });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -167,7 +168,7 @@ router.get('/cars/:id', async (req, res) => {
       id: r.id, name: r.name, type: r.type, brand: r.brand, model: r.model, year: r.year,
       seats: r.seats, transmission: r.transmission, fuelType: r.fuel_type,
       pricePerDay: parseFloat(r.price_per_day), currency: r.currency,
-      images: JSON.parse(r.images || '[]'), features: JSON.parse(r.features || '[]'), city: r.city,
+      images: safeJsonParse(r.images, []), features: safeJsonParse(r.features, []), city: r.city,
     });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
@@ -202,7 +203,7 @@ router.get('/esim/plans', async (req, res) => {
     const data = rows.map(r => ({
       id: r.id, country: r.country, region: r.region, dataAmount: r.data_amount,
       duration: r.duration, price: parseFloat(r.price), currency: r.currency,
-      provider: r.provider, features: JSON.parse(r.features || '[]'),
+      provider: r.provider, features: safeJsonParse(r.features, []),
     }));
     res.json({ data, total: data.length, page: 1, limit: 50, totalPages: 1 });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -250,7 +251,7 @@ router.get('/paybill/categories', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM bill_categories WHERE active = 1');
     const data = rows.map(r => ({
-      id: r.id, name: r.name, icon: r.icon, billers: JSON.parse(r.billers || '[]'),
+      id: r.id, name: r.name, icon: r.icon, billers: safeJsonParse(r.billers, []),
     }));
     res.json({ data });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -260,7 +261,7 @@ router.get('/paybill/billers', async (req, res) => {
   try {
     const { category } = req.query;
     const [rows] = await db.query('SELECT billers FROM bill_categories WHERE name LIKE ? AND active = 1', [`%${category || ''}%`]);
-    const billers = rows.length > 0 ? JSON.parse(rows[0].billers || '[]') : [];
+    const billers = rows.length > 0 ? safeJsonParse(rows[0].billers, []) : [];
     res.json({ data: billers });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
