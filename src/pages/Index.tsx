@@ -90,16 +90,16 @@ const StatCard = memo(({ value, suffix, label, index }: { value: number; suffix:
 StatCard.displayName = "StatCard";
 
 const DestinationCard = memo(({ dest, type }: { dest: { name: string; hotels: string | number; img: string }; type?: string }) => (
-  <div className="destination-card group">
+  <div className="destination-card group spotlight">
     <div className="aspect-[3/4] relative">
-      <img src={dest.img} alt={dest.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" decoding="async" />
+      <img src={dest.img} alt={dest.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3.5">
         <h4 className="font-bold text-white text-[13px] sm:text-[15px]">{dest.name}</h4>
         <p className="text-[10px] sm:text-[11px] text-white/60 mt-0.5">{dest.hotels} Hotels</p>
       </div>
       {type !== 'intl' && (
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110">
           <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
         </div>
       )}
