@@ -67,6 +67,9 @@ router.post('/holidays/book', authenticate, async (req, res) => {
     await db.query(`INSERT INTO transactions (id, user_id, booking_id, type, amount, status, payment_method, reference, description) VALUES (?, ?, ?, 'payment', ?, 'completed', ?, ?, ?)`,
       [uuidv4(), req.user.sub, bookingId, totalAmount, paymentMethod || 'card', bookingRef, `Holiday package: ${pkgs[0]?.title || ''}`]);
 
+    // Notify user + admin
+    notifyBookingConfirm(req.user.sub, { bookingRef, type: 'Holiday Package', amount: totalAmount }).catch(console.error);
+
     res.status(201).json({ id: bookingId, bookingRef, status: 'confirmed', totalAmount, currency: 'BDT', bookingType: 'holiday', createdAt: new Date().toISOString() });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
