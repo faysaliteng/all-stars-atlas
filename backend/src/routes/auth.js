@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../config/db');
 const { generateTokens, formatUser, authenticate } = require('../middleware/auth');
+const { notifyOTP, notifyPasswordReset, notifyWelcome } = require('../services/notify');
 
 const router = express.Router();
 
@@ -60,9 +61,11 @@ router.post('/register', async (req, res) => {
     const user = formatUser(rows[0]);
     const tokens = generateTokens(rows[0]);
 
-    // Store refresh token
     await db.query('INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))',
       [uuidv4(), id, tokens.refreshToken]);
+
+    // Send welcome SMS + Email (non-blocking)
+    notifyWelcome(id).catch(err => console.error('Welcome notify error:', err));
 
     res.status(201).json({ user, ...tokens });
   } catch (err) {
@@ -101,7 +104,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /admin/auth/login  (mounted at /admin/auth/login in server.js)
+// POST /admin/auth/login
 router.post('/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -161,7 +164,6 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ message: 'User not found', status: 401 });
     }
 
-    // Delete old token and create new
     await db.query('DELETE FROM refresh_tokens WHERE token = ?', [refreshToken]);
     const tokens = generateTokens(userRows[0]);
     await db.query('INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))',
@@ -178,13 +180,16 @@ router.post('/refresh', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    const [rows] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-    // Always return success to prevent email enumeration
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (rows.length > 0) {
+      const user = rows[0];
       const otp = String(Math.floor(100000 + Math.random() * 900000));
       const hash = await bcrypt.hash(otp, 10);
       await db.query('UPDATE users SET otp_code = ?, otp_expires = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE email = ?', [hash, email]);
-      console.log(`OTP for ${email}: ${otp}`); // In production, send via email
+      
+      // Send OTP via Email + SMS
+      const name = `${user.first_name} ${user.last_name}`.trim();
+      notifyPasswordReset(email, user.phone, name, otp).catch(err => console.error('Password reset notify error:', err));
     }
     res.json({ message: 'If the email exists, an OTP has been sent.' });
   } catch (err) {
@@ -251,7 +256,7 @@ router.post('/logout', authenticate, async (req, res) => {
   }
 });
 
-// POST /auth/upload-id-document — upload NID/Passport after registration
+// POST /auth/upload-id-document
 router.post('/upload-id-document', authenticate, idUpload.single('document'), async (req, res) => {
   try {
     if (!req.file) {

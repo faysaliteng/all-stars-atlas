@@ -3,6 +3,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
+const { notifyBookingConfirm, notifyContactSubmission } = require('../services/notify');
 
 const router = express.Router();
 
@@ -66,6 +67,9 @@ router.post('/holidays/book', authenticate, async (req, res) => {
     await db.query(`INSERT INTO transactions (id, user_id, booking_id, type, amount, status, payment_method, reference, description) VALUES (?, ?, ?, 'payment', ?, 'completed', ?, ?, ?)`,
       [uuidv4(), req.user.sub, bookingId, totalAmount, paymentMethod || 'card', bookingRef, `Holiday package: ${pkgs[0]?.title || ''}`]);
 
+    // Notify user + admin
+    notifyBookingConfirm(req.user.sub, { bookingRef, type: 'Holiday Package', amount: totalAmount }).catch(console.error);
+
     res.status(201).json({ id: bookingId, bookingRef, status: 'confirmed', totalAmount, currency: 'BDT', bookingType: 'holiday', createdAt: new Date().toISOString() });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
@@ -124,6 +128,7 @@ router.post('/medical/book', authenticate, async (req, res) => {
       `INSERT INTO bookings (id, user_id, booking_type, booking_ref, status, total_amount, payment_method, payment_status, details, passenger_info, contact_info) VALUES (?, ?, 'medical', ?, 'confirmed', 0, ?, 'paid', ?, ?, ?)`,
       [bookingId, req.user.sub, bookingRef, paymentMethod || 'card', JSON.stringify({ hospitalId, treatmentType }), JSON.stringify(patientInfo || {}), JSON.stringify(contactInfo || {})]
     );
+    notifyBookingConfirm(req.user.sub, { bookingRef, type: 'Medical', amount: 0 }).catch(console.error);
     res.status(201).json({ id: bookingId, bookingRef, status: 'confirmed', bookingType: 'medical', createdAt: new Date().toISOString() });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
@@ -180,6 +185,7 @@ router.post('/cars/book', authenticate, async (req, res) => {
       `INSERT INTO bookings (id, user_id, booking_type, booking_ref, status, total_amount, payment_method, payment_status, details, passenger_info, contact_info) VALUES (?, ?, 'car', ?, 'confirmed', ?, ?, 'paid', ?, ?, ?)`,
       [bookingId, req.user.sub, bookingRef, totalAmount, paymentMethod || 'card', JSON.stringify({ car: cars[0]?.name, pickupDate, returnDate }), JSON.stringify(driverInfo || {}), JSON.stringify(contactInfo || {})]
     );
+    notifyBookingConfirm(req.user.sub, { bookingRef, type: 'Car Rental', amount: totalAmount }).catch(console.error);
     res.status(201).json({ id: bookingId, bookingRef, status: 'confirmed', totalAmount, currency: 'BDT', bookingType: 'car', createdAt: new Date().toISOString() });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
@@ -284,6 +290,9 @@ router.post('/contact/submit', async (req, res) => {
       `INSERT INTO contact_submissions (id, name, email, subject, message) VALUES (?, ?, ?, ?, ?)`,
       [id, name, email, subject || '', message]
     );
+    // Auto-reply email + notify admin
+    notifyContactSubmission(name, email).catch(console.error);
+
     res.status(201).json({ id, message: "Thank you! We'll get back to you within 24 hours." });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });

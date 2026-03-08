@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { authenticate, formatUser } = require('../middleware/auth');
+const { notifyPayment } = require('../services/notify');
 
 const router = express.Router();
 

@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { authenticate } = require('../middleware/auth');
+const { notifyBookingConfirm } = require('../services/notify');
 
 const router = express.Router();
 
@@ -80,6 +81,7 @@ router.post('/book', authenticate, async (req, res) => {
       [uuidv4(), req.user.sub, bookingId, totalAmount, paymentMethod || 'card', bookingRef, `Hotel booking at ${hotels[0]?.name || 'Hotel'}`]
     );
 
+    notifyBookingConfirm(req.user.sub, { bookingRef, type: 'Hotel', amount: totalAmount }).catch(console.error);
     res.status(201).json({ id: bookingId, bookingRef, status: 'confirmed', totalAmount, currency: 'BDT', bookingType: 'hotel', createdAt: new Date().toISOString() });
   } catch (err) {
     console.error('Hotel booking error:', err);

@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { authenticate, requireAdmin, formatUser } = require('../middleware/auth');
+const { notifyBookingStatus, notifyPayment } = require('../services/notify');
 
 const router = express.Router();
 router.use(authenticate, requireAdmin);
@@ -165,6 +166,10 @@ router.put('/bookings/:id', async (req, res) => {
     if (notes !== undefined) { sets.push('notes = ?'); params.push(notes); }
     if (sets.length > 0) { params.push(req.params.id); await db.query(`UPDATE bookings SET ${sets.join(', ')} WHERE id = ?`, params); }
     const [rows] = await db.query('SELECT * FROM bookings WHERE id = ?', [req.params.id]);
+    // Notify user of status change
+    if (status && rows[0]) {
+      notifyBookingStatus(rows[0].user_id, rows[0].booking_ref, status).catch(console.error);
+    }
     res.json(rows[0] ? { id: rows[0].id, bookingRef: rows[0].booking_ref, status: rows[0].status } : {});
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
@@ -352,9 +357,13 @@ router.put('/payment-approvals/:id', async (req, res) => {
     
     // If approved, also update the booking payment status
     if (status === 'Approved') {
-      const [txn] = await db.query('SELECT booking_id FROM transactions WHERE id = ?', [req.params.id]);
-      if (txn.length > 0 && txn[0].booking_id) {
-        await db.query("UPDATE bookings SET payment_status = 'paid' WHERE id = ?", [txn[0].booking_id]);
+      const [txn] = await db.query('SELECT booking_id, user_id, amount, reference FROM transactions WHERE id = ?', [req.params.id]);
+      if (txn.length > 0) {
+        if (txn[0].booking_id) {
+          await db.query("UPDATE bookings SET payment_status = 'paid' WHERE id = ?", [txn[0].booking_id]);
+        }
+        // Notify user of payment approval
+        notifyPayment(txn[0].user_id, txn[0].amount, txn[0].reference || req.params.id).catch(console.error);
       }
     }
     
