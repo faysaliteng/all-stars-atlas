@@ -1,30 +1,25 @@
 import { config } from './config';
 
-const PING_INTERVAL = 4 * 60 * 1000; // 4 minutes
-let intervalId: ReturnType<typeof setInterval> | null = null;
+let warmedUp = false;
 
-async function ping() {
-  try {
-    await fetch(`${config.apiBaseUrl}/health`, {
-      method: 'GET',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    });
-  } catch {
-    // Silent fail — next ping will retry
-  }
-}
+/**
+ * Fires a single health-check on first visit to wake the server,
+ * then prefetches critical API data so the visitor sees zero latency.
+ */
+export function warmUpServer() {
+  if (warmedUp) return;
+  warmedUp = true;
 
-export function startKeepAlive() {
-  if (intervalId) return;
-  // Initial ping on startup
-  ping();
-  intervalId = setInterval(ping, PING_INTERVAL);
-}
+  const base = config.apiBaseUrl;
 
-export function stopKeepAlive() {
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
-  }
+  // Parallel warm-up: health + critical data the homepage needs
+  const urls = [
+    `${base}/health`,
+    `${base}/cms/page?path=/`,
+  ];
+
+  urls.forEach((url) => {
+    fetch(url, { method: 'GET', cache: 'no-store', priority: 'low' as any })
+      .catch(() => {}); // silent
+  });
 }
