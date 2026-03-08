@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardWishlist, useRemoveWishlistItem } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
-import { mockWishlist } from "@/lib/mock-data";
+
 
 const typeIcons: Record<string, typeof Plane> = { flight: Plane, hotel: Building2, holiday: Palmtree };
 const typeColors: Record<string, string> = { flight: "bg-primary/10 text-primary", hotel: "bg-secondary/10 text-secondary", holiday: "bg-accent/10 text-accent" };
