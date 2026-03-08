@@ -20,6 +20,8 @@ const toggleWishlistItem = (id: string): boolean => {
 };
 
 const MedicalServices = () => {
+  const { toast } = useToast();
+  const [wishlistedIds, setWishlistedIds] = useState<string[]>(getWishlist);
   const [country, setCountry] = useState("all");
   const [treatment, setTreatment] = useState("all");
   const { data: page } = useCmsPageContent("/medical");
