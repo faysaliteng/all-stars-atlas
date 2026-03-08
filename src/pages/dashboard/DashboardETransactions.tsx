@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, CreditCard, Smartphone, Download, Filter, ArrowDownLeft } from "lucide-react";
+import { downloadCSV } from "@/lib/csv-export";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
