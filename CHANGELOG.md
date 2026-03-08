@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [2.0.0] — 2026-03-08 — Full Production Hardening & Audit
+
+### Fixed
+- **BlogPost.tsx** — Removed mock data dependency (`content-data.ts` + `local-store.ts`); now uses CMS API via `useCmsPageContent("/blog")` 
+- **HotelDetail.tsx** — Removed hardcoded fallback hotel data; UI now shows proper error via `DataLoader` when API is unreachable
+- **Header.tsx** — Fixed wrong mobile nav icons: Cars was using `Plane` icon → `Car`, Medical was using `Headphones` → `Stethoscope`
+- **Header.tsx** — Added missing "Pay Bill" link with `Receipt` icon to mobile navigation
+- **BookingConfirmation.tsx** — Fixed fake "Email Sent" success toast on API failure; now shows real error message
+
+### Changed
+- All 18+ dashboard/admin pages: Removed mock data fallbacks; API errors now display descriptive status-aware messages (network, 401/403, 500, 404)
+- `DataLoader.tsx` — Enhanced with status-specific error icons (WifiOff, ShieldAlert, ServerCrash, AlertCircle) and retry buttons
+- `api.ts` — Network errors now throw structured `NETWORK_ERROR` code for proper UI handling
+
+### Documentation
+- Updated CHANGELOG.md with complete version history
+- All documentation files verified and current
+
+---
+
 ## [1.9.0] — 2026-03-08 — SMS + Email Notification System & Production Hardening
 
 ### Added

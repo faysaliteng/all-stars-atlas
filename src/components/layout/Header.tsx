@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Menu, User, Plane, Building2, FileText, Palmtree,
-  ChevronDown, Phone, Globe, Headphones, LogOut, LayoutDashboard, Settings, Ticket
+  ChevronDown, Phone, Globe, Headphones, LogOut, LayoutDashboard, Settings, Ticket, Car, Receipt, Stethoscope
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
@@ -171,8 +171,9 @@ const Header = () => {
                       { label: "Visa", href: "/visa", icon: FileText },
                       { label: "eSIM", href: "/esim", icon: Globe },
                       { label: "Recharge", href: "/recharge", icon: Phone },
-                      { label: "Medical", href: "/medical", icon: Headphones },
-                      { label: "Cars", href: "/cars", icon: Plane },
+                      { label: "Pay Bill", href: "/paybill", icon: Receipt },
+                      { label: "Medical", href: "/medical", icon: Stethoscope },
+                      { label: "Cars", href: "/cars", icon: Car },
                     ].map((item) => (
                       <Link key={item.href} to={item.href} onClick={() => setMobileOpen(false)}
                         className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-foreground hover:bg-muted transition-colors font-medium">
