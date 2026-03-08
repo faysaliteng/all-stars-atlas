@@ -35,7 +35,7 @@ const AdminPaymentApprovals = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'payment-approvals', activeTab, search],
     queryFn: () => api.get('/admin/payment-approvals', {
       ...(activeTab !== "All" ? { status: activeTab } : {}),

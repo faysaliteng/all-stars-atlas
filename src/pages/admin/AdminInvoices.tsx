@@ -40,7 +40,7 @@ const AdminInvoices = () => {
   });
   const { toast } = useToast();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'invoices', filter, search],
     queryFn: () => api.get('/admin/invoices', {
       ...(filter !== "all" ? { status: filter } : {}),
