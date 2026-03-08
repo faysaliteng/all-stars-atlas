@@ -95,6 +95,7 @@ router.post('/book', authenticate, async (req, res) => {
        JSON.stringify({ airline: flights[0]?.airline, flightNumber: flights[0]?.flight_number, origin: flights[0]?.origin, destination: flights[0]?.destination, departureTime: flights[0]?.departure_time, passenger: passengers?.[0]?.firstName + ' ' + passengers?.[0]?.lastName })]
     );
 
+    notifyBookingConfirm(req.user.sub, { bookingRef, type: 'Flight', amount: totalAmount }).catch(console.error);
     res.status(201).json({ id: bookingId, bookingRef, status: 'confirmed', totalAmount, currency: 'BDT', bookingType: 'flight', createdAt: new Date().toISOString() });
   } catch (err) {
     console.error('Flight booking error:', err);

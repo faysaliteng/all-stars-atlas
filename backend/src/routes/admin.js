@@ -357,9 +357,13 @@ router.put('/payment-approvals/:id', async (req, res) => {
     
     // If approved, also update the booking payment status
     if (status === 'Approved') {
-      const [txn] = await db.query('SELECT booking_id FROM transactions WHERE id = ?', [req.params.id]);
-      if (txn.length > 0 && txn[0].booking_id) {
-        await db.query("UPDATE bookings SET payment_status = 'paid' WHERE id = ?", [txn[0].booking_id]);
+      const [txn] = await db.query('SELECT booking_id, user_id, amount, reference FROM transactions WHERE id = ?', [req.params.id]);
+      if (txn.length > 0) {
+        if (txn[0].booking_id) {
+          await db.query("UPDATE bookings SET payment_status = 'paid' WHERE id = ?", [txn[0].booking_id]);
+        }
+        // Notify user of payment approval
+        notifyPayment(txn[0].user_id, txn[0].amount, txn[0].reference || req.params.id).catch(console.error);
       }
     }
     
