@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { useDashboardStats, useDashboardBookings } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
 import { motion } from "framer-motion";
-import { mockDashboardStats, mockDashboardBookings } from "@/lib/mock-data";
+
 import { useAuth } from "@/hooks/useAuth";
 
 const quickActions = [
@@ -43,22 +43,22 @@ const getGreeting = () => {
 
 const DashboardHome = () => {
   const { user } = useAuth();
-  const { data: statsData, isLoading: statsLoading } = useDashboardStats();
-  const { data: bookingsData, isLoading: bookingsLoading } = useDashboardBookings({ limit: 4 });
+  const { data: statsData, isLoading: statsLoading, error: statsError, refetch: statsRefetch } = useDashboardStats();
+  const { data: bookingsData, isLoading: bookingsLoading, error: bookingsError } = useDashboardBookings({ limit: 4 });
 
-  const resolvedStats = (statsData as any)?.stats ? (statsData as any) : mockDashboardStats;
-  const resolvedBookings = (bookingsData as any)?.bookings?.length ? (bookingsData as any) : mockDashboardBookings;
+  const resolvedStats = (statsData as any) || {};
+  const resolvedBookings = (bookingsData as any) || {};
 
-  const stats = resolvedStats.stats;
+  const stats = resolvedStats.stats || [];
   const upcomingTrip = resolvedStats.upcomingTrip;
-  const spendingData = resolvedStats.spendingData;
-  const pieData = resolvedStats.bookingBreakdown;
+  const spendingData = resolvedStats.spendingData || [];
+  const pieData = resolvedStats.bookingBreakdown || [];
   const recentBookings = resolvedBookings.bookings?.slice(0, 4) || [];
   const displayName = user?.name || resolvedStats.user?.name || '';
   const greeting = getGreeting();
 
   return (
-    <DataLoader isLoading={statsLoading && bookingsLoading} error={null} skeleton="dashboard" retry={() => {}}>
+    <DataLoader isLoading={statsLoading && bookingsLoading} error={statsError || bookingsError} skeleton="dashboard" retry={statsRefetch}>
       <motion.div className="space-y-6" variants={container} initial="hidden" animate="show">
         <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>

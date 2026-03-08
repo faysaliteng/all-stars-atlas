@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardTravellers, useCreateTraveller, useDeleteTraveller } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
-import { mockTravellers } from "@/lib/mock-data";
+
 
 const DashboardTravellers = () => {
   const { toast } = useToast();
@@ -24,8 +24,7 @@ const DashboardTravellers = () => {
   const createTraveller = useCreateTraveller();
   const deleteTraveller = useDeleteTraveller();
 
-  const isApiData = !!(data as any)?.travellers?.length;
-  const resolved = isApiData ? (data as any) : mockTravellers;
+  const resolved = (data as any) || {};
   const baseTravellers = resolved?.travellers || [];
   const travellers = [...localTravellers, ...baseTravellers].filter((t: any) => !removedIds.has(t.id));
 
@@ -128,7 +127,7 @@ const DashboardTravellers = () => {
         </Dialog>
       </div>
 
-      <DataLoader isLoading={isLoading} error={null} skeleton="cards" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="cards" retry={refetch}>
         {travellers.length === 0 ? (
           <Card><CardContent className="py-12 text-center text-muted-foreground">
             <User className="w-12 h-12 mx-auto mb-3 opacity-30" />

@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useDashboardTransactions } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
-import { mockTransactions } from "@/lib/mock-data";
+
 
 const entryTypeColors: Record<string, string> = {
   AirTicket: "bg-primary/10 text-primary",
@@ -36,27 +36,15 @@ const DashboardTransactions = () => {
     page, limit: Number(perPage),
   });
 
-  const isApiData = !!(data as any)?.transactions?.length;
-  const resolved = isApiData ? (data as any) : mockTransactions;
+  const resolved = (data as any) || {};
   const allTransactions = resolved?.transactions || [];
   const summary = resolved?.summary || {};
 
-  // Local filtering for mock data
-  const transactions = allTransactions.filter((txn: any) => {
-    if (!isApiData) {
-      if (filter !== "all" && txn.entryType !== filter) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return (txn.reference || "").toLowerCase().includes(q) || (txn.description || "").toLowerCase().includes(q) || (txn.id || "").toLowerCase().includes(q);
-      }
-    }
-    return true;
-  });
+  const transactions = allTransactions;
 
-  const total = isApiData ? (resolved?.total || 0) : transactions.length;
+  const total = resolved?.total || transactions.length;
   const totalPages = Math.ceil(total / Number(perPage)) || 1;
-  const effectiveError = error && allTransactions.length === 0 ? error : null;
-  const paginatedTransactions = isApiData ? transactions : transactions.slice((page - 1) * Number(perPage), page * Number(perPage));
+  const paginatedTransactions = transactions.slice((page - 1) * Number(perPage), page * Number(perPage));
 
   return (
     <div className="space-y-6">
@@ -69,7 +57,7 @@ const DashboardTransactions = () => {
         }}><Download className="w-4 h-4 mr-1.5" /> Export</Button>
       </div>
 
-      <DataLoader isLoading={isLoading} error={effectiveError} skeleton="dashboard" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="dashboard" retry={refetch}>
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Total Spent</p><p className="text-2xl font-bold mt-1">{summary.totalSpent || '৳0'}</p></CardContent></Card>

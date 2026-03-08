@@ -4,7 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianG
 import { motion } from "framer-motion";
 import { useAdminDashboard } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminDashboard } from "@/lib/mock-data";
+
 
 const statMeta = [
   { icon: Ticket, gradient: "stat-gradient-blue", iconClass: "icon-glow-blue" },
@@ -24,11 +24,11 @@ const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transiti
 const AdminDashboard = () => {
   const { data, isLoading, error, refetch } = useAdminDashboard();
 
-  const resolved = (data as any)?.stats ? (data as any) : mockAdminDashboard;
-  const { stats, recentBookings, revenueData, topServices } = resolved;
+  const resolved = (data as any) || {};
+  const { stats = [], recentBookings = [], revenueData = [], topServices = [] } = resolved;
 
   return (
-    <DataLoader isLoading={isLoading} error={null} skeleton="dashboard" retry={refetch}>
+    <DataLoader isLoading={isLoading} error={error} skeleton="dashboard" retry={refetch}>
       <motion.div className="space-y-6" variants={container} initial="hidden" animate="show">
         <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>

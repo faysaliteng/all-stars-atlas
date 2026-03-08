@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
-import { mockInvoices } from "@/lib/mock-data";
+
 import { generateInvoicePDF, printInvoicePDF } from "@/lib/pdf-generator";
 import { downloadCSV } from "@/lib/csv-export";
 
@@ -35,7 +35,7 @@ const DashboardInvoices = () => {
     }),
   });
 
-  const resolved = (data as any)?.invoices?.length ? (data as any) : mockInvoices;
+  const resolved = (data as any) || {};
   const invoices = resolved?.invoices || [];
 
   const filtered = invoices.filter((inv: any) => {
@@ -84,7 +84,7 @@ const DashboardInvoices = () => {
         </Select>
       </div>
 
-      <DataLoader isLoading={isLoading} error={null} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card>
           <CardContent className="p-0 table-responsive">
             <Table>

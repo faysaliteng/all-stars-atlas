@@ -14,7 +14,7 @@ import { generateTicketPDF } from "@/lib/pdf-generator";
 import { useDashboardBookings } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
-import { mockDashboardBookings } from "@/lib/mock-data";
+
 
 const statusTabs = ["All", "On Hold", "Pending", "In Progress", "Confirmed", "Completed", "Void", "Refund", "Exchange", "Expired", "Cancelled", "Un-Confirmed"];
 
@@ -52,26 +52,13 @@ const DashboardBookings = () => {
     page,
   });
 
-  const isApiData = !!(data as any)?.bookings?.length;
-  const resolved = isApiData ? (data as any) : mockDashboardBookings;
+  const resolved = (data as any) || {};
   const allBookings = resolved?.bookings || [];
 
-  // Local filtering for mock data (API handles its own filtering)
-  const bookings = allBookings.filter((b: any) => {
-    if (!isApiData) {
-      if (activeTab !== "All" && b.status?.toLowerCase() !== activeTab.toLowerCase()) return false;
-      if (typeFilter !== "all" && b.type !== typeFilter) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return b.id?.toLowerCase().includes(q) || b.title?.toLowerCase().includes(q) || b.pnr?.toLowerCase().includes(q);
-      }
-    }
-    return true;
-  });
+  const bookings = allBookings;
 
-  // Compute tab counts from all data
-  const tabCounts: Record<string, number> = isApiData ? (resolved?.tabCounts || {}) : {};
-  if (!isApiData) {
+  const tabCounts: Record<string, number> = resolved?.tabCounts || {};
+  if (!tabCounts["All"]) {
     tabCounts["All"] = allBookings.length;
     statusTabs.forEach(tab => {
       if (tab !== "All") {
@@ -80,12 +67,10 @@ const DashboardBookings = () => {
     });
   }
 
-  const total = isApiData ? (resolved?.total || 0) : bookings.length;
+  const total = resolved?.total || bookings.length;
   const totalPages = Math.ceil(total / Number(perPage)) || 1;
-  const effectiveError = error && allBookings.length === 0 ? error : null;
 
-  // Paginate locally for mock data
-  const paginatedBookings = isApiData ? bookings : bookings.slice((page - 1) * Number(perPage), page * Number(perPage));
+  const paginatedBookings = bookings.slice((page - 1) * Number(perPage), page * Number(perPage));
 
   return (
     <div className="space-y-6">
@@ -128,7 +113,7 @@ const DashboardBookings = () => {
         </Select>
       </div>
 
-      <DataLoader isLoading={isLoading} error={effectiveError} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card>
           <CardContent className="p-0 table-responsive">
             <Table>

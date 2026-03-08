@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useAdminReports } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminReports } from "@/lib/mock-data";
+
 import { downloadCSV } from "@/lib/csv-export";
 
 const AdminReports = () => {
@@ -15,12 +15,12 @@ const AdminReports = () => {
   const { toast } = useToast();
 
   const { data, isLoading, error, refetch } = useAdminReports({ period });
-  const resolved = (data as any)?.kpis ? (data as any) : mockAdminReports;
+  const resolved = (data as any) || {};
 
-  const kpis = resolved.kpis;
-  const revenueData = resolved.revenueData;
-  const bookingData = resolved.bookingData;
-  const pieData = resolved.pieData;
+  const kpis = resolved.kpis || [];
+  const revenueData = resolved.revenueData || [];
+  const bookingData = resolved.bookingData || [];
+  const pieData = resolved.pieData || [];
 
   const handleExport = () => {
     downloadCSV('reports-revenue', ['Month', 'Revenue'], revenueData.map((r: any) => [r.month, r.revenue]));
@@ -28,7 +28,7 @@ const AdminReports = () => {
   };
 
   return (
-    <DataLoader isLoading={isLoading} error={null} skeleton="dashboard" retry={refetch}>
+    <DataLoader isLoading={isLoading} error={error} skeleton="dashboard" retry={refetch}>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-xl sm:text-2xl font-bold">Reports & Analytics</h1>

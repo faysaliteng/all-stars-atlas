@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
-import { mockETransactions } from "@/lib/mock-data";
+
 
 const statusColors: Record<string, string> = {
   Completed: "bg-success/10 text-success",
@@ -40,29 +40,14 @@ const DashboardETransactions = () => {
     }),
   });
 
-  const isApiData = !!((data as any)?.transactions?.length || (data as any)?.data?.length);
-  const resolved = isApiData ? (data as any) : mockETransactions;
+  const resolved = (data as any) || {};
   const allTransactions = resolved?.transactions || resolved?.data || [];
 
-  // Local filtering for mock data
-  const transactions = allTransactions.filter((txn: any) => {
-    if (!isApiData) {
-      if (filter !== "all") {
-        const filterMap: Record<string, string> = { bkash: "BKash", nagad: "Nagad", card: "Card Payment" };
-        if (txn.entryType !== filterMap[filter]) return false;
-      }
-      if (search) {
-        const q = search.toLowerCase();
-        return (txn.reference || "").toLowerCase().includes(q) || (txn.entryType || "").toLowerCase().includes(q);
-      }
-    }
-    return true;
-  });
+  const transactions = allTransactions;
 
-  const total = isApiData ? (resolved?.total || 0) : transactions.length;
+  const total = resolved?.total || transactions.length;
   const totalPages = Math.ceil(total / Number(perPage)) || 1;
-  const effectiveError = error && allTransactions.length === 0 ? error : null;
-  const paginatedTransactions = isApiData ? transactions : transactions.slice((page - 1) * Number(perPage), page * Number(perPage));
+  const paginatedTransactions = transactions.slice((page - 1) * Number(perPage), page * Number(perPage));
 
   return (
     <div className="space-y-6">
@@ -94,7 +79,7 @@ const DashboardETransactions = () => {
         </Select>
       </div>
 
-      <DataLoader isLoading={isLoading} error={effectiveError} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card>
           <CardContent className="p-0 table-responsive">
             <Table>

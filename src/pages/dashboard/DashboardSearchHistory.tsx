@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
-import { mockSearchHistory } from "@/lib/mock-data";
+
 import { useNavigate } from "react-router-dom";
 
 const typeIcons: Record<string, typeof Plane> = { flight: Plane, hotel: Building2, visa: Globe, holiday: Palmtree };
@@ -30,8 +30,7 @@ const DashboardSearchHistory = () => {
     }),
   });
 
-  const isApiData = !!(data as any)?.data?.length;
-  const resolved = isApiData ? (data as any) : mockSearchHistory;
+  const resolved = (data as any) || {};
   const searches = cleared ? [] : (resolved?.data || []);
 
   // Always filter locally (API may not support it for mock)
@@ -91,7 +90,7 @@ const DashboardSearchHistory = () => {
         </Select>
       </div>
 
-      <DataLoader isLoading={isLoading} error={null} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card>
           <CardContent className="p-0 table-responsive">
             <Table>

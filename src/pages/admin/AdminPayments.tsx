@@ -13,7 +13,7 @@ import { useAdminPayments } from "@/hooks/useApiData";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminPayments } from "@/lib/mock-data";
+
 
 const statusMap: Record<string, { label: string; class: string }> = {
   completed: { label: "Completed", class: "bg-success/10 text-success" },
@@ -46,11 +46,11 @@ const AdminPayments = () => {
     description: t.description || "",
   })) || [];
 
-  const payments = apiPayments.length > 0 ? apiPayments : mockAdminPayments.payments;
+  const payments = apiPayments;
 
   const stats = {
     totalRevenue: `৳${payments.filter((p: any) => p.status === "completed").reduce((s: number, p: any) => s + (p.rawAmount || parseInt(String(p.amount).replace(/[^\d]/g, "") || "0")), 0).toLocaleString()}`,
-    thisMonth: mockAdminPayments.stats.thisMonth,
+    thisMonth: "৳0",
     pending: `৳${payments.filter((p: any) => p.status === "pending").reduce((s: number, p: any) => s + (p.rawAmount || parseInt(String(p.amount).replace(/[^\d]/g, "") || "0")), 0).toLocaleString()}`,
     needsVerification: String(payments.filter((p: any) => p.status === "pending_verification").length),
   };
@@ -78,7 +78,7 @@ const AdminPayments = () => {
         ))}
       </div>
       <div className="relative max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search payments..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      <DataLoader isLoading={isLoading} error={null} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card><CardContent className="p-0 table-responsive">
           <Table>
             <TableHeader><TableRow><TableHead>Payment ID</TableHead><TableHead>Customer</TableHead><TableHead className="hidden md:table-cell">Method</TableHead><TableHead className="hidden lg:table-cell">Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>

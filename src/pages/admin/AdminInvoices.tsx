@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminInvoices } from "@/lib/mock-data";
+
 import { generateInvoicePDF, printInvoicePDF } from "@/lib/pdf-generator";
 import { downloadCSV } from "@/lib/csv-export";
 import { getCollection, addToCollection } from "@/lib/local-store";
@@ -40,7 +40,7 @@ const AdminInvoices = () => {
   });
   const { toast } = useToast();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'invoices', filter, search],
     queryFn: () => api.get('/admin/invoices', {
       ...(filter !== "all" ? { status: filter } : {}),
@@ -65,7 +65,7 @@ const AdminInvoices = () => {
   })) || [];
 
   const apiStats = (data as any)?.stats;
-  const allInvoices = [...customInvoices, ...(apiInvoices.length > 0 ? apiInvoices : mockAdminInvoices.data)];
+  const allInvoices = [...customInvoices, ...apiInvoices];
 
   const stats = apiStats ? {
     totalInvoiced: apiStats.totalAmount || 0,
@@ -193,7 +193,7 @@ const AdminInvoices = () => {
         </Select>
       </div>
 
-      <DataLoader isLoading={isLoading} error={null} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card><CardContent className="p-0 table-responsive">
           <Table>
             <TableHeader><TableRow>

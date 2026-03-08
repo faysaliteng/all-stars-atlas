@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminPaymentApprovals } from "@/lib/mock-data";
+
 
 const statusTabs = ["All", "Pending", "Approved", "Rejected"];
 const statusColors: Record<string, string> = {
@@ -35,7 +35,7 @@ const AdminPaymentApprovals = () => {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'payment-approvals', activeTab, search],
     queryFn: () => api.get('/admin/payment-approvals', {
       ...(activeTab !== "All" ? { status: activeTab } : {}),
@@ -59,7 +59,7 @@ const AdminPaymentApprovals = () => {
     note: p.note || "",
     receiptUrl: p.receiptUrl,
     date: p.date ? new Date(p.date).toLocaleDateString('en-GB') : "—",
-  })) : mockAdminPaymentApprovals.data;
+  })) : [];
 
   // Apply local status updates (for mock data actions)
   const payments = rawPayments.map((p: any) => ({
@@ -141,7 +141,7 @@ const AdminPaymentApprovals = () => {
         <div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} /></div>
       </div>
 
-      <DataLoader isLoading={isLoading} error={null} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card><CardContent className="p-0 table-responsive">
           <Table>
             <TableHeader><TableRow><TableHead>Reference</TableHead><TableHead>Customer</TableHead><TableHead className="hidden md:table-cell">Method</TableHead><TableHead className="hidden md:table-cell">Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="w-28"></TableHead></TableRow></TableHeader>

@@ -13,7 +13,7 @@ import { downloadCSV } from "@/lib/csv-export";
 import { useDashboardPayments, useSubmitPayment } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
-import { mockPayments } from "@/lib/mock-data";
+
 
 const statusColors: Record<string, string> = {
   Approved: "bg-success/10 text-success",
@@ -50,12 +50,11 @@ const DashboardPayments = () => {
   const submitPayment = useSubmitPayment();
   const { toast } = useToast();
 
-  const resolved = (data as any)?.payments?.length || (data as any)?.history?.length ? (data as any) : mockPayments;
+  const resolved = (data as any) || {};
   const paymentHistory = resolved?.payments || resolved?.paymentHistory || [];
   const bankAccounts = resolved?.bankAccounts || [];
   const enabledMethodIds: string[] = resolved?.enabledPaymentMethods || allPaymentMethods.map(m => m.id);
   const availableMethods = allPaymentMethods.filter(m => enabledMethodIds.includes(m.id));
-  const effectiveError = error && paymentHistory.length === 0 ? error : null;
 
   // Auto-select first available method
   const activeMethod = paymentMethod && enabledMethodIds.includes(paymentMethod) ? paymentMethod : (availableMethods[0]?.id || "");
@@ -115,7 +114,7 @@ const DashboardPayments = () => {
         </Button>
       </div>
 
-      <DataLoader isLoading={isLoading} error={effectiveError} skeleton="dashboard" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="dashboard" retry={refetch}>
         {/* Make Payment Form */}
         {showMakePayment && (
           <Card className="border-primary/30">

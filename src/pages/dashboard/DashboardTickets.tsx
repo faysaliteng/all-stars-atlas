@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardTickets } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
-import { mockTickets } from "@/lib/mock-data";
+
 import { generateTicketPDF, printTicketPDF } from "@/lib/pdf-generator";
 
 const statusColors: Record<string, string> = {
@@ -23,7 +23,7 @@ const DashboardTickets = () => {
   const [search, setSearch] = useState("");
 
   const { data, isLoading, error, refetch } = useDashboardTickets({ search: search || undefined });
-  const resolved = (data as any)?.tickets?.length ? (data as any) : mockTickets;
+  const resolved = (data as any) || {};
   const tickets = resolved?.tickets || [];
 
   const filtered = tickets.filter((t: any) => {
@@ -47,7 +47,7 @@ const DashboardTickets = () => {
         <Input placeholder="Search by PNR, ticket ID or name..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      <DataLoader isLoading={isLoading} error={null} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <div className="space-y-4">
           {filtered.length === 0 ? (
             <Card><CardContent className="py-12 text-center text-muted-foreground"><Ticket className="w-12 h-12 mx-auto mb-3 opacity-30" /><p className="font-semibold">No tickets found</p></CardContent></Card>

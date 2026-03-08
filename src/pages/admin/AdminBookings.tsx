@@ -14,7 +14,7 @@ import { useAdminBookings } from "@/hooks/useApiData";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminBookings } from "@/lib/mock-data";
+
 import { downloadCSV } from "@/lib/csv-export";
 
 const statusColors: Record<string, string> = {
@@ -46,7 +46,7 @@ const AdminBookings = () => {
     notes: b.notes || "",
   })) || [];
 
-  const bookings = apiBookings.length > 0 ? apiBookings : mockAdminBookings.bookings;
+  const bookings = apiBookings;
 
   const stats = {
     total: bookings.length,
@@ -115,7 +115,7 @@ const AdminBookings = () => {
         </Select>
       </div>
 
-      <DataLoader isLoading={isLoading} error={null} skeleton="table" retry={refetch}>
+      <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card><CardContent className="p-0 table-responsive">
           <Table>
             <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Customer</TableHead><TableHead className="hidden md:table-cell">Type</TableHead><TableHead className="hidden lg:table-cell">Route</TableHead><TableHead className="hidden md:table-cell">Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
