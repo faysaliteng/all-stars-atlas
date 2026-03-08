@@ -2,7 +2,8 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Ticket, CreditCard, FileText, Settings,
   BarChart3, Image, Globe, LogOut, Megaphone, Menu, X,
-  PenLine, Mail, MapPin, Home, Search as SearchIcon, PanelBottom
+  PenLine, Mail, MapPin, Home, Search as SearchIcon, PanelBottom,
+  Shield, ChevronRight, Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,56 +15,56 @@ const sidebarGroups = [
   {
     label: "Main",
     items: [
-      { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { label: "Bookings", href: "/admin/bookings", icon: Ticket },
-      { label: "Users", href: "/admin/users", icon: Users },
+      { label: "Dashboard", href: "/admin", icon: LayoutDashboard, color: "from-blue-500 to-indigo-600" },
+      { label: "Bookings", href: "/admin/bookings", icon: Ticket, color: "from-violet-500 to-purple-600" },
+      { label: "Users", href: "/admin/users", icon: Users, color: "from-cyan-500 to-blue-500" },
     ],
   },
   {
     label: "Finance",
     items: [
-      { label: "Payments", href: "/admin/payments", icon: CreditCard },
-      { label: "Payment Approvals", href: "/admin/payment-approvals", icon: FileText },
-      { label: "Discounts & Pricing", href: "/admin/discounts", icon: Megaphone },
-      { label: "Invoices", href: "/admin/invoices", icon: FileText },
-      { label: "Reports", href: "/admin/reports", icon: BarChart3 },
+      { label: "Payments", href: "/admin/payments", icon: CreditCard, color: "from-emerald-500 to-green-600" },
+      { label: "Payment Approvals", href: "/admin/payment-approvals", icon: FileText, color: "from-teal-400 to-emerald-500" },
+      { label: "Discounts & Pricing", href: "/admin/discounts", icon: Megaphone, color: "from-amber-500 to-orange-600" },
+      { label: "Invoices", href: "/admin/invoices", icon: FileText, color: "from-pink-500 to-rose-600" },
+      { label: "Reports", href: "/admin/reports", icon: BarChart3, color: "from-indigo-500 to-violet-600" },
     ],
   },
   {
     label: "CMS",
     items: [
-      { label: "All Pages", href: "/admin/cms/pages", icon: FileText },
-      { label: "Booking Forms", href: "/admin/cms/booking-forms", icon: PenLine },
-      { label: "Homepage", href: "/admin/cms/homepage", icon: Home },
-      { label: "Footer", href: "/admin/cms/footer", icon: PanelBottom },
-      { label: "SEO", href: "/admin/cms/seo", icon: SearchIcon },
-      { label: "Blog", href: "/admin/cms/blog", icon: PenLine },
-      { label: "Promotions", href: "/admin/cms/promotions", icon: Megaphone },
-      { label: "Destinations", href: "/admin/cms/destinations", icon: MapPin },
-      { label: "Media", href: "/admin/cms/media", icon: Image },
-      { label: "Email Templates", href: "/admin/cms/email-templates", icon: Mail },
+      { label: "All Pages", href: "/admin/cms/pages", icon: FileText, color: "from-sky-400 to-blue-500" },
+      { label: "Booking Forms", href: "/admin/cms/booking-forms", icon: PenLine, color: "from-fuchsia-500 to-pink-600" },
+      { label: "Homepage", href: "/admin/cms/homepage", icon: Home, color: "from-orange-400 to-red-500" },
+      { label: "Footer", href: "/admin/cms/footer", icon: PanelBottom, color: "from-slate-500 to-gray-600" },
+      { label: "SEO", href: "/admin/cms/seo", icon: SearchIcon, color: "from-lime-500 to-green-600" },
+      { label: "Blog", href: "/admin/cms/blog", icon: PenLine, color: "from-rose-400 to-pink-500" },
+      { label: "Promotions", href: "/admin/cms/promotions", icon: Megaphone, color: "from-yellow-500 to-amber-600" },
+      { label: "Destinations", href: "/admin/cms/destinations", icon: MapPin, color: "from-emerald-400 to-teal-500" },
+      { label: "Media", href: "/admin/cms/media", icon: Image, color: "from-purple-400 to-violet-500" },
+      { label: "Email Templates", href: "/admin/cms/email-templates", icon: Mail, color: "from-blue-400 to-indigo-500" },
     ],
   },
   {
     label: "Services",
     items: [
-      { label: "Visa", href: "/admin/visa", icon: Globe },
-      { label: "Settings", href: "/admin/settings", icon: Settings },
+      { label: "Visa", href: "/admin/visa", icon: Globe, color: "from-teal-500 to-cyan-600" },
+      { label: "Settings", href: "/admin/settings", icon: Settings, color: "from-gray-500 to-slate-600" },
     ],
   },
 ];
 
-const SidebarContent = ({ location, onNav }: { location: ReturnType<typeof useLocation>; onNav?: () => void }) => {
+const SidebarNav = ({ location, onNav }: { location: ReturnType<typeof useLocation>; onNav?: () => void }) => {
   const isActive = (href: string) => {
     if (href === "/admin") return location.pathname === "/admin";
     return location.pathname.startsWith(href);
   };
 
   return (
-    <nav className="flex flex-col gap-0.5">
-      {sidebarGroups.map((group, gi) => (
+    <nav className="flex flex-col gap-1 px-2">
+      {sidebarGroups.map((group) => (
         <div key={group.label}>
-          <p className={cn("sidebar-group-label", gi === 0 && "mt-0")}>{group.label}</p>
+          <p className="sidebar-group-label">{group.label}</p>
           {group.items.map((item) => {
             const active = isActive(item.href);
             return (
@@ -72,18 +73,28 @@ const SidebarContent = ({ location, onNav }: { location: ReturnType<typeof useLo
                 to={item.href}
                 onClick={onNav}
                 className={cn(
-                  "sidebar-nav-item",
+                  "sidebar-nav-item group/nav",
                   active ? "sidebar-nav-active" : "sidebar-nav-inactive"
                 )}
               >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
-                <span>{item.label}</span>
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300",
+                  active
+                    ? "bg-white/20 shadow-inner"
+                    : `bg-gradient-to-br ${item.color} shadow-lg`
+                )}>
+                  <item.icon className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-medium text-[13px]">{item.label}</span>
                 {active && (
                   <motion.div
                     layoutId="admin-sidebar-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-primary-foreground"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                    className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   />
+                )}
+                {!active && (
+                  <ChevronRight className="w-3.5 h-3.5 ml-auto opacity-0 -translate-x-2 group-hover/nav:opacity-50 group-hover/nav:translate-x-0 transition-all duration-300" />
                 )}
               </Link>
             );
@@ -100,26 +111,34 @@ const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen dashboard-content">
-      {/* Admin Top Bar with dark glass */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-14 admin-topbar flex items-center px-4 md:px-6">
+    <div className="min-h-screen dashboard-mesh-bg">
+      {/* Floating orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="floating-orb absolute -top-32 right-1/4 w-96 h-96 bg-[hsl(280,70%,55%)] opacity-[0.03]" />
+        <div className="floating-orb absolute top-1/3 -left-20 w-72 h-72 bg-[hsl(217,91%,50%)] opacity-[0.03]" style={{ animationDelay: '3s' }} />
+        <div className="floating-orb absolute bottom-0 right-0 w-80 h-80 bg-[hsl(167,72%,41%)] opacity-[0.02]" style={{ animationDelay: '5s' }} />
+      </div>
+
+      {/* Admin Top Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 admin-topbar flex items-center px-4 md:px-6">
         <button
-          className="md:hidden mr-3 p-2 rounded-xl hover:bg-white/10 transition-colors text-white"
+          className="md:hidden mr-3 p-2 rounded-xl hover:bg-white/10 transition-all duration-200 text-white active:scale-95"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
-        <Link to="/admin" className="flex items-center gap-2.5 mr-8">
+        <Link to="/admin" className="flex items-center gap-3 mr-8">
           <img src="/images/seven-trip-logo.png" alt="Seven Trip" className="h-7 w-auto brightness-0 invert" />
-          <span className="text-sm font-bold text-white/90 px-2 py-0.5 rounded-md bg-white/10 border border-white/10">
-            Admin
+          <span className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-white/90 px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-500/20 to-blue-500/20 border border-white/10 shadow-[0_0_12px_hsl(280,70%,55%,0.15)]">
+            <Shield className="w-3 h-3" />
+            Super Admin
           </span>
         </Link>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <ThemeToggle className="text-white/50 hover:text-white hover:bg-white/10" />
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            <span className="text-xs text-white/60 font-medium">Super Admin</span>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse shadow-[0_0_8px_hsl(152,69%,41%)]" />
+            <span className="text-xs text-white/60 font-medium">Online</span>
           </div>
           <Button
             variant="ghost"
@@ -132,10 +151,23 @@ const AdminLayout = () => {
         </div>
       </header>
 
-      <div className="flex pt-14">
+      <div className="flex pt-16 relative z-10">
         {/* Desktop sidebar */}
-        <aside className="hidden md:flex w-56 dashboard-sidebar fixed top-14 bottom-0 flex-col p-3 overflow-y-auto">
-          <SidebarContent location={location} />
+        <aside className="hidden md:flex w-64 dashboard-sidebar fixed top-16 bottom-0 flex-col py-4 overflow-y-auto">
+          <div className="px-4 mb-4">
+            <div className="gradient-border-card p-3 bg-gradient-to-br from-violet-500/5 to-blue-500/5 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-violet-500/30">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Admin Panel</p>
+                  <p className="text-[10px] text-muted-foreground">Full Access</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <SidebarNav location={location} />
         </aside>
 
         {/* Mobile sidebar */}
@@ -147,31 +179,34 @@ const AdminLayout = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden"
+                className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-md md:hidden"
                 onClick={() => setSidebarOpen(false)}
               />
               <motion.aside
-                initial={{ x: -240 }}
+                initial={{ x: -280 }}
                 animate={{ x: 0 }}
-                exit={{ x: -240 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed top-14 left-0 bottom-0 z-50 w-56 dashboard-sidebar p-3 overflow-y-auto md:hidden"
+                exit={{ x: -280 }}
+                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                className="fixed top-16 left-0 bottom-0 z-50 w-64 dashboard-sidebar py-4 overflow-y-auto md:hidden"
               >
-                <SidebarContent location={location} onNav={() => setSidebarOpen(false)} />
+                <SidebarNav location={location} onNav={() => setSidebarOpen(false)} />
               </motion.aside>
             </>
           )}
         </AnimatePresence>
 
-        <main className="flex-1 md:ml-56 p-4 md:p-6 lg:p-8">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-          >
-            <Outlet />
-          </motion.div>
+        <main className="flex-1 md:ml-64 p-4 md:p-6 lg:p-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 12, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>
