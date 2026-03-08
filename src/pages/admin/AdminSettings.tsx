@@ -85,7 +85,8 @@ function saveBankAccounts(accounts: BankAccount[]) {
 
 const AdminSettings = () => {
   const [visibleFields, setVisibleFields] = useState<Record<string, boolean>>({});
-  const [apiKeyValues, setApiKeyValues] = useState<Record<string, Record<string, string>>>(loadApiKeys);
+  const [socialOAuth, setSocialOAuth] = useState<Record<string, Record<string, string>>>(loadSocialOAuth);
+  const [socialVisible, setSocialVisible] = useState<Record<string, boolean>>({});
   const [notifications, setNotifications] = useState<Record<string, boolean>>(loadNotifications);
   const [enabledApis, setEnabledApis] = useState<Record<string, boolean>>({
     flight_gds: true, hotel_supplier: false, esim_provider: true, recharge_gateway: true,
