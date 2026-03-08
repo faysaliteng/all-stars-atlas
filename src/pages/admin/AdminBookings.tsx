@@ -20,9 +20,9 @@ const AdminBookings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold">All Bookings</h1>
-        <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-1.5" /> Export CSV</Button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold">All Bookings</h1>
+        <Button variant="outline" size="sm" className="w-full sm:w-auto"><Download className="w-4 h-4 mr-1.5" /> Export CSV</Button>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[{ label: "Total Bookings", value: stats.total || "0" }, { label: "Confirmed", value: stats.confirmed || "0" }, { label: "Pending", value: stats.pending || "0" }, { label: "Cancelled", value: stats.cancelled || "0" }].map((s, i) => (
