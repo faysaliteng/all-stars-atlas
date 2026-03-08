@@ -65,7 +65,7 @@ const AdminInvoices = () => {
   })) || [];
 
   const apiStats = (data as any)?.stats;
-  const allInvoices = [...customInvoices, ...(apiInvoices.length > 0 ? apiInvoices : mockAdminInvoices.data)];
+  const allInvoices = [...customInvoices, ...apiInvoices];
 
   const stats = apiStats ? {
     totalInvoiced: apiStats.totalAmount || 0,

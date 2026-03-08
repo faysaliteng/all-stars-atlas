@@ -50,7 +50,7 @@ const AdminPayments = () => {
 
   const stats = {
     totalRevenue: `৳${payments.filter((p: any) => p.status === "completed").reduce((s: number, p: any) => s + (p.rawAmount || parseInt(String(p.amount).replace(/[^\d]/g, "") || "0")), 0).toLocaleString()}`,
-    thisMonth: mockAdminPayments.stats.thisMonth,
+    thisMonth: "৳0",
     pending: `৳${payments.filter((p: any) => p.status === "pending").reduce((s: number, p: any) => s + (p.rawAmount || parseInt(String(p.amount).replace(/[^\d]/g, "") || "0")), 0).toLocaleString()}`,
     needsVerification: String(payments.filter((p: any) => p.status === "pending_verification").length),
   };
