@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminPaymentApprovals } from "@/lib/mock-data";
+
 
 const statusTabs = ["All", "Pending", "Approved", "Rejected"];
 const statusColors: Record<string, string> = {
