@@ -14,7 +14,7 @@ import { generateTicketPDF } from "@/lib/pdf-generator";
 import { useDashboardBookings } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
-import { mockDashboardBookings } from "@/lib/mock-data";
+
 
 const statusTabs = ["All", "On Hold", "Pending", "In Progress", "Confirmed", "Completed", "Void", "Refund", "Exchange", "Expired", "Cancelled", "Un-Confirmed"];
 
