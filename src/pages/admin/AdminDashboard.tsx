@@ -4,7 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianG
 import { motion } from "framer-motion";
 import { useAdminDashboard } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminDashboard } from "@/lib/mock-data";
+
 
 const statMeta = [
   { icon: Ticket, gradient: "stat-gradient-blue", iconClass: "icon-glow-blue" },
