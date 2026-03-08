@@ -12,7 +12,7 @@ import { Search, FileText, Download, Eye, Send, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { mockAdminInvoices } from "@/lib/mock-data";
 import { getCollection, addToCollection } from "@/lib/local-store";
-import { generateInvoicePDF } from "@/lib/pdf-generator";
+import { generateInvoicePDF, printInvoicePDF } from "@/lib/pdf-generator";
 
 const STORE_KEY = "admin_invoices";
 const defaultInvoices = mockAdminInvoices.data;
