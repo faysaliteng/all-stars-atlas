@@ -6,6 +6,7 @@ const fs = require('fs');
 const archiver = require('archiver');
 const db = require('../config/db');
 const { authenticate, requireAdmin, formatUser } = require('../middleware/auth');
+const { notifyVisaStatus } = require('../services/notify');
 
 const router = express.Router();
 
