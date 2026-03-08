@@ -519,13 +519,11 @@ const AdminVisa = () => {
                     <Button variant="outline" size="sm" onClick={() => downloadPDF(viewApp)}>
                       <Printer className="w-3.5 h-3.5 mr-1" /> Download PDF
                     </Button>
-                    {viewApp.documents?.some((d: any) => typeof d === 'object' && d.url) && (
-                      <Button variant="outline" size="sm" onClick={() => downloadDocsZip(viewApp)}>
-                        <Archive className="w-3.5 h-3.5 mr-1" /> Download All Docs (ZIP)
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm" onClick={() => openInGoogleDrive(viewApp)}>
-                      <ExternalLink className="w-3.5 h-3.5 mr-1" /> Save to Google Drive
+                    <Button variant="outline" size="sm" onClick={() => downloadDocsZip(viewApp)}>
+                      <Archive className="w-3.5 h-3.5 mr-1" /> Download Docs (ZIP)
+                    </Button>
+                    <Button variant="default" size="sm" onClick={() => downloadFullApplication(viewApp)}>
+                      <Download className="w-3.5 h-3.5 mr-1" /> Download Full Application
                     </Button>
                   </div>
                   {/* Status actions */}
