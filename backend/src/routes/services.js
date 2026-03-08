@@ -70,44 +70,8 @@ router.post('/holidays/book', authenticate, async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
 
-// ============ VISA ============
+// ============ VISA — moved to visa.js ============
 
-router.get('/visa/countries', async (req, res) => {
-  // Return static visa countries data
-  res.json({
-    data: [
-      { code: 'TH', name: 'Thailand', visaTypes: [{ type: 'tourist', label: 'Tourist Visa', processingDays: 5, fee: 4500 }, { type: 'business', label: 'Business Visa', processingDays: 10, fee: 8000 }], requiredDocuments: ['Passport', 'Photo', 'Bank Statement', 'Hotel Booking'], processingTime: '5-10 working days' },
-      { code: 'MY', name: 'Malaysia', visaTypes: [{ type: 'tourist', label: 'Tourist Visa', processingDays: 5, fee: 6200 }], requiredDocuments: ['Passport', 'Photo', 'Bank Statement'], processingTime: '5-7 working days' },
-      { code: 'SG', name: 'Singapore', visaTypes: [{ type: 'tourist', label: 'Tourist Visa', processingDays: 5, fee: 5800 }], requiredDocuments: ['Passport', 'Photo', 'Bank Statement', 'Employment proof'], processingTime: '5-7 working days' },
-      { code: 'AE', name: 'UAE', visaTypes: [{ type: 'tourist', label: 'Tourist Visa', processingDays: 3, fee: 8500 }, { type: 'business', label: 'Business Visa', processingDays: 7, fee: 12000 }], requiredDocuments: ['Passport', 'Photo', 'Bank Statement', 'Hotel Booking'], processingTime: '3-5 working days' },
-      { code: 'IN', name: 'India', visaTypes: [{ type: 'tourist', label: 'Tourist Visa', processingDays: 7, fee: 3200 }, { type: 'medical', label: 'Medical Visa', processingDays: 5, fee: 4000 }], requiredDocuments: ['Passport', 'Photo', 'Bank Statement'], processingTime: '7-10 working days' },
-    ]
-  });
-});
-
-router.post('/visa/apply', authenticate, async (req, res) => {
-  try {
-    const { country, visaType, applicantInfo, processingFee } = req.body;
-    const id = uuidv4();
-    await db.query(
-      `INSERT INTO visa_applications (id, user_id, country, visa_type, status, applicant_info, processing_fee, submitted_at) VALUES (?, ?, ?, ?, 'submitted', ?, ?, NOW())`,
-      [id, req.user.sub, country || '', visaType || '', JSON.stringify(applicantInfo || {}), processingFee || 0]
-    );
-    res.status(201).json({ id, country, visaType, status: 'submitted', processingFee, submittedAt: new Date().toISOString() });
-  } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
-});
-
-router.get('/visa/applications', authenticate, async (req, res) => {
-  try {
-    const [rows] = await db.query('SELECT * FROM visa_applications WHERE user_id = ? ORDER BY created_at DESC', [req.user.sub]);
-    const data = rows.map(r => ({
-      id: r.id, country: r.country, visaType: r.visa_type, status: r.status,
-      applicantInfo: JSON.parse(r.applicant_info || '{}'), processingFee: r.processing_fee ? parseFloat(r.processing_fee) : 0,
-      submittedAt: r.submitted_at, processedAt: r.processed_at, notes: r.notes, createdAt: r.created_at,
-    }));
-    res.json({ data });
-  } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
-});
 
 // ============ MEDICAL ============
 

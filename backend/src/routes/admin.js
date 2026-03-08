@@ -259,47 +259,8 @@ router.put('/settings', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
 
-// GET /admin/visa
-router.get('/visa', async (req, res) => {
-  try {
-    const { status, country, page = 1, limit = 20 } = req.query;
-    let sql = 'SELECT v.*, u.first_name, u.last_name, u.email as user_email FROM visa_applications v JOIN users u ON v.user_id = u.id WHERE 1=1';
-    const params = [];
-    if (status) { sql += ' AND v.status = ?'; params.push(status); }
-    if (country) { sql += ' AND v.country LIKE ?'; params.push(`%${country}%`); }
+// Visa routes moved to visa.js
 
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-    const [countResult] = await db.query(sql.replace('SELECT v.*, u.first_name, u.last_name, u.email as user_email', 'SELECT COUNT(*) as total'), params);
-    sql += ` ORDER BY v.created_at DESC LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit), offset);
-    const [rows] = await db.query(sql, params);
-
-    const data = rows.map(v => {
-      const info = JSON.parse(v.applicant_info || '{}');
-      const docs = v.documents ? JSON.parse(v.documents) : [];
-      return {
-        id: v.id, country: v.country, visaType: v.visa_type, status: v.status,
-        processingFee: v.processing_fee ? parseFloat(v.processing_fee) : 0,
-        user: { name: `${v.first_name} ${v.last_name}`, email: v.user_email },
-        submittedAt: v.submitted_at, processedAt: v.processed_at, notes: v.notes,
-        applicantInfo: info, documents: docs,
-      };
-    });
-    res.json({ data, total: countResult[0].total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(countResult[0].total / parseInt(limit)) });
-  } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
-});
-
-// PUT /admin/visa/:id
-router.put('/visa/:id', async (req, res) => {
-  try {
-    const { status, notes } = req.body;
-    const sets = []; const params = [];
-    if (status) { sets.push('status = ?'); params.push(status); if (status === 'approved' || status === 'rejected') sets.push('processed_at = NOW()'); }
-    if (notes !== undefined) { sets.push('notes = ?'); params.push(notes); }
-    if (sets.length > 0) { params.push(req.params.id); await db.query(`UPDATE visa_applications SET ${sets.join(', ')} WHERE id = ?`, params); }
-    res.json({ message: 'Visa application updated' });
-  } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
-});
 
 // =============== PAYMENT APPROVALS ===============
 // GET /admin/payment-approvals
