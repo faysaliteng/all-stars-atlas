@@ -86,18 +86,19 @@ const AdminInvoices = () => {
   };
 
   const handlePrint = (inv: any) => {
-    const invoiceData = {
+    printInvoicePDF({
       invoiceNo: inv.invoiceNo,
       bookingRef: inv.bookingRef,
       customerName: inv.customerName,
       customerEmail: inv.customerEmail,
       amount: inv.amount,
+      subtotal: inv.amount,
+      tax: 0,
+      discount: 0,
       status: inv.status,
       date: inv.date,
-      dueDate: inv.dueDate,
-      bookingType: inv.bookingType,
-    };
-    printInvoicePDF(invoiceData);
+      serviceType: inv.bookingType,
+    });
   };
 
   return (
