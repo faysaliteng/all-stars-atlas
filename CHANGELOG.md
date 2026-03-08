@@ -4,6 +4,30 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [1.7.0] — 2026-03-08
+
+### 🔧 Full Site Audit & Production Hardening (v1.7.0)
+
+#### Bug Fixes
+- **Flight Booking Step 3 (Payment)** — Fixed critical bug where the payment step (Review & Pay) never rendered because it has an empty `fields` array by design, and the render condition `formStep.fields.length === 0` caused it to `return null`. All 3 booking steps now render correctly.
+- **CMS Promotions cleanup** — Removed duplicate "Promotions" sidebar link from admin; consolidated all promo/discount logic under "Discounts & Pricing"
+
+#### New Features
+- **Popups & Banners CMS** (`/admin/cms/popups`) — New admin module for managing:
+  - Popups (on-load, exit-intent, scroll triggers with frequency control)
+  - Ad Banners (announcement bars, hero banners with color picker and live preview)
+  - Push Notification templates (promotional, transactional, price alerts with audience targeting)
+
+#### Blog Editor Fix
+- **CMSBlog** — Fixed empty content issue; all 16 default blog posts now initialize with structured HTML content (headings, lists, blockquotes), enabling functional editing in Visual Editor, HTML, and Preview tabs
+
+#### Documentation
+- Updated README.md with Popups & Banners CMS module
+- Updated CHANGELOG.md with complete v1.7.0 release notes
+- All 5 documentation files verified current and accurate
+
+---
+
 ## [1.6.0] — 2026-03-08
 
 ### 🐛 Critical Bug Fixes

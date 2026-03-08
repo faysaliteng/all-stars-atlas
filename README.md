@@ -18,7 +18,7 @@ Seven Trip is a complete travel booking platform (like Booking.com or MakeMyTrip
 - 📞 **Mobile Recharge** — All BD operators (GP, Banglalink, Robi, Airtel, Teletalk)
 - 💡 **Utility Bill Payment** — DESCO, DPDC, gas, water, internet
 - 👤 **Customer Dashboard** — 12 pages: bookings, e-tickets, transactions, e-transactions, payments, invoices, pay later, travellers, wishlist, search history, settings
-- 🔐 **Super Admin Panel** — 16 enterprise modules: analytics dashboard, user management, booking management, payment management, payment approvals, invoices, reports, visa processing, discounts & pricing, system settings, and full CMS (homepage, pages, blog, promotions, media, email templates, SEO, footer, destinations, booking forms)
+- 🔐 **Super Admin Panel** — 17 enterprise modules: analytics dashboard, user management, booking management, payment management, payment approvals, invoices, reports, visa processing, discounts & pricing, system settings, and full CMS (homepage, pages, blog, popups & banners, media, email templates, SEO, footer, destinations, booking forms)
 
 ---
 
@@ -276,7 +276,8 @@ The output will be in the `dist/` folder — these are static files you serve wi
 | `/admin/cms/homepage`          | CMS — Homepage sections                  |
 | `/admin/cms/pages`             | CMS — Static pages                       |
 | `/admin/cms/blog`              | CMS — Blog posts                         |
-| `/admin/cms/promotions`        | CMS — Promotions                         |
+| `/admin/cms/promotions`        | CMS — Promotions (legacy)                |
+| `/admin/cms/popups`            | CMS — Popups, Banners & Push Notifications |
 | `/admin/cms/media`             | CMS — Media library                      |
 | `/admin/cms/email-templates`   | CMS — Email templates                    |
 | `/admin/cms/destinations`      | CMS — Destinations                       |
