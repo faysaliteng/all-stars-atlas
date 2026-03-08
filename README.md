@@ -12,7 +12,7 @@
 |-------|-----------|
 | **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion |
 | **Backend** | Node.js (Express), MySQL/MariaDB, JWT Auth |
-| **Hosting** | Ubuntu 24.04 VPS (Hostinger KVM 1), Nginx, PM2, local file storage |
+| **Hosting** | Ubuntu 24.04 VPS (Hostinger KVM 2), Nginx, PM2, local file storage |
 | **State** | React Query (server), Context API (auth), localStorage (CMS) |
 
 ---
