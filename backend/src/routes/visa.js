@@ -199,6 +199,12 @@ router.put('/admin/visa/:id', authenticate, requireAdmin, async (req, res) => {
     }
     const [rows] = await db.query('SELECT * FROM visa_applications WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Application not found', status: 404 });
+
+    // Notify user of status change
+    if (status) {
+      notifyVisaStatus(rows[0].user_id, rows[0].country, status, notes).catch(console.error);
+    }
+
     res.json({ id: rows[0].id, status: rows[0].status, notes: rows[0].notes, processedAt: rows[0].processed_at });
   } catch (err) {
     console.error(err);
