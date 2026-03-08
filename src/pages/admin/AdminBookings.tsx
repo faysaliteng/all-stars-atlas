@@ -14,7 +14,7 @@ import { useAdminBookings } from "@/hooks/useApiData";
 import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import DataLoader from "@/components/DataLoader";
-import { mockAdminBookings } from "@/lib/mock-data";
+
 import { downloadCSV } from "@/lib/csv-export";
 
 const statusColors: Record<string, string> = {
