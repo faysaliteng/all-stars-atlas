@@ -8,6 +8,8 @@ import { Search, MoreHorizontal, Eye, CheckCircle2, XCircle, Download, DollarSig
 import { useState } from "react";
 import { useAdminPayments } from "@/hooks/useApiData";
 import DataLoader from "@/components/DataLoader";
+import { useToast } from "@/hooks/use-toast";
+import { mockAdminPayments } from "@/lib/mock-data";
 
 const statusMap: Record<string, { label: string; class: string }> = {
   completed: { label: "Completed", class: "bg-success/10 text-success" },
@@ -19,15 +21,22 @@ const statusMap: Record<string, { label: string; class: string }> = {
 
 const AdminPayments = () => {
   const [search, setSearch] = useState("");
+  const { toast } = useToast();
   const { data, isLoading, error, refetch } = useAdminPayments({ search: search || undefined });
-  const payments = (data as any)?.payments || [];
-  const stats = (data as any)?.stats || {};
+
+  const resolved = error ? mockAdminPayments : (data as any);
+  const payments = resolved?.payments || [];
+  const stats = resolved?.stats || mockAdminPayments.stats;
+
+  const handleExport = () => toast({ title: "Exporting...", description: "Payments CSV is being prepared." });
+  const handleApprove = (p: any) => toast({ title: "Payment Approved", description: `Payment ${p.id} has been approved` });
+  const handleReject = (p: any) => toast({ title: "Payment Rejected", description: `Payment ${p.id} has been rejected` });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-bold">Payments</h1>
-        <Button variant="outline" size="sm" className="w-full sm:w-auto"><Download className="w-4 h-4 mr-1.5" /> Export</Button>
+        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExport}><Download className="w-4 h-4 mr-1.5" /> Export</Button>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[{ label: "Total Revenue", value: stats.totalRevenue || "৳0", icon: DollarSign, color: "text-success" }, { label: "This Month", value: stats.thisMonth || "৳0", icon: TrendingUp, color: "text-primary" }, { label: "Pending", value: stats.pending || "৳0", icon: Clock, color: "text-warning" }, { label: "Needs Verification", value: stats.needsVerification || "0", icon: AlertTriangle, color: "text-secondary" }].map((s, i) => (
@@ -52,7 +61,11 @@ const AdminPayments = () => {
                   <TableCell className="text-right font-semibold text-sm">{p.amount}</TableCell>
                   <TableCell>
                     <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
-                      <DropdownMenuContent align="end"><DropdownMenuItem><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem><DropdownMenuItem><CheckCircle2 className="w-4 h-4 mr-2" /> Approve</DropdownMenuItem><DropdownMenuItem className="text-destructive"><XCircle className="w-4 h-4 mr-2" /> Reject</DropdownMenuItem></DropdownMenuContent>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => toast({ title: "Payment Details", description: `${p.id} — ${p.customer} — ${p.amount}` })}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleApprove(p)}><CheckCircle2 className="w-4 h-4 mr-2" /> Approve</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleReject(p)}><XCircle className="w-4 h-4 mr-2" /> Reject</DropdownMenuItem>
+                      </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>

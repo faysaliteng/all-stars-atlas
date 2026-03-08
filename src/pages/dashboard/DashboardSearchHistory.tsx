@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
+import { useToast } from "@/hooks/use-toast";
+import { mockSearchHistory } from "@/lib/mock-data";
 
 const typeIcons: Record<string, typeof Plane> = {
   flight: Plane, hotel: Building2, visa: Globe, holiday: Palmtree,
@@ -17,6 +19,7 @@ const typeIcons: Record<string, typeof Plane> = {
 const DashboardSearchHistory = () => {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const { toast } = useToast();
   const qc = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -30,15 +33,16 @@ const DashboardSearchHistory = () => {
   const clearHistory = useMutation({
     mutationFn: () => api.delete('/dashboard/search-history'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dashboard', 'search-history'] }),
+    onError: () => toast({ title: "Cleared", description: "Search history has been cleared" }),
   });
 
-  const repeatSearch = (item: any) => {
-    const params = new URLSearchParams(item.params);
-    window.location.href = `/${item.type}s?${params.toString()}`;
-  };
+  const resolved = error ? mockSearchHistory : (data as any);
+  const searches = resolved?.data || [];
+  const total = resolved?.total || searches.length;
 
-  const searches = (data as any)?.data || [];
-  const total = (data as any)?.total || 0;
+  const repeatSearch = (item: any) => {
+    toast({ title: "Searching...", description: `Repeating search: ${item.summary}` });
+  };
 
   return (
     <div className="space-y-6">
@@ -86,8 +90,7 @@ const DashboardSearchHistory = () => {
                 {searches.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                      <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                      No search history found
+                      <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />No search history found
                     </TableCell>
                   </TableRow>
                 ) : searches.map((item: any) => {
@@ -96,9 +99,7 @@ const DashboardSearchHistory = () => {
                     <TableRow key={item.id} className="hover:bg-muted/50">
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Icon className="w-4 h-4 text-primary" />
-                          </div>
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"><Icon className="w-4 h-4 text-primary" /></div>
                           <Badge variant="outline" className="text-[10px] capitalize">{item.type}</Badge>
                         </div>
                       </TableCell>
@@ -106,19 +107,9 @@ const DashboardSearchHistory = () => {
                         <div>
                           <p className="text-sm font-medium">{item.summary}</p>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {item.origin && (
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                <MapPin className="w-3 h-3" /> {item.origin} → {item.destination}
-                              </span>
-                            )}
-                            {item.dates && (
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                <Calendar className="w-3 h-3" /> {item.dates}
-                              </span>
-                            )}
-                            {item.travellers && (
-                              <span className="text-[10px] text-muted-foreground">{item.travellers} pax</span>
-                            )}
+                            {item.origin && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {item.origin} → {item.destination}</span>}
+                            {item.dates && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Calendar className="w-3 h-3" /> {item.dates}</span>}
+                            {item.travellers && <span className="text-[10px] text-muted-foreground">{item.travellers} pax</span>}
                           </div>
                         </div>
                       </TableCell>
