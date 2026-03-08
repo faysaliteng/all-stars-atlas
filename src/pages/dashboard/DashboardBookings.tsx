@@ -86,7 +86,7 @@ const DashboardBookings = () => {
 
       <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 table-responsive">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -108,8 +108,8 @@ const DashboardBookings = () => {
                       <TableCell className="font-mono text-xs font-semibold">{booking.id}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"><Icon className="w-4 h-4 text-primary" /></div>
-                          <div><span className="font-medium text-sm block">{booking.title}</span>
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Icon className="w-4 h-4 text-primary" /></div>
+                          <div className="min-w-0"><span className="font-medium text-sm block truncate max-w-[150px] sm:max-w-none">{booking.title}</span>
                             {booking.ticketNo && booking.ticketNo !== "—" && <span className="text-[10px] text-muted-foreground font-mono">{booking.ticketNo}</span>}
                           </div>
                         </div>
