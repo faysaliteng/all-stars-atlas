@@ -99,7 +99,7 @@ const AdminPaymentApprovals = () => {
 
       <DataLoader isLoading={isLoading} error={error} skeleton="table" retry={refetch}>
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 table-responsive">
             <Table>
               <TableHeader>
                 <TableRow>

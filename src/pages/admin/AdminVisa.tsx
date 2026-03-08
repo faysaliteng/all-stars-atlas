@@ -73,7 +73,7 @@ const AdminVisa = () => {
               </Table>
             </CardContent></Card>
           ) : (
-            <Card><CardContent className="p-0">
+            <Card><CardContent className="p-0 table-responsive">
               <Table>
                 <TableHeader><TableRow><TableHead>Country</TableHead><TableHead>Processing Time</TableHead><TableHead>Fee</TableHead><TableHead>Status</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
                 <TableBody>
