@@ -285,4 +285,14 @@ Express, mysql2, bcryptjs, jsonwebtoken, multer, uuid, cors, helmet, morgan, exp
 
 ## 📄 License
 
-Proprietary — Seven Trip Bangladesh Ltd. All rights reserved.
+Proprietary — Evan International (Seven Trip). All rights reserved.
+
+---
+
+## 📞 Contact
+
+**Seven Trip** — A concern of Evan International  
+📞 +880 1749-373748  
+📧 support@seventrip.com.bd  
+📍 Beena Kanon, Flat-4A, House-03, Road-17, Block-E, Banani, Dhaka-1213  
+🌐 www.seventrip.com.bd
