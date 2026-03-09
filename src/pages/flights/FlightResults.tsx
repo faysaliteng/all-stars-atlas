@@ -203,6 +203,7 @@ const FlightCard = ({
   flight: any; cheapest: number; isExpanded: boolean; onToggleExpand: () => void;
   isSelected?: boolean; onSelect?: () => void; selectionMode?: boolean;
 }) => {
+  const cardNavigate = useNavigate();
   const logo = getAirlineLogo(flight.airlineCode);
   const departTime = formatTime(flight.departureTime);
   const arriveTime = formatTime(flight.arrivalTime);
@@ -300,8 +301,8 @@ const FlightCard = ({
                 {isSelected ? <><Check className="w-3.5 h-3.5 mr-1" /> Selected</> : <>Select <ArrowRight className="w-3.5 h-3.5 ml-1" /></>}
               </Button>
             ) : (
-              <Button size="sm" className="mt-2 font-bold h-8 px-4 shadow-sm" asChild>
-                <Link to={`/flights/book?flightId=${flight.id}`}>Select <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+              <Button size="sm" className="mt-2 font-bold h-8 px-4 shadow-sm" onClick={() => cardNavigate(`/flights/book`, { state: { outboundFlight: flight } })}>
+                Select <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             )}
           </div>
@@ -542,9 +543,9 @@ const FlightResults = () => {
   // Handle booking with both flights for round-trip
   const handleBookRoundTrip = () => {
     if (!selectedOutbound || !selectedReturn) return;
-    const outId = selectedOutbound.id;
-    const retId = selectedReturn.id;
-    navigate(`/flights/book?flightId=${outId}&returnFlightId=${retId}&roundTrip=true`);
+    navigate(`/flights/book?roundTrip=true`, {
+      state: { outboundFlight: selectedOutbound, returnFlight: selectedReturn },
+    });
   };
 
   // Total for round-trip selection

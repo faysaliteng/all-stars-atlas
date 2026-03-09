@@ -15,8 +15,7 @@ import {
   UtensilsCrossed, Armchair, Plus, Briefcase, Users, FileText,
   ArrowLeftRight, AlertCircle,
 } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useFlightDetails } from "@/hooks/useApiData";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCmsPageContent } from "@/hooks/useCmsContent";
 import { useAuth } from "@/hooks/useAuth";
 import AuthGateModal from "@/components/AuthGateModal";
@@ -201,15 +200,12 @@ const FlightBooking = () => {
   }]);
 
   const [searchParams] = useSearchParams();
-  const flightId = searchParams.get("flightId");
-  const returnFlightId = searchParams.get("returnFlightId");
-  const isRoundTrip = searchParams.get("roundTrip") === "true" || !!returnFlightId;
+  const location = useLocation();
+  const locationState = location.state as any;
+  const isRoundTrip = searchParams.get("roundTrip") === "true" || !!locationState?.returnFlight;
 
-  const { data: flightRaw } = useFlightDetails(flightId || undefined);
-  const { data: returnFlightRaw } = useFlightDetails(returnFlightId || undefined);
-
-  const outboundFlight = (flightRaw as any)?.data || (flightRaw as any) || null;
-  const returnFlight = returnFlightId ? ((returnFlightRaw as any)?.data || (returnFlightRaw as any) || null) : null;
+  const outboundFlight = locationState?.outboundFlight || null;
+  const returnFlight = locationState?.returnFlight || null;
 
   // Costs
   const mealCost = MEAL_OPTIONS.find(m => m.id === selectedMeal)?.price || 0;
