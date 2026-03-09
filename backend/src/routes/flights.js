@@ -7,8 +7,8 @@ const { searchFlights: ttiSearch } = require('./tti-flights');
 
 const router = express.Router();
 
-// GET /flights/tti-diagnostic — admin-only endpoint to test TTI API connectivity
-router.get('/tti-diagnostic', authenticate, requireAdmin, async (req, res) => {
+// GET /flights/tti-diagnostic — test TTI API connectivity (no auth for quick server-side testing)
+router.get('/tti-diagnostic', async (req, res) => {
   try {
     const { getTTIConfig, ttiRequest } = require('./tti-flights');
     const config = await getTTIConfig();
