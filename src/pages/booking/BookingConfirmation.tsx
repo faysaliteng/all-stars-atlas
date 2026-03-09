@@ -79,16 +79,23 @@ const BookingConfirmation = () => {
             {/* Details */}
             <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl mb-4">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Plane className="w-5 h-5 text-primary" />
+                {serviceType === "Hotel" ? <Building2 className="w-5 h-5 text-primary" /> :
+                 serviceType === "Car Rental" ? <Car className="w-5 h-5 text-primary" /> :
+                 serviceType === "Medical" ? <Stethoscope className="w-5 h-5 text-primary" /> :
+                 serviceType === "eSIM" ? <Smartphone className="w-5 h-5 text-primary" /> :
+                 serviceType === "Holiday" ? <Globe className="w-5 h-5 text-primary" /> :
+                 <Plane className="w-5 h-5 text-primary" />}
               </div>
               <div className="flex-1">
                 <p className="text-sm font-bold">{route}</p>
-                <p className="text-xs text-muted-foreground">{date} · {flightNo} · {cabin}</p>
+                <p className="text-xs text-muted-foreground">{date}{flightNo !== "—" ? ` · ${flightNo}` : ""}{cabin !== "Economy" || serviceType === "Flight" ? ` · ${cabin}` : ""}</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-bold">{departTime} - {arriveTime}</p>
-                <p className="text-xs text-muted-foreground">{stops}</p>
-              </div>
+              {(departTime !== "—" || arriveTime !== "—") && (
+                <div className="text-right">
+                  <p className="text-sm font-bold">{departTime} - {arriveTime}</p>
+                  <p className="text-xs text-muted-foreground">{stops}</p>
+                </div>
+              )}
             </div>
 
             {/* Passenger */}
