@@ -306,7 +306,22 @@ router.get('/:id', async (req, res) => {
 // Bangladesh domestic airports
 const BD_AIRPORTS = ['DAC', 'CXB', 'CGP', 'ZYL', 'JSR', 'RJH', 'SPD', 'BZL', 'IRD', 'TKR'];
 
-function calculatePaymentDeadline(departureTime, isDomestic) {
+/**
+ * Determine payment deadline.
+ * Priority: 1) Airline-provided time limit  2) Fallback calculation
+ * The airline's GDS response includes a LastTicketingDate / TimeLimit that
+ * specifies exactly when the PNR will be auto-cancelled. We use that first.
+ */
+function resolvePaymentDeadline(airlineTimeLimit, departureTime, isDomestic) {
+  // 1) Use airline-provided time limit if available and valid
+  if (airlineTimeLimit) {
+    const tl = new Date(airlineTimeLimit);
+    if (!isNaN(tl.getTime()) && tl > new Date()) {
+      return tl;
+    }
+  }
+
+  // 2) Fallback: calculate based on route type (for DB-sourced flights with no GDS TL)
   const now = new Date();
   const departure = new Date(departureTime);
   const hoursUntilFlight = (departure.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -342,10 +357,11 @@ router.post('/book', authenticate, async (req, res) => {
     // Determine domestic/international
     const domestic = isDomestic !== undefined ? isDomestic : (BD_AIRPORTS.includes(origin.toUpperCase()) && BD_AIRPORTS.includes(destination.toUpperCase()));
 
-    // Calculate payment deadline for pay-later bookings
+    // Resolve payment deadline: use airline-provided timeLimit first, fallback to calculation
+    const airlineTimeLimit = flightData?.timeLimit || null;
     let paymentDeadline = null;
     if (payLater) {
-      paymentDeadline = calculatePaymentDeadline(departureTime, domestic);
+      paymentDeadline = resolvePaymentDeadline(airlineTimeLimit, departureTime, domestic);
     }
 
     const status = payLater ? 'on_hold' : 'confirmed';

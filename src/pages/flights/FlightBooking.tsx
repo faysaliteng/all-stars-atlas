@@ -34,38 +34,58 @@ function isBimanAirline(airlineCode?: string): boolean {
   return airlineCode?.toUpperCase() === "BG";
 }
 
-/** Calculate payment deadline based on rules */
-function calculatePaymentDeadline(departureTime: string, isDomestic: boolean): { deadline: Date; label: string } {
-  const now = new Date();
-  const departure = new Date(departureTime);
-  const hoursUntilFlight = (departure.getTime() - now.getTime()) / (1000 * 60 * 60);
+/** 
+ * Resolve payment deadline.
+ * Priority: 1) Airline-provided timeLimit (from GDS response)
+ *           2) Fallback calculation based on route type
+ * The airline's GDS (TTI, Sabre, BDFare) returns a LastTicketingDate / TimeLimit
+ * that specifies exactly when the booking expires. We show that to the user.
+ */
+function resolveDeadlineInfo(flight: any, isDomestic: boolean): { deadline: Date; label: string } | null {
+  if (!flight) return null;
 
-  if (isDomestic) {
-    if (hoursUntilFlight <= 48) {
-      // Flight within 48h → pay 3h before flight
-      const deadline = new Date(departure.getTime() - 3 * 60 * 60 * 1000);
-      return { deadline, label: `Pay within ${Math.max(1, Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)))} hours (3h before flight)` };
-    } else {
-      // Flight > 48h → booking valid 48h, pay 24h before flight
-      const deadline48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-      const deadline24hBefore = new Date(departure.getTime() - 24 * 60 * 60 * 1000);
-      const deadline = deadline48h < deadline24hBefore ? deadline48h : deadline24hBefore;
-      const hoursLeft = Math.max(1, Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)));
-      return { deadline, label: hoursLeft > 24 ? `Pay within ${Math.ceil(hoursLeft / 24)} days` : `Pay within ${hoursLeft} hours` };
-    }
-  } else {
-    // International
-    if (hoursUntilFlight <= 7 * 24) {
-      // Flight within 7 days → pay 24h before flight
-      const deadline = new Date(departure.getTime() - 24 * 60 * 60 * 1000);
-      const hoursLeft = Math.max(1, Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)));
-      return { deadline, label: hoursLeft > 24 ? `Pay within ${Math.ceil(hoursLeft / 24)} days` : `Pay within ${hoursLeft} hours` };
-    } else {
-      // Flight > 7 days → 7 day booking validity
-      const deadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      return { deadline, label: "Pay within 7 days" };
+  let deadline: Date | null = null;
+
+  // 1) Check airline-provided time limit
+  if (flight.timeLimit) {
+    const tl = new Date(flight.timeLimit);
+    if (!isNaN(tl.getTime()) && tl > new Date()) {
+      deadline = tl;
     }
   }
+
+  // 2) Fallback: calculate from departure time
+  if (!deadline && flight.departureTime) {
+    const now = new Date();
+    const departure = new Date(flight.departureTime);
+    const hoursUntilFlight = (departure.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (isDomestic) {
+      if (hoursUntilFlight <= 48) {
+        deadline = new Date(departure.getTime() - 3 * 60 * 60 * 1000);
+      } else {
+        const d48 = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+        const d24b = new Date(departure.getTime() - 24 * 60 * 60 * 1000);
+        deadline = d48 < d24b ? d48 : d24b;
+      }
+    } else {
+      if (hoursUntilFlight <= 7 * 24) {
+        deadline = new Date(departure.getTime() - 24 * 60 * 60 * 1000);
+      } else {
+        deadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      }
+    }
+  }
+
+  if (!deadline) return null;
+
+  const now = new Date();
+  const hoursLeft = Math.max(1, Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)));
+  const label = hoursLeft > 24
+    ? `Pay within ${Math.ceil(hoursLeft / 24)} days (by ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })})`
+    : `Pay within ${hoursLeft} hours (by ${deadline.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })})`;
+
+  return { deadline, label };
 }
 
 const RenderField = ({ field }: { field: BookingFormField }) => {
@@ -276,10 +296,8 @@ const FlightBooking = () => {
   const serviceCharge = 250;
   const grandTotal = baseFare + taxes + serviceCharge + addOnTotal;
 
-  // Payment deadline info
-  const deadlineInfo = outboundFlight?.departureTime
-    ? calculatePaymentDeadline(outboundFlight.departureTime, domestic)
-    : null;
+  // Payment deadline — uses airline-provided timeLimit first, then fallback
+  const deadlineInfo = resolveDeadlineInfo(outboundFlight, domestic);
 
   /** Validate current step before proceeding */
   const validateStep = (currentStep: number): boolean => {
@@ -460,28 +478,29 @@ const FlightBooking = () => {
                   <span className="text-muted-foreground">Total Amount</span>
                   <span className="font-bold text-primary">৳{grandTotal.toLocaleString()}</span>
                 </div>
-                {bookingResult.payLater && deadlineInfo && (
+                {bookingResult.payLater && bookingResult.paymentDeadline && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Payment Deadline</span>
                     <span className="font-bold text-destructive flex items-center gap-1">
                       <Timer className="w-3.5 h-3.5" />
-                      {deadlineInfo.label}
+                      {new Date(bookingResult.paymentDeadline).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
                 )}
               </div>
 
               {/* Payment deadline warning */}
-              {bookingResult.payLater && deadlineInfo && (
+              {bookingResult.payLater && bookingResult.paymentDeadline && (
                 <div className="flex items-start gap-3 p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-left">
                   <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-bold text-destructive">Payment Required</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {domestic
-                        ? "Domestic booking: Your booking will be automatically cancelled if payment is not received before the deadline."
-                        : "International booking: Your booking will be automatically cancelled if payment is not received within the deadline period."
-                      }
+                      Your booking will be automatically cancelled if payment is not received by{" "}
+                      <strong className="text-destructive">
+                        {new Date(bookingResult.paymentDeadline).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </strong>.
+                      {outboundFlight?.timeLimit ? " This deadline is set by the airline." : ""}
                     </p>
                   </div>
                 </div>
@@ -834,21 +853,23 @@ const FlightBooking = () => {
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                           <Timer className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                          <p className="font-bold text-sm">Book Now, Pay Later</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Your booking will be placed on hold. You can pay anytime from your dashboard.
-                            {deadlineInfo && (
-                              <span className="text-destructive font-semibold"> {deadlineInfo.label}.</span>
-                            )}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground mt-2">
-                            {domestic
-                              ? "Domestic flights: Booking valid for 48 hours. Must pay 24h before departure."
-                              : "International flights: Booking valid for 7 days. Must pay before deadline."
-                            }
-                          </p>
-                        </div>
+                         <div>
+                           <p className="font-bold text-sm">Book Now, Pay Later</p>
+                           <p className="text-xs text-muted-foreground mt-1">
+                             Your booking will be placed on hold. You can pay anytime from your dashboard before the airline's deadline.
+                             {deadlineInfo && (
+                               <span className="text-destructive font-semibold"> {deadlineInfo.label}.</span>
+                             )}
+                           </p>
+                           <p className="text-[10px] text-muted-foreground mt-2">
+                             {outboundFlight?.timeLimit
+                               ? "⏱ Deadline set by the airline's reservation system. Booking will auto-cancel after this time."
+                               : domestic
+                                 ? "Domestic flights: Booking valid for 48 hours. Must pay 24h before departure."
+                                 : "International flights: Booking valid for 7 days. Must pay before deadline."
+                             }
+                           </p>
+                         </div>
                       </div>
                     </CardContent>
                   </Card>

@@ -155,6 +155,7 @@ function normalizeBDFareResponse(response, originCode, destinationCode) {
         stops: [],
       })),
       fareDetails: f.fareDetails || [],
+      timeLimit: f.lastTicketingDate || f.ticketTimeLimit || f.timeLimit || null,
       _bdfOfferId: f.id || f.offerId || null,
     };
   });
