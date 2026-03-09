@@ -18,6 +18,7 @@ import DataLoader from "@/components/DataLoader";
 
 /* ─── airline logo map ─── */
 const AIRLINE_LOGOS: Record<string, string> = {
+  "2A": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Air_Astra_Logo.svg/200px-Air_Astra_Logo.svg.png",
   "S2": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Air_Astra_Logo.svg/200px-Air_Astra_Logo.svg.png",
   "Air Astra": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Air_Astra_Logo.svg/200px-Air_Astra_Logo.svg.png",
   "BG": "https://images.seeklogo.com/logo-png/52/1/biman-bangladesh-airlines-logo-png_seeklogo-524035.png",
