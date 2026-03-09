@@ -399,9 +399,11 @@ const SearchWidget = () => {
   };
 
   const handleCarSearch = () => {
+    if (!pickupDate) { toast.error("Please select a pickup date"); return; }
+    if (!dropoffDate) { toast.error("Please select a drop-off date"); return; }
     const params = new URLSearchParams({ pickup: pickupCity, dropoff: dropoffCity });
-    if (pickupDate) params.set('pickupDate', format(pickupDate, 'yyyy-MM-dd'));
-    if (dropoffDate) params.set('dropoffDate', format(dropoffDate, 'yyyy-MM-dd'));
+    params.set('pickupDate', format(pickupDate, 'yyyy-MM-dd'));
+    params.set('dropoffDate', format(dropoffDate, 'yyyy-MM-dd'));
     navigate(`/cars?${params.toString()}`);
   };
 
