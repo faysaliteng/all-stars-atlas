@@ -34,15 +34,22 @@ const HotelResults = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [view, setView] = useState<"grid" | "list">("grid");
 
-  const params = {
-    location: searchParams.get("location") || undefined,
-    checkIn: searchParams.get("checkIn") || undefined,
-    checkOut: searchParams.get("checkOut") || undefined,
-    guests: searchParams.get("guests") || undefined,
+  const destination = searchParams.get("destination") || searchParams.get("location") || "";
+  const checkIn = searchParams.get("checkIn") || "";
+  const checkOut = searchParams.get("checkOut") || "";
+  const hasRequiredParams = !!destination && !!checkIn && !!checkOut;
+
+  const params = hasRequiredParams ? {
+    location: destination,
+    destination: destination,
+    checkIn,
+    checkOut,
+    guests: searchParams.get("adults") || searchParams.get("guests") || undefined,
+    rooms: searchParams.get("rooms") || undefined,
     sort: sortBy,
     priceMin: priceRange[0],
     priceMax: priceRange[1],
-  };
+  } : undefined;
 
   const { data: rawData, isLoading, error, refetch } = useHotelSearch(params);
   const apiData = (rawData as any) || {};
