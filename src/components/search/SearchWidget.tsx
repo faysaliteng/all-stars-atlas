@@ -360,9 +360,11 @@ const SearchWidget = () => {
   };
 
   const handleHotelSearch = () => {
+    if (!checkIn) { toast.error("Please select a check-in date"); return; }
+    if (!checkOut) { toast.error("Please select a check-out date"); return; }
     const params = new URLSearchParams({ destination: hotelCity });
-    if (checkIn) params.set('checkIn', format(checkIn, 'yyyy-MM-dd'));
-    if (checkOut) params.set('checkOut', format(checkOut, 'yyyy-MM-dd'));
+    params.set('checkIn', format(checkIn, 'yyyy-MM-dd'));
+    params.set('checkOut', format(checkOut, 'yyyy-MM-dd'));
     params.set('adults', String(hotelGuests.adults));
     params.set('children', String(hotelGuests.children));
     params.set('rooms', String(hotelRooms));
