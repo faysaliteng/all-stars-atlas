@@ -387,8 +387,9 @@ const SearchWidget = () => {
   };
 
   const handleHolidaySearch = () => {
+    if (!travelDate) { toast.error("Please select a travel date"); return; }
     const params = new URLSearchParams({ destination: holidayDest });
-    if (travelDate) params.set('date', format(travelDate, 'yyyy-MM-dd'));
+    params.set('date', format(travelDate, 'yyyy-MM-dd'));
     navigate(`/holidays?${params.toString()}`);
   };
 
