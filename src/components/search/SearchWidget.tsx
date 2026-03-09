@@ -420,10 +420,13 @@ const SearchWidget = () => {
   };
 
   const handleRecharge = () => {
+    if (!rechargeOperator) { toast.error("Please select an operator"); return; }
+    if (!rechargeNumber) { toast.error("Please enter a phone number"); return; }
+    if (!rechargeAmount) { toast.error("Please enter recharge amount"); return; }
     const params = new URLSearchParams();
-    if (rechargeOperator) params.set('operator', rechargeOperator);
-    if (rechargeNumber) params.set('number', rechargeNumber);
-    if (rechargeAmount) params.set('amount', rechargeAmount);
+    params.set('operator', rechargeOperator);
+    params.set('number', rechargeNumber);
+    params.set('amount', rechargeAmount);
     params.set('type', rechargeType);
     navigate(`/recharge?${params.toString()}`);
   };
