@@ -219,7 +219,22 @@ const AdminInvoices = () => {
                     <DropdownMenu modal={false}><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => setViewInvoice(inv)}><Eye className="w-4 h-4 mr-2" /> View</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadPDF(inv)}><Download className="w-4 h-4 mr-2" /> Download PDF</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadPDF(inv)}><Download className="w-4 h-4 mr-2" /> Download Invoice</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          generateMoneyReceiptPDF({
+                            receiptNo: `RCT-${inv.invoiceNo?.replace('INV-', '') || Date.now()}`,
+                            customerName: inv.customerName,
+                            customerPhone: inv.customerPhone || "",
+                            customerAddress: inv.customerAddress || "",
+                            items: [{ description: inv.bookingType ? `${inv.bookingType.charAt(0).toUpperCase() + inv.bookingType.slice(1)} Booking` : "Service", pax: 1, unitPrice: inv.amount || 0, totalPrice: inv.amount || 0 }],
+                            totalAmount: inv.amount || 0,
+                            due: inv.status === "Paid" ? 0 : inv.amount || 0,
+                            discount: inv.discount || 0,
+                            grandTotal: inv.amount || 0,
+                            date: inv.date || new Date().toLocaleDateString(),
+                          });
+                          toast({ title: "Downloaded", description: "Money Receipt PDF saved" });
+                        }}><Receipt className="w-4 h-4 mr-2" /> Money Receipt</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handlePrint(inv)}><Printer className="w-4 h-4 mr-2" /> Print</DropdownMenuItem>
                         {inv.status !== "Paid" && <DropdownMenuItem onClick={() => handleRemind(inv)}><Send className="w-4 h-4 mr-2" /> Send Reminder</DropdownMenuItem>}
                       </DropdownMenuContent>
