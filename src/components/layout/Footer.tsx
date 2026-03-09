@@ -148,7 +148,7 @@ const Footer = React.forwardRef<HTMLElement>((_, ref) => {
 
       <div className="border-t border-white/6">
         <div className="container mx-auto px-4 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 text-[10px] sm:text-[11px] text-white/25">
-          <p>© {new Date().getFullYear()} Seven Trip. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Seven Trip — A concern of Evan International. All rights reserved.</p>
           <div className="flex items-center gap-3 sm:gap-5 flex-wrap justify-center">
             <span className="flex items-center gap-1.5">✈️ IATA Accredited</span>
             <span className="flex items-center gap-1.5">🏆 ATAB Member</span>
