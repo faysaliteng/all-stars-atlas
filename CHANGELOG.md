@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [2.3.0] — 2026-03-09 — Critical Logic Fixes & Enterprise Flight Cards
+
+### Fixed
+- **Mandatory Date Validation** — Flight departure date, hotel check-in/check-out, car pickup/drop-off dates now required before search. Toast errors shown for missing dates. Round-trip requires return date.
+- **Hotel Search Param Mismatch** — SearchWidget sends `destination`, HotelResults now reads both `destination` and `location` params correctly.
+- **Hotel Results Guard** — Shows "No Search Criteria" empty state when no check-in/check-out dates provided instead of empty list.
+- **FlightBooking Hardcoded Data** — Was showing static "07:30 DAC → 08:35 CXB". Now fetches actual flight details via `useFlightDetails(flightId)` and displays real data.
+- **Booking Confirmation Data** — FlightBooking, HotelDetail, and HolidayDetail now pass complete booking data (route, price, taxes, totals) via `location.state` to the confirmation page.
+- **HotelDetail Book Now** — Passes hotel name, room price, and calculated taxes to confirmation page.
+- **HolidayDetail Book Package** — Passes package destination, price, and taxes to confirmation page.
+
+### Added
+- **Enterprise-grade Flight Result Cards** — Airline logo mapping for 15+ airlines (Biman, US-Bangla, Novoair, Emirates, Qatar Airways, Singapore Airlines, etc.), proper time formatting, clock icons, gradient flight path lines, refundable badges, price range filtering.
+- **FlightResults "No Criteria" Guard** — Shows empty state when required params (from, to, depart) are missing.
+
+### Refactored
+- **FlightResults.tsx** — Extracted `FlightCard` and `FilterPanel` into separate components for maintainability.
+- **SearchWidget** — Added `sonner` toast import for validation feedback.
+
+---
+
 ## [2.2.0] — 2026-03-08 — Full Production Audit & Final Fixes
 
 ### Comprehensive Audit (0-to-100 review of ALL 70+ pages)
