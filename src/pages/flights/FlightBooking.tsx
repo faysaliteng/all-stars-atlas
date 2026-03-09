@@ -490,16 +490,17 @@ const FlightBooking = () => {
               </div>
 
               {/* Payment deadline warning */}
-              {bookingResult.payLater && deadlineInfo && (
+              {bookingResult.payLater && bookingResult.paymentDeadline && (
                 <div className="flex items-start gap-3 p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-left">
                   <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-bold text-destructive">Payment Required</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {domestic
-                        ? "Domestic booking: Your booking will be automatically cancelled if payment is not received before the deadline."
-                        : "International booking: Your booking will be automatically cancelled if payment is not received within the deadline period."
-                      }
+                      Your booking will be automatically cancelled if payment is not received by{" "}
+                      <strong className="text-destructive">
+                        {new Date(bookingResult.paymentDeadline).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </strong>.
+                      {outboundFlight?.timeLimit ? " This deadline is set by the airline." : ""}
                     </p>
                   </div>
                 </div>
