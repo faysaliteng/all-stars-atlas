@@ -53,7 +53,7 @@ const HolidayDetail = () => {
                   {pkg.nextAvailable && <div className="flex justify-between"><span className="text-muted-foreground">Next Available</span><span className="font-semibold">{pkg.nextAvailable}</span></div>}
                 </div>
                 <Button className="w-full h-11 font-bold shadow-lg shadow-primary/20" asChild>
-                  <Link to="/booking/confirmation">Book This Package <ArrowRight className="w-4 h-4 ml-1" /></Link>
+                  <Link to="/booking/confirmation" state={{ booking: { type: "Holiday", route: pkg.destination, date: pkg.nextAvailable || "—", baseFare: pkg.price || 0, taxes: Math.round((pkg.price || 0) * 0.05), total: Math.round((pkg.price || 0) * 1.05), paymentMethod: "Pending" } }}>Book This Package <ArrowRight className="w-4 h-4 ml-1" /></Link>
                 </Button>
                 <Button variant="outline" className="w-full" asChild><Link to="/contact">Enquire Now</Link></Button>
               </CardContent></Card>
