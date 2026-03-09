@@ -112,7 +112,7 @@ export const MEDIA_FILES = [
   { id: 9, name: "kolkata-victoria.jpg", type: "image" as const, size: "270 KB", url: "https://tbbd-flight.s3.ap-southeast-1.amazonaws.com/promotion/Kolkata.jpg", uploaded: "Feb 3, 2026" },
   { id: 10, name: "kathmandu-temple.jpg", type: "image" as const, size: "250 KB", url: "https://tbbd-flight.s3.ap-southeast-1.amazonaws.com/promotion/Kathamandu.jpg", uploaded: "Feb 1, 2026" },
   { id: 11, name: "sylhet-tea-garden.png", type: "image" as const, size: "380 KB", url: "https://tbbd-flight.s3.ap-southeast-1.amazonaws.com/promotion/AzOSQlJV2UD8QhKVOKLteYWlrI9brl.png", uploaded: "Jan 28, 2026" },
-  { id: 12, name: "og-default.jpg", type: "image" as const, size: "150 KB", url: "https://seventrip.com.bd/images/og-default.jpg", uploaded: "Jan 15, 2026" },
+  { id: 12, name: "og-default.jpg", type: "image" as const, size: "150 KB", url: "https://seven-trip.com/images/og-default.jpg", uploaded: "Jan 15, 2026" },
   { id: 13, name: "booking-confirmation.pdf", type: "document" as const, size: "85 KB", url: "/templates/booking-confirmation.pdf", uploaded: "Jan 10, 2026" },
   { id: 14, name: "invoice-template.pdf", type: "document" as const, size: "92 KB", url: "/templates/invoice-template.pdf", uploaded: "Jan 8, 2026" },
   { id: 15, name: "dubai-shopping.jpg", type: "image" as const, size: "290 KB", url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80", uploaded: "Jan 5, 2026" },
