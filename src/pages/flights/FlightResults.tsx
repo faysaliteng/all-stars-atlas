@@ -300,8 +300,8 @@ const FlightCard = ({
                 {isSelected ? <><Check className="w-3.5 h-3.5 mr-1" /> Selected</> : <>Select <ArrowRight className="w-3.5 h-3.5 ml-1" /></>}
               </Button>
             ) : (
-              <Button size="sm" className="mt-2 font-bold h-8 px-4 shadow-sm" asChild>
-                <Link to={`/flights/book?flightId=${flight.id}`}>Select <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+              <Button size="sm" className="mt-2 font-bold h-8 px-4 shadow-sm" onClick={() => navigate(`/flights/book`, { state: { outboundFlight: flight } })}>
+                Select <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             )}
           </div>
