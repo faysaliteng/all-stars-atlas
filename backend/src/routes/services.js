@@ -199,6 +199,19 @@ router.post('/cars/book', authenticate, async (req, res) => {
 router.get('/esim/plans', async (req, res) => {
   try {
     const { country, page = 1, limit = 20 } = req.query;
+
+    // Try Airalo API first
+    const airaloConfig = await getAiraloConfig();
+    if (airaloConfig && country) {
+      try {
+        const packages = await airaloPackages(country.toLowerCase());
+        if (packages.length > 0) {
+          return res.json({ data: packages, total: packages.length, page: 1, limit: 50, totalPages: 1, source: 'airalo' });
+        }
+      } catch (err) { console.error('Airalo fetch failed, falling back to DB:', err.message); }
+    }
+
+    // Fallback to DB
     let sql = 'SELECT * FROM esim_plans WHERE available = 1';
     const params = [];
     if (country) { sql += ' AND country LIKE ?'; params.push(`%${country}%`); }
@@ -208,7 +221,7 @@ router.get('/esim/plans', async (req, res) => {
       duration: r.duration, price: parseFloat(r.price), currency: r.currency,
       provider: r.provider, features: safeJsonParse(r.features, []),
     }));
-    res.json({ data, total: data.length, page: 1, limit: 50, totalPages: 1 });
+    res.json({ data, total: data.length, page: 1, limit: 50, totalPages: 1, source: 'db' });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
 
