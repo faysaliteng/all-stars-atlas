@@ -281,7 +281,61 @@ const FlightBooking = () => {
     ? calculatePaymentDeadline(outboundFlight.departureTime, domestic)
     : null;
 
-  const createBooking = async (payLater: boolean) => {
+  /** Validate current step before proceeding */
+  const validateStep = (currentStep: number): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (currentStep === 1) {
+      if (!outboundFlight) {
+        toast({ title: "No Flight Selected", description: "Please go back and select a flight.", variant: "destructive" });
+        return false;
+      }
+    }
+
+    if (currentStep === 2) {
+      const p = passengers[0];
+      if (!p.title) errors["title"] = "Title is required";
+      if (!p.firstName?.trim()) errors["firstName"] = "First name is required";
+      if (!p.lastName?.trim()) errors["lastName"] = "Last name is required";
+      if (!p.dob) errors["dob"] = "Date of birth is required";
+      if (!p.nationality?.trim()) errors["nationality"] = "Nationality is required";
+      if (!p.email?.trim()) errors["email"] = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) errors["email"] = "Invalid email format";
+      if (!p.phone?.trim()) errors["phone"] = "Phone number is required";
+
+      // Validate name lengths
+      if (p.firstName && p.firstName.trim().length < 2) errors["firstName"] = "First name too short";
+      if (p.lastName && p.lastName.trim().length < 2) errors["lastName"] = "Last name too short";
+
+      // Validate DOB is in the past
+      if (p.dob) {
+        const dobDate = new Date(p.dob);
+        if (dobDate >= new Date()) errors["dob"] = "Date of birth must be in the past";
+      }
+
+      // For international flights, passport is required
+      if (!domestic && !p.passport?.trim()) errors["passport"] = "Passport required for international flights";
+      if (p.passport && p.passport.trim().length > 0 && p.passport.trim().length < 5) errors["passport"] = "Invalid passport number";
+
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        const firstError = Object.values(errors)[0];
+        toast({ title: "Missing Passenger Info", description: firstError, variant: "destructive" });
+        return false;
+      }
+    }
+
+    setFieldErrors({});
+    return true;
+  };
+
+  const handleContinue = () => {
+    if (validateStep(step)) {
+      setStep(step + 1);
+    }
+  };
+
+
     setBookingLoading(true);
     try {
       const bookingData = {
