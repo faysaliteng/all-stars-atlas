@@ -13,10 +13,9 @@ const CACHE_TTL = 5 * 60 * 1000;
 async function getTTIConfig() {
   if (_configCache && Date.now() - _configCacheTime < CACHE_TTL) return _configCache;
   try {
-    const [rows] = await db.query("SELECT setting_value FROM system_settings WHERE setting_key = 'api_integrations'");
+    const [rows] = await db.query("SELECT setting_value FROM system_settings WHERE setting_key = 'api_tti_astra'");
     if (rows.length > 0) {
-      const integrations = JSON.parse(rows[0].setting_value || '{}');
-      const tti = integrations.tti_astra || {};
+      const tti = JSON.parse(rows[0].setting_value || '{}');
       if (tti.api_url && tti.api_key) {
         _configCache = { url: tti.api_url, key: tti.api_key, agencyId: tti.agency_id || '' };
         _configCacheTime = Date.now();
