@@ -320,13 +320,8 @@ export const CMS_PAGE_DEFAULTS: Record<string, CmsPageContent> = {
       subtitle: "Help us revolutionize travel in Bangladesh. We're always looking for talented people.",
       gradient: "from-[hsl(167,72%,41%)] to-[hsl(217,91%,50%)]",
     },
-    perks: [
-      { icon: "Heart", title: "Health Insurance", desc: "Comprehensive health coverage for you and your family" },
-      { icon: "Rocket", title: "Travel Benefits", desc: "Discounted flights, hotels, and holiday packages" },
-      { icon: "Users", title: "Great Team", desc: "Work with passionate travel enthusiasts" },
-      { icon: "Briefcase", title: "Growth", desc: "Career development opportunities and training" },
-    ],
-    positions: OPEN_POSITIONS,
+    perks: [],
+    positions: [],
     careersEmail: "careers@seventrip.com.bd",
   },
 
