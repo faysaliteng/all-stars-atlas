@@ -236,6 +236,7 @@ const FlightBooking = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { data: page, isLoading } = useCmsPageContent("/flights/book");
@@ -279,6 +280,60 @@ const FlightBooking = () => {
   const deadlineInfo = outboundFlight?.departureTime
     ? calculatePaymentDeadline(outboundFlight.departureTime, domestic)
     : null;
+
+  /** Validate current step before proceeding */
+  const validateStep = (currentStep: number): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (currentStep === 1) {
+      if (!outboundFlight) {
+        toast({ title: "No Flight Selected", description: "Please go back and select a flight.", variant: "destructive" });
+        return false;
+      }
+    }
+
+    if (currentStep === 2) {
+      const p = passengers[0];
+      if (!p.title) errors["title"] = "Title is required";
+      if (!p.firstName?.trim()) errors["firstName"] = "First name is required";
+      if (!p.lastName?.trim()) errors["lastName"] = "Last name is required";
+      if (!p.dob) errors["dob"] = "Date of birth is required";
+      if (!p.nationality?.trim()) errors["nationality"] = "Nationality is required";
+      if (!p.email?.trim()) errors["email"] = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) errors["email"] = "Invalid email format";
+      if (!p.phone?.trim()) errors["phone"] = "Phone number is required";
+
+      // Validate name lengths
+      if (p.firstName && p.firstName.trim().length < 2) errors["firstName"] = "First name too short";
+      if (p.lastName && p.lastName.trim().length < 2) errors["lastName"] = "Last name too short";
+
+      // Validate DOB is in the past
+      if (p.dob) {
+        const dobDate = new Date(p.dob);
+        if (dobDate >= new Date()) errors["dob"] = "Date of birth must be in the past";
+      }
+
+      // For international flights, passport is required
+      if (!domestic && !p.passport?.trim()) errors["passport"] = "Passport required for international flights";
+      if (p.passport && p.passport.trim().length > 0 && p.passport.trim().length < 5) errors["passport"] = "Invalid passport number";
+
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        const firstError = Object.values(errors)[0];
+        toast({ title: "Missing Passenger Info", description: firstError, variant: "destructive" });
+        return false;
+      }
+    }
+
+    setFieldErrors({});
+    return true;
+  };
+
+  const handleContinue = () => {
+    if (validateStep(step)) {
+      setStep(step + 1);
+    }
+  };
 
   const createBooking = async (payLater: boolean) => {
     setBookingLoading(true);
@@ -559,11 +614,12 @@ const FlightBooking = () => {
                       </div>
                       <div className="grid sm:grid-cols-4 gap-4">
                         <div className="space-y-1.5">
-                          <Label>Title *</Label>
+                          <Label className={fieldErrors.title ? "text-destructive" : ""}>Title *</Label>
                           <Select value={pax.title} onValueChange={(v) => {
                             const updated = [...passengers]; updated[pi].title = v; setPassengers(updated);
+                            setFieldErrors(prev => { const n = {...prev}; delete n.title; return n; });
                           }}>
-                            <SelectTrigger className="h-11"><SelectValue placeholder="Title" /></SelectTrigger>
+                            <SelectTrigger className={`h-11 ${fieldErrors.title ? "border-destructive ring-destructive/20 ring-2" : ""}`}><SelectValue placeholder="Title" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Mr">Mr</SelectItem>
                               <SelectItem value="Mrs">Mrs</SelectItem>
@@ -572,38 +628,49 @@ const FlightBooking = () => {
                               <SelectItem value="Miss">Miss</SelectItem>
                             </SelectContent>
                           </Select>
+                          {fieldErrors.title && <p className="text-[11px] text-destructive font-medium">{fieldErrors.title}</p>}
                         </div>
                         <div className="space-y-1.5 sm:col-span-1">
-                          <Label>First Name *</Label>
+                          <Label className={fieldErrors.firstName ? "text-destructive" : ""}>First Name *</Label>
                           <Input value={pax.firstName} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].firstName = e.target.value; setPassengers(updated);
-                          }} placeholder="As on passport" className="h-11" />
+                            setFieldErrors(prev => { const n = {...prev}; delete n.firstName; return n; });
+                          }} placeholder="As on passport" className={`h-11 ${fieldErrors.firstName ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                          {fieldErrors.firstName && <p className="text-[11px] text-destructive font-medium">{fieldErrors.firstName}</p>}
                         </div>
                         <div className="space-y-1.5 sm:col-span-2">
-                          <Label>Last Name *</Label>
+                          <Label className={fieldErrors.lastName ? "text-destructive" : ""}>Last Name *</Label>
                           <Input value={pax.lastName} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].lastName = e.target.value; setPassengers(updated);
-                          }} placeholder="As on passport" className="h-11" />
+                            setFieldErrors(prev => { const n = {...prev}; delete n.lastName; return n; });
+                          }} placeholder="As on passport" className={`h-11 ${fieldErrors.lastName ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                          {fieldErrors.lastName && <p className="text-[11px] text-destructive font-medium">{fieldErrors.lastName}</p>}
                         </div>
                       </div>
                       <div className="grid sm:grid-cols-3 gap-4">
                         <div className="space-y-1.5">
-                          <Label>Date of Birth *</Label>
+                          <Label className={fieldErrors.dob ? "text-destructive" : ""}>Date of Birth *</Label>
                           <Input type="date" value={pax.dob} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].dob = e.target.value; setPassengers(updated);
-                          }} className="h-11" />
+                            setFieldErrors(prev => { const n = {...prev}; delete n.dob; return n; });
+                          }} className={`h-11 ${fieldErrors.dob ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                          {fieldErrors.dob && <p className="text-[11px] text-destructive font-medium">{fieldErrors.dob}</p>}
                         </div>
                         <div className="space-y-1.5">
-                          <Label>Nationality *</Label>
+                          <Label className={fieldErrors.nationality ? "text-destructive" : ""}>Nationality *</Label>
                           <Input value={pax.nationality} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].nationality = e.target.value; setPassengers(updated);
-                          }} placeholder="e.g. Bangladeshi" className="h-11" />
+                            setFieldErrors(prev => { const n = {...prev}; delete n.nationality; return n; });
+                          }} placeholder="e.g. Bangladeshi" className={`h-11 ${fieldErrors.nationality ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                          {fieldErrors.nationality && <p className="text-[11px] text-destructive font-medium">{fieldErrors.nationality}</p>}
                         </div>
                         <div className="space-y-1.5">
-                          <Label>Passport Number</Label>
+                          <Label className={fieldErrors.passport ? "text-destructive" : ""}>{domestic ? "Passport Number" : "Passport Number *"}</Label>
                           <Input value={pax.passport} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].passport = e.target.value; setPassengers(updated);
-                          }} placeholder="e.g. AB1234567" className="h-11" />
+                            setFieldErrors(prev => { const n = {...prev}; delete n.passport; return n; });
+                          }} placeholder="e.g. AB1234567" className={`h-11 ${fieldErrors.passport ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                          {fieldErrors.passport && <p className="text-[11px] text-destructive font-medium">{fieldErrors.passport}</p>}
                         </div>
                       </div>
                       <div className="grid sm:grid-cols-3 gap-4">
@@ -616,16 +683,20 @@ const FlightBooking = () => {
                         {pi === 0 && (
                           <>
                             <div className="space-y-1.5">
-                              <Label>Email *</Label>
+                              <Label className={fieldErrors.email ? "text-destructive" : ""}>Email *</Label>
                               <Input type="email" value={pax.email} onChange={(e) => {
                                 const updated = [...passengers]; updated[pi].email = e.target.value; setPassengers(updated);
-                              }} placeholder="email@example.com" className="h-11" />
+                                setFieldErrors(prev => { const n = {...prev}; delete n.email; return n; });
+                              }} placeholder="email@example.com" className={`h-11 ${fieldErrors.email ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                              {fieldErrors.email && <p className="text-[11px] text-destructive font-medium">{fieldErrors.email}</p>}
                             </div>
                             <div className="space-y-1.5">
-                              <Label>Phone *</Label>
+                              <Label className={fieldErrors.phone ? "text-destructive" : ""}>Phone *</Label>
                               <Input type="tel" value={pax.phone} onChange={(e) => {
                                 const updated = [...passengers]; updated[pi].phone = e.target.value; setPassengers(updated);
-                              }} placeholder="+880 1XXX-XXXXXX" className="h-11" />
+                                setFieldErrors(prev => { const n = {...prev}; delete n.phone; return n; });
+                              }} placeholder="+880 1XXX-XXXXXX" className={`h-11 ${fieldErrors.phone ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                              {fieldErrors.phone && <p className="text-[11px] text-destructive font-medium">{fieldErrors.phone}</p>}
                             </div>
                           </>
                         )}
@@ -797,7 +868,7 @@ const FlightBooking = () => {
             <div className="flex gap-3">
               {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>Back</Button>}
               {step < 4 ? (
-                <Button onClick={() => setStep(step + 1)} className="font-bold">Continue <ArrowRight className="w-4 h-4 ml-1" /></Button>
+                <Button onClick={handleContinue} className="font-bold">Continue <ArrowRight className="w-4 h-4 ml-1" /></Button>
               ) : isBiman ? (
                 <Button className="font-bold shadow-lg shadow-primary/20" onClick={handleConfirmBooking} disabled={bookingLoading}>
                   {bookingLoading ? "Processing..." : <>
