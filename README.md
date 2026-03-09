@@ -174,19 +174,24 @@
 | CMS: Popups & Banners | Exit-intent popups, announcement banners, push templates |
 | CMS: Blog | Visual WYSIWYG + HTML editor, 16 default posts |
 | CMS: SEO, Footer, Media, Destinations, Email Templates | Full CMS suite |
-| Settings | General, payments, bank accounts, **API Integrations** (TTI GDS, BDFare, HotelBeds, bKash, Nagad, SSLCommerz, BulkSMSBD, Resend), **Social Login OAuth** (Google + Facebook), Google Drive |
+| Settings | General, payments, bank accounts, **19 API Integrations** (TTI GDS, BDFare, FlyHub, HotelBeds, Airalo, SSL Wireless, SSLCommerz, bKash, Nagad, BulkSMSBD, Resend, Stripe, WhatsApp, Google Maps), **Social Login OAuth** (Google + Facebook), Google Drive |
 
-### GDS & API Integrations
-| Integration | Status | Description |
-|-------------|--------|-------------|
-| **TTI/ZENITH (Air Astra)** | ✅ Live | Real-time flight search via Agency ID 10000240 |
-| **BDFare / Amadeus** | 🔧 Configurable | Additional GDS slot in admin settings |
-| **HotelBeds** | 🔧 Configurable | Hotel supplier API slot |
-| **bKash** | 🔧 Configurable | Mobile payment gateway |
-| **Nagad** | 🔧 Configurable | Mobile payment gateway |
-| **SSLCommerz** | 🔧 Configurable | Card payment gateway |
-| **BulkSMSBD** | ✅ Live | SMS notifications (OTP, booking, visa) |
-| **Resend** | ✅ Live | Transactional emails (10 templates) |
+### GDS & API Integrations (All Admin-Panel Configurable)
+| Integration | File | Description |
+|-------------|------|-------------|
+| **TTI/ZENITH (Air Astra)** | `tti-flights.js` | Real-time flight search via Agency ID 10000240 |
+| **BDFare** | `bdf-flights.js` | Bangladesh flight aggregator (US-Bangla, Novoair, Biman) |
+| **FlyHub** | `flyhub-flights.js` | 450+ airline flight aggregator with token auth |
+| **HotelBeds** | `hotelbeds.js` | 180,000+ hotels worldwide with SHA256 signature |
+| **Airalo** | `airalo.js` | eSIM for 200+ countries with QR delivery |
+| **SSL Wireless** | `ssl-recharge.js` | Mobile recharge (GP/Robi/BL/TT) + bill payments |
+| **SSLCommerz** | `sslcommerz.js` | Card + mobile payments (IPN callback + auto-confirm) |
+| **bKash** | `bkash.js` | Tokenized checkout with grant token auth |
+| **Nagad** | `nagad.js` | Payment gateway with verify callback |
+| **BulkSMSBD** | `services/sms.js` | SMS notifications (OTP, booking, visa) |
+| **Resend** | `services/email.js` | Transactional emails (10+ branded templates) |
+
+> All APIs read credentials from the `system_settings` DB table. **No API keys in code or .env.** Toggle on/off from Admin → Settings → API Integrations.
 
 ### SEO & Performance
 - OpenGraph + Twitter Cards meta tags
