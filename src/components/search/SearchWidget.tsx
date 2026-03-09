@@ -331,7 +331,9 @@ const SearchWidget = () => {
   const handleFlightSearch = () => {
     if (tripType === "multicity") {
       const validSegments = multiCitySegments.filter(s => s.from && s.to);
-      if (validSegments.length < 2) return;
+      if (validSegments.length < 2) { toast.error("Please add at least 2 flight segments"); return; }
+      const missingDates = validSegments.some(s => !s.date);
+      if (missingDates) { toast.error("Please select departure date for all segments"); return; }
       const params = new URLSearchParams({
         tripType: "multicity",
         adults: String(passengers.adults), children: String(passengers.children), infants: String(passengers.infants),
@@ -344,13 +346,15 @@ const SearchWidget = () => {
       navigate(`/flights?${params.toString()}`);
       return;
     }
-    if (!fromAirport || !toAirport) return;
+    if (!fromAirport || !toAirport) { toast.error("Please select departure and arrival airports"); return; }
+    if (!departDate) { toast.error("Please select a departure date"); return; }
+    if (tripType === 'roundtrip' && !returnDate) { toast.error("Please select a return date for round trip"); return; }
     const params = new URLSearchParams({
       from: fromAirport.code, to: toAirport.code, tripType,
       adults: String(passengers.adults), children: String(passengers.children), infants: String(passengers.infants),
       cabin: cabinClass, fare: fareType,
     });
-    if (departDate) params.set('depart', format(departDate, 'yyyy-MM-dd'));
+    params.set('depart', format(departDate, 'yyyy-MM-dd'));
     if (returnDate && tripType === 'roundtrip') params.set('return', format(returnDate, 'yyyy-MM-dd'));
     navigate(`/flights?${params.toString()}`);
   };
