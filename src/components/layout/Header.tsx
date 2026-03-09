@@ -45,7 +45,7 @@ const Header = () => {
               <Phone className="w-3 h-3" /><span>+880 1749-373748</span>
             </a>
             <span className="w-px h-3 bg-current opacity-30" />
-            <a href="mailto:support@seventrip.com.bd" className="hover:text-primary transition-colors">support@seventrip.com.bd</a>
+            <a href="mailto:support@seven-trip.com" className="hover:text-primary transition-colors">support@seven-trip.com</a>
           </div>
           <div className={`flex items-center gap-3 text-[11px] font-medium ${transparent ? "text-white/60" : "text-muted-foreground"}`}>
             <button className="flex items-center gap-1 hover:text-primary transition-colors"><Globe className="w-3 h-3" /> English</button>

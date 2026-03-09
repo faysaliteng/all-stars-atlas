@@ -448,7 +448,7 @@ const CMSBlog = () => {
                 {/* SEO Preview */}
                 <div className="bg-muted/30 rounded-lg p-4 space-y-1">
                   <p className="text-sm font-medium text-blue-600 dark:text-blue-400 truncate">{editingPost.seoTitle || editingPost.title || "Post Title"}</p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">seventrip.com.bd/blog/{editingPost.slug || "post-url"}</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">seven-trip.com/blog/{editingPost.slug || "post-url"}</p>
                   <p className="text-xs text-muted-foreground line-clamp-2">{editingPost.seoDescription || editingPost.excerpt || "Post description will appear here..."}</p>
                 </div>
                 <div className="space-y-1.5">

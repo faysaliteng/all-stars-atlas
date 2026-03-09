@@ -130,7 +130,7 @@ const Footer = React.forwardRef<HTMLElement>((_, ref) => {
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 shrink-0 text-primary/60" />
-                <a href="mailto:support@seventrip.com.bd" className="hover:text-white transition-colors">support@seventrip.com.bd</a>
+                <a href="mailto:support@seven-trip.com" className="hover:text-white transition-colors">support@seven-trip.com</a>
               </li>
             </ul>
 
