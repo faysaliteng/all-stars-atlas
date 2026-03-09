@@ -79,11 +79,15 @@ const AirportInput = ({ label, value, onChange, placeholder, airports: airportLi
   const list = airportList || AIRPORTS;
 
   const filtered = query.length > 0
-    ? list.filter(a =>
-        a.city.toLowerCase().includes(query.toLowerCase()) ||
-        a.code.toLowerCase().includes(query.toLowerCase()) ||
-        a.name.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8)
+    ? list.filter(a => {
+        const q = query.toLowerCase();
+        const countryName = COUNTRY_NAMES[a.country] || a.country;
+        return a.city.toLowerCase().includes(q) ||
+          a.code.toLowerCase().includes(q) ||
+          a.name.toLowerCase().includes(q) ||
+          countryName.toLowerCase().includes(q) ||
+          a.country.toLowerCase().includes(q);
+      }).slice(0, 12)
     : list.slice(0, 8);
 
   const handleSelect = (airport: typeof AIRPORTS[0]) => {
