@@ -251,7 +251,7 @@ export const CMS_PAGE_DEFAULTS: Record<string, CmsPageContent> = {
     contactInfo: [
       { icon: "MapPin", title: "Office Address", text: "Beena Kanon, Flat-4A, House-03\nRoad-17, Block-E, Banani, Dhaka-1213" },
       { icon: "Phone", title: "Phone", text: "+880 1749-373748" },
-      { icon: "Mail", title: "Email", text: "support@seventrip.com.bd\nbooking@seventrip.com.bd" },
+      { icon: "Mail", title: "Email", text: "support@seven-trip.com\nbooking@seven-trip.com" },
       { icon: "Clock", title: "Working Hours", text: "Sunday - Thursday: 9AM - 8PM\nFriday - Saturday: 10AM - 6PM" },
     ],
     formTitle: "Send us a Message",
