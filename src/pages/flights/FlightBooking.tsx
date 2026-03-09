@@ -131,27 +131,27 @@ const FlightBooking = () => {
               <CardContent>
                 <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl">
                   <div className="text-center">
-                    <p className="text-2xl font-black">07:30</p>
-                    <p className="text-xs font-semibold text-muted-foreground">DAC</p>
+                    <p className="text-2xl font-black">{selectedFlight?.departureTime ? new Date(selectedFlight.departureTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }) : selectedFlight?.departTime || "—"}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">{selectedFlight?.origin || selectedFlight?.from || "—"}</p>
                   </div>
                   <div className="flex-1 flex flex-col items-center gap-1">
-                    <p className="text-[11px] text-muted-foreground font-medium">1h 05m</p>
+                    <p className="text-[11px] text-muted-foreground font-medium">{selectedFlight?.duration || "—"}</p>
                     <div className="w-full flex items-center gap-1">
                       <div className="w-2 h-2 rounded-full border-2 border-primary" />
                       <div className="flex-1 h-px bg-border" />
                       <div className="w-2 h-2 rounded-full bg-primary" />
                     </div>
-                    <p className="text-[11px] text-success font-semibold">Non-stop</p>
+                    <p className="text-[11px] text-success font-semibold">{selectedFlight?.stops === 0 ? "Non-stop" : `${selectedFlight?.stops || 0} Stop`}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-black">08:35</p>
-                    <p className="text-xs font-semibold text-muted-foreground">CXB</p>
+                    <p className="text-2xl font-black">{selectedFlight?.arrivalTime ? new Date(selectedFlight.arrivalTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }) : selectedFlight?.arriveTime || "—"}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">{selectedFlight?.destination || selectedFlight?.to || "—"}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-4 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Luggage className="w-3.5 h-3.5" /> 20kg Checked</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Thu, 26 Feb 2026</span>
-                  <span>Biman Bangladesh • BG-435 • Economy</span>
+                  <span className="flex items-center gap-1"><Luggage className="w-3.5 h-3.5" /> {selectedFlight?.baggage || "20kg"}</span>
+                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {selectedFlight?.departureTime ? new Date(selectedFlight.departureTime).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }) : "—"}</span>
+                  <span>{selectedFlight?.airline || "—"} • {selectedFlight?.flightNumber || selectedFlight?.flightNo || "—"} • {selectedFlight?.cabinClass || selectedFlight?.class || "Economy"}</span>
                 </div>
               </CardContent>
             </Card>
