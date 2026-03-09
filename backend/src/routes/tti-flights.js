@@ -275,4 +275,4 @@ function getAirlineName(code) {
   return names[code] || code;
 }
 
-module.exports = { searchFlights, ttiRequest, getAirlineName, clearTTIConfigCache };
+module.exports = { searchFlights, ttiRequest, getTTIConfig, getAirlineName, clearTTIConfigCache };
