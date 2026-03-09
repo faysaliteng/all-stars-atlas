@@ -120,7 +120,7 @@ const AirportInput = ({ label, value, onChange, placeholder, airports: airportLi
             onChange={e => { setQuery(e.target.value); setOpen(true); }}
             onFocus={() => { setFocused(true); setOpen(true); }}
             onBlur={() => setTimeout(() => { setOpen(false); setFocused(false); }, 200)}
-            placeholder={placeholder || "Type city or airport code..."}
+            placeholder={placeholder || "Type city, airport, or country..."}
             className="w-full bg-transparent text-sm font-bold outline-none placeholder:text-muted-foreground/50 placeholder:font-normal"
             autoComplete="off"
           />
