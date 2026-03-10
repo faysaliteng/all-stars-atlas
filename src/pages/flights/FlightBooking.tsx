@@ -804,7 +804,7 @@ const FlightBooking = () => {
                 <div className="flex justify-between text-base"><span className="font-bold">Total Payable</span><span className="font-black text-accent">৳{grandTotal.toLocaleString()}</span></div>
                 {isRoundTrip && <p className="text-[10px] text-muted-foreground text-center">Round-trip fare for 1 passenger</p>}
 
-                {!isBiman && deadlineInfo && step === 4 && (
+                {!isBiman && deadlineInfo && step === reviewStep && (
                   <>
                     <Separator />
                     <div className="flex items-center gap-2 text-xs text-destructive font-semibold"><Timer className="w-3.5 h-3.5" />{deadlineInfo.label}</div>
