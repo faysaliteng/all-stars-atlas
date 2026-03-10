@@ -179,23 +179,22 @@ export async function generateMoneyReceiptPDF(data: MoneyReceiptData) {
   const doc = new jsPDF();
   const w = doc.internal.pageSize.getWidth();
   const logo = await loadLogoBase64();
+  const qrText = `SevenTrip Receipt | ${data.receiptNo || "N/A"} | ${data.customerName} | BDT ${data.grandTotal} | ${data.date}`;
+  const qr = await generateQRDataUrl(qrText);
 
-  let y = drawCompanyHeader(doc, logo, w);
-  y += 4;
+  let y = drawReferenceHeader(doc, logo, w, qr);
 
-  // Title
-  doc.setFillColor(30, 30, 30);
-  doc.rect(20, y, w - 40, 10, "F");
-  doc.setTextColor(255);
-  doc.setFontSize(13);
+  // Title: "Money Receipt" — large bold text (NOT in a filled bar)
+  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("Money Receipt", w / 2, y + 7, { align: "center" });
-  y += 16;
+  doc.setTextColor(30, 30, 30);
+  doc.text("Money Receipt", 20, y);
+  y += 10;
 
   // Receipt for section
-  doc.setTextColor(100);
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
+  doc.setTextColor(60);
   doc.text("Receipt for-", 20, y);
   y += 6;
 
@@ -203,134 +202,158 @@ export async function generateMoneyReceiptPDF(data: MoneyReceiptData) {
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.text(data.customerName, 20, y);
-  y += 6;
+  y += 5;
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(80);
   if (data.customerPhone) { doc.text(data.customerPhone, 20, y); y += 5; }
   if (data.customerAddress) { doc.text(data.customerAddress, 20, y); y += 5; }
-
-  // Receipt no on right
-  if (data.receiptNo) {
-    doc.setFontSize(9);
-    doc.setTextColor(100);
-    doc.text(`Receipt #: ${data.receiptNo}`, w - 20, y - 16, { align: "right" });
-  }
-  doc.text(`Date: ${data.date}`, w - 20, y - 11, { align: "right" });
-
   y += 6;
 
-  // Table header
-  const cols = [20, 30, w - 100, w - 70, w - 40, w - 20];
-  doc.setFillColor(240, 240, 240);
-  doc.rect(20, y - 4, w - 40, 8, "F");
-  doc.setFontSize(8);
+  // ── Table matching reference exactly ──
+  const tableLeft = 20;
+  const tableRight = w - 20;
+  const tableW = tableRight - tableLeft;
+  const colNo = tableLeft;
+  const colDesc = tableLeft + 25;
+  const colPax = tableLeft + tableW * 0.55;
+  const colUnit = tableLeft + tableW * 0.68;
+  const colTotal = tableRight;
+  const rowH = 10;
+
+  // Table header — light cyan/blue background
+  doc.setFillColor(200, 235, 245);
+  doc.rect(tableLeft, y, tableW, rowH, "F");
+  doc.setDrawColor(180, 220, 235);
+  doc.rect(tableLeft, y, tableW, rowH, "S");
+  doc.setFontSize(8.5);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(60);
-  doc.text("No", 25, y + 1);
-  doc.text("Description", 35, y + 1);
-  doc.text("Pax", w - 95, y + 1, { align: "center" });
-  doc.text("Unit Price", w - 65, y + 1, { align: "right" });
-  doc.text("Total Price", w - 25, y + 1, { align: "right" });
-  y += 8;
+  doc.setTextColor(30);
+  doc.text("No", colNo + 4, y + 7);
+  doc.text("Description", colDesc, y + 7);
+  doc.text("Pax", colPax, y + 7, { align: "center" });
+  doc.text("Unit Price", colUnit + 10, y + 7, { align: "center" });
+  doc.text("Total price", colTotal - 4, y + 7, { align: "right" });
+  y += rowH;
 
   // Table rows
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(0);
   doc.setFontSize(9);
+  doc.setTextColor(0);
 
-  data.items.forEach((item, i) => {
-    const rowY = y + 1;
-    doc.text(String(i + 1).padStart(2, "0"), 25, rowY);
-    doc.text(item.description, 35, rowY, { maxWidth: w - 140 });
-    doc.text(String(item.pax), w - 95, rowY, { align: "center" });
-    doc.text(`${item.unitPrice.toLocaleString()}৳`, w - 65, rowY, { align: "right" });
-    doc.text(`${item.totalPrice.toLocaleString()}৳`, w - 25, rowY, { align: "right" });
-    y += 7;
-    doc.setDrawColor(230);
-    doc.line(20, y - 2, w - 20, y - 2);
-  });
+  const totalRows = Math.max(3, data.items.length);
+  for (let i = 0; i < totalRows; i++) {
+    // Alternate row background: white / very light gray
+    if (i % 2 === 1) {
+      doc.setFillColor(248, 248, 248);
+      doc.rect(tableLeft, y, tableW, rowH, "F");
+    }
+    doc.setDrawColor(220, 220, 220);
+    doc.rect(tableLeft, y, tableW, rowH, "S");
 
-  // Fill empty rows to match format (up to 3 rows)
-  const emptyRows = Math.max(0, 3 - data.items.length);
-  for (let i = 0; i < emptyRows; i++) {
-    doc.text(String(data.items.length + i + 1).padStart(2, "0"), 25, y + 1);
-    y += 7;
-    doc.setDrawColor(230);
-    doc.line(20, y - 2, w - 20, y - 2);
+    const item = data.items[i];
+    doc.setTextColor(0);
+    doc.text(String(i + 1).padStart(2, "0"), colNo + 4, y + 7);
+    if (item) {
+      doc.text(item.description, colDesc, y + 7, { maxWidth: colPax - colDesc - 5 });
+      doc.text(String(item.pax), colPax, y + 7, { align: "center" });
+      doc.text(`${item.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}৳`, colUnit + 10, y + 7, { align: "center" });
+      doc.setFont("helvetica", "bold");
+      doc.text(`${item.totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}৳`, colTotal - 4, y + 7, { align: "right" });
+      doc.setFont("helvetica", "normal");
+    }
+    y += rowH;
   }
 
-  y += 4;
+  // ── Totals section — right-aligned with pink/lavender background ──
+  y += 2;
+  const totalsLabelX = colUnit - 10;
+  const totalsValueX = colTotal - 4;
+  const totalsRowH = 9;
 
-  // Totals
-  const totalsX = w - 80;
+  // Total Fair
+  doc.setFillColor(235, 245, 235);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "F");
+  doc.setDrawColor(220);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "S");
   doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0);
-
-  doc.text("Total Fair:", totalsX, y);
-  doc.text(`${data.totalAmount.toLocaleString()}৳`, w - 25, y, { align: "right" });
-  y += 6;
-
-  doc.text("Due:", totalsX, y);
-  doc.text(`${data.due.toLocaleString()}৳`, w - 25, y, { align: "right" });
-  y += 6;
-
-  doc.text("Adjustment/Discount:", totalsX, y);
-  doc.text(`${data.discount.toLocaleString()}৳`, w - 25, y, { align: "right" });
-  y += 8;
-
-  // Grand total in words
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("In Words: Grand Total", 20, y);
-  doc.text(`${data.grandTotal.toLocaleString()}৳`, w - 25, y, { align: "right" });
-  y += 6;
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(8);
-  doc.setTextColor(80);
-  doc.text(numberToWords(data.grandTotal), 20, y);
-  y += 8;
-
-  // Received with gratitude line
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(60);
-  const gratitudeText = `Received with gratitude from ${data.customerName}, the amount of ${numberToWords(data.grandTotal)} (BDT ${data.grandTotal.toLocaleString()}/-) towards ${data.items.map(i => i.description).join(", ")}.`;
-  doc.text(gratitudeText, 20, y, { maxWidth: w - 40 });
-  y += 16;
-
-  // Signature line
   doc.setTextColor(0);
+  doc.text("Total Fair", totalsValueX - 45, y + 6, { align: "right" });
+  doc.text(`${data.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}৳`, totalsValueX, y + 6, { align: "right" });
+  y += totalsRowH;
+
+  // Due
+  doc.setFillColor(240, 230, 245);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "F");
+  doc.setDrawColor(220);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "S");
+  doc.setFont("helvetica", "bold");
+  doc.text("Due", totalsValueX - 45, y + 6, { align: "right" });
+  doc.text(`${data.due.toLocaleString("en-IN", { minimumFractionDigits: 2 })}৳`, totalsValueX, y + 6, { align: "right" });
+  y += totalsRowH;
+
+  // Adjustment/Discount
+  doc.setFillColor(240, 230, 245);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "F");
+  doc.setDrawColor(220);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "S");
+  doc.setFont("helvetica", "bold");
+  doc.text("Adjustment/Discount", totalsValueX - 45, y + 6, { align: "right" });
+  doc.text(`${data.discount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}৳`, totalsValueX, y + 6, { align: "right" });
+  y += totalsRowH;
+
+  // Grand Total — pink background
+  doc.setFillColor(235, 210, 230);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "F");
+  doc.setDrawColor(220);
+  doc.rect(totalsLabelX - 5, y, tableRight - totalsLabelX + 5, totalsRowH, "S");
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Grand Total", totalsValueX - 45, y + 6, { align: "right" });
+  doc.text(`${data.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}৳`, totalsValueX, y + 6, { align: "right" });
+  y += totalsRowH;
+
+  // In Words
+  y += 2;
   doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0);
+  doc.text("In Words-", 20, y + 5);
+  y += 6;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text(numberToWords(data.grandTotal), 20, y + 5);
+  y += 14;
+
+  // Received with gratitude — mint green box
+  doc.setFillColor(220, 245, 230);
+  const gratitudeText = `Received with gratitude from ${data.customerName}, the amount of ${numberToWords(data.grandTotal)} (BDT ${data.grandTotal.toLocaleString()}/-) towards ${data.items.map(i => i.description).join(", ")}.`;
+  const gratLines = doc.splitTextToSize(gratitudeText, w - 50);
+  const gratH = gratLines.length * 5 + 8;
+  doc.rect(20, y, w - 40, gratH, "F");
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(30);
+  doc.text(gratLines, 25, y + 6);
+  y += gratH + 20;
+
+  // Signature — right-aligned, no horizontal line
+  doc.setTextColor(0);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   if (data.receivedBy) {
-    doc.text(data.receivedBy, w - 60, y);
+    doc.text(data.receivedBy, w - 30, y, { align: "right" });
     y += 5;
   }
-  doc.text(data.date, w - 60, y);
-  y += 3;
-  doc.setDrawColor(0);
-  doc.line(w - 80, y, w - 20, y);
-  y += 4;
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
+  doc.text(data.date, w - 30, y, { align: "right" });
+  y += 5;
+  doc.setFontSize(8);
   doc.setTextColor(100);
-  doc.text("Signature & Date", w - 60, y);
-
-  // QR Code (bottom-left)
-  const qrText = `SevenTrip Receipt | ${data.receiptNo || "N/A"} | ${data.customerName} | BDT ${data.grandTotal} | ${data.date}`;
-  const qr = await generateQRDataUrl(qrText);
-  if (qr) {
-    try { doc.addImage(qr, "PNG", 20, y - 20, 25, 25); } catch { /* skip */ }
-  }
-
-  // Footer
-  y += 15;
-  doc.setFontSize(6);
-  doc.setTextColor(150);
-  doc.text(`${COMPANY.name} — A concern of ${COMPANY.parent} | ${COMPANY.website} | ${COMPANY.phone}`, w / 2, y, { align: "center" });
+  doc.text("Signature & Date", w - 30, y, { align: "right" });
 
   doc.save(`MoneyReceipt-${data.receiptNo || "receipt"}.pdf`);
 }
