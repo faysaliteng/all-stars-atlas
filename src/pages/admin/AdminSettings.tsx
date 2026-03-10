@@ -382,8 +382,9 @@ const AdminSettings = () => {
               <TabsTrigger value="digital">Digital Services</TabsTrigger>
               <TabsTrigger value="payment">Payment Gateways</TabsTrigger>
               <TabsTrigger value="communication">Communication</TabsTrigger>
+              <TabsTrigger value="utility">Utility & AI</TabsTrigger>
             </TabsList>
-            {['travel', 'digital', 'payment', 'communication'].map(cat => (
+            {['travel', 'digital', 'payment', 'communication', 'utility'].map(cat => (
               <TabsContent key={cat} value={cat} className="space-y-4">
                 {apiIntegrations.filter(a => a.category === cat).map(apiItem => (
                   <div key={apiItem.id} className="border rounded-lg p-4 space-y-3">
