@@ -692,10 +692,6 @@ interface TicketData {
   currency?: string;
 }
 
-function drawFilledBox2(doc: jsPDF, x: number, y: number, w: number, h: number, r: number, g: number, b: number) {
-  doc.setFillColor(r, g, b);
-  doc.rect(x, y, w, h, "F");
-}
 
 /** Parse time from ISO or other formats, return HH:mm */
 function safeTime(dt?: string): string {
