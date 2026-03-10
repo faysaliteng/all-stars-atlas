@@ -33,7 +33,7 @@ const AdminInvoices = () => {
   const [filter, setFilter] = useState("all");
   const [viewInvoice, setViewInvoice] = useState<any>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [customInvoices, setCustomInvoices] = useState<any[]>(() => getCollection(STORE_KEY, []));
+  const [customInvoices, setCustomInvoices] = useState<any[]>([]);
   const [createForm, setCreateForm] = useState({
     customerName: "", customerEmail: "", bookingRef: "", bookingType: "flight",
     amount: "", tax: "0", discount: "0", dueDate: "", notes: "",
