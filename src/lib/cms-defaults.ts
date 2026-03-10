@@ -100,8 +100,9 @@ export interface BookingFormField {
   type: "text" | "email" | "tel" | "date" | "select" | "textarea" | "number" | "file";
   required: boolean;
   placeholder?: string;
-  options?: { value: string; label: string }[];
+  options?: { value: string; label: string }[] | string[];
   half?: boolean;
+  halfWidth?: boolean;
   visible: boolean;
 }
 
