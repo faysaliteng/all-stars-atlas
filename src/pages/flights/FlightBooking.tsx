@@ -12,8 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plane, ArrowRight, User, Clock, Luggage, Shield, CreditCard,
-  UtensilsCrossed, Armchair, Plus, Briefcase, Users, FileText,
-  AlertCircle, CheckCircle2, Timer, AlertTriangle, Package, Weight,
+  UtensilsCrossed, Plus, Briefcase, Users, FileText,
+  AlertCircle, CheckCircle2, Timer, AlertTriangle, Package,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCmsPageContent } from "@/hooks/useCmsContent";
