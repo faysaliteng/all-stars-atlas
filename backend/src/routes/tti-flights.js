@@ -429,12 +429,29 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
 
       const bookingClass = fareDetails[0]?.bookingClass || '';
 
-      // Collect the raw segments used by this OD for display
-      const rawOdSegments = [];
-      for (const coupon of coupons) {
-        const ref = coupon.RefSegment || coupon.Ref || coupon;
+      // ── Collect ALL segment refs referenced by this itinerary + its fares ──
+      // This ensures CreateBooking gets exactly the segments TTI expects
+      const itinSegmentRefs = new Set();
+      // From itinerary AirOriginDestinations
+      for (const aod of airODs) {
+        for (const coupon of (aod.AirCoupons || [])) {
+          const ref = coupon.RefSegment || coupon.Ref;
+          if (ref) itinSegmentRefs.add(ref);
+        }
+      }
+      // From associated ETTicketFares
+      for (const f of fares) {
+        for (const odf of (f.OriginDestinationFares || [])) {
+          for (const cf of (odf.CouponFares || [])) {
+            if (cf.RefSegment) itinSegmentRefs.add(cf.RefSegment);
+          }
+        }
+      }
+      // Resolve to actual segment objects
+      const itinSegments = [];
+      for (const ref of itinSegmentRefs) {
         const seg = segmentMap[ref];
-        if (seg) rawOdSegments.push(seg);
+        if (seg) itinSegments.push(seg);
       }
 
       flights.push({
@@ -474,11 +491,10 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
         cancellationPolicy: cancellationPolicy,
         dateChangePolicy: dateChangePolicy,
         _ttiItineraryRef: itin.Ref,
-        // ── COMPLETE raw TTI data for CreateBooking (unmodified from search response) ──
-        // TTI CreateBooking requires the FULL itinerary echoed back exactly as-is
+        // ── Raw TTI data for CreateBooking: only segments referenced by THIS itinerary ──
         _ttiRawItinerary: itin,
         _ttiRawFares: fares,
-        _ttiRawSegments: segments, // ALL segments from search response, not just this direction
+        _ttiRawSegments: itinSegments,
       });
     }
   }
