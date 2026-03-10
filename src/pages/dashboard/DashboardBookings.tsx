@@ -352,12 +352,14 @@ const BookingDetailDialog = ({ booking, onClose }: { booking: any; onClose: () =
                 duration: f?.duration || "",
                 cabinClass: f?.cabinClass || "Economy",
                 aircraft: f?.aircraft || f?.legs?.[0]?.aircraft || "",
-                terminal: f?.terminal || "",
-                arrivalTerminal: f?.arrivalTerminal || "",
-                baggage: f?.baggage || "20kg",
+                terminal: f?.terminal || f?.legs?.[0]?.departureTerminal || "",
+                arrivalTerminal: f?.arrivalTerminal || f?.legs?.[0]?.arrivalTerminal || "",
+                baggage: f?.baggage || "20Kg",
                 status: "Confirmed",
                 meal: f?.meal || "Meals",
                 stops: f?.stops ?? 0,
+                distance: f?.distance || f?.legs?.[0]?.distance || null,
+                emission: f?.emission || null,
               });
 
               const outbound = booking.details?.outbound;
@@ -514,10 +516,30 @@ const DashboardBookings = () => {
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setViewBooking(booking); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
-                              generateTicketPDF({ id: booking.id, pnr: booking.pnr || booking.id, airline: booking.airline || "Seven Trip",
-                                flightNo: booking.flightNumber || "ST-001", from: booking.origin || "Origin", to: booking.destination || "Destination",
-                                date: booking.date, time: fmtTime(booking.departureTime), passenger: booking.paxNames?.[0] || "Traveller",
-                                seat: "—", class: booking.cabinClass || "Economy" });
+                              const getCity = (code: string) => { const ap = AIRPORTS.find(a => a.code === code?.toUpperCase()); return ap ? `${ap.city}, ${ap.country}` : ""; };
+                              const outbound = booking.details?.outbound;
+                              const returnFlt = booking.returnFlight || booking.details?.return;
+                              const buildSeg = (f: any) => ({
+                                airline: f?.airline || "Seven Trip", airlineCode: f?.airlineCode || "", flightNumber: f?.flightNumber || "",
+                                origin: f?.origin || "", originCity: f?.originCity || getCity(f?.origin),
+                                destination: f?.destination || "", destinationCity: f?.destinationCity || getCity(f?.destination),
+                                departureTime: f?.departureTime || "", arrivalTime: f?.arrivalTime || "", duration: f?.duration || "",
+                                cabinClass: f?.cabinClass || "Economy", aircraft: f?.aircraft || f?.legs?.[0]?.aircraft || "",
+                                terminal: f?.terminal || "", arrivalTerminal: f?.arrivalTerminal || "",
+                                baggage: f?.baggage || "20Kg", status: "Confirmed", meal: f?.meal || "Meals",
+                                distance: f?.distance || null, emission: f?.emission || null,
+                              });
+                              generateTicketPDF({
+                                id: booking.id, pnr: booking.pnr || booking.id, bookingRef: booking.pnr !== "—" ? booking.pnr : booking.id,
+                                airline: booking.airline || "Seven Trip", flightNo: booking.flightNumber || "",
+                                from: booking.origin || "", to: booking.destination || "",
+                                date: booking.departureTime || booking.date, time: booking.departureTime || "",
+                                passenger: booking.paxNames?.[0] || "Traveller", seat: "—", class: booking.cabinClass || "Economy",
+                                isRoundTrip: booking.isRoundTrip,
+                                outbound: outbound ? [buildSeg(outbound)] : [],
+                                returnSegments: returnFlt ? [buildSeg(returnFlt)] : [],
+                                passengers: booking.passengers?.map((p: any) => ({ title: p.title || "", firstName: p.firstName || "", lastName: p.lastName || "", seat: "" })) || [],
+                              });
                               toast({ title: "Downloaded", description: `E-Ticket PDF saved` });
                             }}><FileText className="w-4 h-4 mr-2" /> Download E-Ticket</DropdownMenuItem>
                             {(booking.status === "Confirmed" || booking.status === "confirmed") && (<>
