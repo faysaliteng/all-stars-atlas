@@ -37,7 +37,7 @@ router.get('/stats', async (req, res) => {
     // Upcoming trip
     let upcomingTrip = null;
     const [nextTrip] = await db.query(
-      "SELECT * FROM bookings WHERE user_id = ? AND status IN ('confirmed','pending') ORDER BY booked_at DESC LIMIT 1", [userId]
+      "SELECT * FROM bookings WHERE user_id = ? AND status IN ('confirmed','pending') AND (archived IS NULL OR archived = 0) ORDER BY booked_at DESC LIMIT 1", [userId]
     );
     if (nextTrip.length > 0) {
       const b = nextTrip[0];
