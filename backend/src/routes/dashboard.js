@@ -140,7 +140,7 @@ router.get('/transactions', async (req, res) => {
     const data = rows.map(t => ({
       id: t.id, type: t.type, amount: parseFloat(t.amount), currency: t.currency,
       status: t.status, paymentMethod: t.payment_method, reference: t.reference,
-      description: t.description, meta: t.meta ? JSON.parse(t.meta) : null, createdAt: t.created_at,
+      description: t.description, meta: t.meta ? safeJsonParse(t.meta, null) : null, createdAt: t.created_at,
     }));
 
     res.json({
