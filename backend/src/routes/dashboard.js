@@ -62,7 +62,7 @@ router.get('/stats', async (req, res) => {
 
     // Booking breakdown by type
     const [breakdown] = await db.query(
-      `SELECT booking_type, COUNT(*) as cnt FROM bookings WHERE user_id = ? GROUP BY booking_type`, [userId]
+      `SELECT booking_type, COUNT(*) as cnt FROM bookings WHERE user_id = ? AND (archived IS NULL OR archived = 0) GROUP BY booking_type`, [userId]
     );
     const colors = { flight: '#3b82f6', hotel: '#8b5cf6', holiday: '#10b981', visa: '#f59e0b', medical: '#ec4899', car: '#06b6d4' };
     const bookingBreakdown = breakdown.map(b => ({
