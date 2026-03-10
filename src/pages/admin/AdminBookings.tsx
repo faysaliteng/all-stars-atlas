@@ -214,7 +214,7 @@ const AdminBookings = () => {
     try {
       await api.patch(`/admin/bookings/${b.rawId || b.id}/archive`, { archived: true });
       toast({ title: "Archived", description: `Booking ${b.id} hidden from dashboards` });
-      qc.invalidateQueries({ queryKey: ["admin-bookings"] });
+      qc.invalidateQueries({ queryKey: ['admin', 'bookings'] });
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to archive", variant: "destructive" });
     }
