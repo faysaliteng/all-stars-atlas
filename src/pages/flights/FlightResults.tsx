@@ -194,7 +194,7 @@ const FlightCard = ({
               </div>
 
               {/* Duration bar */}
-              <div className="flex-1 flex flex-col items-center gap-1 min-w-[100px]">
+              <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[60px] sm:min-w-[100px]">
                 <p className="text-xs text-muted-foreground font-medium">{duration}</p>
                 <div className="w-full flex items-center gap-0">
                   <div className="w-2 h-2 rounded-full bg-accent" />
