@@ -526,6 +526,11 @@ router.get('/settings', async (req, res) => {
       defaultCurrency: settings.currency || 'BDT',
       apiKeys,
       socialOAuth,
+      settings: {
+        ...settings,
+        markup_config: settings.markup_config || null,
+        currency_rates: settings.currency_rates || null,
+      },
       paymentMethods: settings.paymentMethods || null,
       bankAccounts: settings.bankAccounts || null,
       notificationPrefs: settings.notifications || null,
