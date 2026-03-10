@@ -226,7 +226,7 @@ const AdminBookings = () => {
     try {
       await api.delete(`/admin/bookings/${b.rawId || b.id}`);
       toast({ title: "Deleted", description: `Booking ${b.id} permanently removed` });
-      qc.invalidateQueries({ queryKey: ["admin-bookings"] });
+      qc.invalidateQueries({ queryKey: ['admin', 'bookings'] });
       setDeleteConfirm(null);
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to delete", variant: "destructive" });
