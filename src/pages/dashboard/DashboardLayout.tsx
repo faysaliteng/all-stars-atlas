@@ -141,7 +141,6 @@ const DashboardLayout = () => {
           >
             <LogOut className="w-4 h-4" />
           </Button>
-          </Button>
         </div>
       </header>
 
