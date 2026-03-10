@@ -41,7 +41,7 @@ router.get('/stats', async (req, res) => {
     );
     if (nextTrip.length > 0) {
       const b = nextTrip[0];
-      const details = JSON.parse(b.details || '{}');
+      const details = safeJsonParse(b.details, {});
       upcomingTrip = {
         title: details.destination || details.route || `${b.booking_type} Booking`,
         date: new Date(b.booked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -74,7 +74,7 @@ router.get('/stats', async (req, res) => {
     // Recent bookings for the list
     const [recentBookings] = await db.query('SELECT * FROM bookings WHERE user_id = ? ORDER BY booked_at DESC LIMIT 5', [userId]);
     const bookings = recentBookings.map(b => {
-      const details = JSON.parse(b.details || '{}');
+      const details = safeJsonParse(b.details, {});
       return {
         id: b.booking_ref || b.id,
         title: details.destination || details.route || `${b.booking_type} Booking`,
@@ -140,7 +140,7 @@ router.get('/transactions', async (req, res) => {
     const data = rows.map(t => ({
       id: t.id, type: t.type, amount: parseFloat(t.amount), currency: t.currency,
       status: t.status, paymentMethod: t.payment_method, reference: t.reference,
-      description: t.description, meta: t.meta ? JSON.parse(t.meta) : null, createdAt: t.created_at,
+      description: t.description, meta: t.meta ? safeJsonParse(t.meta, null) : null, createdAt: t.created_at,
     }));
 
     res.json({
@@ -269,7 +269,7 @@ router.get('/tickets', async (req, res) => {
     const [rows] = await db.query(sql, params);
     const data = rows.map(t => ({
       id: t.id, bookingId: t.booking_id, ticketNo: t.ticket_no, pnr: t.pnr,
-      status: t.status, pdfUrl: t.pdf_url, details: JSON.parse(t.details || '{}'), issuedAt: t.issued_at,
+      status: t.status, pdfUrl: t.pdf_url, details: safeJsonParse(t.details, {}), issuedAt: t.issued_at,
     }));
     res.json({ data, total: data.length, page: 1, limit: 50, totalPages: 1 });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -281,7 +281,7 @@ router.get('/wishlist', async (req, res) => {
     const [rows] = await db.query('SELECT * FROM wishlist WHERE user_id = ? ORDER BY created_at DESC', [req.user.sub]);
     const data = rows.map(w => ({
       id: w.id, itemType: w.item_type, itemId: w.item_id,
-      itemData: JSON.parse(w.item_data || '{}'), createdAt: w.created_at,
+      itemData: safeJsonParse(w.item_data, {}), createdAt: w.created_at,
     }));
     res.json({ data });
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
@@ -465,7 +465,7 @@ router.get('/invoices', async (req, res) => {
       if (b.payment_status === 'paid') status = 'Paid';
       else if (b.payment_status === 'partial') status = 'Partial';
       
-      const details = JSON.parse(b.details || '{}');
+      const details = safeJsonParse(b.details, {});
       
       return {
         id: b.id,
@@ -568,7 +568,7 @@ router.get('/search-history', async (req, res) => {
       origin: s.origin,
       destination: s.destination,
       dates: s.dates,
-      params: JSON.parse(s.params || '{}'),
+      params: safeJsonParse(s.params, {}),
       searchedAt: s.created_at,
     }));
     

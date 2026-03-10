@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { authenticate, requireAdmin, formatUser } = require('../middleware/auth');
 const { notifyBookingStatus, notifyPayment } = require('../services/notify');
+const { safeJsonParse } = require('../utils/json');
 
 const router = express.Router();
 router.use(authenticate, requireAdmin);
@@ -149,7 +150,7 @@ router.get('/bookings', async (req, res) => {
     const data = rows.map(b => ({
       id: b.id, bookingRef: b.booking_ref, bookingType: b.booking_type, status: b.status,
       totalAmount: parseFloat(b.total_amount), currency: b.currency, paymentMethod: b.payment_method,
-      paymentStatus: b.payment_status, details: JSON.parse(b.details || '{}'),
+      paymentStatus: b.payment_status, details: safeJsonParse(b.details, {}),
       user: { name: `${b.first_name} ${b.last_name}`, email: b.user_email },
       bookedAt: b.booked_at,
     }));
@@ -369,7 +370,7 @@ router.get('/payment-approvals', async (req, res) => {
       method: methodLabels[t.payment_method] || t.payment_method,
       status: t.status === 'completed' ? 'Approved' : t.status === 'failed' ? 'Rejected' : 'Pending',
       reference: t.reference || `TXN-${t.id.substring(0, 8).toUpperCase()}`,
-      receiptUrl: t.meta ? (JSON.parse(t.meta || '{}').receiptUrl || null) : null,
+      receiptUrl: t.meta ? (safeJsonParse(t.meta, {}).receiptUrl || null) : null,
       note: t.description,
       date: t.created_at,
     }));
