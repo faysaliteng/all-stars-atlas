@@ -12,15 +12,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plane, ArrowRight, User, Clock, Luggage, Shield, CreditCard,
-  UtensilsCrossed, Armchair, Plus, Briefcase, Users, FileText,
-  AlertCircle, CheckCircle2, Timer, AlertTriangle, Package, Weight,
+  UtensilsCrossed, Plus, Briefcase, Users, FileText,
+  AlertCircle, CheckCircle2, Timer, AlertTriangle, Package,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCmsPageContent } from "@/hooks/useCmsContent";
 import { useAuth } from "@/hooks/useAuth";
 import AuthGateModal from "@/components/AuthGateModal";
 import { api } from "@/lib/api";
-import SeatMap from "@/components/flights/SeatMap";
 import type { BookingFormField } from "@/lib/cms-defaults";
 
 // ─── Bangladesh domestic airports ───
@@ -70,28 +69,7 @@ function getAirlineLogo(code?: string): string | null {
 function fmtTime(dt?: string) { if (!dt) return "—"; try { const d = new Date(dt); return isNaN(d.getTime()) ? dt : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return dt; } }
 function fmtDate(dt?: string) { if (!dt) return "—"; try { const d = new Date(dt); return isNaN(d.getTime()) ? dt : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); } catch { return dt; } }
 
-/* ─── Default Extras data (used as fallback) ─── */
-const DEFAULT_MEALS = [
-  { id: "standard", name: "Standard Meal", price: 0, desc: "Included with your fare", icon: "🍽️" },
-  { id: "vegetarian", name: "Vegetarian", price: 0, desc: "Lacto-ovo vegetarian meal", icon: "🥗" },
-  { id: "vegan", name: "Vegan", price: 200, desc: "Plant-based meal", icon: "🌱" },
-  { id: "halal", name: "Halal Meal", price: 0, desc: "Halal certified preparation", icon: "☪️" },
-  { id: "kosher", name: "Kosher Meal", price: 300, desc: "Kosher certified meal", icon: "✡️" },
-  { id: "child", name: "Child Meal", price: 0, desc: "Kid-friendly options", icon: "🧒" },
-  { id: "diabetic", name: "Diabetic Meal", price: 0, desc: "Low sugar, balanced nutrition", icon: "💊" },
-  { id: "seafood", name: "Seafood Meal", price: 350, desc: "Fresh seafood selection", icon: "🦐" },
-  { id: "fruit", name: "Fruit Platter", price: 150, desc: "Fresh fruit selection", icon: "🍎" },
-];
-const DEFAULT_BAGGAGE = [
-  { id: "extra5", name: "+5 kg Extra Baggage", price: 500, desc: "Total: 25kg checked", icon: "🧳" },
-  { id: "extra10", name: "+10 kg Extra Baggage", price: 900, desc: "Total: 30kg checked", icon: "🧳" },
-  { id: "extra15", name: "+15 kg Extra Baggage", price: 1200, desc: "Total: 35kg checked", icon: "🧳" },
-  { id: "extra20", name: "+20 kg Extra Baggage", price: 1500, desc: "Total: 40kg checked", icon: "🧳" },
-  { id: "extra30", name: "+30 kg Extra Baggage", price: 2200, desc: "Total: 50kg checked", icon: "🧳" },
-  { id: "sport", name: "Sports Equipment", price: 2000, desc: "Golf, ski, surfboard etc.", icon: "⚽" },
-  { id: "fragile", name: "Fragile Handling", price: 800, desc: "Priority fragile handling", icon: "📦" },
-  { id: "musical", name: "Musical Instrument", price: 1500, desc: "Guitar, violin etc.", icon: "🎸" },
-];
+/* ─── No hardcoded defaults — extras only from real API data ─── */
 
 /* ─── Add-on Card ─── */
 const AddOnCard = ({ item, selected, onSelect, multi }: { item: { id: string; name: string; price: number; desc: string; icon?: string }; selected: boolean; onSelect: () => void; multi?: boolean }) => (
@@ -188,15 +166,15 @@ const FlightBooking = () => {
   const { data: page, isLoading } = useCmsPageContent("/flights/book");
   const { toast } = useToast();
 
-  const [selectedMeal, setSelectedMeal] = useState("standard");
+  const [selectedMeal, setSelectedMeal] = useState("");
   const [selectedBaggage, setSelectedBaggage] = useState<string[]>([]);
-  const [selectedSeats, setSelectedSeats] = useState<Record<number, string>>({});
-  const [seatPrices, setSeatPrices] = useState<Record<number, number>>({});
 
-  // Ancillary data from API
-  const [mealOptions, setMealOptions] = useState(DEFAULT_MEALS);
-  const [baggageOptions, setBaggageOptions] = useState(DEFAULT_BAGGAGE);
-  const [ancillarySource, setAncillarySource] = useState("standard");
+  // Ancillary data from real API ONLY — no fake fallbacks
+  const [mealOptions, setMealOptions] = useState<{ id: string; name: string; price: number; desc: string; icon?: string }[]>([]);
+  const [baggageOptions, setBaggageOptions] = useState<{ id: string; name: string; price: number; desc: string; icon?: string }[]>([]);
+  const [ancillarySource, setAncillarySource] = useState("none");
+  const [ancillaryLoading, setAncillaryLoading] = useState(false);
+  const hasRealExtras = ancillarySource !== "none" && ancillarySource !== "standard";
 
   const [passengers, setPassengers] = useState([{
     title: "", firstName: "", lastName: "", dob: "", nationality: "", passport: "", passportExpiry: "", email: "", phone: "", gender: "", documentCountry: "BD",
@@ -227,19 +205,23 @@ const FlightBooking = () => {
         if (outboundFlight.cabinClass) params.cabinClass = outboundFlight.cabinClass;
 
         const data = await api.get<any>("/flights/ancillaries", params);
-        if (data?.meals?.length > 0) {
-          setMealOptions(data.meals.map((m: any) => ({
-            id: m.id, name: m.name, price: m.price || 0, desc: m.description || "", icon: m.category === "dietary" ? "🥗" : m.category === "premium" ? "🦐" : "🍽️",
-          })));
+        if (data?.source && data.source !== "standard") {
+          // Only use data from real airline APIs (TTI, BDFare etc.), NOT standard fallbacks
+          setAncillarySource(data.source);
+          if (data.meals?.length > 0) {
+            setMealOptions(data.meals.map((m: any) => ({
+              id: m.id, name: m.name, price: m.price || 0, desc: m.description || "", icon: m.category === "dietary" ? "🥗" : m.category === "premium" ? "🦐" : "🍽️",
+            })));
+          }
+          if (data.baggage?.length > 0) {
+            setBaggageOptions(data.baggage.map((b: any) => ({
+              id: b.id, name: b.name, price: b.price || 0, desc: b.description || "", icon: b.type === "special" ? "📦" : "🧳",
+            })));
+          }
         }
-        if (data?.baggage?.length > 0) {
-          setBaggageOptions(data.baggage.map((b: any) => ({
-            id: b.id, name: b.name, price: b.price || 0, desc: b.description || "", icon: b.type === "special" ? "📦" : "🧳",
-          })));
-        }
-        if (data?.source) setAncillarySource(data.source);
+        // If source is "standard", we don't set anything — no fake data
       } catch {
-        // Silently fall back to defaults
+        // No API available — no extras shown
       }
     };
     fetchAncillaries();
@@ -247,8 +229,7 @@ const FlightBooking = () => {
 
   const mealCost = mealOptions.find(m => m.id === selectedMeal)?.price || 0;
   const baggageCost = selectedBaggage.reduce((sum, id) => sum + (baggageOptions.find(b => b.id === id)?.price || 0), 0);
-  const seatCost = Object.values(seatPrices).reduce((a, b) => a + b, 0);
-  const addOnTotal = mealCost + baggageCost + seatCost;
+  const addOnTotal = mealCost + baggageCost;
   const outboundPrice = outboundFlight?.price || 0;
   const returnPrice = returnFlight?.price || 0;
   const baseFare = outboundPrice + returnPrice;
@@ -258,14 +239,22 @@ const FlightBooking = () => {
 
   const deadlineInfo = resolveDeadlineInfo(outboundFlight, domestic);
 
-  const handleSeatSelect = (paxIdx: number, seatId: string, price: number) => {
-    setSelectedSeats(prev => ({ ...prev, [paxIdx]: seatId }));
-    setSeatPrices(prev => ({ ...prev, [paxIdx]: price }));
-  };
-  const handleSeatDeselect = (paxIdx: number) => {
-    setSelectedSeats(prev => { const n = { ...prev }; delete n[paxIdx]; return n; });
-    setSeatPrices(prev => { const n = { ...prev }; delete n[paxIdx]; return n; });
-  };
+  // Dynamic steps: only show Extras if real API data is available
+  const STEPS = hasRealExtras
+    ? [
+        { label: "Flight Details", icon: Plane },
+        { label: "Passenger Info", icon: Users },
+        { label: "Extras", icon: Plus },
+        { label: "Review & Pay", icon: CreditCard },
+      ]
+    : [
+        { label: "Flight Details", icon: Plane },
+        { label: "Passenger Info", icon: Users },
+        { label: "Review & Pay", icon: CreditCard },
+      ];
+  const totalSteps = STEPS.length;
+  const reviewStep = totalSteps;
+  const extrasStep = hasRealExtras ? 3 : -1; // -1 means no extras step
 
   const validateStep = (currentStep: number): boolean => {
     const errors: Record<string, string> = {};
@@ -295,15 +284,11 @@ const FlightBooking = () => {
   const createBooking = async (payLater: boolean) => {
     setBookingLoading(true);
     try {
-      const seatSelections = Object.entries(selectedSeats).map(([paxIdx, seatId]) => ({
-        passenger: Number(paxIdx), seat: seatId, price: seatPrices[Number(paxIdx)] || 0,
-      }));
       const bookingData = {
         flightData: outboundFlight, returnFlightData: returnFlight, passengers, isRoundTrip, isDomestic: domestic, payLater,
         paymentMethod: payLater ? "pay_later" : (selectedPaymentMethod || "card"), totalAmount: grandTotal, baseFare, taxes, serviceCharge,
         addOns: {
-          meal: mealOptions.find(m => m.id === selectedMeal)?.name,
-          seats: seatSelections,
+          meal: mealOptions.find(m => m.id === selectedMeal)?.name || undefined,
           baggage: selectedBaggage.map(id => baggageOptions.find(b => b.id === id)?.name).filter(Boolean),
           total: addOnTotal,
         },
@@ -336,12 +321,7 @@ const FlightBooking = () => {
 
   if (isLoading) return <div className="min-h-screen bg-muted/30 pt-20 lg:pt-28 pb-10"><div className="container mx-auto px-4"><Skeleton className="h-96 w-full rounded-xl" /></div></div>;
 
-  const STEPS = [
-    { label: "Flight Details", icon: Plane },
-    { label: "Passenger Info", icon: Users },
-    { label: "Extras", icon: Plus },
-    { label: "Review & Pay", icon: CreditCard },
-  ];
+  // STEPS already defined above dynamically based on hasRealExtras
 
   // ─── POST-BOOKING SUCCESS ───
   if (bookingComplete && bookingResult) {
@@ -457,7 +437,7 @@ const FlightBooking = () => {
         </div>
 
         {/* Biman notice */}
-        {isBiman && step === 4 && (
+        {isBiman && step === reviewStep && (
           <div className="flex items-start gap-3 p-4 mb-6 bg-warning/10 border border-warning/20 rounded-xl">
             <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
             <div>
@@ -621,45 +601,21 @@ const FlightBooking = () => {
               </Card>
             )}
 
-            {/* STEP 3: Extras — Meal, Baggage, Seat Selection */}
-            {step === 3 && (
+            {/* STEP 3: Extras — ONLY when real airline API data is available */}
+            {step === extrasStep && hasRealExtras && (
               <Card>
                 <CardHeader className="bg-accent/5 border-b border-border">
                   <CardTitle className="text-sm sm:text-base flex items-center gap-2">
                     <Plus className="w-5 h-5 text-accent" /> Customize Your Flight
-                    {ancillarySource !== "standard" && (
-                      <Badge className="bg-accent/10 text-accent border-0 text-[9px] ml-2">Live Airline Data</Badge>
-                    )}
+                    <Badge className="bg-accent/10 text-accent border-0 text-[9px] ml-2">Live Airline Data</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-5">
-                  <Tabs defaultValue="seat" className="w-full">
-                    <TabsList className="w-full grid grid-cols-3 mb-4 h-auto">
-                      <TabsTrigger value="seat" className="gap-1 sm:gap-1.5 text-[11px] sm:text-sm py-2"><Armchair className="w-3.5 h-3.5" /><span className="hidden xs:inline">Seat</span><span className="xs:hidden">🪑</span></TabsTrigger>
-                      <TabsTrigger value="baggage" className="gap-1 sm:gap-1.5 text-[11px] sm:text-sm py-2"><Luggage className="w-3.5 h-3.5" /><span className="hidden xs:inline">Baggage</span><span className="xs:hidden">🧳</span></TabsTrigger>
-                      <TabsTrigger value="meal" className="gap-1 sm:gap-1.5 text-[11px] sm:text-sm py-2"><UtensilsCrossed className="w-3.5 h-3.5" /><span className="hidden xs:inline">Meal</span><span className="xs:hidden">🍽️</span></TabsTrigger>
+                  <Tabs defaultValue="baggage" className="w-full">
+                    <TabsList className="w-full grid grid-cols-2 mb-4 h-auto">
+                      <TabsTrigger value="baggage" className="gap-1 sm:gap-1.5 text-[11px] sm:text-sm py-2"><Luggage className="w-3.5 h-3.5" /> Baggage</TabsTrigger>
+                      <TabsTrigger value="meal" className="gap-1 sm:gap-1.5 text-[11px] sm:text-sm py-2"><UtensilsCrossed className="w-3.5 h-3.5" /> Meal</TabsTrigger>
                     </TabsList>
-
-                    {/* ── SEAT SELECTION (Interactive Seat Map) ── */}
-                    <TabsContent value="seat" className="space-y-3">
-                      <div className="flex items-center gap-2 p-3 bg-accent/5 rounded-lg border border-accent/10">
-                        <Armchair className="w-4 h-4 text-accent shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium">Select Your Preferred Seat</p>
-                          <p className="text-xs text-muted-foreground">Tap on a seat to assign it to the active passenger</p>
-                        </div>
-                      </div>
-                      <SeatMap
-                        flightNumber={outboundFlight?.flightNumber || ""}
-                        aircraft={outboundFlight?.aircraft || outboundFlight?.legs?.[0]?.aircraft || ""}
-                        cabinClass={outboundFlight?.cabinClass || "Economy"}
-                        passengers={passengers}
-                        selectedSeats={selectedSeats}
-                        onSeatSelect={handleSeatSelect}
-                        onSeatDeselect={handleSeatDeselect}
-                        isDomestic={domestic}
-                      />
-                    </TabsContent>
 
                     {/* ── EXTRA BAGGAGE ── */}
                     <TabsContent value="baggage" className="space-y-3">
@@ -670,33 +626,41 @@ const FlightBooking = () => {
                           <p className="text-xs text-muted-foreground">Your fare includes standard baggage allowance</p>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        {baggageOptions.map(bag => (
-                          <AddOnCard key={bag.id} item={bag} multi
-                            selected={selectedBaggage.includes(bag.id)}
-                            onSelect={() => setSelectedBaggage(prev => prev.includes(bag.id) ? prev.filter(x => x !== bag.id) : [...prev, bag.id])} />
-                        ))}
-                      </div>
+                      {baggageOptions.length > 0 ? (
+                        <div className="space-y-2">
+                          {baggageOptions.map(bag => (
+                            <AddOnCard key={bag.id} item={bag} multi
+                              selected={selectedBaggage.includes(bag.id)}
+                              onSelect={() => setSelectedBaggage(prev => prev.includes(bag.id) ? prev.filter(x => x !== bag.id) : [...prev, bag.id])} />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground p-3">No extra baggage options available from this airline.</p>
+                      )}
                     </TabsContent>
 
                     {/* ── MEAL SELECTION ── */}
                     <TabsContent value="meal" className="space-y-3">
                       <p className="text-sm text-muted-foreground">Select your preferred meal for this flight.</p>
-                      <div className="space-y-2">
-                        {mealOptions.map(meal => (
-                          <AddOnCard key={meal.id} item={meal}
-                            selected={selectedMeal === meal.id}
-                            onSelect={() => setSelectedMeal(meal.id)} />
-                        ))}
-                      </div>
+                      {mealOptions.length > 0 ? (
+                        <div className="space-y-2">
+                          {mealOptions.map(meal => (
+                            <AddOnCard key={meal.id} item={meal}
+                              selected={selectedMeal === meal.id}
+                              onSelect={() => setSelectedMeal(meal.id)} />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground p-3">No meal options available from this airline.</p>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </CardContent>
               </Card>
             )}
 
-            {/* STEP 4: Review & Booking */}
-            {step === 4 && (
+            {/* REVIEW STEP: Review & Booking */}
+            {step === reviewStep && (
               <>
                 <Card>
                   <CardHeader className="bg-accent/5 border-b border-border">
@@ -731,7 +695,6 @@ const FlightBooking = () => {
                           <User className="w-4 h-4 text-muted-foreground shrink-0" />
                           <span className="font-medium">{p.title} {p.firstName} {p.lastName}</span>
                           {p.passport && <span className="text-xs text-muted-foreground hidden sm:inline">Passport: {p.passport}</span>}
-                          {selectedSeats[i] && <Badge className="bg-accent/10 text-accent border-0 text-[9px]">Seat {selectedSeats[i]}</Badge>}
                         </div>
                       ))}
                     </div>
@@ -739,11 +702,8 @@ const FlightBooking = () => {
                       <div>
                         <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Selected Extras</h4>
                         <div className="flex flex-wrap gap-2">
-                          {selectedMeal !== "standard" && <Badge variant="outline" className="text-xs"><UtensilsCrossed className="w-3 h-3 mr-1" />{mealOptions.find(m => m.id === selectedMeal)?.name}</Badge>}
+                          {selectedMeal && <Badge variant="outline" className="text-xs"><UtensilsCrossed className="w-3 h-3 mr-1" />{mealOptions.find(m => m.id === selectedMeal)?.name}</Badge>}
                           {selectedBaggage.map(id => <Badge key={id} variant="outline" className="text-xs"><Luggage className="w-3 h-3 mr-1" />{baggageOptions.find(b => b.id === id)?.name}</Badge>)}
-                          {Object.entries(selectedSeats).map(([idx, seatId]) => (
-                            <Badge key={idx} variant="outline" className="text-xs"><Armchair className="w-3 h-3 mr-1" />Seat {seatId} (Pax {Number(idx) + 1})</Badge>
-                          ))}
                         </div>
                       </div>
                     )}
@@ -798,7 +758,7 @@ const FlightBooking = () => {
             {/* Navigation */}
             <div className="flex gap-3">
               {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>Back</Button>}
-              {step < 4 ? (
+              {step < totalSteps ? (
                 <Button onClick={handleContinue} className="font-bold bg-accent text-accent-foreground hover:bg-accent/90">Continue <ArrowRight className="w-4 h-4 ml-1" /></Button>
               ) : isBiman ? (
                 <Button className="font-bold bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg" onClick={handleConfirmBooking} disabled={bookingLoading}>
@@ -841,7 +801,6 @@ const FlightBooking = () => {
                     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Add-ons</p>
                     {mealCost > 0 && <div className="flex justify-between text-xs"><span className="text-muted-foreground">{mealOptions.find(m => m.id === selectedMeal)?.name}</span><span>৳{mealCost.toLocaleString()}</span></div>}
                     {baggageCost > 0 && selectedBaggage.map(id => { const bag = baggageOptions.find(b => b.id === id); return bag ? <div key={id} className="flex justify-between text-xs"><span className="text-muted-foreground">{bag.name}</span><span>৳{bag.price.toLocaleString()}</span></div> : null; })}
-                    {seatCost > 0 && <div className="flex justify-between text-xs"><span className="text-muted-foreground">Seat Selection</span><span>৳{seatCost.toLocaleString()}</span></div>}
                   </>
                 )}
 
@@ -849,7 +808,7 @@ const FlightBooking = () => {
                 <div className="flex justify-between text-base"><span className="font-bold">Total Payable</span><span className="font-black text-accent">৳{grandTotal.toLocaleString()}</span></div>
                 {isRoundTrip && <p className="text-[10px] text-muted-foreground text-center">Round-trip fare for 1 passenger</p>}
 
-                {!isBiman && deadlineInfo && step === 4 && (
+                {!isBiman && deadlineInfo && step === reviewStep && (
                   <>
                     <Separator />
                     <div className="flex items-center gap-2 text-xs text-destructive font-semibold"><Timer className="w-3.5 h-3.5" />{deadlineInfo.label}</div>
