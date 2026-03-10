@@ -73,7 +73,7 @@ const BookingConfirmation = () => {
           duration: ob.duration || "",
           cabinClass: ob.cabinClass || cabin,
           aircraft: ob.aircraft || "",
-          baggage: ob.baggage || "20kg",
+          baggage: ob.baggage || "As per airline policy",
           status: "Confirmed",
           meal: booking.meal || "Meals",
         });
