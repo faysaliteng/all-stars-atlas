@@ -546,7 +546,7 @@ async function createBooking({ flightData, passengers, contactInfo }) {
   let refCounter = 1;
   const ttiPassengers = passengers.map((p, i) => ({
     Ref: String(refCounter++),
-    PassengerTypeCode: 'AD', // TODO: detect child/infant from DOB
+    PassengerTypeCode: 'AD',
     Title: p.title || 'Mr',
     FirstName: (p.firstName || '').toUpperCase(),
     LastName: (p.lastName || '').toUpperCase(),
@@ -559,37 +559,57 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     Phone: p.phone || contactInfo?.phone || '',
   }));
 
-  // Build segments from flight data
-  const segments = [];
-  const legs = flightData.legs || [];
-  if (legs.length > 0) {
-    legs.forEach((leg, i) => {
+  // ── TTI CreateBooking requires the original FareInfo (Itineraries + ETTicketFares) 
+  // and Segments from the SearchFlights response to be echoed back ──
+  const rawItinerary = flightData._ttiRawItinerary || null;
+  const rawFares = flightData._ttiRawFares || [];
+  const rawSegments = flightData._ttiRawSegments || [];
+
+  // Build FareInfo from raw search data
+  const fareInfo = {};
+  if (rawItinerary) {
+    fareInfo.Itineraries = [rawItinerary];
+  }
+  if (rawFares.length > 0) {
+    fareInfo.ETTicketFares = rawFares;
+  }
+
+  // Use raw segments if available, otherwise build from legs
+  let segments = [];
+  if (rawSegments.length > 0) {
+    segments = rawSegments;
+  } else {
+    const legs = flightData.legs || [];
+    if (legs.length > 0) {
+      legs.forEach((leg, i) => {
+        segments.push({
+          Ref: String(i + 1),
+          FlightNumber: leg.flightNumber || flightData.flightNumber,
+          AirlineCode: leg.airlineCode || flightData.airlineCode,
+          Origin: leg.origin || flightData.origin,
+          Destination: leg.destination || flightData.destination,
+          DepartureDate: leg.departureTime ? `/Date(${new Date(leg.departureTime).getTime()})/` : null,
+          CabinClass: flightData.cabinClass || 'Economy',
+        });
+      });
+    } else {
       segments.push({
-        Ref: String(i + 1),
-        FlightNumber: leg.flightNumber || flightData.flightNumber,
-        AirlineCode: leg.airlineCode || flightData.airlineCode,
-        Origin: leg.origin || flightData.origin,
-        Destination: leg.destination || flightData.destination,
-        DepartureDate: leg.departureTime ? `/Date(${new Date(leg.departureTime).getTime()})/` : null,
+        Ref: '1',
+        FlightNumber: flightData.flightNumber,
+        AirlineCode: flightData.airlineCode,
+        Origin: flightData.origin,
+        Destination: flightData.destination,
+        DepartureDate: flightData.departureTime ? `/Date(${new Date(flightData.departureTime).getTime()})/` : null,
         CabinClass: flightData.cabinClass || 'Economy',
       });
-    });
-  } else {
-    segments.push({
-      Ref: '1',
-      FlightNumber: flightData.flightNumber,
-      AirlineCode: flightData.airlineCode,
-      Origin: flightData.origin,
-      Destination: flightData.destination,
-      DepartureDate: flightData.departureTime ? `/Date(${new Date(flightData.departureTime).getTime()})/` : null,
-      CabinClass: flightData.cabinClass || 'Economy',
-    });
+    }
   }
 
   const request = {
     RequestInfo: { AuthenticationKey: config.key },
     Passengers: ttiPassengers,
     Segments: segments,
+    FareInfo: fareInfo,
     ContactInfo: {
       Email: contactInfo?.email || passengers[0]?.email || '',
       Phone: contactInfo?.phone || passengers[0]?.phone || '',
@@ -601,7 +621,8 @@ async function createBooking({ flightData, passengers, contactInfo }) {
   };
 
   console.log('[TTI] Creating booking for', flightData.origin, '→', flightData.destination, 'flight', flightData.flightNumber);
-  console.log('[TTI BOOKING] Request payload:', JSON.stringify(request, null, 2).substring(0, 2000));
+  console.log('[TTI BOOKING] Has raw itinerary:', !!rawItinerary, '| Has raw fares:', rawFares.length, '| Has raw segments:', rawSegments.length);
+  console.log('[TTI BOOKING] Request payload (truncated):', JSON.stringify(request).substring(0, 3000));
 
   try {
     const response = await ttiRequest('CreateBooking', request);
