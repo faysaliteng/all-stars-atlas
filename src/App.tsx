@@ -100,6 +100,8 @@ const AdminInvoices = lazy(() => import("@/pages/admin/AdminInvoices"));
 const AdminPaymentApprovals = lazy(() => import("@/pages/admin/AdminPaymentApprovals"));
 const AdminDiscounts = lazy(() => import("@/pages/admin/AdminDiscounts"));
 const CMSBookingForms = lazy(() => import("@/pages/admin/cms/CMSBookingForms"));
+const AdminMarkup = lazy(() => import("@/pages/admin/AdminMarkup"));
+const AdminCurrency = lazy(() => import("@/pages/admin/AdminCurrency"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
