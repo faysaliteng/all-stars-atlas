@@ -190,21 +190,26 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
       }
     }
 
-    // Get fare details for the itinerary
+    // Get fare details for the itinerary (including seat availability)
     const fareDetails = [];
+    let minAvailableSeats = Infinity;
     for (const f of fares) {
       const odFares = f.OriginDestinationFares || [];
       for (const odf of odFares) {
         const couponFares = odf.ETCouponFares || odf.CouponFares || [];
         for (const cf of couponFares) {
+          const seats = cf.AvailableSeats ?? cf.SeatsAvailable ?? cf.Availability ?? cf.AvailableCount ?? null;
+          if (seats !== null && seats < minAvailableSeats) minAvailableSeats = seats;
           fareDetails.push({
             fareBasis: cf.FareBasisCode || '',
             bookingClass: cf.BookingClassCode || '',
             cabinClass: cf.CabinClassCode || '',
+            availableSeats: seats,
           });
         }
       }
     }
+    const availableSeats = minAvailableSeats === Infinity ? null : minAvailableSeats;
 
     const cabinClass = fareDetails[0]?.cabinClass || '';
     const cabinName = cabinClass === 'Y' ? 'Economy' : cabinClass === 'C' ? 'Business' : cabinClass === 'F' ? 'First' : cabinClass === 'W' ? 'Premium Economy' : cabinClass || 'Economy';
