@@ -257,18 +257,34 @@ function parsePassportText(text) {
     }
   }
 
-  // Issue date
+  // Issue date — BD passports show "Date of Issue" or just a date near "18 JUN 2025" pattern
   if (!result.issuanceDate) {
-    const issueContext = fullText.match(/(?:ISSUE|ISSUANCE|DATE\s*OF\s*ISSUE)\s*(?:DATE)?[:\s]*(\d{1,2}[\s\/\-\.]\w{2,3}[\s\/\-\.]\d{2,4})/i);
+    const issueContext = fullText.match(/(?:DATE\s*OF\s*ISSUE|ISSUE\s*DATE|ISSUANCE\s*DATE|ISSUED)[:\s]*(\d{1,2}[\s\/\-\.]\w{2,3}[\s\/\-\.]\d{2,4})/i);
     if (issueContext) {
       result.issuanceDate = normalizeDate(issueContext[1]);
+    } else if (dates.length >= 3 && result.birthDate && result.expiryDate) {
+      // On BD passports: DOB, Issue Date, Expiry Date appear in order
+      // Find a date that isn't DOB or expiry
+      for (const d of dates) {
+        const normalized = normalizeDate(d.raw);
+        if (normalized && normalized !== result.birthDate && normalized !== result.expiryDate) {
+          result.issuanceDate = normalized;
+          break;
+        }
+      }
     }
   }
 
-  // Birth place
+  // Birth place — BD passports: "Place of Birth" or city name near birth info
   if (!result.birthPlace) {
-    const placeMatch = fullText.match(/(?:BIRTH\s*PLACE|PLACE\s*OF\s*BIRTH)[:\s]*([A-Z\s,]+?)(?:\n|$)/i);
-    if (placeMatch) result.birthPlace = placeMatch[1].trim();
+    const placeMatch = fullText.match(/(?:BIRTH\s*PLACE|PLACE\s*OF\s*BIRTH)[:\s]*([A-Z][A-Z\s,]+?)(?:\n|$)/i) ||
+                       fullText.match(/(?:PLACE\s*OF\s*BIRTH|BIRTH\s*PLACE)[:\s\/]*\n?\s*([A-Z][A-Z\s,]+?)(?:\n|$)/i);
+    if (placeMatch) {
+      let place = placeMatch[1].trim();
+      // Filter out single letters (parsing artifacts)
+      if (place.length <= 2) place = '';
+      result.birthPlace = place;
+    }
   }
 
   console.log('[OCR] Visual text parsed');
