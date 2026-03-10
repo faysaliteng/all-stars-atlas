@@ -23,7 +23,7 @@ import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-const STORE_KEY = "cms_blog_posts";
+
 const statusColors: Record<string, string> = {
   published: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   draft: "bg-muted text-muted-foreground",
