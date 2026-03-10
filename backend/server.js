@@ -60,7 +60,8 @@ app.use('/api/flights', flightRoutes);
 app.use('/api/flights', ancillaryRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api', serviceRoutes); // holidays, medical, cars, esim, recharge, paybill, contact
-app.use('/api', visaRoutes); // visa apply, upload, user applications + admin visa routes
+app.use('/api', visaRoutes);
+app.use('/api/passport', passportOcrRoutes);
 
 // Dashboard
 app.use('/api/dashboard', dashboardRoutes);
