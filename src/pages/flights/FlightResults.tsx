@@ -297,11 +297,15 @@ const FlightCard = ({
                             {/* Segment card */}
                             <div className="border border-border rounded-xl overflow-hidden">
                               {/* Segment header */}
-                              <div className="bg-accent/5 px-4 py-2.5 flex items-center gap-3 border-b border-border/50">
+                              <div className="bg-accent/5 px-4 py-2.5 flex flex-wrap items-center gap-2 sm:gap-3 border-b border-border/50">
                                 {legLogo && <img src={legLogo} alt="" className="w-6 h-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
                                 <span className="text-sm font-bold">{leg.airlineCode || flight.airline}</span>
                                 <span className="text-xs text-muted-foreground">{leg.flightNumber}</span>
-                                {leg.aircraft && <span className="text-xs text-muted-foreground">· Aircraft: {leg.aircraft}</span>}
+                                {leg.aircraft && <span className="text-xs text-muted-foreground">· {leg.aircraft}</span>}
+                                <span className="text-xs font-medium">{cabinDisplay}</span>
+                                {availableSeats !== null && availableSeats <= 9 && (
+                                  <span className="text-xs text-destructive font-bold">{availableSeats} Seats Left</span>
+                                )}
                               </div>
                               {/* Segment body - responsive grid */}
                               <div className="grid grid-cols-3 sm:grid-cols-5 gap-0 text-center divide-x divide-border/50">
