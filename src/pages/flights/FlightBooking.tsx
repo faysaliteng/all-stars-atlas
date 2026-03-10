@@ -253,16 +253,18 @@ const FlightBooking = () => {
 
   const mealCost = mealOptions.find(m => m.id === selectedMeal)?.price || 0;
   const baggageCost = selectedBaggage.reduce((sum, id) => sum + (baggageOptions.find(b => b.id === id)?.price || 0), 0);
-  const addOnTotal = mealCost + baggageCost;
+  const addOnTotal = (mealCost + baggageCost) * totalPaxCount;
   const outboundPrice = outboundFlight?.price || 0;
   const returnPrice = returnFlight?.price || 0;
   const outboundBaseFare = outboundFlight?.baseFare ?? outboundPrice;
   const returnBaseFare = returnFlight?.baseFare ?? returnPrice;
-  const baseFare = outboundBaseFare + returnBaseFare;
+  const perPaxBaseFare = outboundBaseFare + returnBaseFare;
+  const baseFare = perPaxBaseFare * totalPaxCount;
   // Use real tax data from GDS response; only fall back to calculation if unavailable
   const outboundTaxes = outboundFlight?.taxes ?? 0;
   const returnTaxes = returnFlight?.taxes ?? 0;
-  const taxes = (outboundTaxes + returnTaxes) > 0 ? (outboundTaxes + returnTaxes) : Math.round(baseFare * 0.12);
+  const perPaxTaxes = (outboundTaxes + returnTaxes) > 0 ? (outboundTaxes + returnTaxes) : Math.round(perPaxBaseFare * 0.12);
+  const taxes = perPaxTaxes * totalPaxCount;
   const serviceCharge = outboundFlight?.serviceCharge ?? 0;
   const grandTotal = baseFare + taxes + serviceCharge + addOnTotal;
 
