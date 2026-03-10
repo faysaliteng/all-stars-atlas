@@ -13,15 +13,20 @@ let configCacheTime = 0;
 async function getVisionConfig() {
   if (configCache && Date.now() - configCacheTime < 5 * 60 * 1000) return configCache;
   try {
-    const [rows] = await db.query("SELECT setting_value FROM system_settings WHERE setting_key = 'api_google_vision'");
+    const [rows] = await db.query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key = 'api_google_vision'");
+    console.log('[OCR] DB query result rows:', rows.length, rows.length > 0 ? 'Found config' : 'No config found');
     if (rows.length > 0) {
-      const config = JSON.parse(rows[0].setting_value);
+      const raw = rows[0].setting_value;
+      console.log('[OCR] Raw setting_value:', raw);
+      const config = JSON.parse(raw);
+      console.log('[OCR] Parsed config keys:', Object.keys(config), 'enabled:', config.enabled, 'hasApiKey:', !!config.apiKey);
       const isEnabled = config.enabled === true || config.enabled === 'true';
       if (isEnabled && config.apiKey) {
         configCache = config;
         configCacheTime = Date.now();
         return config;
       }
+      console.log('[OCR] Config check failed — enabled:', isEnabled, 'apiKey present:', !!config.apiKey);
     }
   } catch (err) {
     console.error('[OCR] Config load error:', err.message);
