@@ -638,13 +638,17 @@ const FlightBooking = () => {
                     {/* ── MEAL SELECTION ── */}
                     <TabsContent value="meal" className="space-y-3">
                       <p className="text-sm text-muted-foreground">Select your preferred meal for this flight.</p>
-                      <div className="space-y-2">
-                        {mealOptions.map(meal => (
-                          <AddOnCard key={meal.id} item={meal}
-                            selected={selectedMeal === meal.id}
-                            onSelect={() => setSelectedMeal(meal.id)} />
-                        ))}
-                      </div>
+                      {mealOptions.length > 0 ? (
+                        <div className="space-y-2">
+                          {mealOptions.map(meal => (
+                            <AddOnCard key={meal.id} item={meal}
+                              selected={selectedMeal === meal.id}
+                              onSelect={() => setSelectedMeal(meal.id)} />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground p-3">No meal options available from this airline.</p>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </CardContent>
