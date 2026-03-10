@@ -167,7 +167,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
         <DialogHeader className="p-5 pb-3 border-b border-border">
           <DialogTitle className="flex items-center gap-2 text-base">
             <ScanLine className="w-5 h-5 text-accent" />
-            Passport Scanner
+            Document Scanner
           </DialogTitle>
         </DialogHeader>
 
