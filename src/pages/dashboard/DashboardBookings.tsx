@@ -21,7 +21,16 @@ import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
 import PaymentReminderBanner from "@/components/PaymentReminder";
 
-const statusTabs = ["All", "On Hold", "Pending", "In Progress", "Confirmed", "Completed", "Void", "Refund", "Exchange", "Expired", "Cancelled", "Un-Confirmed"];
+const statusTabs = ["All", "Reserved", "Pending", "In Progress", "Confirmed", "Completed", "Void", "Refund", "Exchange", "Expired", "Cancelled", "Un-Confirmed"];
+
+const statusLabelMap: Record<string, string> = {
+  on_hold: "Reserved", "On Hold": "Reserved",
+  confirmed: "Confirmed", pending: "Pending", in_progress: "In Progress",
+  completed: "Completed", cancelled: "Cancelled", void: "Void",
+  refund: "Refund", exchange: "Exchange", expired: "Expired",
+  un_confirmed: "Un-Confirmed",
+};
+function displayStatus(status: string) { return statusLabelMap[status] || status; }
 
 const statusColors: Record<string, string> = {
   "Confirmed": "bg-accent/10 text-accent border-accent/20", "confirmed": "bg-accent/10 text-accent border-accent/20",
@@ -33,7 +42,7 @@ const statusColors: Record<string, string> = {
   "Refund": "bg-accent/10 text-accent border-accent/20", "refund": "bg-accent/10 text-accent border-accent/20",
   "Exchange": "bg-primary/10 text-primary border-primary/20", "exchange": "bg-primary/10 text-primary border-primary/20",
   "Expired": "bg-muted text-muted-foreground border-border", "expired": "bg-muted text-muted-foreground border-border",
-  "On Hold": "bg-warning/10 text-warning border-warning/20", "on_hold": "bg-warning/10 text-warning border-warning/20",
+  "Reserved": "bg-warning/10 text-warning border-warning/20", "On Hold": "bg-warning/10 text-warning border-warning/20", "on_hold": "bg-warning/10 text-warning border-warning/20",
   "Un-Confirmed": "bg-destructive/10 text-destructive border-destructive/20", "un_confirmed": "bg-destructive/10 text-destructive border-destructive/20",
 };
 
@@ -110,7 +119,7 @@ const BookingDetailDialog = ({ booking, onClose }: { booking: any; onClose: () =
                 <span className="text-sm sm:text-base truncate">Booking: {booking.id}</span>
               </div>
               <Badge className="bg-accent-foreground/20 text-accent-foreground border-0 text-xs w-fit">
-                {booking.status}
+                {displayStatus(booking.status)}
               </Badge>
             </DialogTitle>
           </DialogHeader>
@@ -410,7 +419,7 @@ const DashboardBookings = () => {
   const [page, setPage] = useState(1);
   const [viewBooking, setViewBooking] = useState<any>(null);
 
-  const statusParam = activeTab !== "All" ? activeTab.toLowerCase().replace(/[ -]/g, "_") : undefined;
+  const statusParam = activeTab !== "All" ? (activeTab === "Reserved" ? "on_hold" : activeTab.toLowerCase().replace(/[ -]/g, "_")) : undefined;
   const { data, isLoading, error, refetch } = useDashboardBookings({
     status: statusParam, search: search || undefined, limit: Number(perPage), page,
   });
@@ -424,8 +433,8 @@ const DashboardBookings = () => {
     tabCounts["All"] = bookings.length;
     statusTabs.forEach(tab => {
       if (tab !== "All") {
-        const tabKey = tab.toLowerCase().replace(/ /g, "_");
-        tabCounts[tab] = bookings.filter((b: any) => b.status?.toLowerCase() === tabKey || b.status?.toLowerCase() === tab.toLowerCase()).length;
+        const tabKey = tab === "Reserved" ? "on_hold" : tab.toLowerCase().replace(/ /g, "_");
+        tabCounts[tab] = bookings.filter((b: any) => b.status?.toLowerCase() === tabKey || displayStatus(b.status) === tab).length;
       }
     });
   }
@@ -441,7 +450,7 @@ const DashboardBookings = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div><h1 className="text-xl sm:text-2xl font-bold">My Bookings</h1><p className="text-xs sm:text-sm text-muted-foreground mt-1">{total} total bookings</p></div>
         <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => {
-          downloadCSV('bookings', ['ID', 'Type', 'Route', 'Date', 'Status', 'Amount'], bookings.map((b: any) => [b.id, b.type, b.title, b.date, b.status, b.amount]));
+          downloadCSV('bookings', ['ID', 'Type', 'Route', 'Date', 'Status', 'Amount'], bookings.map((b: any) => [b.id, b.type, b.title, b.date, displayStatus(b.status), b.amount]));
           toast({ title: "Exported", description: "Bookings CSV downloaded." });
         }}><Download className="w-4 h-4 mr-1.5" /> Export</Button>
       </div>
@@ -508,7 +517,7 @@ const DashboardBookings = () => {
                         {booking.pnr && booking.pnr !== "—" ? <code className="text-xs bg-accent/10 text-accent px-1.5 py-0.5 rounded font-bold">{booking.pnr}</code> : <span className="text-muted-foreground text-xs">—</span>}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-sm">{booking.pax}</TableCell>
-                      <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{booking.status}</Badge></TableCell>
+                      <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{displayStatus(booking.status)}</Badge></TableCell>
                       <TableCell className="text-right font-semibold text-sm">{booking.amount}</TableCell>
                       <TableCell>
                         <DropdownMenu modal={false}>
