@@ -181,6 +181,10 @@ const FlightBooking = () => {
   const hasRealExtras = ancillarySource !== "none" && ancillarySource !== "standard";
 
   // Read passenger counts from URL
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const locationState = location.state as any;
+
   const adultCount = parseInt(searchParams.get("adults") || "1");
   const childCount = parseInt(searchParams.get("children") || "0");
   const infantCount = parseInt(searchParams.get("infants") || "0");
@@ -201,9 +205,6 @@ const FlightBooking = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [activePaxIndex, setActivePaxIndex] = useState(0);
 
-  const [searchParamsObj] = useSearchParams();
-  const location = useLocation();
-  const locationState = location.state as any;
   const isRoundTrip = searchParams.get("roundTrip") === "true" || !!locationState?.returnFlight;
 
   const outboundFlight = locationState?.outboundFlight || null;
