@@ -18,11 +18,11 @@ router.use(authenticate, requireAdmin);
 router.get('/dashboard', async (req, res) => {
   try {
     const [users] = await db.query('SELECT COUNT(*) as total FROM users');
-    const [bookings] = await db.query('SELECT COUNT(*) as total FROM bookings');
+    const [bookings] = await db.query('SELECT COUNT(*) as total FROM bookings WHERE (archived IS NULL OR archived = 0)');
     const [revenue] = await db.query("SELECT COALESCE(SUM(amount),0) as total FROM transactions WHERE type = 'payment' AND status = 'completed'");
     const [visas] = await db.query("SELECT COUNT(*) as total FROM visa_applications WHERE status IN ('submitted','processing')");
 
-    const [byType] = await db.query('SELECT booking_type, COUNT(*) as count FROM bookings GROUP BY booking_type');
+    const [byType] = await db.query('SELECT booking_type, COUNT(*) as count FROM bookings WHERE (archived IS NULL OR archived = 0) GROUP BY booking_type');
     const bookingsByType = {};
     byType.forEach(r => { bookingsByType[r.booking_type] = r.count; });
 
@@ -34,7 +34,7 @@ router.get('/dashboard', async (req, res) => {
     );
 
     const [recentBookings] = await db.query(
-      `SELECT b.*, u.first_name, u.last_name, u.email as user_email FROM bookings b JOIN users u ON b.user_id = u.id ORDER BY b.booked_at DESC LIMIT 5`
+      `SELECT b.*, u.first_name, u.last_name, u.email as user_email FROM bookings b JOIN users u ON b.user_id = u.id WHERE (b.archived IS NULL OR b.archived = 0) ORDER BY b.booked_at DESC LIMIT 5`
     );
     const [recentUsers] = await db.query('SELECT * FROM users ORDER BY created_at DESC LIMIT 5');
 

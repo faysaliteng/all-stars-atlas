@@ -17,8 +17,8 @@ router.get('/stats', async (req, res) => {
     const userId = req.user.sub;
 
     // Core counts
-    const [bookingCount] = await db.query('SELECT COUNT(*) as total FROM bookings WHERE user_id = ?', [userId]);
-    const [upcoming] = await db.query("SELECT COUNT(*) as total FROM bookings WHERE user_id = ? AND status IN ('confirmed','pending')", [userId]);
+    const [bookingCount] = await db.query('SELECT COUNT(*) as total FROM bookings WHERE user_id = ? AND (archived IS NULL OR archived = 0)', [userId]);
+    const [upcoming] = await db.query("SELECT COUNT(*) as total FROM bookings WHERE user_id = ? AND status IN ('confirmed','pending') AND (archived IS NULL OR archived = 0)", [userId]);
     const [totalSpent] = await db.query("SELECT COALESCE(SUM(amount),0) as total FROM transactions WHERE user_id = ? AND type = 'payment' AND status = 'completed'", [userId]);
     const [travellers] = await db.query('SELECT COUNT(*) as total FROM travellers WHERE user_id = ?', [userId]);
 
@@ -37,7 +37,7 @@ router.get('/stats', async (req, res) => {
     // Upcoming trip
     let upcomingTrip = null;
     const [nextTrip] = await db.query(
-      "SELECT * FROM bookings WHERE user_id = ? AND status IN ('confirmed','pending') ORDER BY booked_at DESC LIMIT 1", [userId]
+      "SELECT * FROM bookings WHERE user_id = ? AND status IN ('confirmed','pending') AND (archived IS NULL OR archived = 0) ORDER BY booked_at DESC LIMIT 1", [userId]
     );
     if (nextTrip.length > 0) {
       const b = nextTrip[0];
@@ -62,7 +62,7 @@ router.get('/stats', async (req, res) => {
 
     // Booking breakdown by type
     const [breakdown] = await db.query(
-      `SELECT booking_type, COUNT(*) as cnt FROM bookings WHERE user_id = ? GROUP BY booking_type`, [userId]
+      `SELECT booking_type, COUNT(*) as cnt FROM bookings WHERE user_id = ? AND (archived IS NULL OR archived = 0) GROUP BY booking_type`, [userId]
     );
     const colors = { flight: '#3b82f6', hotel: '#8b5cf6', holiday: '#10b981', visa: '#f59e0b', medical: '#ec4899', car: '#06b6d4' };
     const bookingBreakdown = breakdown.map(b => ({
@@ -72,7 +72,7 @@ router.get('/stats', async (req, res) => {
     }));
 
     // Recent bookings for the list
-    const [recentBookings] = await db.query('SELECT * FROM bookings WHERE user_id = ? ORDER BY booked_at DESC LIMIT 5', [userId]);
+    const [recentBookings] = await db.query('SELECT * FROM bookings WHERE user_id = ? AND (archived IS NULL OR archived = 0) ORDER BY booked_at DESC LIMIT 5', [userId]);
     const bookings = recentBookings.map(b => {
       const details = safeJsonParse(b.details, {});
       return {
