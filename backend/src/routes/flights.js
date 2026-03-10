@@ -7,6 +7,9 @@ const { searchFlights: ttiSearch, createBooking: ttiCreateBooking } = require('.
 const { searchFlights: bdfSearch } = require('./bdf-flights');
 const { searchFlights: flyhubSearch } = require('./flyhub-flights');
 const { searchFlights: sabreSearch } = require('./sabre-flights');
+const { searchFlights: galileoSearch } = require('./galileo-flights');
+const { searchFlights: ndcSearch } = require('./ndc-flights');
+const { searchAllLCCs } = require('./lcc-flights');
 
 const router = express.Router();
 
