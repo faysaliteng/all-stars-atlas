@@ -505,9 +505,19 @@ const FlightBooking = () => {
             {step === 2 && (
               <Card>
                 <CardHeader className="bg-accent/5 border-b border-border">
-                  <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                    <Users className="w-5 h-5 text-accent" /> Enter Traveler Details
-                  </CardTitle>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                      <Users className="w-5 h-5 text-accent" /> Enter Traveler Details
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setPassportScanOpen(true)}>
+                        <ScanLine className="w-3.5 h-3.5 mr-1" /> Passport Scan
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSearchPaxOpen(true)}>
+                        <Search className="w-3.5 h-3.5 mr-1" /> Saved Passenger
+                      </Button>
+                    </div>
+                  </div>
                   <p className="text-xs text-muted-foreground">Enter details exactly as they appear on your passport/ID</p>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-5">
