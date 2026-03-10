@@ -4,6 +4,29 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [2.9.0] — 2026-03-10 — Full Platform Audit & Production Hardening
+
+### Fixed — Hardcoded Data Removal (Zero-Mock Policy)
+- **Baggage fallbacks**: Replaced all `"20kg"` hardcoded defaults with `null` or `"As per airline policy"` across BookingConfirmation, DashboardBookings, FlightBooking, and ancillaries endpoint
+- **Meal fallbacks**: Removed `"Meals"` hardcoded default — now shows actual API data or empty
+- **Dashboard stats**: Removed fake `"+12%"`, `"+5%"`, `"+8%"` growth indicators from user and admin dashboard stats — values now come directly from DB
+- **Admin reports**: Replaced hardcoded `growthRate: 12.5` with real calculated growth rate comparing last two periods
+- **Admin discounts**: Removed 7 hardcoded default discount codes and 7 default price rules — now shows empty state when no API data exists
+- **Admin currency**: Exchange rates now load from API/DB with proper empty state
+
+### Improved — TTI/ZENITH GDS Integration
+- Enhanced seat availability extraction from `AirCoupons[]`, segment-level, and `ETCouponFares[]`
+- Enhanced baggage extraction from AirCoupon level and segment level (weight + piece formats)
+- Added `[TTI DEBUG]` logging for field-name discovery when data is null
+
+### Improved — GDS Flight Operations (Admin)
+- Real-time GDS API calls for ticket issuance, cancellation, and voiding across TTI, BDFare, FlyHub, Sabre
+- Ticket records auto-created in DB upon successful GDS issuance
+- GDS action results persisted in booking `details.lastGdsAction`
+
+---
+
+
 ## [2.8.0] — 2026-03-09 — Company Rebrand, Invoice & Money Receipt PDFs
 
 ### Changed — Company Info System-Wide Update
