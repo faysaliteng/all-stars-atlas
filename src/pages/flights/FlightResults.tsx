@@ -244,14 +244,14 @@ const FlightCard = ({
         </div>
 
         {/* ── Info bar ── */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 sm:px-5 py-2.5 bg-muted/30 border-t border-border/50 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1 font-medium"><Luggage className="w-3 h-3" /> Baggage: {baggage}</span>
-          <span>Cabin Class: {cabin}</span>
-          {aircraft && <span>Aircraft: {aircraft}</span>}
+        <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 px-3 sm:px-5 py-2.5 bg-muted/30 border-t border-border/50 text-[10px] sm:text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1 font-medium"><Luggage className="w-3 h-3" /> {baggage}</span>
+          <span>{cabin}</span>
+          {aircraft && <span className="hidden sm:inline">Aircraft: {aircraft}</span>}
           <span className={refundable ? "text-accent font-semibold" : ""}>{refundLabel}</span>
           {source === "tti" && <span className="text-accent font-semibold">Air Astra</span>}
           <button className="flex items-center gap-1 text-accent font-semibold ml-auto hover:underline" onClick={onToggleExpand}>
-            {isExpanded ? "Hide Details" : "View Details"}
+            {isExpanded ? "Hide" : "Details"}
             {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         </div>
