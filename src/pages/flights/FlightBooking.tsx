@@ -691,7 +691,6 @@ const FlightBooking = () => {
                           <User className="w-4 h-4 text-muted-foreground shrink-0" />
                           <span className="font-medium">{p.title} {p.firstName} {p.lastName}</span>
                           {p.passport && <span className="text-xs text-muted-foreground hidden sm:inline">Passport: {p.passport}</span>}
-                          {selectedSeats[i] && <Badge className="bg-accent/10 text-accent border-0 text-[9px]">Seat {selectedSeats[i]}</Badge>}
                         </div>
                       ))}
                     </div>
