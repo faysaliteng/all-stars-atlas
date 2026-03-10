@@ -515,9 +515,11 @@ const FlightBooking = () => {
                       <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setPassportScanOpen(true)}>
                         <ScanLine className="w-3.5 h-3.5 mr-1" /> Passport Scan
                       </Button>
-                      <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSearchPaxOpen(true)}>
-                        <Search className="w-3.5 h-3.5 mr-1" /> Saved Passenger
-                      </Button>
+                      {isAuthenticated && (
+                        <Button variant="outline" size="sm" className="text-xs h-8 border-accent/30 text-accent hover:bg-accent/10" onClick={() => setSearchPaxOpen(true)}>
+                          <Search className="w-3.5 h-3.5 mr-1" /> Saved Passenger
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">Enter details exactly as they appear on your passport/ID</p>
