@@ -192,11 +192,12 @@ router.put('/bookings/:id', async (req, res) => {
     // ── Real GDS actions for flight bookings ──
     if (isFlightBooking && status) {
       const oldStatus = booking.status;
+      console.log(`[Admin GDS] Flight booking update: ${bookingId} | Source: ${flightSource} | PNR: ${gdsPnr} | GDS BookingId: ${gdsBookingId} | Status: ${oldStatus} → ${status}`);
 
       // CONFIRM / TICKETED → Issue ticket via GDS
       if ((status === 'confirmed' || status === 'ticketed') && oldStatus !== 'confirmed' && oldStatus !== 'ticketed') {
         if (gdsPnr || gdsBookingId) {
-          console.log(`[Admin] Issuing ticket via ${flightSource} — PNR: ${gdsPnr}`);
+          console.log(`[Admin GDS] → ISSUE TICKET via ${flightSource || 'unknown'} — PNR: ${gdsPnr} | BookingId: ${gdsBookingId}`);
           try {
             if (flightSource === 'tti' || bookingDetails.outbound?.airlineCode === '2A' || bookingDetails.outbound?.airlineCode === 'S2') {
               gdsResult = await ttiFlights.issueTicket({ pnr: gdsPnr, bookingId: gdsBookingId });

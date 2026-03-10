@@ -589,23 +589,39 @@ async function createBooking({ flightData, passengers, contactInfo }) {
   };
 
   console.log('[TTI] Creating booking for', flightData.origin, '→', flightData.destination, 'flight', flightData.flightNumber);
+  console.log('[TTI BOOKING] Request payload:', JSON.stringify(request, null, 2).substring(0, 2000));
 
   try {
     const response = await ttiRequest('CreateBooking', request);
 
+    // ── COMPREHENSIVE DEBUG LOGGING ──
+    console.log('[TTI BOOKING] Full response keys:', Object.keys(response));
+    console.log('[TTI BOOKING] Full response:', JSON.stringify(response).substring(0, 3000));
+
     if (response.ResponseInfo?.Error) {
       const err = response.ResponseInfo.Error;
-      console.error('[TTI] CreateBooking error:', err);
+      console.error('[TTI BOOKING] API Error:', JSON.stringify(err));
       throw new Error(`TTI booking error: ${err.Message || err.Code || 'Unknown error'}`);
     }
 
-    // Extract PNR from response
+    // Extract PNR from response — try all possible field names
     const pnr = response.BookingReference || response.PNR || response.RecordLocator || 
-                 response.Booking?.Reference || response.Booking?.PNR || null;
-    const ttiBookingId = response.BookingId || response.Booking?.Id || null;
-    const ticketTimeLimit = response.TicketTimeLimit || response.TimeLimit || null;
+                 response.Booking?.Reference || response.Booking?.PNR || 
+                 response.Booking?.BookingReference || response.Booking?.RecordLocator ||
+                 response.AirReservation?.BookingReference ||
+                 response.ReservationInfo?.BookingReference ||
+                 null;
+    const ttiBookingId = response.BookingId || response.Booking?.Id || response.Booking?.BookingId || 
+                          response.ReservationInfo?.Id || null;
+    const ticketTimeLimit = response.TicketTimeLimit || response.TimeLimit || 
+                             response.Booking?.TicketTimeLimit || response.Booking?.TimeLimit ||
+                             response.ReservationInfo?.TicketTimeLimit || null;
 
-    console.log('[TTI] Booking created — PNR:', pnr, 'BookingId:', ttiBookingId);
+    console.log('[TTI BOOKING] ✅ Extracted — PNR:', pnr, '| BookingId:', ttiBookingId, '| TimeLimit:', ticketTimeLimit);
+
+    if (!pnr) {
+      console.warn('[TTI BOOKING] ⚠️ PNR is null! Full response for inspection:', JSON.stringify(response).substring(0, 5000));
+    }
 
     return {
       success: true,
@@ -615,7 +631,7 @@ async function createBooking({ flightData, passengers, contactInfo }) {
       rawResponse: response,
     };
   } catch (err) {
-    console.error('[TTI] CreateBooking failed:', err.message);
+    console.error('[TTI BOOKING] ❌ CreateBooking failed:', err.message);
     // Don't throw — let the caller decide whether to fail the whole booking
     return {
       success: false,
@@ -634,33 +650,56 @@ async function issueTicket({ pnr, bookingId }) {
   const config = await getTTIConfig();
   if (!config) throw new Error('TTI API not configured');
 
-  console.log('[TTI] Issuing ticket for PNR:', pnr);
+  console.log('[TTI TICKET] Issuing ticket for PNR:', pnr, '| BookingId:', bookingId);
 
   try {
-    const response = await ttiRequest('TicketBooking', {
+    const request = {
       RequestInfo: { AuthenticationKey: config.key },
       BookingReference: pnr,
       BookingId: bookingId || undefined,
       AgencyInfo: { AgencyId: config.agencyId, AgencyName: config.agencyName },
-    });
+    };
+
+    console.log('[TTI TICKET] Request:', JSON.stringify(request));
+
+    const response = await ttiRequest('TicketBooking', request);
+
+    // ── COMPREHENSIVE DEBUG LOGGING ──
+    console.log('[TTI TICKET] Full response keys:', Object.keys(response));
+    console.log('[TTI TICKET] Full response:', JSON.stringify(response).substring(0, 3000));
 
     if (response.ResponseInfo?.Error) {
-      throw new Error(`TTI ticketing error: ${response.ResponseInfo.Error.Message || response.ResponseInfo.Error.Code}`);
+      const errMsg = response.ResponseInfo.Error.Message || response.ResponseInfo.Error.Code || 'Unknown';
+      console.error('[TTI TICKET] ❌ API Error:', errMsg);
+      throw new Error(`TTI ticketing error: ${errMsg}`);
     }
 
     const ticketNumbers = [];
-    const tickets = response.Tickets || response.ETickets || response.TicketDetails || [];
+    // Try multiple possible response structures
+    const tickets = response.Tickets || response.ETickets || response.TicketDetails || 
+                    response.Booking?.Tickets || response.Booking?.ETickets ||
+                    response.TicketInfo || [];
     if (Array.isArray(tickets)) {
       tickets.forEach(t => {
-        const num = t.TicketNumber || t.ETicketNumber || t.Number;
+        const num = t.TicketNumber || t.ETicketNumber || t.Number || t.DocumentNumber;
         if (num) ticketNumbers.push(num);
       });
     }
 
-    console.log('[TTI] Ticket issued — tickets:', ticketNumbers);
+    // Also check if ticket number is at top level
+    if (ticketNumbers.length === 0) {
+      if (response.TicketNumber) ticketNumbers.push(response.TicketNumber);
+      if (response.ETicketNumber) ticketNumbers.push(response.ETicketNumber);
+    }
+
+    console.log('[TTI TICKET] ✅ Tickets issued:', ticketNumbers.length > 0 ? ticketNumbers.join(', ') : 'NONE FOUND');
+    if (ticketNumbers.length === 0) {
+      console.warn('[TTI TICKET] ⚠️ No ticket numbers extracted! Full response:', JSON.stringify(response).substring(0, 5000));
+    }
+
     return { success: true, ticketNumbers, rawResponse: response };
   } catch (err) {
-    console.error('[TTI] IssueTicket failed:', err.message);
+    console.error('[TTI TICKET] ❌ IssueTicket failed:', err.message);
     return { success: false, error: err.message, ticketNumbers: [] };
   }
 }
@@ -673,24 +712,34 @@ async function cancelBooking({ pnr, bookingId }) {
   const config = await getTTIConfig();
   if (!config) throw new Error('TTI API not configured');
 
-  console.log('[TTI] Cancelling booking PNR:', pnr);
+  console.log('[TTI CANCEL] Cancelling booking PNR:', pnr, '| BookingId:', bookingId);
 
   try {
-    const response = await ttiRequest('CancelBooking', {
+    const request = {
       RequestInfo: { AuthenticationKey: config.key },
       BookingReference: pnr,
       BookingId: bookingId || undefined,
       AgencyInfo: { AgencyId: config.agencyId, AgencyName: config.agencyName },
-    });
+    };
+
+    console.log('[TTI CANCEL] Request:', JSON.stringify(request));
+
+    const response = await ttiRequest('CancelBooking', request);
+
+    // ── COMPREHENSIVE DEBUG LOGGING ──
+    console.log('[TTI CANCEL] Full response keys:', Object.keys(response));
+    console.log('[TTI CANCEL] Full response:', JSON.stringify(response).substring(0, 3000));
 
     if (response.ResponseInfo?.Error) {
-      throw new Error(`TTI cancel error: ${response.ResponseInfo.Error.Message || response.ResponseInfo.Error.Code}`);
+      const errMsg = response.ResponseInfo.Error.Message || response.ResponseInfo.Error.Code || 'Unknown';
+      console.error('[TTI CANCEL] ❌ API Error:', errMsg);
+      throw new Error(`TTI cancel error: ${errMsg}`);
     }
 
-    console.log('[TTI] Booking cancelled — PNR:', pnr);
+    console.log('[TTI CANCEL] ✅ Booking cancelled — PNR:', pnr);
     return { success: true, rawResponse: response };
   } catch (err) {
-    console.error('[TTI] CancelBooking failed:', err.message);
+    console.error('[TTI CANCEL] ❌ CancelBooking failed:', err.message);
     return { success: false, error: err.message };
   }
 }
