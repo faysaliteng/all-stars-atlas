@@ -27,7 +27,7 @@ export interface TeamMember {
   name: string;
   role: string;
   avatar: string;
-  bio: string;
+  bio?: string;
 }
 
 export interface CompanyValue {
@@ -43,7 +43,7 @@ export interface JobPosition {
   location: string;
   type: string;
   description: string;
-  requirements: string[];
+  requirements?: string[];
 }
 
 export interface Perk {
@@ -94,6 +94,7 @@ export interface ServicePageContent {
 }
 
 export interface BookingFormField {
+  id?: string;
   name: string;
   label: string;
   type: "text" | "email" | "tel" | "date" | "select" | "textarea" | "number" | "file";
@@ -105,17 +106,25 @@ export interface BookingFormField {
 }
 
 export interface BookingFormStep {
-  id: string;
+  id?: string;
   title: string;
+  label?: string;
   icon: string;
   fields: BookingFormField[];
-  visible: boolean;
+  visible?: boolean;
 }
 
 export interface BookingFormConfig {
   steps: BookingFormStep[];
   submitLabel: string;
   confirmationMessage: string;
+  submitButtonText?: string;
+  totalAmount?: number;
+  summaryTitle?: string;
+  totalLabel?: string;
+  paymentMethods?: string[];
+  note?: string;
+  summaryFields?: { label: string; value: string }[];
 }
 
 export interface VisaCountryOption {
@@ -124,12 +133,23 @@ export interface VisaCountryOption {
   flag?: string;
   processing?: string;
   fee?: string;
+  code?: string;
+  name?: string;
+  visaTypes?: string[];
+  processingOptions?: { label: string; days: string; extraFee: number }[];
+  baseFee?: number;
+  serviceFee?: number;
+  requiredDocs?: string[];
+  active?: boolean;
 }
 
 export interface VisaApplicationConfig {
   countries: VisaCountryOption[];
   requiredDocuments: string[];
   processingSteps: { step: string; title: string; desc: string }[];
+  estimatedProcessingNote?: string;
+  termsText?: string;
+  formSteps?: { label: string; icon: string }[];
 }
 
 export interface VisaCountryListing {
