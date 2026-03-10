@@ -69,28 +69,7 @@ function getAirlineLogo(code?: string): string | null {
 function fmtTime(dt?: string) { if (!dt) return "—"; try { const d = new Date(dt); return isNaN(d.getTime()) ? dt : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return dt; } }
 function fmtDate(dt?: string) { if (!dt) return "—"; try { const d = new Date(dt); return isNaN(d.getTime()) ? dt : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); } catch { return dt; } }
 
-/* ─── Default Extras data (used as fallback) ─── */
-const DEFAULT_MEALS = [
-  { id: "standard", name: "Standard Meal", price: 0, desc: "Included with your fare", icon: "🍽️" },
-  { id: "vegetarian", name: "Vegetarian", price: 0, desc: "Lacto-ovo vegetarian meal", icon: "🥗" },
-  { id: "vegan", name: "Vegan", price: 200, desc: "Plant-based meal", icon: "🌱" },
-  { id: "halal", name: "Halal Meal", price: 0, desc: "Halal certified preparation", icon: "☪️" },
-  { id: "kosher", name: "Kosher Meal", price: 300, desc: "Kosher certified meal", icon: "✡️" },
-  { id: "child", name: "Child Meal", price: 0, desc: "Kid-friendly options", icon: "🧒" },
-  { id: "diabetic", name: "Diabetic Meal", price: 0, desc: "Low sugar, balanced nutrition", icon: "💊" },
-  { id: "seafood", name: "Seafood Meal", price: 350, desc: "Fresh seafood selection", icon: "🦐" },
-  { id: "fruit", name: "Fruit Platter", price: 150, desc: "Fresh fruit selection", icon: "🍎" },
-];
-const DEFAULT_BAGGAGE = [
-  { id: "extra5", name: "+5 kg Extra Baggage", price: 500, desc: "Total: 25kg checked", icon: "🧳" },
-  { id: "extra10", name: "+10 kg Extra Baggage", price: 900, desc: "Total: 30kg checked", icon: "🧳" },
-  { id: "extra15", name: "+15 kg Extra Baggage", price: 1200, desc: "Total: 35kg checked", icon: "🧳" },
-  { id: "extra20", name: "+20 kg Extra Baggage", price: 1500, desc: "Total: 40kg checked", icon: "🧳" },
-  { id: "extra30", name: "+30 kg Extra Baggage", price: 2200, desc: "Total: 50kg checked", icon: "🧳" },
-  { id: "sport", name: "Sports Equipment", price: 2000, desc: "Golf, ski, surfboard etc.", icon: "⚽" },
-  { id: "fragile", name: "Fragile Handling", price: 800, desc: "Priority fragile handling", icon: "📦" },
-  { id: "musical", name: "Musical Instrument", price: 1500, desc: "Guitar, violin etc.", icon: "🎸" },
-];
+/* ─── No hardcoded defaults — extras only from real API data ─── */
 
 /* ─── Add-on Card ─── */
 const AddOnCard = ({ item, selected, onSelect, multi }: { item: { id: string; name: string; price: number; desc: string; icon?: string }; selected: boolean; onSelect: () => void; multi?: boolean }) => (
