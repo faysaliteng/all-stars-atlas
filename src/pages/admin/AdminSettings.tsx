@@ -58,11 +58,7 @@ interface BankAccount {
   enabled: boolean;
 }
 
-const DEFAULT_BANK_ACCOUNTS: BankAccount[] = [
-  { id: '1', bankName: 'Dutch-Bangla Bank Limited', accountName: 'Seven Trip Ltd', accountNumber: '1234567890123', branch: 'Gulshan Branch', routingNumber: '090261725', enabled: true },
-  { id: '2', bankName: 'BRAC Bank Limited', accountName: 'Seven Trip Ltd', accountNumber: '9876543210456', branch: 'Banani Branch', routingNumber: '060261103', enabled: true },
-  { id: '3', bankName: 'Eastern Bank PLC', accountName: 'Seven Trip Ltd', accountNumber: '5551234567890', branch: 'Motijheel Branch', routingNumber: '095261523', enabled: false },
-];
+const DEFAULT_BANK_ACCOUNTS: BankAccount[] = [];
 
 const DEFAULT_PAYMENT_METHODS = [
   { id: "bank_deposit", name: "Bank Deposit", description: "User deposits cash at your bank branch", enabled: true },

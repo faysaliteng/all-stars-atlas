@@ -18,7 +18,7 @@ const DashboardTravellers = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ firstName: '', lastName: '', gender: 'Male', dob: '', passport: '', nationality: 'Bangladeshi', email: '', phone: '' });
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
-  const [localTravellers, setLocalTravellers] = useState<any[]>([]);
+  
 
   const { data, isLoading, error, refetch } = useDashboardTravellers();
   const createTraveller = useCreateTraveller();
@@ -26,7 +26,7 @@ const DashboardTravellers = () => {
 
   const resolved = (data as any) || {};
   const baseTravellers = resolved?.data || resolved?.travellers || [];
-  const travellers = [...localTravellers, ...baseTravellers].filter((t: any) => !removedIds.has(t.id));
+  const travellers = baseTravellers.filter((t: any) => !removedIds.has(t.id));
 
   const resetForm = () => {
     setForm({ firstName: '', lastName: '', gender: 'Male', dob: '', passport: '', nationality: 'Bangladeshi', email: '', phone: '' });
@@ -41,19 +41,7 @@ const DashboardTravellers = () => {
       setOpen(false);
       resetForm();
     } catch {
-      // Add locally for mock data
-      if (!editingId) {
-        const newT = {
-          id: `T-${Date.now()}`,
-          name: `${form.firstName} ${form.lastName}`,
-          ...form,
-          type: "Adult",
-        };
-        setLocalTravellers(prev => [...prev, newT]);
-        toast({ title: "Success", description: "Traveller added successfully" });
-      } else {
-        toast({ title: "Success", description: "Traveller updated" });
-      }
+      toast({ title: "Error", description: "Failed to save traveller. Please try again.", variant: "destructive" });
       setOpen(false);
       resetForm();
     }

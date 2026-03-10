@@ -31,7 +31,7 @@ const AdminPaymentApprovals = () => {
   const [rejectNote, setRejectNote] = useState("");
   const [viewPayment, setViewPayment] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [localUpdates, setLocalUpdates] = useState<Record<string, string>>({});
+  
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -61,11 +61,7 @@ const AdminPaymentApprovals = () => {
     date: p.date ? new Date(p.date).toLocaleDateString('en-GB') : "—",
   })) : [];
 
-  // Apply local status updates (for mock data actions)
-  const payments = rawPayments.map((p: any) => ({
-    ...p,
-    status: localUpdates[p.id] || p.status,
-  }));
+  const payments = rawPayments;
 
   // Local filtering — always filter client-side for tabs and search
   const filteredPayments = payments.filter((p: any) => {
@@ -92,9 +88,7 @@ const AdminPaymentApprovals = () => {
       qc.invalidateQueries({ queryKey: ['admin', 'payment-approvals'] });
       refetch();
     } catch {
-      // Update locally for mock data
-      setLocalUpdates(prev => ({ ...prev, [id]: "Approved" }));
-      toast({ title: "Payment Approved", description: "Payment has been approved successfully" });
+      toast({ title: "Error", description: "Failed to approve payment", variant: "destructive" });
     } finally {
       setActionLoading(null);
     }
@@ -109,8 +103,7 @@ const AdminPaymentApprovals = () => {
       qc.invalidateQueries({ queryKey: ['admin', 'payment-approvals'] });
       refetch();
     } catch {
-      setLocalUpdates(prev => ({ ...prev, [id]: "Rejected" }));
-      toast({ title: "Payment Rejected", description: "Payment has been rejected" });
+      toast({ title: "Error", description: "Failed to reject payment", variant: "destructive" });
       setRejectNote("");
     } finally {
       setActionLoading(null);

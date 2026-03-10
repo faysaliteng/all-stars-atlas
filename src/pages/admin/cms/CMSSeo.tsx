@@ -53,23 +53,7 @@ const defaultJsonLd = {
   priceRange: "৳৳",
 };
 
-const defaultPageSeo = [
-  { id: "1", path: "/", title: "Seven Trip - Book Flights, Hotels & Holidays", description: "Bangladesh's most trusted travel platform. Best prices on flights, hotels, visa & packages.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "2", path: "/flights", title: "Flight Booking", description: "Search and book cheap flights from Bangladesh. Compare 120+ airlines.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "3", path: "/hotels", title: "Hotel Reservation", description: "Book hotels at best prices. 50,000+ properties worldwide.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "4", path: "/visa", title: "Visa Processing", description: "Fast visa processing for 45+ countries. Apply online now.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "5", path: "/holidays", title: "Holiday Packages", description: "All-inclusive holiday packages. Flights + hotels + sightseeing.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "6", path: "/about", title: "About Us", description: "Learn about Seven Trip - Bangladesh's leading travel platform.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "7", path: "/contact", title: "Contact Us", description: "Get in touch with Seven Trip. 24/7 customer support.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "8", path: "/faq", title: "FAQ", description: "Frequently asked questions about Seven Trip services.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "9", path: "/terms", title: "Terms & Conditions", description: "Seven Trip terms of service and user agreement.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "10", path: "/privacy", title: "Privacy Policy", description: "How Seven Trip collects, uses and protects your data.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "11", path: "/careers", title: "Careers", description: "Join the Seven Trip team. View open positions.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "12", path: "/refund-policy", title: "Refund Policy", description: "Seven Trip refund and cancellation policy.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "13", path: "/esim", title: "eSIM Plans", description: "Buy international eSIM plans for travel. Stay connected abroad.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "14", path: "/cars", title: "Car Rental", description: "Rent cars for travel in Bangladesh and abroad.", ogTitle: "", ogDescription: "", noIndex: false },
-  { id: "15", path: "/medical", title: "Medical Tourism", description: "Medical tourism packages. Top hospitals, affordable treatments.", ogTitle: "", ogDescription: "", noIndex: false },
-];
+const defaultPageSeo: any[] = [];
 
 const defaultSocialMeta = {
   ogType: "website",

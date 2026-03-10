@@ -26,24 +26,9 @@ const statusColors: Record<string, string> = {
   expired: "bg-warning/10 text-warning",
 };
 
-const defaultPopups = [
-  { id: "POP-001", title: "Welcome Offer — ৳500 Off!", content: "New to Seven Trip? Get ৳500 off your first booking. Use code WELCOME500 at checkout.", imageUrl: "", ctaText: "Book Now", ctaUrl: "/flights", trigger: "on_load", delay: 3, frequency: "once_per_session", status: "active", startDate: "2026-01-01", endDate: "2026-12-31", pages: "homepage" },
-  { id: "POP-002", title: "Eid Holiday Packages 🎉", content: "Exclusive Eid packages starting from ৳15,000. Cox's Bazar, Maldives, Bangkok & more!", imageUrl: "", ctaText: "View Packages", ctaUrl: "/holidays", trigger: "exit_intent", delay: 0, frequency: "once_per_day", status: "active", startDate: "2026-03-01", endDate: "2026-04-15", pages: "all" },
-  { id: "POP-003", title: "Subscribe to Newsletter", content: "Get weekly deals, travel guides, and exclusive offers straight to your inbox.", imageUrl: "", ctaText: "Subscribe", ctaUrl: "#newsletter", trigger: "scroll_50", delay: 0, frequency: "once_per_week", status: "draft", startDate: "", endDate: "", pages: "blog" },
-];
-
-const defaultBanners = [
-  { id: "BNR-001", title: "Flash Sale — 40% Off International Flights", position: "top_bar", bgColor: "#3b82f6", textColor: "#ffffff", ctaText: "Shop Now →", ctaUrl: "/flights", status: "active", startDate: "2026-03-01", endDate: "2026-03-31", dismissible: true },
-  { id: "BNR-002", title: "Download Our App — Get ৳200 Cashback", position: "homepage_hero", bgColor: "#8b5cf6", textColor: "#ffffff", ctaText: "Download", ctaUrl: "#app", status: "active", startDate: "2026-01-01", endDate: "2026-12-31", dismissible: false },
-  { id: "BNR-003", title: "Umrah 2026 Early Bird — Book Before Mar 15", position: "homepage_mid", bgColor: "#059669", textColor: "#ffffff", ctaText: "View Packages", ctaUrl: "/holidays", status: "scheduled", startDate: "2026-03-10", endDate: "2026-03-15", dismissible: true },
-];
-
-const defaultPush = [
-  { id: "PUSH-001", title: "Your trip to Bangkok is in 3 days!", body: "Don't forget to check visa requirements and download your e-ticket.", type: "booking_reminder", status: "active", audience: "booked_users", scheduledAt: "Auto — 3 days before departure" },
-  { id: "PUSH-002", title: "Flash Sale: 50% Off Cox's Bazar Hotels 🏖️", body: "Limited time offer! Book before midnight.", type: "promotional", status: "active", audience: "all_users", scheduledAt: "Mar 15, 2026 — 10:00 AM" },
-  { id: "PUSH-003", title: "Payment Approved ✅", body: "Your payment of ৳32,000 for BK-260303 has been approved.", type: "transactional", status: "active", audience: "specific_user", scheduledAt: "Automatic on approval" },
-  { id: "PUSH-004", title: "Price Drop Alert 📉", body: "DAC → BKK fare dropped by 20%! Book now before prices go back up.", type: "price_alert", status: "draft", audience: "wishlist_users", scheduledAt: "On price change detection" },
-];
+const defaultPopups: any[] = [];
+const defaultBanners: any[] = [];
+const defaultPush: any[] = [];
 
 const emptyPopup = { title: "", content: "", imageUrl: "", ctaText: "", ctaUrl: "", trigger: "on_load", delay: 3, frequency: "once_per_session", status: "draft", startDate: "", endDate: "", pages: "all" };
 const emptyBanner = { title: "", position: "top_bar", bgColor: "#3b82f6", textColor: "#ffffff", ctaText: "", ctaUrl: "", status: "draft", startDate: "", endDate: "", dismissible: true };
