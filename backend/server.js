@@ -19,6 +19,7 @@ const { publicRouter: cmsPublicRouter, adminRouter: cmsAdminRouter } = require('
 const { router: sslcommerzRoutes } = require('./src/routes/sslcommerz');
 const { router: bkashRoutes } = require('./src/routes/bkash');
 const { router: nagadRoutes } = require('./src/routes/nagad');
+const passportOcrRoutes = require('./src/routes/passport-ocr');
 
 const app = express();
 app.set('trust proxy', 1); // Trust first proxy (Nginx)
@@ -59,7 +60,8 @@ app.use('/api/flights', flightRoutes);
 app.use('/api/flights', ancillaryRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api', serviceRoutes); // holidays, medical, cars, esim, recharge, paybill, contact
-app.use('/api', visaRoutes); // visa apply, upload, user applications + admin visa routes
+app.use('/api', visaRoutes);
+app.use('/api/passport', passportOcrRoutes);
 
 // Dashboard
 app.use('/api/dashboard', dashboardRoutes);
