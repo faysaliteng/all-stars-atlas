@@ -419,7 +419,7 @@ const DashboardBookings = () => {
   const [page, setPage] = useState(1);
   const [viewBooking, setViewBooking] = useState<any>(null);
 
-  const statusParam = activeTab !== "All" ? activeTab.toLowerCase().replace(/[ -]/g, "_") : undefined;
+  const statusParam = activeTab !== "All" ? (activeTab === "Reserved" ? "on_hold" : activeTab.toLowerCase().replace(/[ -]/g, "_")) : undefined;
   const { data, isLoading, error, refetch } = useDashboardBookings({
     status: statusParam, search: search || undefined, limit: Number(perPage), page,
   });
