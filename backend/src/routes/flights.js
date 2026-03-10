@@ -6,6 +6,7 @@ const { notifyBookingConfirm } = require('../services/notify');
 const { searchFlights: ttiSearch, createBooking: ttiCreateBooking } = require('./tti-flights');
 const { searchFlights: bdfSearch } = require('./bdf-flights');
 const { searchFlights: flyhubSearch } = require('./flyhub-flights');
+const { searchFlights: sabreSearch } = require('./sabre-flights');
 
 const router = express.Router();
 
