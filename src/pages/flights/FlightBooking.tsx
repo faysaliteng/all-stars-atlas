@@ -698,11 +698,8 @@ const FlightBooking = () => {
                       <div>
                         <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Selected Extras</h4>
                         <div className="flex flex-wrap gap-2">
-                          {selectedMeal !== "standard" && <Badge variant="outline" className="text-xs"><UtensilsCrossed className="w-3 h-3 mr-1" />{mealOptions.find(m => m.id === selectedMeal)?.name}</Badge>}
+                          {selectedMeal && <Badge variant="outline" className="text-xs"><UtensilsCrossed className="w-3 h-3 mr-1" />{mealOptions.find(m => m.id === selectedMeal)?.name}</Badge>}
                           {selectedBaggage.map(id => <Badge key={id} variant="outline" className="text-xs"><Luggage className="w-3 h-3 mr-1" />{baggageOptions.find(b => b.id === id)?.name}</Badge>)}
-                          {Object.entries(selectedSeats).map(([idx, seatId]) => (
-                            <Badge key={idx} variant="outline" className="text-xs"><Armchair className="w-3 h-3 mr-1" />Seat {seatId} (Pax {Number(idx) + 1})</Badge>
-                          ))}
                         </div>
                       </div>
                     )}
