@@ -26,7 +26,7 @@ const DashboardTravellers = () => {
 
   const resolved = (data as any) || {};
   const baseTravellers = resolved?.data || resolved?.travellers || [];
-  const travellers = [...localTravellers, ...baseTravellers].filter((t: any) => !removedIds.has(t.id));
+  const travellers = baseTravellers.filter((t: any) => !removedIds.has(t.id));
 
   const resetForm = () => {
     setForm({ firstName: '', lastName: '', gender: 'Male', dob: '', passport: '', nationality: 'Bangladeshi', email: '', phone: '' });

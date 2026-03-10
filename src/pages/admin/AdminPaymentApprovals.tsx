@@ -61,11 +61,7 @@ const AdminPaymentApprovals = () => {
     date: p.date ? new Date(p.date).toLocaleDateString('en-GB') : "—",
   })) : [];
 
-  // Apply local status updates (for mock data actions)
-  const payments = rawPayments.map((p: any) => ({
-    ...p,
-    status: localUpdates[p.id] || p.status,
-  }));
+  const payments = rawPayments;
 
   // Local filtering — always filter client-side for tabs and search
   const filteredPayments = payments.filter((p: any) => {
