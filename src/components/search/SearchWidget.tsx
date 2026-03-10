@@ -407,8 +407,8 @@ const SearchWidget = () => {
   };
 
   const handleHotelSearch = () => {
-    if (!checkIn) { toast.error("Please select a check-in date"); return; }
-    if (!checkOut) { toast.error("Please select a check-out date"); return; }
+    if (!checkIn) { toast.error("Please select a check-in date"); addDateError("checkIn"); return; }
+    if (!checkOut) { toast.error("Please select a check-out date"); addDateError("checkOut"); return; }
     const params = new URLSearchParams({ destination: hotelCity });
     params.set('checkIn', format(checkIn, 'yyyy-MM-dd'));
     params.set('checkOut', format(checkOut, 'yyyy-MM-dd'));
