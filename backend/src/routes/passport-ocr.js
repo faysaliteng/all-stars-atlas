@@ -187,10 +187,11 @@ function parsePassportText(text) {
     }
 
     console.log('[OCR] MRZ parsed successfully');
-    return result;
+    // Don't return yet — fall through to visual parsing for fields MRZ doesn't cover
+    // (birthPlace, issuanceDate)
   }
 
-  // ── Fallback: Visual text parsing ──
+  // ── Visual text parsing for remaining empty fields ──
   // Try to find key fields from labels in the scanned text
 
   // Passport/Document number
