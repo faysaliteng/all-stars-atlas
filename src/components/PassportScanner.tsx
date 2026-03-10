@@ -1,14 +1,15 @@
 /**
- * Passport Scanner — Upload passport/NID image, extract data, auto-fill passenger form
- * Matches UIUX spec pages 13-14: Upload zone + Extracted Data panel
+ * Passport Scanner — Upload passport/NID image, extract data via Google Vision OCR
+ * Calls backend /api/passport/ocr endpoint for real text extraction
  */
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, X, FileText, ScanLine, CheckCircle2, Loader2 } from "lucide-react";
+import { Upload, X, FileText, ScanLine, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface ExtractedData {
   title: string;
@@ -32,26 +33,6 @@ interface PassportScannerProps {
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-/**
- * Client-side MRZ-style extraction simulation.
- * In production, this would call an OCR API endpoint.
- * For now, it provides a realistic UX with editable extracted fields.
- */
-function simulateOCR(fileName: string): ExtractedData {
-  return {
-    title: "",
-    firstName: "",
-    lastName: "",
-    country: "",
-    passportNumber: "",
-    birthDate: "",
-    birthPlace: "",
-    gender: "",
-    issuanceDate: "",
-    expiryDate: "",
-  };
-}
-
 const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,8 +40,9 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
   const [preview, setPreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
-  const handleFile = (f: File) => {
+  const handleFile = async (f: File) => {
     if (!ALLOWED_TYPES.includes(f.type)) {
       toast({ title: "Invalid File", description: "Upload JPG, PNG, WebP, or PDF only.", variant: "destructive" });
       return;
@@ -70,20 +52,66 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
       return;
     }
     setFile(f);
+    setOcrError(null);
+
+    // Generate preview
+    let base64Data = "";
     if (f.type.startsWith("image/")) {
       const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
-      reader.readAsDataURL(f);
+      base64Data = await new Promise<string>((resolve) => {
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          setPreview(result);
+          resolve(result);
+        };
+        reader.readAsDataURL(f);
+      });
     } else {
       setPreview(null);
+      const reader = new FileReader();
+      base64Data = await new Promise<string>((resolve) => {
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.readAsDataURL(f);
+      });
     }
-    // Auto-scan
+
+    // Call real OCR API
     setScanning(true);
     setExtracted(null);
-    setTimeout(() => {
-      setExtracted(simulateOCR(f.name));
+    try {
+      const result = await api.post<{
+        success: boolean;
+        extracted: ExtractedData;
+        rawText?: string;
+      }>("/passport/ocr", { image: base64Data });
+
+      if (result.success && result.extracted) {
+        setExtracted(result.extracted);
+        const hasData = result.extracted.firstName || result.extracted.lastName || result.extracted.passportNumber;
+        if (!hasData) {
+          setOcrError("Could not extract text clearly. Please fill in the fields manually.");
+        }
+      } else {
+        setOcrError("OCR could not process this image. Please try a clearer photo.");
+        setExtracted({
+          title: "", firstName: "", lastName: "", country: "",
+          passportNumber: "", birthDate: "", birthPlace: "",
+          gender: "", issuanceDate: "", expiryDate: "",
+        });
+      }
+    } catch (err: any) {
+      console.error("OCR error:", err);
+      const msg = err?.message || "OCR service unavailable";
+      setOcrError(msg);
+      // Show empty form so user can manually fill
+      setExtracted({
+        title: "", firstName: "", lastName: "", country: "",
+        passportNumber: "", birthDate: "", birthPlace: "",
+        gender: "", issuanceDate: "", expiryDate: "",
+      });
+    } finally {
       setScanning(false);
-    }, 1500);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -105,6 +133,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
     setPreview(null);
     setExtracted(null);
     setScanning(false);
+    setOcrError(null);
   };
 
   const updateField = (field: keyof ExtractedData, value: string) => {
@@ -127,14 +156,14 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
             {file && preview ? (
               <div className="relative">
                 <img src={preview} alt="Passport" className="w-full rounded-lg border-2 border-dashed border-accent/40 object-contain max-h-[400px]" />
-                <button onClick={() => { resetState(); }} className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={resetState} className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
                   <X className="w-4 h-4" />
                 </button>
                 {scanning && (
                   <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center rounded-lg">
                     <div className="text-center">
                       <Loader2 className="w-8 h-8 animate-spin text-accent mx-auto mb-2" />
-                      <p className="text-sm font-medium">Scanning document...</p>
+                      <p className="text-sm font-medium">Scanning with Google Vision...</p>
                     </div>
                   </div>
                 )}
@@ -155,7 +184,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
               >
                 <Upload className="w-10 h-10 text-muted-foreground mb-3" />
                 <p className="text-sm font-medium text-muted-foreground">Upload or drop your image right here</p>
-                <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG, PDF</p>
+                <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG, PDF — Max 10MB</p>
                 <input ref={fileInputRef} type="file" className="hidden" accept=".jpg,.jpeg,.png,.webp,.pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
               </label>
             )}
@@ -164,6 +193,14 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
           {/* Right: Extracted Data */}
           <div className="p-5">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">EXTRACTED DATA</h3>
+
+            {ocrError && (
+              <div className="flex items-start gap-2 p-3 mb-3 bg-destructive/5 border border-destructive/20 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive">{ocrError}</p>
+              </div>
+            )}
+
             {extracted ? (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -203,7 +240,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Gender</Label>
-                    <Input value={extracted.gender} onChange={(e) => updateField("gender", e.target.value)} placeholder="MALE" className="h-9 bg-muted/30 border-accent/20 focus:border-accent" />
+                    <Input value={extracted.gender} onChange={(e) => updateField("gender", e.target.value)} placeholder="Male" className="h-9 bg-muted/30 border-accent/20 focus:border-accent" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -224,7 +261,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
               <div className="flex flex-col items-center justify-center text-center py-16 text-muted-foreground">
                 <ScanLine className="w-10 h-10 mb-3 opacity-30" />
                 <p className="text-sm">Upload a passport or NID to extract data</p>
-                <p className="text-xs mt-1">Fields will auto-populate after scanning</p>
+                <p className="text-xs mt-1">Powered by Google Vision OCR</p>
               </div>
             )}
           </div>
