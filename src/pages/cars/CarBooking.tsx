@@ -59,20 +59,33 @@ const CarBooking = () => {
     if (validateStep(step)) setStep(step + 1);
   };
 
-  const handleFinalAction = () => {
+  const handleFinalAction = async () => {
     if (!isAuthenticated) { setAuthOpen(true); return; }
-    navigate("/booking/confirmation", {
-      state: {
-        booking: {
-          type: "Car Rental",
-          route: `Car #${carId || "—"}`,
-          baseFare: config?.totalAmount || 0,
-          taxes: Math.round((config?.totalAmount || 0) * 0.05),
-          total: Math.round((config?.totalAmount || 0) * 1.05),
-          paymentMethod: "Pending",
+    try {
+      const result: any = await api.post('/cars/book', {
+        carId, formData,
+        pickup: searchParams.get("pickup") || '',
+        dropoff: searchParams.get("dropoff") || '',
+        pickupDate: searchParams.get("pickupDate") || '',
+        dropoffDate: searchParams.get("dropoffDate") || '',
+        totalAmount: config?.totalAmount || 0,
+      });
+      navigate("/booking/confirmation", {
+        state: {
+          booking: {
+            type: "Car Rental",
+            bookingRef: result.bookingRef || result.id,
+            route: `Car #${carId || "—"}`,
+            baseFare: config?.totalAmount || 0,
+            taxes: Math.round((config?.totalAmount || 0) * 0.05),
+            total: Math.round((config?.totalAmount || 0) * 1.05),
+            paymentMethod: "Pending",
+          },
         },
-      },
-    });
+      });
+    } catch (err: any) {
+      toast({ title: "Booking Failed", description: err?.message || "Could not complete booking", variant: "destructive" });
+    }
   };
 
   if (isLoading) {
