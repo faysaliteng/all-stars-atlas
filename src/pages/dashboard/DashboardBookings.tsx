@@ -433,8 +433,8 @@ const DashboardBookings = () => {
     tabCounts["All"] = bookings.length;
     statusTabs.forEach(tab => {
       if (tab !== "All") {
-        const tabKey = tab.toLowerCase().replace(/ /g, "_");
-        tabCounts[tab] = bookings.filter((b: any) => b.status?.toLowerCase() === tabKey || b.status?.toLowerCase() === tab.toLowerCase()).length;
+        const tabKey = tab === "Reserved" ? "on_hold" : tab.toLowerCase().replace(/ /g, "_");
+        tabCounts[tab] = bookings.filter((b: any) => b.status?.toLowerCase() === tabKey || displayStatus(b.status) === tab).length;
       }
     });
   }
