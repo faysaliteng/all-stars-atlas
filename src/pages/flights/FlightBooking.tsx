@@ -280,15 +280,11 @@ const FlightBooking = () => {
   const createBooking = async (payLater: boolean) => {
     setBookingLoading(true);
     try {
-      const seatSelections = Object.entries(selectedSeats).map(([paxIdx, seatId]) => ({
-        passenger: Number(paxIdx), seat: seatId, price: seatPrices[Number(paxIdx)] || 0,
-      }));
       const bookingData = {
         flightData: outboundFlight, returnFlightData: returnFlight, passengers, isRoundTrip, isDomestic: domestic, payLater,
         paymentMethod: payLater ? "pay_later" : (selectedPaymentMethod || "card"), totalAmount: grandTotal, baseFare, taxes, serviceCharge,
         addOns: {
-          meal: mealOptions.find(m => m.id === selectedMeal)?.name,
-          seats: seatSelections,
+          meal: mealOptions.find(m => m.id === selectedMeal)?.name || undefined,
           baggage: selectedBaggage.map(id => baggageOptions.find(b => b.id === id)?.name).filter(Boolean),
           total: addOnTotal,
         },
