@@ -151,7 +151,7 @@ const BookingFormEditor = ({ slug }: { slug: string }) => {
       {/* Form Steps & Fields */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Form Steps & Fields</h2>
-        <Button size="sm" onClick={() => updateConfig(c => { c.steps.push({ title: "New Step", label: "New Step", icon: "FileText", fields: [] } as any); })}>
+        <Button size="sm" onClick={() => updateConfig(c => { c.steps.push({ label: "New Step", icon: "FileText", fields: [] }); })}>
           <Plus className="w-4 h-4 mr-1" /> Add Step
         </Button>
       </div>
@@ -212,9 +212,9 @@ const BookingFormEditor = ({ slug }: { slug: string }) => {
 
             <Button variant="outline" size="sm" onClick={() => updateConfig(c => {
               c.steps[si].fields.push({
-                id: `field_${Date.now()}`, name: `field_${Date.now()}`, label: "New Field", type: "text",
+                id: `field_${Date.now()}`, label: "New Field", type: "text",
                 placeholder: "", required: false, visible: true, halfWidth: true,
-              } as any);
+              });
             })}>
               <Plus className="w-3.5 h-3.5 mr-1" /> Add Field
             </Button>

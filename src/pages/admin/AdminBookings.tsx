@@ -106,7 +106,6 @@ const AdminBookings = () => {
       customer, email: b.user?.email || "",
       type: b.bookingType || "flight",
       route,
-      pnr: b.pnr || b.details?.gdsPnr || "—",
       date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString('en-GB') : "—",
       status: b.status, amount: `৳${(b.totalAmount || 0).toLocaleString()}`,
       rawAmount: b.totalAmount || 0, paymentMethod: b.paymentMethod || "—",
@@ -134,7 +133,7 @@ const AdminBookings = () => {
     if (statusFilter !== "all" && b.status !== statusFilter) return false;
     if (search) {
       const q = search.toLowerCase();
-      return b.id?.toLowerCase().includes(q) || b.customer?.toLowerCase().includes(q) || b.email?.toLowerCase().includes(q) || b.route?.toLowerCase().includes(q) || (b.pnr && b.pnr !== "—" && b.pnr.toLowerCase().includes(q));
+      return b.id?.toLowerCase().includes(q) || b.customer?.toLowerCase().includes(q) || b.email?.toLowerCase().includes(q) || b.route?.toLowerCase().includes(q);
     }
     return true;
   });
@@ -286,7 +285,6 @@ const AdminBookings = () => {
               <TableHead>ID</TableHead><TableHead>Customer</TableHead>
               <TableHead className="hidden md:table-cell">Type</TableHead>
               <TableHead className="hidden lg:table-cell">Route</TableHead>
-              <TableHead className="hidden md:table-cell">PNR</TableHead>
               <TableHead className="hidden md:table-cell">Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden lg:table-cell">Payment</TableHead>
@@ -295,14 +293,13 @@ const AdminBookings = () => {
             </TableRow></TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No bookings found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-12">No bookings found</TableCell></TableRow>
               ) : filtered.map((b: any) => (
                 <TableRow key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(b)}>
                   <TableCell className="font-mono text-xs">{b.id}</TableCell>
                   <TableCell><div><p className="text-sm font-medium">{b.customer}</p><p className="text-xs text-muted-foreground">{b.email}</p></div></TableCell>
                   <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px]">{b.type}</Badge></TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">{b.route}</TableCell>
-                  <TableCell className="hidden md:table-cell"><span className={`font-mono text-xs ${b.pnr !== "—" ? "text-warning font-bold" : "text-muted-foreground"}`}>{b.pnr}</span></TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{b.date}</TableCell>
                   <TableCell><Badge variant="outline" className={`text-[11px] capitalize ${getStatusStyle(b.status)}`}>{statusLabel(b.status)}</Badge></TableCell>
                   <TableCell className="hidden lg:table-cell"><Badge variant="outline" className="text-[10px] capitalize">{b.paymentStatus}</Badge></TableCell>

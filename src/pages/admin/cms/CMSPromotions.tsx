@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,31 +9,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, MoreHorizontal, Edit2, Trash2, Copy, Eye } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { PROMOTIONS } from "@/lib/content-data";
+import { getCollection, addToCollection, updateInCollection, removeFromCollection } from "@/lib/local-store";
 import { toast } from "sonner";
 
+const STORE_KEY = "cms_promotions";
 const emptyPromo = { title: "", code: "", discount: "", type: "percentage" as const, used: 0, usageLimit: 100, status: "active" as const, expires: "", description: "" };
 
 const CMSPromotions = () => {
   const [search, setSearch] = useState("");
-  const { data: apiData } = useQuery({ queryKey: ['cms', 'promotions'], queryFn: () => api.get('/cms/promotions'), retry: 1 });
-  const [promotions, setPromotions] = useState<any[]>([]);
-  const [initialized, setInitialized] = useState(false);
+  const [promotions, setPromotions] = useState(() => getCollection(STORE_KEY, PROMOTIONS.map(p => ({ ...p, id: String(p.id) }))));
   const [showDialog, setShowDialog] = useState(false);
   const [editingPromo, setEditingPromo] = useState<any>(null);
   const [form, setForm] = useState(emptyPromo);
   const [viewPromo, setViewPromo] = useState<any>(null);
 
-  useEffect(() => {
-    if (apiData && !initialized) {
-      const raw = (apiData as any)?.data || (apiData as any)?.promotions || [];
-      setPromotions(raw.map((p: any) => ({ ...p, id: String(p.id) })));
-      setInitialized(true);
-    }
-  }, [apiData, initialized]);
-
-  const filtered = promotions.filter(p => p.title?.toLowerCase().includes(search.toLowerCase()) || p.code?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = promotions.filter(p => p.title.toLowerCase().includes(search.toLowerCase()) || p.code.toLowerCase().includes(search.toLowerCase()));
   const activeCount = promotions.filter(p => p.status === "active").length;
   const totalUsed = promotions.reduce((sum, p) => sum + (p.used || 0), 0);
 
@@ -44,30 +35,27 @@ const CMSPromotions = () => {
     setShowDialog(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!form.title || !form.code) { toast.error("Title and Code are required"); return; }
-    try {
-      if (editingPromo) {
-        await api.put(`/cms/promotions/${editingPromo.id}`, form);
-        setPromotions(prev => prev.map(p => p.id === editingPromo.id ? { ...p, ...form } : p));
-        toast.success(`"${form.title}" updated`);
-      } else {
-        const result = await api.post('/cms/promotions', form) as any;
-        const newPromo = { ...form, id: result?.id || `promo-${Date.now()}`, used: 0 };
-        setPromotions(prev => [newPromo, ...prev]);
-        toast.success(`"${form.title}" created`);
-      }
-    } catch {
-      toast.error("Failed to save promotion");
+    const defaults = PROMOTIONS.map(p => ({ ...p, id: String(p.id) }));
+    if (editingPromo) {
+      const updated = updateInCollection(STORE_KEY, defaults, editingPromo.id, { ...form });
+      setPromotions([...updated]);
+      toast.success(`"${form.title}" updated`);
+    } else {
+      const newPromo = { ...form, id: `promo-${Date.now()}`, used: 0 };
+      const updated = addToCollection(STORE_KEY, defaults, newPromo);
+      setPromotions([...updated]);
+      toast.success(`"${form.title}" created`);
     }
     setShowDialog(false);
     setEditingPromo(null);
     setForm(emptyPromo);
   };
 
-  const handleDelete = async (p: any) => {
-    try { await api.delete(`/cms/promotions/${p.id}`); } catch {}
-    setPromotions(prev => prev.filter(x => x.id !== p.id));
+  const handleDelete = (p: any) => {
+    const updated = removeFromCollection(STORE_KEY, PROMOTIONS.map(p => ({ ...p, id: String(p.id) })), p.id);
+    setPromotions([...updated]);
     toast.success(`"${p.title}" deleted`);
   };
 

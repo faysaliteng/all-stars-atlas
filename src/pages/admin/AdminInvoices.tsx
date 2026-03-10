@@ -17,7 +17,7 @@ import DataLoader from "@/components/DataLoader";
 
 import { generateInvoicePDF, printInvoicePDF, generateMoneyReceiptPDF } from "@/lib/pdf-generator";
 import { downloadCSV } from "@/lib/csv-export";
-
+import { getCollection, addToCollection } from "@/lib/local-store";
 
 const statusColors: Record<string, string> = {
   Paid: "bg-success/10 text-success border-success/20",
@@ -33,7 +33,7 @@ const AdminInvoices = () => {
   const [filter, setFilter] = useState("all");
   const [viewInvoice, setViewInvoice] = useState<any>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [customInvoices, setCustomInvoices] = useState<any[]>([]);
+  const [customInvoices, setCustomInvoices] = useState<any[]>(() => getCollection(STORE_KEY, []));
   const [createForm, setCreateForm] = useState({
     customerName: "", customerEmail: "", bookingRef: "", bookingType: "flight",
     amount: "", tax: "0", discount: "0", dueDate: "", notes: "",
@@ -146,7 +146,8 @@ const AdminInvoices = () => {
       dueDate: createForm.dueDate || "—",
       notes: createForm.notes,
     };
-    setCustomInvoices(prev => [newInv, ...prev]);
+    const updated = addToCollection(STORE_KEY, [], newInv);
+    setCustomInvoices([...updated]);
     toast({ title: "Invoice Created", description: `${newInv.invoiceNo} for ৳${total.toLocaleString()} created.` });
     setShowCreate(false);
     setCreateForm({ customerName: "", customerEmail: "", bookingRef: "", bookingType: "flight", amount: "", tax: "0", discount: "0", dueDate: "", notes: "" });
