@@ -777,21 +777,42 @@ async function createBooking({ flightData, passengers, contactInfo }) {
 
     const booking = response.Booking || {};
     // Extract PNR — try all possible field names including TTI-specific ones
+    // PNR extraction: TTI puts booking refs in Segments, Passengers, and ETTicketFares
+    const seg0 = booking.Segments?.[0] || {};
+    const pax0 = booking.Passengers?.[0] || {};
+    const etFare0 = booking.FareInfo?.ETTicketFares?.[0] || {};
+    
+    // Log passenger scalars to discover PNR location
+    if (booking.Passengers?.length) {
+      const paxScalars = {};
+      for (const [k, v] of Object.entries(pax0)) {
+        if (typeof v !== 'object' || v === null) paxScalars[k] = v;
+      }
+      console.log('[TTI BOOKING] Passenger[0] scalars:', JSON.stringify(paxScalars));
+    }
+    // Log ETTicketFare scalars
+    if (booking.FareInfo?.ETTicketFares?.length) {
+      const etScalars = {};
+      for (const [k, v] of Object.entries(etFare0)) {
+        if (typeof v !== 'object' || v === null) etScalars[k] = v;
+      }
+      console.log('[TTI BOOKING] ETTicketFare[0] scalars:', JSON.stringify(etScalars));
+    }
+
     const pnr = booking.RecordLocator || booking.BookingReference || booking.PNR || 
-                 booking.Reference || booking.Ref || booking.BookingRef ||
-                 booking.AirlinePNR || booking.GDSReference ||
+                 booking.Reference || booking.Ref ||
+                 seg0.RecordLocator || seg0.AirlinePNR || seg0.PNR || seg0.BookingReference ||
+                 pax0.RecordLocator || pax0.PNR || pax0.BookingReference ||
+                 etFare0.Ref ||  // ETTicketFare Ref as fallback (e.g. "16545817")
+                 seg0.Ref ||     // Segment Ref as last resort (e.g. "978508")
                  response.BookingReference || response.PNR || response.RecordLocator || 
                  null;
-    const ttiBookingId = booking.Id || booking.BookingId || booking.BookingNumber ||
-                          response.BookingId || response.ReservationInfo?.Id || null;
-    const ticketTimeLimit = booking.TicketTimeLimit || booking.TimeLimit || booking.TicketingDeadline ||
-                             response.TicketTimeLimit || response.ReservationInfo?.TicketTimeLimit || null;
+    const ttiBookingId = booking.Id || booking.BookingId || etFare0.Ref || seg0.Ref ||
+                          response.BookingId || null;
+    const ticketTimeLimit = seg0.TimeLimit || booking.TicketTimeLimit || booking.TimeLimit ||
+                             response.TicketTimeLimit || null;
 
     console.log('[TTI BOOKING] ✅ Extracted — PNR:', pnr, '| BookingId:', ttiBookingId, '| TimeLimit:', ticketTimeLimit);
-
-    if (!pnr) {
-      console.warn('[TTI BOOKING] ⚠️ PNR is null! Booking keys:', booking ? Object.keys(booking) : 'no booking');
-    }
 
     return {
       success: true,
