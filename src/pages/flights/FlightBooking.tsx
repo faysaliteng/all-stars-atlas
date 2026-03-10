@@ -210,6 +210,8 @@ const FlightBooking = () => {
         };
         if (outboundFlight._ttiItineraryRef) params.itineraryRef = outboundFlight._ttiItineraryRef;
         if (outboundFlight.cabinClass) params.cabinClass = outboundFlight.cabinClass;
+        if (outboundFlight.baggage) params.checkedBaggage = outboundFlight.baggage;
+        if (outboundFlight.handBaggage) params.handBaggage = outboundFlight.handBaggage;
 
         const data = await api.get<any>("/flights/ancillaries", params);
         if (data?.source && data.source !== "standard") {
