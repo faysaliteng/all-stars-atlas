@@ -212,9 +212,9 @@ const BookingFormEditor = ({ slug }: { slug: string }) => {
 
             <Button variant="outline" size="sm" onClick={() => updateConfig(c => {
               c.steps[si].fields.push({
-                id: `field_${Date.now()}`, label: "New Field", type: "text",
+                id: `field_${Date.now()}`, name: `field_${Date.now()}`, label: "New Field", type: "text",
                 placeholder: "", required: false, visible: true, halfWidth: true,
-              });
+              } as any);
             })}>
               <Plus className="w-3.5 h-3.5 mr-1" /> Add Field
             </Button>

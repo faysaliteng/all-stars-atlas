@@ -641,10 +641,11 @@ const VisaFormSettingsEditor = () => {
   const addCountry = () => {
     updateConfig(cfg => {
       cfg.countries.push({
+        value: `country_${Date.now()}`, label: "New Country",
         code: `country_${Date.now()}`, name: "New Country", flag: "🏳️",
         visaTypes: ["Tourist"], processingOptions: [{ label: "Normal", days: "5-7 days", extraFee: 0 }],
         baseFee: 3000, serviceFee: 1000, requiredDocs: ["Valid passport (min 6 months validity)"], active: true,
-      });
+      } as any);
     });
   };
 

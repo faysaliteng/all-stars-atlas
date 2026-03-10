@@ -14,26 +14,26 @@ import {
   FileText, Globe, ChevronRight, GripVertical
 } from "lucide-react";
 import { toast } from "sonner";
-import { CMS_PAGE_DEFAULTS, type CmsPageContent, type ContentSection, type FAQCategory } from "@/lib/cms-defaults";
-import { useCmsSavePage } from "@/hooks/useCmsContent";
-
-const allPages = Object.values(CMS_PAGE_DEFAULTS);
+import { type CmsPageContent, type ContentSection, type FAQCategory } from "@/lib/cms-defaults";
+import { useCmsAllPages, useCmsSavePage } from "@/hooks/useCmsContent";
 
 const CMSPages = () => {
   const [search, setSearch] = useState("");
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<CmsPageContent | null>(null);
   const saveMutation = useCmsSavePage();
+  const { data: apiPages } = useCmsAllPages();
+  const allPages: CmsPageContent[] = (apiPages as any)?.data || apiPages || [];
 
-  const filtered = allPages.filter(p =>
-    p.pageTitle.toLowerCase().includes(search.toLowerCase()) ||
-    p.slug.toLowerCase().includes(search.toLowerCase())
+  const filtered = allPages.filter((p: CmsPageContent) =>
+    p.pageTitle?.toLowerCase().includes(search.toLowerCase()) ||
+    p.slug?.toLowerCase().includes(search.toLowerCase())
   );
 
   const startEditing = (slug: string) => {
-    const page = CMS_PAGE_DEFAULTS[slug];
+    const page = allPages.find((p: CmsPageContent) => p.slug === slug);
     if (page) {
-      setEditContent(JSON.parse(JSON.stringify(page))); // deep clone
+      setEditContent(JSON.parse(JSON.stringify(page)));
       setEditingSlug(slug);
     }
   };
