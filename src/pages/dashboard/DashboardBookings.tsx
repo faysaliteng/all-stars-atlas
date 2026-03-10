@@ -517,7 +517,7 @@ const DashboardBookings = () => {
                         {booking.pnr && booking.pnr !== "—" ? <code className="text-xs bg-accent/10 text-accent px-1.5 py-0.5 rounded font-bold">{booking.pnr}</code> : <span className="text-muted-foreground text-xs">—</span>}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-sm">{booking.pax}</TableCell>
-                      <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{booking.status}</Badge></TableCell>
+                      <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{displayStatus(booking.status)}</Badge></TableCell>
                       <TableCell className="text-right font-semibold text-sm">{booking.amount}</TableCell>
                       <TableCell>
                         <DropdownMenu modal={false}>
