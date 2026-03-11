@@ -813,4 +813,4 @@ All providers are searched in parallel via `Promise.allSettled` with deduplicati
 
 ### Zero-Mock Cabin Class Rule
 
-The frontend NEVER overrides the cabin class returned by the API. If a user searches for Business class but the GDS returns Economy fares (e.g., the airline doesn't offer Business on that route), the results will correctly show "Economy" — not fake "Business". The `flight.cabinClass` field from the API is the single source of truth for display. The searched cabin is only used for passing to the booking page URL params, not for display override.
+The frontend NEVER overrides the cabin class returned by the API. If a user searches for Business class but the GDS returns only Economy fares (e.g., Air Astra ATR 72-600 has 70 Economy seats only — no Business class), the results will correctly show "Economy" with an amber info banner: **"Business class is not available on this route — showing available Economy class fares instead."** The `flight.cabinClass` field from the API is the single source of truth for display.
