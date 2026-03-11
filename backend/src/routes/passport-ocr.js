@@ -846,6 +846,7 @@ function cleanMRZLine(raw) {
 
 function parseMRZ(lines) {
   const r = emptyResult();
+  const verified = {}; // tracks which fields have check-digit verification
 
   const candidates = [];
   for (let i = 0; i < lines.length; i++) {
@@ -855,7 +856,7 @@ function parseMRZ(lines) {
     }
   }
 
-  if (candidates.length < 1) return r;
+  if (candidates.length < 1) return { data: r, verified };
 
   let format = null;
   let mrzLines = [];
@@ -907,16 +908,16 @@ function parseMRZ(lines) {
     mrzLines = [candidates[0].line, candidates[1].line];
   }
 
-  if (mrzLines.length < 2) return r;
+  if (mrzLines.length < 2) return { data: r, verified };
 
   console.log(`[OCR] MRZ format: ${format}, lines: ${mrzLines.length}`);
   mrzLines.forEach((l, i) => console.log(`[OCR] MRZ[${i}]: ${l}`));
 
-  if (format === 'TD3') return parseTD3(mrzLines, r);
-  if (format === 'TD1') return parseTD1(mrzLines, r);
-  if (format === 'TD2') return parseTD2(mrzLines, r);
+  if (format === 'TD3') return parseTD3(mrzLines, r, verified);
+  if (format === 'TD1') return parseTD1(mrzLines, r, verified);
+  if (format === 'TD2') return parseTD2(mrzLines, r, verified);
 
-  return r;
+  return { data: r, verified };
 }
 
 function parseTD3(mrzLines, r) {
