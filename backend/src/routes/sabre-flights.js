@@ -1,10 +1,13 @@
 /**
- * Sabre GDS API integration for international flight search & booking
+ * Sabre GDS API integration — JV_BD OTA Solution
+ * OAuth v3 password grant (EPR-PCC + agency password)
  * Credentials stored in system_settings DB table (key: 'api_sabre')
  * Admin Panel → Settings → API Integrations → Sabre GDS
  *
- * Sabre REST API Docs: https://developer.sabre.com/docs/rest_apis
- * Uses Bargain Finder Max (BFM) for flight search
+ * Auth: POST /v3/auth/token (password grant, Basic auth with JV_BD shared secret)
+ * CERT: https://api.cert.platform.sabre.com
+ * PROD: https://api.platform.sabre.com
+ * PCC: J4YL | EPR: 631470
  */
 
 const db = require('../config/db');
