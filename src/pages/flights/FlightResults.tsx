@@ -411,8 +411,8 @@ const FlightCard = ({
                       ) : (
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between py-1.5 border-b border-border/50"><span className="text-muted-foreground">Before Departure</span><span className="font-semibold">{cancellationPolicy?.beforeDeparture != null ? `৳${Number(cancellationPolicy.beforeDeparture).toLocaleString()} fee` : refundable ? "Refundable (fees apply)" : "As per airline policy"}</span></div>
-                          <div className="flex justify-between py-1.5 border-b border-border/50"><span className="text-muted-foreground">After Departure</span><span className="font-semibold text-destructive">{cancellationPolicy?.afterDeparture || "Non-refundable"}</span></div>
-                          <div className="flex justify-between py-1.5"><span className="text-muted-foreground">No Show</span><span className="font-semibold text-destructive">{cancellationPolicy?.noShow || "Non-refundable"}</span></div>
+                          <div className="flex justify-between py-1.5 border-b border-border/50"><span className="text-muted-foreground">After Departure</span><span className={`font-semibold ${cancellationPolicy?.afterDeparture ? "" : refundable ? "text-warning" : "text-destructive"}`}>{cancellationPolicy?.afterDeparture || (refundable ? "Refundable (fees apply)" : "As per airline policy")}</span></div>
+                          <div className="flex justify-between py-1.5"><span className="text-muted-foreground">No Show</span><span className={`font-semibold ${cancellationPolicy?.noShow ? "" : refundable ? "text-warning" : "text-destructive"}`}>{cancellationPolicy?.noShow || (refundable ? "Charges apply" : "As per airline policy")}</span></div>
                         </div>
                       )}
                       <p className="text-[11px] text-muted-foreground"><Info className="w-3 h-3 inline mr-1" />Cancellation charges are determined by the airline and may vary. Contact support for exact amounts.</p>
