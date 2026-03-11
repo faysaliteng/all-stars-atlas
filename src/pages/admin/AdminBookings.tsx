@@ -592,7 +592,7 @@ const AdminBookings = () => {
                                   <p className="text-xs text-muted-foreground truncate">{doc.originalName || doc.filename || 'Document'}</p>
                                 </div>
                                 {doc.url && (
-                                  <a href={`${(window as any).__API_BASE || ''}${doc.url}`} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                                  <a href={`${config.apiBaseUrl.replace('/api', '')}${doc.url}`} target="_blank" rel="noopener noreferrer" className="shrink-0">
                                     <Button variant="outline" size="sm" className="h-7 text-xs">
                                       <ExternalLink className="w-3 h-3 mr-1" /> View
                                     </Button>
