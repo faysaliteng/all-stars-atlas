@@ -168,11 +168,16 @@ const Index = () => {
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoReady ? 'opacity-0' : 'opacity-100'}`}
                 fetchPriority="high"
               />
-              {videoReady && (
-                <video ref={videoRef} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" poster={cms.hero.posterUrl}>
-                  <source src={cms.hero.videoUrl} type="video/mp4" />
-                </video>
-              )}
+              <video
+                ref={videoRef}
+                autoPlay loop muted playsInline
+                preload="auto"
+                onCanPlay={handleVideoCanPlay}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+                poster={cms.hero.posterUrl}
+              >
+                <source src={cms.hero.videoUrl} type="video/mp4" />
+              </video>
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-b from-[hsl(200,80%,20%)/0.3] via-[hsl(200,80%,20%)/0.15] to-[hsl(200,80%,20%)/0.45]" />
             <div className="hidden sm:block absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-[100px]" />
