@@ -168,6 +168,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
         setExtracted(result.extracted);
         if (result.confidence) setConfidence(result.confidence);
         if (result.crossValidation?.mrzVerified) setMrzVerified(result.crossValidation.mrzVerified);
+        if (result.qrDetected) setQrDetected(true);
         const hasData = result.extracted.firstName || result.extracted.lastName || result.extracted.passportNumber;
         if (!hasData) {
           setOcrError("Could not extract text clearly. Please fill in the fields manually.");
