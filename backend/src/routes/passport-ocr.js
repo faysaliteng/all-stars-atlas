@@ -241,6 +241,11 @@ function parseDocument(text) {
   result.birthPlace = cleanPlace(result.birthPlace);
   result.country = normalizeCountryCode(result.country);
 
+  // Infer gender from name if not detected (critical for NID cards without gender field)
+  if (!result.gender) {
+    result.gender = inferGenderFromName(result.firstName, result.lastName);
+  }
+
   // Title from gender
   if (!result.title && result.gender === 'Male') result.title = 'MR';
   if (!result.title && result.gender === 'Female') result.title = 'MS';
