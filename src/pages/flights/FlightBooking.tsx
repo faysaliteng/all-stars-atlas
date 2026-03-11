@@ -377,9 +377,19 @@ const FlightBooking = () => {
         CAN:'CA',AUS:'AU',JPN:'JP',KOR:'KR',CHN:'CN',THA:'TH',IDN:'ID',PHL:'PH',
         TUR:'TR',EGY:'EG',DEU:'DE',FRA:'FR',ITA:'IT',ESP:'ES',NLD:'NL',CHE:'CH',
       };
+      const code3toNationality: Record<string, string> = {
+        BGD:'Bangladeshi',IND:'Indian',USA:'American',GBR:'British',PAK:'Pakistani',
+        NPL:'Nepalese',LKA:'Sri Lankan',MMR:'Myanmar',MYS:'Malaysian',SGP:'Singaporean',
+        ARE:'Emirati',SAU:'Saudi',KWT:'Kuwaiti',QAT:'Qatari',BHR:'Bahraini',OMN:'Omani',
+        CAN:'Canadian',AUS:'Australian',JPN:'Japanese',KOR:'Korean',CHN:'Chinese',
+        THA:'Thai',IDN:'Indonesian',PHL:'Filipino',TUR:'Turkish',EGY:'Egyptian',
+        DEU:'German',FRA:'French',ITA:'Italian',ESP:'Spanish',NLD:'Dutch',CHE:'Swiss',
+      };
       const iso2 = data.countryCode ? (code3to2[data.countryCode] || data.countryCode.substring(0, 2)) : "BD";
       updated[pi].documentCountry = iso2;
-      if (!updated[pi].nationality) updated[pi].nationality = iso2;
+      if (!updated[pi].nationality) {
+        updated[pi].nationality = data.countryCode ? (code3toNationality[data.countryCode] || data.country || "") : "Bangladeshi";
+      }
     }
     setPassengers(updated);
     setFieldErrors({});
