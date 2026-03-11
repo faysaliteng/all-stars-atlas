@@ -385,19 +385,41 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
     const fareDetails = [];
     let minAvailableSeats = Infinity;
     let isRefundable = false;
-    for (const f of fares) {
-      // Check refundability at fare level
-      if (f.IsRefundable === true || f.Refundable === true || f.PenaltyDetails?.IsRefundable === true) {
-        isRefundable = true;
+    let voluntaryRefundCode = null;
+    let voluntaryChangeCode = null;
+
+    // 1) PRIMARY: Check FareRules via RefFareRule on AirOriginDestinations
+    for (const airOD of airODs) {
+      const ruleRef = airOD.RefFareRule;
+      if (ruleRef && fareRuleMap[ruleRef]) {
+        const rule = fareRuleMap[ruleRef];
+        voluntaryRefundCode = rule.VoluntaryRefundCode || null;
+        voluntaryChangeCode = rule.VoluntaryChangeCode || null;
+        // "NotPermitted" = non-refundable, "WithPenalties" or "Free" = refundable
+        if (voluntaryRefundCode && voluntaryRefundCode !== 'NotPermitted') {
+          isRefundable = true;
+        }
       }
+    }
+
+    // 2) FALLBACK: Check explicit boolean fields on fare objects
+    if (!voluntaryRefundCode) {
+      for (const f of fares) {
+        if (f.IsRefundable === true || f.Refundable === true || f.PenaltyDetails?.IsRefundable === true) {
+          isRefundable = true;
+        }
+        const odFares = f.OriginDestinationFares || [];
+        for (const odf of odFares) {
+          if (odf.IsRefundable === true || odf.Refundable === true) isRefundable = true;
+        }
+      }
+    }
+
+    for (const f of fares) {
       const odFares = f.OriginDestinationFares || [];
       for (const odf of odFares) {
-        // Check refundability at OD fare level
-        if (odf.IsRefundable === true || odf.Refundable === true) isRefundable = true;
         const couponFares = odf.CouponFares || odf.ETCouponFares || [];
         for (const cf of couponFares) {
-          // TTI stores seat count in Segments[].BookingClasses[] matching the BookingClassCode
-          // We'll resolve it after segment map is built — for now collect fare details
           fareDetails.push({
             fareBasis: cf.FareBasisCode || '',
             bookingClass: cf.BookingClassCode || '',
