@@ -157,11 +157,18 @@ async function searchFlights({ origin, destination, departDate, returnDate, adul
     );
   }
 
+  // Map cabin class to TTI code: Y=Economy, W=Premium Economy, C=Business, F=First
+  const cabinMap = { economy: 'Y', premiumeconomy: 'W', business: 'C', first: 'F' };
+  const ttiCabinCode = cabinMap[(cabinClass || '').toLowerCase()] || null;
+
   const request = {
     RequestInfo: { AuthenticationKey: config.key },
     Passengers: passengers,
     OriginDestinations: originDestinations,
-    FareDisplaySettings: { SaleCurrencyCode: 'BDT' },
+    FareDisplaySettings: {
+      SaleCurrencyCode: 'BDT',
+      ...(ttiCabinCode ? { CabinClassCode: ttiCabinCode } : {}),
+    },
   };
 
   const response = await ttiRequest('SearchFlights', request);
