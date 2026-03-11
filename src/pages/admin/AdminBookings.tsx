@@ -364,10 +364,11 @@ const AdminBookings = () => {
 
           {viewBooking && (
             <Tabs defaultValue="overview" className="mt-2">
-              <TabsList className="grid grid-cols-4 w-full">
+              <TabsList className="grid grid-cols-5 w-full">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="passengers">Passengers</TabsTrigger>
                 <TabsTrigger value="flight">Flight Info</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="actions">Actions</TabsTrigger>
               </TabsList>
 
