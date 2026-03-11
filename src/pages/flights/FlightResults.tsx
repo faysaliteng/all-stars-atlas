@@ -557,23 +557,23 @@ const FlightResults = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-accent-foreground flex items-center gap-2">
-                <Plane className="w-5 h-5" /> {fromCode || "—"} <ArrowRight className="w-5 h-5" /> {toCode || "—"}
-                {isRoundTrip && <Badge className="bg-accent-foreground/20 text-accent-foreground border-0 text-[10px] ml-2">Round Trip</Badge>}
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+                <Plane className="w-5 h-5 text-accent" /> {fromCode || "—"} <ArrowRight className="w-5 h-5" /> {toCode || "—"}
+                {isRoundTrip && <Badge className="bg-accent/10 text-accent border-0 text-[10px] ml-2">Round Trip</Badge>}
               </h1>
-              <p className="text-sm text-accent-foreground/80 mt-1">
-                {departDate}{returnDate ? ` – ${returnDate}` : ""} · {totalPax} Passenger(s){cabinClass ? ` · ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""} · <strong className="text-accent-foreground">{flights.length} flights found</strong>
-                {sources.tti > 0 && <span className="text-accent-foreground/90 ml-1">({sources.tti} Air Astra)</span>}
-                {sources.sabre > 0 && <span className="text-accent-foreground/90 ml-1">({sources.sabre} Sabre)</span>}
-                {sources.flyhub > 0 && <span className="text-accent-foreground/90 ml-1">({sources.flyhub} FlyHub)</span>}
+              <p className="text-sm text-muted-foreground mt-1">
+                {departDate}{returnDate ? ` – ${returnDate}` : ""} · {totalPax} Passenger(s){cabinClass ? ` · ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""} · <strong className="text-foreground">{flights.length} flights found</strong>
+                {sources.tti > 0 && <span className="text-muted-foreground ml-1">({sources.tti} Air Astra)</span>}
+                {sources.sabre > 0 && <span className="text-muted-foreground ml-1">({sources.sabre} Sabre)</span>}
+                {sources.flyhub > 0 && <span className="text-muted-foreground ml-1">({sources.flyhub} FlyHub)</span>}
               </p>
             </div>
             <div className="flex gap-2 items-center">
-              <Button variant="outline" size="sm" className="bg-accent-foreground/10 border-accent-foreground/20 text-accent-foreground hover:bg-accent-foreground/20" asChild>
+              <Button variant="outline" size="sm" asChild>
                 <Link to="/">Modify Search</Link>
               </Button>
               {cheapest > 0 && (
-                <Badge className="bg-accent-foreground/20 text-accent-foreground border-0 font-semibold h-9 px-3">
+                <Badge className="bg-accent/10 text-accent border-0 font-semibold h-9 px-3">
                   From ৳{cheapest.toLocaleString()}
                 </Badge>
               )}
