@@ -660,18 +660,18 @@ const FlightBooking = () => {
                       {/* Row 2: Names */}
                       <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                         <div className="space-y-1.5">
-                          <Label className={`text-xs sm:text-sm ${fieldErrors.firstName ? "text-destructive" : ""}`}>First/Given Name *</Label>
+                          <Label className={`text-xs sm:text-sm ${fieldErrors[`firstName_${pi}`] ? "text-destructive" : ""}`}>First/Given Name *</Label>
                           <Input value={pax.firstName} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].firstName = e.target.value; setPassengers(updated);
-                            setFieldErrors(prev => { const n = {...prev}; delete n.firstName; return n; });
-                          }} placeholder="As on passport" className={`h-10 sm:h-11 ${fieldErrors.firstName ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                            setFieldErrors(prev => { const n = {...prev}; delete n[`firstName_${pi}`]; return n; });
+                          }} placeholder="As on passport" className={`h-10 sm:h-11 ${fieldErrors[`firstName_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className={`text-xs sm:text-sm ${fieldErrors.lastName ? "text-destructive" : ""}`}>Surname/Family/Last Name *</Label>
+                          <Label className={`text-xs sm:text-sm ${fieldErrors[`lastName_${pi}`] ? "text-destructive" : ""}`}>Surname/Family/Last Name *</Label>
                           <Input value={pax.lastName} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].lastName = e.target.value; setPassengers(updated);
-                            setFieldErrors(prev => { const n = {...prev}; delete n.lastName; return n; });
-                          }} placeholder="As on passport" className={`h-10 sm:h-11 ${fieldErrors.lastName ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                            setFieldErrors(prev => { const n = {...prev}; delete n[`lastName_${pi}`]; return n; });
+                          }} placeholder="As on passport" className={`h-10 sm:h-11 ${fieldErrors[`lastName_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
                         </div>
                       </div>
 
