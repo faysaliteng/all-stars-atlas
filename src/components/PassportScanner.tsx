@@ -90,6 +90,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
   const [qualityWarning, setQualityWarning] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<Record<string, string>>({});
   const [mrzVerified, setMrzVerified] = useState<Record<string, boolean>>({});
+  const [qrDetected, setQrDetected] = useState(false);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
