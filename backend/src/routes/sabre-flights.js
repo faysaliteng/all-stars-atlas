@@ -24,17 +24,27 @@ async function getSabreConfig() {
 
     const isProd = cfg.environment === 'production';
     const baseUrl = isProd
-      ? (cfg.prod_url || 'https://api.sabre.com')
-      : (cfg.sandbox_url || 'https://api-crt.cert.havail.sabre.com');
+      ? (cfg.prod_url || 'https://api.platform.sabre.com')
+      : (cfg.sandbox_url || 'https://api.cert.platform.sabre.com');
     const clientId = isProd ? cfg.prod_client_id : cfg.sandbox_client_id;
     const clientSecret = isProd ? cfg.prod_client_secret : cfg.sandbox_client_secret;
     if (!clientId || !clientSecret) return null;
+
+    // EPR + password required for OAuth v3 password grant
+    const epr = cfg.epr || '';
+    const agencyPassword = cfg.agency_password || '';
+    if (!epr || !agencyPassword) {
+      console.error('[Sabre] EPR and agency_password are required for OAuth v3. Configure in Admin → Settings → API Integrations → Sabre GDS');
+      return null;
+    }
 
     _configCache = {
       baseUrl: baseUrl.replace(/\/$/, ''),
       clientId,
       clientSecret,
       pcc: cfg.pcc || '',
+      epr,
+      agencyPassword,
       environment: cfg.environment || 'cert',
     };
     _configCacheTime = Date.now();
