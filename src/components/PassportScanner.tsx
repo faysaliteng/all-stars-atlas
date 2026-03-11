@@ -245,10 +245,23 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
     setScanning(false);
     setOcrError(null);
     setQualityWarning(null);
+    setConfidence({});
+    setMrzVerified({});
   };
 
   const updateField = (field: keyof ExtractedData, value: string) => {
     if (extracted) setExtracted({ ...extracted, [field]: value });
+  };
+
+  /** Render a small verification icon next to a field */
+  const VerifyBadge = ({ field }: { field: string }) => {
+    const c = confidence[field];
+    const v = mrzVerified[field];
+    if (v) return <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" title="MRZ check-digit verified" />;
+    if (c === 'verified' || c === 'verified-mrz-wins') return <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" title="Verified by MRZ code" />;
+    if (c === 'high') return <ShieldCheck className="w-3 h-3 text-blue-500 shrink-0" title="MRZ + visual match" />;
+    if (c === 'medium' || c === 'mrz-only' || c === 'visual-only') return <ShieldAlert className="w-3 h-3 text-amber-500 shrink-0" title="Single source — please verify" />;
+    return null;
   };
 
   return (
