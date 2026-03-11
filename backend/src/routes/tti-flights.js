@@ -260,6 +260,13 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
     }
   }
 
+  // Build fare rule map from FareInfo.FareRules (contains refundability/change info)
+  const fareRules = fareInfo.FareRules || [];
+  const fareRuleMap = {};
+  for (const rule of fareRules) {
+    if (rule.Ref) fareRuleMap[rule.Ref] = rule;
+  }
+
   const itinFareMap = {};
   for (const fare of etTicketFares) {
     if (fare.RefItinerary) {
@@ -338,10 +345,52 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
     // Extract penalty/fare rules for cancellation & date change
     let cancellationPolicy = null;
     let dateChangePolicy = null;
+
+    // Use FareRules VoluntaryRefundCode/VoluntaryChangeCode from the itinerary's linked fare rule
+    for (const airOD of airODs) {
+      const ruleRef = airOD.RefFareRule;
+      if (ruleRef && fareRuleMap[ruleRef]) {
+        const rule = fareRuleMap[ruleRef];
+        if (rule.VoluntaryRefundCode) {
+          cancellationPolicy = cancellationPolicy || {};
+          cancellationPolicy.voluntaryRefundCode = rule.VoluntaryRefundCode;
+          if (rule.VoluntaryRefundCode === 'NotPermitted') {
+            cancellationPolicy.refundable = false;
+            cancellationPolicy.label = 'Non-Refundable';
+          } else if (rule.VoluntaryRefundCode === 'WithPenalties') {
+            cancellationPolicy.refundable = true;
+            cancellationPolicy.label = 'Refundable (with penalties)';
+          } else if (rule.VoluntaryRefundCode === 'Free') {
+            cancellationPolicy.refundable = true;
+            cancellationPolicy.label = 'Fully Refundable';
+          }
+        }
+        if (rule.VoluntaryChangeCode) {
+          dateChangePolicy = dateChangePolicy || {};
+          dateChangePolicy.voluntaryChangeCode = rule.VoluntaryChangeCode;
+          if (rule.VoluntaryChangeCode === 'NotPermitted') {
+            dateChangePolicy.changeAllowed = false;
+            dateChangePolicy.label = 'Date change not permitted';
+          } else if (rule.VoluntaryChangeCode === 'WithPenalties') {
+            dateChangePolicy.changeAllowed = true;
+            dateChangePolicy.label = 'Date change allowed (with penalties)';
+          } else if (rule.VoluntaryChangeCode === 'Free') {
+            dateChangePolicy.changeAllowed = true;
+            dateChangePolicy.label = 'Free date change';
+          }
+        }
+        if (rule.FareConditionText) {
+          cancellationPolicy = cancellationPolicy || {};
+          cancellationPolicy.ruleText = rule.FareConditionText;
+        }
+      }
+    }
+
+    // Fallback: check PenaltyDetails on fare objects
     for (const f of fares) {
       if (f.PenaltyDetails || f.Penalties) {
         const pd = f.PenaltyDetails || f.Penalties;
-        if (pd.CancellationCharge !== undefined || pd.RefundPenalty !== undefined) {
+        if (!cancellationPolicy && (pd.CancellationCharge !== undefined || pd.RefundPenalty !== undefined)) {
           cancellationPolicy = {
             beforeDeparture: pd.CancellationCharge ?? pd.RefundPenalty ?? null,
             afterDeparture: pd.PostDepartureCancellation ?? 'Non-refundable',
@@ -349,7 +398,7 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
             currency: currency,
           };
         }
-        if (pd.DateChangeCharge !== undefined || pd.ReissuePenalty !== undefined || pd.ChangePenalty !== undefined) {
+        if (!dateChangePolicy && (pd.DateChangeCharge !== undefined || pd.ReissuePenalty !== undefined || pd.ChangePenalty !== undefined)) {
           dateChangePolicy = {
             changeAllowed: true,
             changeFee: pd.DateChangeCharge ?? pd.ReissuePenalty ?? pd.ChangePenalty ?? null,
@@ -363,11 +412,11 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
           for (const rule of rules) {
             if (rule.Category === 'CANCELLATION' || rule.Type === 'cancellation') {
               cancellationPolicy = cancellationPolicy || {};
-              cancellationPolicy.ruleText = rule.Text || rule.Description || rule.RuleText || null;
+              cancellationPolicy.ruleText = cancellationPolicy.ruleText || rule.Text || rule.Description || rule.RuleText || null;
             }
             if (rule.Category === 'DATE_CHANGE' || rule.Category === 'REISSUE' || rule.Type === 'reissue') {
               dateChangePolicy = dateChangePolicy || {};
-              dateChangePolicy.ruleText = rule.Text || rule.Description || rule.RuleText || null;
+              dateChangePolicy.ruleText = dateChangePolicy.ruleText || rule.Text || rule.Description || rule.RuleText || null;
             }
           }
         }
@@ -378,19 +427,41 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
     const fareDetails = [];
     let minAvailableSeats = Infinity;
     let isRefundable = false;
-    for (const f of fares) {
-      // Check refundability at fare level
-      if (f.IsRefundable === true || f.Refundable === true || f.PenaltyDetails?.IsRefundable === true) {
-        isRefundable = true;
+    let voluntaryRefundCode = null;
+    let voluntaryChangeCode = null;
+
+    // 1) PRIMARY: Check FareRules via RefFareRule on AirOriginDestinations
+    for (const airOD of airODs) {
+      const ruleRef = airOD.RefFareRule;
+      if (ruleRef && fareRuleMap[ruleRef]) {
+        const rule = fareRuleMap[ruleRef];
+        voluntaryRefundCode = rule.VoluntaryRefundCode || null;
+        voluntaryChangeCode = rule.VoluntaryChangeCode || null;
+        // "NotPermitted" = non-refundable, "WithPenalties" or "Free" = refundable
+        if (voluntaryRefundCode && voluntaryRefundCode !== 'NotPermitted') {
+          isRefundable = true;
+        }
       }
+    }
+
+    // 2) FALLBACK: Check explicit boolean fields on fare objects
+    if (!voluntaryRefundCode) {
+      for (const f of fares) {
+        if (f.IsRefundable === true || f.Refundable === true || f.PenaltyDetails?.IsRefundable === true) {
+          isRefundable = true;
+        }
+        const odFares = f.OriginDestinationFares || [];
+        for (const odf of odFares) {
+          if (odf.IsRefundable === true || odf.Refundable === true) isRefundable = true;
+        }
+      }
+    }
+
+    for (const f of fares) {
       const odFares = f.OriginDestinationFares || [];
       for (const odf of odFares) {
-        // Check refundability at OD fare level
-        if (odf.IsRefundable === true || odf.Refundable === true) isRefundable = true;
         const couponFares = odf.CouponFares || odf.ETCouponFares || [];
         for (const cf of couponFares) {
-          // TTI stores seat count in Segments[].BookingClasses[] matching the BookingClassCode
-          // We'll resolve it after segment map is built — for now collect fare details
           fareDetails.push({
             fareBasis: cf.FareBasisCode || '',
             bookingClass: cf.BookingClassCode || '',
@@ -548,6 +619,7 @@ function normalizeTTIResponse(response, originCode, destinationCode, isRoundTrip
         totalRoundTripPrice: isRoundTrip && odCount > 1 ? totalItinPrice : undefined,
         currency: currency,
         refundable: isRefundable,
+        fareType: voluntaryRefundCode === 'WithPenalties' ? 'Refundable' : voluntaryRefundCode === 'Free' ? 'Fully Refundable' : voluntaryRefundCode === 'NotPermitted' ? 'Non-Refundable' : (isRefundable ? 'Refundable' : 'Non-Refundable'),
         baggage: checkedBaggage || null,
         handBaggage: handBaggage || null,
         aircraft: firstLeg.aircraft,
