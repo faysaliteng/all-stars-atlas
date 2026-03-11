@@ -17,6 +17,8 @@ interface ExtractedData {
   lastName: string;
   country: string;
   countryCode: string;
+  nationality: string;
+  phone: string;
   passportNumber: string;
   birthDate: string;
   birthPlace: string;
