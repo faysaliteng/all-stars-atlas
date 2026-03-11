@@ -263,6 +263,14 @@ const SearchWidget = () => {
       if (field === "to" && index < updated.length - 1) {
         updated[index + 1] = { ...updated[index + 1], from: value };
       }
+      // When changing a date, clear dates of later segments that are now invalid
+      if (field === "date" && value) {
+        for (let i = index + 1; i < updated.length; i++) {
+          if (updated[i].date && updated[i].date! < value) {
+            updated[i] = { ...updated[i], date: undefined };
+          }
+        }
+      }
       return updated;
     });
   }, []);
