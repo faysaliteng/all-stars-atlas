@@ -638,14 +638,39 @@ const FlightResults = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-                <Plane className="w-5 h-5 text-accent" /> {fromCode || "—"} <ArrowRight className="w-5 h-5" /> {toCode || "—"}
-                {isRoundTrip && <Badge className="bg-accent/10 text-accent border-0 text-[10px] ml-2">Round Trip</Badge>}
+                <Plane className="w-5 h-5 text-accent" />
+                {isMultiCity ? (
+                  <>
+                    {multiCitySegments.map((s, i) => (
+                      <span key={i} className="flex items-center gap-1">
+                        {i > 0 && <ArrowRight className="w-4 h-4 text-muted-foreground" />}
+                        <span>{s.from}</span>
+                      </span>
+                    ))}
+                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    <span>{multiCitySegments[multiCitySegments.length - 1]?.to || "—"}</span>
+                    <Badge className="bg-blue-500/10 text-blue-600 border-0 text-[10px] ml-2">Multi-City</Badge>
+                  </>
+                ) : (
+                  <>
+                    {fromCode || "—"} <ArrowRight className="w-5 h-5" /> {toCode || "—"}
+                    {isRoundTrip && <Badge className="bg-accent/10 text-accent border-0 text-[10px] ml-2">Round Trip</Badge>}
+                  </>
+                )}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {departDate}{returnDate ? ` – ${returnDate}` : ""} · {totalPax} Passenger(s){cabinClass ? ` · ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""} · <strong className="text-foreground">{flights.length} flights found</strong>
-                {sources.tti > 0 && <span className="text-muted-foreground ml-1">({sources.tti} Air Astra)</span>}
-                {sources.sabre > 0 && <span className="text-muted-foreground ml-1">({sources.sabre} Sabre)</span>}
-                {sources.flyhub > 0 && <span className="text-muted-foreground ml-1">({sources.flyhub} FlyHub)</span>}
+                {isMultiCity ? (
+                  <>
+                    {multiCitySegments.map((s, i) => s.date).join(", ")} · {totalPax} Passenger(s){cabinClass ? ` · ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""} · <strong className="text-foreground">{totalMultiCityFlights} flights found</strong>
+                  </>
+                ) : (
+                  <>
+                    {departDate}{returnDate ? ` – ${returnDate}` : ""} · {totalPax} Passenger(s){cabinClass ? ` · ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""} · <strong className="text-foreground">{flights.length} flights found</strong>
+                    {sources.tti > 0 && <span className="text-muted-foreground ml-1">({sources.tti} Air Astra)</span>}
+                    {sources.sabre > 0 && <span className="text-muted-foreground ml-1">({sources.sabre} Sabre)</span>}
+                    {sources.flyhub > 0 && <span className="text-muted-foreground ml-1">({sources.flyhub} FlyHub)</span>}
+                  </>
+                )}
               </p>
             </div>
             <div className="flex gap-2 items-center">
