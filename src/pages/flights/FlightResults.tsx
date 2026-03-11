@@ -553,7 +553,7 @@ const FlightResults = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <div className="bg-accent pt-20 lg:pt-28 pb-5">
+      <div className="bg-card border-b border-border pt-20 lg:pt-28 pb-5">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
