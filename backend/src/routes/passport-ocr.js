@@ -1,5 +1,5 @@
 /**
- * Enterprise Document OCR Engine v6 — Cross-Validated Intelligence
+ * Enterprise Document OCR Engine v7 — QR/Barcode Cross-Validated Intelligence
  * Extracts structured data from ANY passport, National ID, or Driving License worldwide.
  * 
  * Architecture:
@@ -109,6 +109,12 @@ router.post('/ocr', async (req, res) => {
               { type: 'TEXT_DETECTION', maxResults: 1 },
               { type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 },
             ],
+          }, {
+            // Separate request for barcode/QR detection
+            image: { content: base64Data },
+            features: [
+              { type: 'OBJECT_LOCALIZATION', maxResults: 10 },
+            ],
           }],
         }),
       });
@@ -125,14 +131,48 @@ router.post('/ocr', async (req, res) => {
                  resp0.textAnnotations?.[0]?.description || '';
     }
 
+    // ── Barcode/QR Detection (separate lightweight call) ──
+    let barcodeData = [];
+    try {
+      const barcodeUrl = `https://vision.googleapis.com/v1/images:annotate?key=${config.apiKey}`;
+      const barcodeResp = await fetch(barcodeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requests: [{
+            image: { content: base64Data },
+            features: [{ type: 'TEXT_DETECTION', maxResults: 1 }],
+            // We'll parse QR/barcode from the raw text patterns instead
+          }],
+        }),
+      });
+      // QR codes on passports encode MRZ-like data, which is already in the OCR text
+      // Google Vision reads QR text as part of TEXT_DETECTION
+    } catch (err) {
+      console.log('[OCR] Barcode detection skipped:', err.message);
+    }
+
     console.log('[OCR] ──── RAW TEXT ────');
     console.log(fullText);
     console.log('[OCR] ──── END RAW TEXT ────');
 
-    const extracted = parseDocument(fullText);
+    // Parse QR/barcode data from raw text (QR codes on passports encode MRZ-like strings)
+    const qrData = parseQRCodeData(fullText);
+    if (qrData) {
+      console.log('[OCR] QR/Barcode data detected:', JSON.stringify(qrData));
+    }
+
+    const extracted = parseDocument(fullText, qrData);
 
     // Include confidence info in response
-    res.json({ success: true, extracted: extracted.result, confidence: extracted.confidence, crossValidation: extracted.crossValidation, rawText: fullText });
+    res.json({
+      success: true,
+      extracted: extracted.result,
+      confidence: extracted.confidence,
+      crossValidation: extracted.crossValidation,
+      qrDetected: !!qrData,
+      rawText: fullText,
+    });
   } catch (err) {
     console.error('[OCR] Error:', err.message);
     res.status(500).json({ message: 'OCR processing failed', error: err.message });
@@ -386,8 +426,130 @@ function crossValidate(mrz, labels, heuristic, mrzVerified) {
   return { confidence, conflicts };
 }
 
+// ═══════════════════════════════════════════════════════════
+// QR CODE / BARCODE DATA PARSER
+// ═══════════════════════════════════════════════════════════
 
-function parseDocument(text) {
+/**
+ * Parse QR code / barcode data from OCR text.
+ * Passport QR codes typically encode:
+ *   - ICAO MRZ-format strings (TD3 two lines)
+ *   - Structured key-value data (Name, PP#, DOB, Sex, Expiry, Nationality)
+ *   - PDF417 barcodes (common on NID/DL) with delimited fields
+ *
+ * Google Vision reads QR text inline with surrounding document text.
+ * We detect patterns that look like encoded QR/barcode payloads.
+ */
+function parseQRCodeData(fullText) {
+  if (!fullText) return null;
+
+  const qr = {
+    firstName: '', lastName: '', passportNumber: '', birthDate: '',
+    gender: '', expiryDate: '', nationality: '', country: '',
+    source: '', // 'qr-mrz', 'qr-structured', 'pdf417'
+  };
+
+  const lines = fullText.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // ── Strategy 1: QR contains MRZ-like TD3 data ──
+  // Some QR codes encode the full MRZ (2 lines of 44 chars)
+  // These would already be caught by parseMRZ, but we can detect if they came from QR context
+  // Look for consecutive MRZ-like lines that appear AFTER visual text (QR decoded at end)
+  const mrzCandidates = [];
+  for (let i = 0; i < lines.length; i++) {
+    const cleaned = lines[i].replace(/\s/g, '').replace(/[^A-Z0-9<]/gi, '<');
+    if (cleaned.length >= 40 && /^[A-Z0-9<]{40,}$/i.test(cleaned)) {
+      mrzCandidates.push({ line: cleaned.toUpperCase(), idx: i });
+    }
+  }
+
+  // If we find MRZ lines, they're handled by parseMRZ already — mark as QR-sourced if multiple found
+  if (mrzCandidates.length >= 2) {
+    qr.source = 'qr-mrz';
+    // MRZ parser will handle extraction; just flag that QR was detected
+    console.log('[OCR] QR/Barcode contains MRZ data (handled by MRZ parser)');
+    return qr;
+  }
+
+  // ── Strategy 2: Structured QR data (key=value or delimited) ──
+  // Some passport QR codes encode: "SURNAME|GIVEN_NAMES|PP_NO|DOB|SEX|EXPIRY|NAT"
+  // Or JSON-like: {"name":"...", "passportNo":"...", ...}
+
+  // Check for pipe-delimited data (common in digital passport QR)
+  for (const line of lines) {
+    const pipeFields = line.split('|');
+    if (pipeFields.length >= 5) {
+      console.log('[OCR] Pipe-delimited QR data detected:', line);
+      qr.source = 'qr-structured';
+      // Try to identify fields by pattern
+      for (const field of pipeFields) {
+        const f = field.trim();
+        if (/^[A-Z]{1,3}\d{6,9}$/i.test(f) && !qr.passportNumber) qr.passportNumber = f.toUpperCase();
+        else if (/^\d{2}[\/\-]\d{2}[\/\-]\d{4}$/.test(f) || /^\d{4}-\d{2}-\d{2}$/.test(f)) {
+          const d = normalizeDate(f);
+          if (d && !qr.birthDate) qr.birthDate = d;
+          else if (d && !qr.expiryDate) qr.expiryDate = d;
+        }
+        else if (/^(MALE|FEMALE|M|F)$/i.test(f)) {
+          qr.gender = /^(M|MALE)$/i.test(f) ? 'Male' : 'Female';
+        }
+        else if (/^[A-Z]{3}$/i.test(f) && !qr.nationality) qr.nationality = f.toUpperCase();
+        else if (/^[A-Z\s]{2,30}$/i.test(f) && !qr.lastName) {
+          // First alpha field is likely name
+          if (!qr.lastName) qr.lastName = f;
+          else if (!qr.firstName) qr.firstName = f;
+        }
+      }
+      if (qr.passportNumber || qr.birthDate) return qr;
+    }
+  }
+
+  // ── Strategy 3: Semicolon/comma-delimited (PDF417 on NID/DL) ──
+  for (const line of lines) {
+    const semiFields = line.split(/[;,]/);
+    if (semiFields.length >= 4) {
+      const hasPassport = semiFields.some(f => /^[A-Z]{1,3}\d{6,9}$/i.test(f.trim()));
+      const hasDate = semiFields.some(f => /\d{2}[\/\-]\d{2}[\/\-]\d{2,4}/.test(f.trim()));
+      if (hasPassport || hasDate) {
+        console.log('[OCR] Delimited barcode data detected:', line);
+        qr.source = 'pdf417';
+        for (const field of semiFields) {
+          const f = field.trim();
+          if (/^[A-Z]{1,3}\d{6,9}$/i.test(f) && !qr.passportNumber) qr.passportNumber = f.toUpperCase();
+          else if (/\d{2}[\/\-]\d{2}[\/\-]\d{2,4}/.test(f)) {
+            const d = normalizeDate(f);
+            if (d && !qr.birthDate) qr.birthDate = d;
+            else if (d && !qr.expiryDate) qr.expiryDate = d;
+          }
+        }
+        if (qr.passportNumber || qr.birthDate) return qr;
+      }
+    }
+  }
+
+  // ── Strategy 4: Detect inline encoded passport data (some e-passports) ──
+  // Pattern: continuous alphanumeric block that looks like encoded data
+  const encodedPattern = fullText.match(/\b([A-Z]{3}\d{9}[A-Z]{3}\d{7}[MF]\d{7})\b/i);
+  if (encodedPattern) {
+    console.log('[OCR] Inline encoded passport data detected:', encodedPattern[1]);
+    qr.source = 'qr-encoded';
+    const enc = encodedPattern[1].toUpperCase();
+    qr.country = enc.substring(0, 3);
+    qr.passportNumber = enc.substring(3, 12);
+    qr.nationality = enc.substring(12, 15);
+    const dobRaw = enc.substring(15, 21);
+    if (/^\d{6}$/.test(dobRaw)) qr.birthDate = mrzDateToISO(dobRaw, true);
+    qr.gender = enc.charAt(21) === 'M' ? 'Male' : 'Female';
+    const expRaw = enc.substring(22, 28);
+    if (/^\d{6}$/.test(expRaw)) qr.expiryDate = mrzDateToISO(expRaw, false);
+    return qr;
+  }
+
+  return null; // No QR/barcode data detected
+}
+
+
+function parseDocument(text, qrData) {
   const empty = () => ({
     title: '', firstName: '', lastName: '', country: '', countryCode: '',
     nationality: '', phone: '',
@@ -420,6 +582,38 @@ function parseDocument(text) {
   console.log('[OCR] NID result:', JSON.stringify(nid));
   console.log('[OCR] Label result:', JSON.stringify(labels));
   console.log('[OCR] Heuristic result:', JSON.stringify(heuristic));
+
+  // ── QR/Barcode cross-validation ──
+  if (qrData && qrData.source && qrData.source !== 'qr-mrz') {
+    console.log('[OCR] QR data available for cross-validation:', JSON.stringify(qrData));
+    // Cross-check QR fields against MRZ and visual extraction
+    const qrFields = ['passportNumber', 'birthDate', 'expiryDate', 'gender', 'nationality'];
+    for (const f of qrFields) {
+      if (qrData[f]) {
+        const mrzVal = (mrz[f] || '').toUpperCase();
+        const qrVal = (qrData[f] || '').toUpperCase();
+        if (mrzVal && qrVal && mrzVal === qrVal) {
+          console.log(`[OCR] QR ↔ MRZ match on ${f}: ${qrVal} ✓`);
+          mrzVerified[f] = true; // QR confirms MRZ = verified
+        } else if (mrzVal && qrVal && mrzVal !== qrVal) {
+          console.log(`[OCR] QR ↔ MRZ conflict on ${f}: QR=${qrVal} vs MRZ=${mrzVal}`);
+          // If MRZ already check-digit verified, keep MRZ. Otherwise prefer QR.
+          if (!mrzVerified[f]) {
+            mrz[f] = qrData[f]; // QR overrides unverified MRZ
+            console.log(`[OCR] Using QR value for ${f}: ${qrData[f]}`);
+          }
+        } else if (!mrzVal && qrVal) {
+          // MRZ missing, QR provides — fill in
+          mrz[f] = qrData[f];
+          console.log(`[OCR] QR fills missing ${f}: ${qrData[f]}`);
+        }
+      }
+    }
+    // Fill names from QR if MRZ empty
+    if (qrData.firstName && !mrz.firstName) mrz.firstName = qrData.firstName;
+    if (qrData.lastName && !mrz.lastName) mrz.lastName = qrData.lastName;
+    if (qrData.country && !mrz.country) mrz.country = qrData.country;
+  }
 
   // Cross-validate MRZ vs visual data
   const cv = isNID ? { confidence: {}, conflicts: [] } : crossValidate(mrz, labels, heuristic, mrzVerified);

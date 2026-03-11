@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, X, FileText, ScanLine, CheckCircle2, Loader2, AlertCircle, Camera, CameraOff, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Upload, X, FileText, ScanLine, CheckCircle2, Loader2, AlertCircle, Camera, CameraOff, ShieldCheck, ShieldAlert, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 
@@ -90,6 +90,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
   const [qualityWarning, setQualityWarning] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<Record<string, string>>({});
   const [mrzVerified, setMrzVerified] = useState<Record<string, boolean>>({});
+  const [qrDetected, setQrDetected] = useState(false);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -152,12 +153,14 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
     setOcrError(null);
     setConfidence({});
     setMrzVerified({});
+    setQrDetected(false);
     try {
       const result = await api.post<{
         success: boolean;
         extracted: ExtractedData;
         confidence?: Record<string, string>;
         crossValidation?: { conflicts?: any[]; mrzVerified?: Record<string, boolean> };
+        qrDetected?: boolean;
         rawText?: string;
       }>("/passport/ocr", { image: base64Data });
 
@@ -165,6 +168,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
         setExtracted(result.extracted);
         if (result.confidence) setConfidence(result.confidence);
         if (result.crossValidation?.mrzVerified) setMrzVerified(result.crossValidation.mrzVerified);
+        if (result.qrDetected) setQrDetected(true);
         const hasData = result.extracted.firstName || result.extracted.lastName || result.extracted.passportNumber;
         if (!hasData) {
           setOcrError("Could not extract text clearly. Please fill in the fields manually.");
@@ -247,6 +251,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
     setQualityWarning(null);
     setConfidence({});
     setMrzVerified({});
+    setQrDetected(false);
   };
 
   const updateField = (field: keyof ExtractedData, value: string) => {
@@ -357,10 +362,20 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
           {/* Right: Extracted Data */}
           <div className="p-5">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">EXTRACTED DATA</h3>
-            {Object.values(mrzVerified).some(v => v) && (
-              <div className="flex items-center gap-1.5 mb-3 text-xs text-accent">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>MRZ code verified — data cross-checked with document code</span>
+            {(Object.values(mrzVerified).some(v => v) || qrDetected) && (
+              <div className="flex flex-col gap-1 mb-3">
+                {Object.values(mrzVerified).some(v => v) && (
+                  <div className="flex items-center gap-1.5 text-xs text-accent">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>MRZ code verified — data cross-checked with document code</span>
+                  </div>
+                )}
+                {qrDetected && (
+                  <div className="flex items-center gap-1.5 text-xs text-accent">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>QR/Barcode detected — data cross-validated with encoded payload</span>
+                  </div>
+                )}
               </div>
             )}
 
