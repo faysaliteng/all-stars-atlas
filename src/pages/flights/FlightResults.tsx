@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plane, Clock, ArrowRight, Filter, X, Luggage,
   SlidersHorizontal, ChevronDown, ChevronUp, Shield, Timer,
