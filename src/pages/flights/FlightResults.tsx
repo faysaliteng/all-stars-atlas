@@ -241,7 +241,7 @@ const FlightCard = ({
               </Button>
             ) : (
               <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => cardNavigate(`/flights/book?adults=${cardSearchParams.get("adults") || "1"}&children=${cardSearchParams.get("children") || "0"}&infants=${cardSearchParams.get("infants") || "0"}&cabin=${cardSearchParams.get("cabin") || "economy"}`, { state: { outboundFlight: flight } })}>
-                Select <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                Select <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             )}
           </div>
