@@ -133,13 +133,8 @@ const Index = () => {
   const routesFade = useFadeIn();
   const testimonialsFade = useFadeIn();
 
-  // Load video immediately — no delay
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      video.play().then(() => setVideoReady(true)).catch(() => setVideoReady(true));
-    }
-  }, []);
+  // Video loads immediately — fade in once it's playing
+  const handleVideoCanPlay = useCallback(() => setVideoReady(true), []);
 
   const isSectionVisible = (key: string) => {
     const section = cms.sections.find(s => s.key === key);
