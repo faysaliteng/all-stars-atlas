@@ -698,15 +698,18 @@ const FlightBooking = () => {
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className={`text-xs sm:text-sm ${fieldErrors.passport ? "text-destructive" : ""}`}>{domestic ? "Document Number" : "Document Number *"}</Label>
+                          <Label className={`text-xs sm:text-sm ${fieldErrors[`passport_${pi}`] ? "text-destructive" : ""}`}>{domestic ? "Document Number" : "Document Number *"}</Label>
                           <Input value={pax.passport} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].passport = e.target.value; setPassengers(updated);
-                            setFieldErrors(prev => { const n = {...prev}; delete n.passport; return n; });
-                          }} placeholder="e.g. A0123456789" className={`h-10 sm:h-11 ${fieldErrors.passport ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                            setFieldErrors(prev => { const n = {...prev}; delete n[`passport_${pi}`]; return n; });
+                          }} placeholder="e.g. A0123456789" className={`h-10 sm:h-11 ${fieldErrors[`passport_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs sm:text-sm">Expiration Date</Label>
-                          <Input type="date" value={pax.passportExpiry} onChange={(e) => { const updated = [...passengers]; updated[pi].passportExpiry = e.target.value; setPassengers(updated); }} className="h-10 sm:h-11" />
+                          <Label className={`text-xs sm:text-sm ${fieldErrors[`passportExpiry_${pi}`] ? "text-destructive" : ""}`}>{domestic ? "Expiration Date" : "Expiration Date *"}</Label>
+                          <Input type="date" value={pax.passportExpiry} onChange={(e) => {
+                            const updated = [...passengers]; updated[pi].passportExpiry = e.target.value; setPassengers(updated);
+                            setFieldErrors(prev => { const n = {...prev}; delete n[`passportExpiry_${pi}`]; return n; });
+                          }} className={`h-10 sm:h-11 ${fieldErrors[`passportExpiry_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
                         </div>
                       </div>
 
