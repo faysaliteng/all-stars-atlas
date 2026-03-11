@@ -421,6 +421,7 @@ const PassportScanner = ({ open, onOpenChange, onConfirm }: PassportScannerProps
 function emptyExtracted(): ExtractedData {
   return {
     title: "", firstName: "", lastName: "", country: "", countryCode: "",
+    nationality: "", phone: "",
     passportNumber: "", birthDate: "", birthPlace: "",
     gender: "", issuanceDate: "", expiryDate: "",
   };
