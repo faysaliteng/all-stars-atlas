@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, X, FileText, ScanLine, CheckCircle2, Loader2, AlertCircle, Camera, CameraOff, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Upload, X, FileText, ScanLine, CheckCircle2, Loader2, AlertCircle, Camera, CameraOff, ShieldCheck, ShieldAlert, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 
