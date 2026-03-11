@@ -642,18 +642,18 @@ const FlightBooking = () => {
                           </div>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className={`text-xs sm:text-sm ${fieldErrors.dob ? "text-destructive" : ""}`}>Date of Birth *</Label>
+                          <Label className={`text-xs sm:text-sm ${fieldErrors[`dob_${pi}`] ? "text-destructive" : ""}`}>Date of Birth *</Label>
                           <Input type="date" value={pax.dob} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].dob = e.target.value; setPassengers(updated);
-                            setFieldErrors(prev => { const n = {...prev}; delete n.dob; return n; });
-                          }} className={`h-10 sm:h-11 ${fieldErrors.dob ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                            setFieldErrors(prev => { const n = {...prev}; delete n[`dob_${pi}`]; return n; });
+                          }} className={`h-10 sm:h-11 ${fieldErrors[`dob_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className={`text-xs sm:text-sm ${fieldErrors.nationality ? "text-destructive" : ""}`}>Nationality *</Label>
+                          <Label className={`text-xs sm:text-sm ${fieldErrors[`nationality_${pi}`] ? "text-destructive" : ""}`}>Nationality *</Label>
                           <Input value={pax.nationality} onChange={(e) => {
                             const updated = [...passengers]; updated[pi].nationality = e.target.value; setPassengers(updated);
-                            setFieldErrors(prev => { const n = {...prev}; delete n.nationality; return n; });
-                          }} placeholder="e.g. Bangladeshi" className={`h-10 sm:h-11 ${fieldErrors.nationality ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                            setFieldErrors(prev => { const n = {...prev}; delete n[`nationality_${pi}`]; return n; });
+                          }} placeholder="e.g. Bangladeshi" className={`h-10 sm:h-11 ${fieldErrors[`nationality_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
                         </div>
                       </div>
 
