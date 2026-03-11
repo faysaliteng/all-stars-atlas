@@ -720,18 +720,19 @@ const FlightBooking = () => {
                           <p className="text-sm font-semibold flex items-center gap-2"><User className="w-4 h-4 text-accent" /> Enter Contact Details</p>
                           <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                             <div className="space-y-1.5">
-                              <Label className={`text-xs sm:text-sm ${fieldErrors.phone ? "text-destructive" : ""}`}>Mobile Number *</Label>
+                              <Label className={`text-xs sm:text-sm ${fieldErrors[`phone_${pi}`] ? "text-destructive" : ""}`}>Mobile Number *</Label>
                               <Input type="tel" value={pax.phone} onChange={(e) => {
                                 const updated = [...passengers]; updated[pi].phone = e.target.value; setPassengers(updated);
-                                setFieldErrors(prev => { const n = {...prev}; delete n.phone; return n; });
-                              }} placeholder="+880 1XXX-XXXXXX" className={`h-10 sm:h-11 ${fieldErrors.phone ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                                setFieldErrors(prev => { const n = {...prev}; delete n[`phone_${pi}`]; return n; });
+                              }} placeholder="01XXX-XXXXXXXX" className={`h-10 sm:h-11 ${fieldErrors[`phone_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                              {fieldErrors[`phone_${pi}`] && <p className="text-[11px] text-destructive">{fieldErrors[`phone_${pi}`]}</p>}
                             </div>
                             <div className="space-y-1.5">
-                              <Label className={`text-xs sm:text-sm ${fieldErrors.email ? "text-destructive" : ""}`}>E-mail *</Label>
+                              <Label className={`text-xs sm:text-sm ${fieldErrors[`email_${pi}`] ? "text-destructive" : ""}`}>E-mail *</Label>
                               <Input type="email" value={pax.email} onChange={(e) => {
                                 const updated = [...passengers]; updated[pi].email = e.target.value; setPassengers(updated);
-                                setFieldErrors(prev => { const n = {...prev}; delete n.email; return n; });
-                              }} placeholder="email@example.com" className={`h-10 sm:h-11 ${fieldErrors.email ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
+                                setFieldErrors(prev => { const n = {...prev}; delete n[`email_${pi}`]; return n; });
+                              }} placeholder="email@example.com" className={`h-10 sm:h-11 ${fieldErrors[`email_${pi}`] ? "border-destructive ring-destructive/20 ring-2" : ""}`} />
                             </div>
                           </div>
                         </>
