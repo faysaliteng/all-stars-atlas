@@ -1,16 +1,21 @@
 /**
- * Enterprise Document OCR Engine v4
+ * Enterprise Document OCR Engine v6 — Cross-Validated Intelligence
  * Extracts structured data from ANY passport, National ID, or Driving License worldwide.
  * 
  * Architecture:
  *   1. Google Vision API → raw OCR text (images + PDF support)
  *   2. Multi-strategy parser:
- *      a) MRZ parsing with OCR error correction (ICAO 9303 TD1/TD2/TD3)
- *      b) NID/ID Card specific parsing (BD NID, smart card, any country ID)
- *      c) Universal labeled field extraction (supports 50+ label variations)
- *      d) Contextual heuristic extraction with date disambiguation
- *      e) Cross-validation & conflict resolution across strategies
- *   3. Post-processing: name cleanup, country normalization, date validation
+ *      a) MRZ parsing with OCR error correction + ICAO 9303 check digit validation (TD1/TD2/TD3)
+ *      b) MRZ nationality extraction (TD3 pos 10-12, TD1 pos 15-17)
+ *      c) NID/ID Card specific parsing (BD NID, smart card, any country ID)
+ *      d) Universal labeled field extraction (supports 50+ label variations)
+ *      e) Contextual heuristic extraction with date disambiguation
+ *   3. Cross-validation layer:
+ *      - MRZ ↔ Visual text field-by-field comparison
+ *      - Check digit integrity verification (passport number, DOB, expiry, composite)
+ *      - Confidence scoring per field (high/medium/low)
+ *      - Conflict resolution: verified MRZ > unverified MRZ > labels > heuristic
+ *   4. Post-processing: name cleanup, country normalization, date validation
  */
 const express = require('express');
 const router = express.Router();
