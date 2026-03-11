@@ -766,3 +766,47 @@ const handleDelete = async (id: string) => {
   }
 };
 ```
+
+---
+
+## Flight Search & Booking Architecture
+
+### Trip Types
+
+The search widget supports three trip types: **One-way**, **Round-trip**, and **Multi-city** (2–5 segments).
+
+### Multi-City Search Flow
+
+1. User adds 2–5 segments in `SearchWidget.tsx`, each with origin/destination/date.
+2. Date validation enforces chronological order — segment N+1 date cannot be before segment N.
+3. Search navigates to `/flights?tripType=multicity&segments=[JSON]`.
+4. `FlightResults.tsx` detects `tripType=multicity`, parses segments, and fires **parallel API calls** per segment via `Promise.all`.
+5. Results are grouped by segment with color-coded headers and independent selection.
+6. A sticky booking bar tracks selections and enables booking only when all segments are selected.
+
+### Cabin Class Handling
+
+- Cabin class (Economy/Business/First/Premium Economy) is sent to all GDS providers (TTI, BDFare, FlyHub, Sabre, etc.).
+- The UI displays the **searched cabin class**, not the raw GDS fare basis code.
+
+### Passenger Validation (FlightBooking.tsx)
+
+- Per-passenger indexed error keys: `firstName_${index}`, `dob_${index}`, etc.
+- Bangladesh phone regex: `/^01[3-9]\d{8}$/`
+- Passport expiry must be 6+ months from departure for international flights.
+- Max 9 total passengers; infants cannot exceed adults.
+- Multi-city booking passes all selected segments to the API.
+
+### GDS Providers
+
+| Provider | Route File | Notes |
+|----------|-----------|-------|
+| TTI/ZENITH | `backend/src/routes/tti-flights.js` | Air Astra, 5-min cache |
+| BDFare | `backend/src/routes/bdf-flights.js` | Multi-provider normalized |
+| FlyHub | `backend/src/routes/flyhub-flights.js` | — |
+| Sabre | `backend/src/routes/sabre-flights.js` | Coming soon |
+| Galileo | `backend/src/routes/galileo-flights.js` | — |
+| NDC | `backend/src/routes/ndc-flights.js` | — |
+| LCC | `backend/src/routes/lcc-flights.js` | Low-cost carriers |
+
+All providers are searched in parallel via `Promise.allSettled` with deduplication.
