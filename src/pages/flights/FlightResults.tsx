@@ -123,9 +123,8 @@ const FlightCard = ({
   const fromCode = flight.origin || "";
   const toCode = flight.destination || "";
   const flightNo = flight.flightNumber || "";
-  const cabin = searchedCabin
-    ? searchedCabin.charAt(0).toUpperCase() + searchedCabin.slice(1)
-    : (flight.cabinClass || "Economy");
+  // Always use the REAL cabin class from the API — never override with searched cabin
+  const cabin = flight.cabinClass || "Economy";
   const bookingClass = flight.bookingClass || "";
   const availableSeats = flight.availableSeats ?? null;
   const duration = flight.duration || "";
