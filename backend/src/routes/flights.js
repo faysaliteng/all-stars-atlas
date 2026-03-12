@@ -719,23 +719,38 @@ router.post('/cancel', authenticate, async (req, res) => {
 
     // Attempt GDS cancellation if PNR exists
     let gdsCancelResult = null;
+    let gdsCancelFailed = false;
     if (gdsPnr) {
       try {
         if (source === 'sabre') {
           const { cancelBooking: sabreCancelBooking } = require('./sabre-flights');
           gdsCancelResult = await sabreCancelBooking({ pnr: gdsPnr });
+          if (!gdsCancelResult?.success) gdsCancelFailed = true;
         } else if (source === 'tti') {
-          // TTI cancel not yet wired — proceed with local cancel
-          console.log('[Cancel] TTI cancel not implemented — local cancel only');
+          const { cancelBooking: ttiCancelBooking } = require('./tti-flights');
+          gdsCancelResult = await ttiCancelBooking({ pnr: gdsPnr, bookingId: booking.id });
+          if (!gdsCancelResult?.success) gdsCancelFailed = true;
         }
       } catch (gdsErr) {
         console.error('[Cancel] GDS cancel error:', gdsErr.message);
+        gdsCancelFailed = true;
+        gdsCancelResult = { success: false, error: gdsErr.message };
       }
+    }
+
+    // Safety block: if GDS cancel failed and PNR exists, don't update local status
+    if (gdsCancelFailed && gdsPnr) {
+      console.warn(`[Cancel] GDS cancel failed for PNR ${gdsPnr} — local status NOT changed`);
+      return res.status(422).json({
+        message: 'GDS cancellation failed — booking status unchanged',
+        gdsError: gdsCancelResult?.error || 'Provider returned failure',
+        hint: 'Contact support or try again later',
+      });
     }
 
     await db.query('UPDATE bookings SET status = ?, notes = CONCAT(IFNULL(notes,""), ?) WHERE id = ?', [
       'cancelled',
-      `\n[Customer Cancel ${new Date().toISOString()}] ${reason || 'No reason provided'}`,
+      `\n[Customer Cancel ${new Date().toISOString()}] ${reason || 'No reason provided'}${gdsPnr ? ` | GDS: ${gdsCancelResult?.success ? 'OK' : 'N/A'}` : ''}`,
       bookingId,
     ]);
 
