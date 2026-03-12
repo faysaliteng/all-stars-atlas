@@ -582,8 +582,9 @@ const DashboardBookings = () => {
                               <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); toast({ title: "Request Submitted", description: "Refund request submitted." }); }}><XCircle className="w-4 h-4 mr-2" /> Request Refund</DropdownMenuItem>
                             </>)}
                             {(booking.status === "On Hold" || booking.status === "on_hold") && (
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); window.location.href = "/dashboard/payments"; }}><CreditCard className="w-4 h-4 mr-2" /> Pay Now</DropdownMenuItem>
-                            )}
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePayNow(booking); }}>
+                                <CreditCard className="w-4 h-4 mr-2" /> {!booking.isDomestic && booking.type === "flight" ? "Upload Docs & Pay" : "Pay Now"}
+                              </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
