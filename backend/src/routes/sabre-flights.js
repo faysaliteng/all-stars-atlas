@@ -247,7 +247,21 @@ async function searchFlights(params) {
   try {
     console.log(`[Sabre] Searching ${origin} → ${destination} on ${departDate}...`);
     const raw = await sabreRequest(config, '/v5/offers/shop', requestBody);
-    return normalizeSabreResponse(raw, params);
+    // Debug: log raw BFM response structure
+    const topKeys = raw ? Object.keys(raw) : [];
+    console.log(`[Sabre] BFM response keys: ${JSON.stringify(topKeys)}`);
+    const rs = raw?.OTA_AirLowFareSearchRS || raw?.groupedItineraryResponse || raw;
+    const itinCount = rs?.PricedItineraries?.PricedItinerary?.length
+      || rs?.itineraryGroups?.[0]?.itineraries?.length
+      || 0;
+    console.log(`[Sabre] BFM itinerary count: ${itinCount}, hasStatistics: ${!!rs?.statistics}`);
+    if (itinCount === 0) {
+      // Log first 2000 chars of response for debugging
+      console.log(`[Sabre] BFM raw (truncated): ${JSON.stringify(raw).slice(0, 2000)}`);
+    }
+    const results = normalizeSabreResponse(raw, params);
+    console.log(`[Sabre] Normalized ${results.length} flights`);
+    return results;
   } catch (err) {
     console.error('[Sabre] Search failed:', err.message);
     return [];
