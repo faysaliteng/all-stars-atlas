@@ -152,7 +152,7 @@ router.post('/validate-coupon', authenticate, async (req, res) => {
 });
 
 // ── POST /rewards/apply-coupon — Apply coupon to a booking ──
-router.post('/apply-coupon', authenticateToken, async (req, res) => {
+router.post('/apply-coupon', authenticate, async (req, res) => {
   const { code, bookingId } = req.body;
   if (!code || !bookingId) return res.status(400).json({ message: 'Code and bookingId required' });
 
