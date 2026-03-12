@@ -892,6 +892,7 @@ const RoundTripFlightCard = ({
               const aitVat = Math.round((infantBase - disc) * AIT_VAT_PCT / 100);
               fareRows.push({ paxType: "Infant", baseFare: infantBase, tax: infantTax, other: 0, discount: disc, aitVat, count: paxInfants, amount: (infantBase - disc + infantTax + aitVat) * paxInfants });
             }
+            const totalPayable = fareRows.reduce((s, r) => s + r.amount, 0);
 
             return (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
