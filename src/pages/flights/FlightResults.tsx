@@ -1231,6 +1231,13 @@ const FlightResults = () => {
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [stopsFilter, setStopsFilter] = useState("all");
   const [departTimeRange, setDepartTimeRange] = useState([0, 24]);
+  const [arrivalTimeRange, setArrivalTimeRange] = useState([0, 24]);
+  const [durationRange, setDurationRange] = useState([0, 5000]);
+  const [selectedAlliances, setSelectedAlliances] = useState<string[]>([]);
+  const [refundableOnly, setRefundableOnly] = useState(false);
+  const [selectedLayoverAirports, setSelectedLayoverAirports] = useState<string[]>([]);
+  const [layoverDurationRange, setLayoverDurationRange] = useState([0, 5000]);
+  const airlineBarRef = useRef<HTMLDivElement>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [expandedFlight, setExpandedFlight] = useState<string | null>(null);
   const [selectedOutbound, setSelectedOutbound] = useState<any>(null);
