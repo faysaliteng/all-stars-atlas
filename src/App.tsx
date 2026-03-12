@@ -187,6 +187,7 @@ const App = () => (
                 <Route path="e-transactions" element={<DashboardETransactions />} />
                 <Route path="pay-later" element={<DashboardPayLater />} />
                 <Route path="invoices" element={<DashboardInvoices />} />
+                <Route path="rewards" element={<DashboardRewards />} />
               </Route>
 
               {/* Admin Dashboard — Admin Protected */}
