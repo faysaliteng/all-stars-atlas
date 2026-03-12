@@ -36,6 +36,9 @@
 │   │       ├── tti-flights.js # TTI/ZENITH (Air Astra) GDS
 │   │       ├── bdf-flights.js # BDFare GDS integration
 │   │       ├── flyhub-flights.js # FlyHub GDS integration
+│   │       ├── sabre-flights.js  # Sabre REST (BFM search, PNR, SSR, ticketing)
+│   │       ├── sabre-soap.js     # Sabre SOAP (EnhancedSeatMap, GetAncillaryOffers)
+│   │       ├── ancillaries.js    # Seat map + baggage/meal (Sabre SOAP → TTI → fallback)
 │   │       ├── hotels.js      # Hotel search (DB + HotelBeds)
 │   │       ├── hotelbeds.js   # HotelBeds API integration
 │   │       ├── services.js    # Holidays, medical, cars, eSIM, recharge, paybill
