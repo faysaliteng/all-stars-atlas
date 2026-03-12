@@ -2675,13 +2675,12 @@ const FlightResults = () => {
                     )}
                     {multiCitySegments.map((seg, segIdx) => {
                       const segFlights = sortFlights(applyFilters(multiCityResults[segIdx] || []), sortBy);
-                      const segColors = ["bg-accent/10 text-accent", "bg-blue-500/10 text-blue-600", "bg-purple-500/10 text-purple-600", "bg-amber-500/10 text-amber-600", "bg-rose-500/10 text-rose-600"];
                       const selectedFlight = selectedMultiCityFlights[segIdx];
 
                       return (
                         <div key={segIdx}>
                           <div className="flex items-center gap-3 mb-3">
-                            <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 ${segColors[segIdx % segColors.length]}`}>
+                            <div className="flex items-center gap-2 bg-accent/10 text-accent rounded-lg px-3 py-1.5">
                               <Plane className="w-4 h-4" /><span className="text-sm font-bold">Flight {segIdx + 1}</span>
                             </div>
                             <span className="text-sm font-medium">{seg.from} → {seg.to}</span>
@@ -2691,6 +2690,7 @@ const FlightResults = () => {
                                 <Check className="w-3 h-3 mr-1" /> {formatTime(selectedFlight.departureTime)} – {formatTime(selectedFlight.arrivalTime)} · ৳{selectedFlight.price?.toLocaleString()}
                               </Badge>
                             )}
+                            <span className="text-xs text-muted-foreground italic ml-auto">(Fares include. AIT VAT)</span>
                           </div>
                           <div className="space-y-3">
                             {segFlights.length === 0 ? (
