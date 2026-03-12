@@ -884,9 +884,6 @@ const FlightCard = ({
                       </div>
                     </div>
                   )}
-                      <p className="text-[11px] text-muted-foreground"><Info className="w-3 h-3 inline mr-1" />Date changes are subject to seat availability and fare difference.</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </motion.div>
