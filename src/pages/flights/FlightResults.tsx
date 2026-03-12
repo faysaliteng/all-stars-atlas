@@ -1438,11 +1438,13 @@ const FlightResults = () => {
   const [refundableOnly, setRefundableOnly] = useState(false);
   const [selectedLayoverAirports, setSelectedLayoverAirports] = useState<string[]>([]);
   const [layoverDurationRange, setLayoverDurationRange] = useState([0, 5000]);
+  const [selectedBaggage, setSelectedBaggage] = useState<string[]>([]);
   const airlineBarRef = useRef<HTMLDivElement>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [expandedFlight, setExpandedFlight] = useState<string | null>(null);
   const [selectedOutbound, setSelectedOutbound] = useState<any>(null);
   const [selectedReturn, setSelectedReturn] = useState<any>(null);
+  const [searchStartTime] = useState(Date.now());
 
   // Multi-city state
   const tripType = searchParams.get("tripType") || "";
