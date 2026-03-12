@@ -405,15 +405,43 @@ const FilterPanel = ({
         </div>
       )}
 
-      {/* Airlines */}
+      {/* Baggage Filter — chip buttons from real API data */}
+      {baggageStats.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Baggage Filter</h4>
+          <div className="flex flex-wrap gap-1.5">
+            {baggageStats.map(b => {
+              const isActive = selectedBaggage.includes(b.label);
+              return (
+                <button key={b.label} onClick={() => toggleBaggage(b.label)}
+                  className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-medium transition-all ${
+                    isActive
+                      ? "bg-accent/10 border-accent text-accent"
+                      : "border-border text-muted-foreground hover:border-foreground/30"
+                  }`}>
+                  {b.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Preferred Airlines — with logos */}
       {airlineList.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Airlines</h4>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Preferred Airlines</h4>
+          <div className="space-y-2 max-h-56 overflow-y-auto">
             {airlineList.map((a: any) => (
-              <label key={a.name} className="flex items-center gap-2 cursor-pointer group">
+              <label key={a.name} className="flex items-center gap-2.5 cursor-pointer group">
                 <Checkbox checked={selectedAirlines.includes(a.name)} onCheckedChange={() => toggleAirline(a.name)} />
-                <span className="text-xs group-hover:text-foreground text-muted-foreground transition-colors">{a.name}</span>
+                <img
+                  src={getAirlineLogo(a.code) || ''}
+                  alt={a.name}
+                  className="w-5 h-5 rounded-full object-contain shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+                <span className="text-xs group-hover:text-foreground text-muted-foreground transition-colors truncate">{a.name}</span>
               </label>
             ))}
           </div>
