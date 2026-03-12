@@ -458,8 +458,20 @@ const SearchWidget = () => {
     if (tripType === "multicity") {
       const validSegments = multiCitySegments.filter(s => s.from && s.to);
       if (validSegments.length < 2) { toast.error("Please add at least 2 flight segments"); return; }
+
+      const hasInvalidRoute = validSegments.some(s => isScopeInvalidRoute(s.from!, s.to!));
+      if (hasInvalidRoute) {
+        toast.error(
+          flightScope === "domestic"
+            ? "Domestic multi-city flights must be within Bangladesh"
+            : "International multi-city flights need at least one airport outside Bangladesh per segment"
+        );
+        return;
+      }
+
       const missingDates = validSegments.some(s => !s.date);
       if (missingDates) { toast.error("Please select departure date for all segments"); return; }
+
       const params = new URLSearchParams({
         tripType: "multicity",
         adults: String(passengers.adults), children: String(passengers.children), infants: String(passengers.infants),
@@ -472,10 +484,16 @@ const SearchWidget = () => {
       navigate(`/flights?${params.toString()}`);
       return;
     }
+
     if (!fromAirport || !toAirport) { toast.error("Please select departure and arrival airports"); return; }
-    if (fromAirport.code === toAirport.code) { toast.error("Departure and arrival airports cannot be the same"); return; }
-    if (flightScope === "domestic" && (fromAirport.country !== "BD" || toAirport.country !== "BD")) { toast.error("Domestic flights must be within Bangladesh"); return; }
-    if (flightScope === "international" && fromAirport.country === "BD" && toAirport.country === "BD") { toast.error("International flights need at least one airport outside Bangladesh"); return; }
+    if (isScopeInvalidRoute(fromAirport, toAirport)) {
+      toast.error(
+        flightScope === "domestic"
+          ? "Domestic flights must be within Bangladesh"
+          : "International flights need at least one airport outside Bangladesh"
+      );
+      return;
+    }
     if (!departDate) { toast.error("Please select a departure date"); addDateError("depart"); return; }
     if (tripType === 'roundtrip' && !returnDate) { toast.error("Please select a return date for round trip"); addDateError("return"); return; }
     const params = new URLSearchParams({
