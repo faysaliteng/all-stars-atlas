@@ -989,7 +989,14 @@ const FlightCard = ({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground font-medium">{duration}</p>
-                <p className={`text-[11px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+                <div className="flex items-center gap-2">
+                  <p className={`text-[11px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+                  {distanceKm && (
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                      <MapPin className="w-2.5 h-2.5" /> {distanceKm.toLocaleString()} Km
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Arrival */}
