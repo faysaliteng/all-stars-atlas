@@ -474,6 +474,14 @@ function normalizeGroupedResponse(response, params) {
       const groupDesc = group.groupDescription || {};
       const itineraries = group.itineraries || [];
 
+      // Extract departure dates from leg descriptions for datetime reconstruction
+      const legDates = {};
+      for (const ld of (groupDesc.legDescriptions || [])) {
+        if (ld.departureDate && ld.departureLocation) {
+          legDates[ld.id || Object.keys(legDates).length] = ld.departureDate;
+        }
+      }
+
       for (let idx = 0; idx < itineraries.length; idx++) {
         const itin = itineraries[idx];
         const pricingInfo = itin.pricingInformation || [];
