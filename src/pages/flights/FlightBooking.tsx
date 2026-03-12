@@ -553,7 +553,7 @@ const FlightBooking = () => {
   const serviceCharge = outboundFlight?.serviceCharge ?? 0;
   const grandTotal = baseFare + taxes + serviceCharge + addOnTotal;
 
-  const deadlineInfo = resolveDeadlineInfo(outboundFlight, domestic);
+  const deadlineInfo = resolveDeadlineInfo(bookingFlightData, domestic);
 
   // Always 4 steps: Flight Details → Passenger Info → Seat & Extras → Review & Pay
   const STEPS = [
