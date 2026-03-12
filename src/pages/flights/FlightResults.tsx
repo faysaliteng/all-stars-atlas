@@ -140,6 +140,7 @@ const FilterPanel = ({
   refundableOnly, setRefundableOnly,
   selectedLayoverAirports, toggleLayoverAirport,
   layoverDurationRange, setLayoverDurationRange,
+  isRoundTrip, originCode, destCode,
   selectedBaggage, toggleBaggage,
   onReset,
 }: any) => {
