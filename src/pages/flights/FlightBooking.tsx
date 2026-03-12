@@ -43,32 +43,17 @@ function isBimanAirline(airlineCode?: string): boolean {
   return airlineCode?.toUpperCase() === "BG";
 }
 
-function resolveDeadlineInfo(flight: any, isDomestic: boolean): { deadline: Date; label: string } | null {
-  if (!flight) return null;
-  let deadline: Date | null = null;
-  if (flight.timeLimit) {
-    const tl = new Date(flight.timeLimit);
-    if (!isNaN(tl.getTime()) && tl > new Date()) deadline = tl;
-  }
-  if (!deadline && flight.departureTime) {
-    const now = new Date();
-    const departure = new Date(flight.departureTime);
-    const hoursUntilFlight = (departure.getTime() - now.getTime()) / (1000 * 60 * 60);
-    if (isDomestic) {
-      if (hoursUntilFlight <= 48) { deadline = new Date(departure.getTime() - 3 * 60 * 60 * 1000); }
-      else { const d48 = new Date(now.getTime() + 48 * 60 * 60 * 1000); const d24b = new Date(departure.getTime() - 24 * 60 * 60 * 1000); deadline = d48 < d24b ? d48 : d24b; }
-    } else {
-      if (hoursUntilFlight <= 7 * 24) { deadline = new Date(departure.getTime() - 24 * 60 * 60 * 1000); }
-      else { deadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); }
-    }
-  }
-  if (!deadline) return null;
+/** API-only deadline: uses airline-provided timeLimit from GDS. No hardcoded fallbacks. */
+function resolveDeadlineInfo(flight: any): { deadline: Date; label: string } | null {
+  if (!flight?.timeLimit) return null;
+  const tl = new Date(flight.timeLimit);
+  if (isNaN(tl.getTime()) || tl <= new Date()) return null;
   const now = new Date();
-  const hoursLeft = Math.max(1, Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)));
+  const hoursLeft = Math.max(1, Math.floor((tl.getTime() - now.getTime()) / (1000 * 60 * 60)));
   const label = hoursLeft > 24
-    ? `Pay within ${Math.ceil(hoursLeft / 24)} days (by ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })})`
-    : `Pay within ${hoursLeft} hours (by ${deadline.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })})`;
-  return { deadline, label };
+    ? `Pay within ${Math.ceil(hoursLeft / 24)} days (by ${tl.toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })})`
+    : `Pay within ${hoursLeft} hours (by ${tl.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })})`;
+  return { deadline: tl, label };
 }
 
 function getAirlineLogo(code?: string): string | null {
