@@ -1247,37 +1247,45 @@ const FlightCard = ({
               </div>
             </div>
 
-            {/* Baggage + Seats + Class info row */}
+            {/* Baggage + Seats + Class info row — BDFare style */}
             <div className="flex items-center flex-wrap gap-3 mt-2">
               {handBaggage && (
-                <span className="flex items-center gap-1 text-[10px] text-accent font-medium">
-                  <Package className="w-3 h-3" /> {handBaggage}
+                <span className="flex items-center gap-1.5 text-xs text-accent font-medium">
+                  <Package className="w-3.5 h-3.5" /> {handBaggage}
                 </span>
               )}
               {baggage && (
-                <span className="flex items-center gap-1 text-[10px] text-accent font-medium">
-                  <Luggage className="w-3 h-3" /> {baggage}
+                <span className="flex items-center gap-1.5 text-xs text-accent font-medium">
+                  <Luggage className="w-3.5 h-3.5" /> {baggage}
                 </span>
               )}
               {availableSeats !== null && (
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
-                  <Users className="w-3 h-3" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""}
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                  <Users className="w-3.5 h-3.5" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""}
                 </span>
               )}
-              <span className="text-[10px] text-muted-foreground font-medium">Class: {bookingClass || cabin.charAt(0)}</span>
+              <span className="text-xs text-muted-foreground font-medium">Class: {bookingClass || cabin.charAt(0)}</span>
             </div>
           </div>
 
           {/* Price section */}
           <div className="flex flex-col items-end gap-1 p-4 sm:p-5 sm:w-56 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+            <div className="flex items-center gap-2">
+              {price === cheapest && price > 0 && (
+                <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
+              )}
+              {/* Reward Points Badge */}
+              {price > 0 && (
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[9px] font-bold flex items-center gap-1">
+                  <span className="text-sm">🪙</span> +{calcRewardPoints(price).toLocaleString()}
+                </Badge>
+              )}
+            </div>
             <p className="text-xl sm:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
             {baseFare > 0 && (
               <p className="text-[10px] text-muted-foreground line-through">BDT {Math.round(price * 1.05).toLocaleString()}</p>
             )}
             <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
-            {price === cheapest && price > 0 && (
-              <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
-            )}
             <Popover open={showPriceBreakdown} onOpenChange={setShowPriceBreakdown}>
               <PopoverTrigger asChild>
                 <button className="text-[11px] text-accent font-semibold flex items-center gap-1 hover:underline mt-0.5">
