@@ -290,12 +290,22 @@ const SearchWidget = () => {
   const internationalAirports = useMemo(() => AIRPORTS.filter(a => a.country !== "BD"), []);
 
   // Domestic: both FROM and TO must be BD airports
-  // International: FROM is BD, TO is international (or vice versa)
+  // International: at least one airport must be outside BD — filter dropdown accordingly
   const scopedFromAirports = flightScope === "domestic" ? domesticAirports : AIRPORTS;
-  const scopedToAirports = flightScope === "domestic" ? domesticAirports : AIRPORTS;
+  const scopedToAirports = useMemo(() => {
+    if (flightScope === "domestic") return domesticAirports;
+    // International: if FROM is BD, only show non-BD destinations (and vice versa)
+    if (fromAirport?.country === "BD") return internationalAirports;
+    return AIRPORTS; // FROM is international, so TO can be anything (including BD)
+  }, [flightScope, fromAirport, domesticAirports, internationalAirports]);
 
   // Filter multi-city airports based on scope
-  const scopedMultiCityAirports = flightScope === "domestic" ? domesticAirports : AIRPORTS;
+  const scopedMultiCityFromAirports = flightScope === "domestic" ? domesticAirports : AIRPORTS;
+  const getMultiCityToAirports = useCallback((fromSegment: typeof AIRPORTS[0] | null) => {
+    if (flightScope === "domestic") return domesticAirports;
+    if (fromSegment?.country === "BD") return internationalAirports;
+    return AIRPORTS;
+  }, [flightScope, domesticAirports, internationalAirports]);
 
   // When switching scope, reset airports that don't match
   useEffect(() => {
