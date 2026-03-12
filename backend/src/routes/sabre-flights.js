@@ -25,7 +25,7 @@ async function getSabreConfig() {
     const cfg = JSON.parse(rows[0].setting_value);
     if (cfg.enabled !== 'true' && cfg.enabled !== true) return null;
 
-    const isProd = cfg.environment === 'production';
+    const isProd = cfg.environment === 'production' || cfg.environment === 'prod';
     const baseUrl = isProd
       ? (cfg.prod_url || 'https://api.platform.sabre.com')
       : (cfg.sandbox_url || 'https://api.cert.platform.sabre.com');
