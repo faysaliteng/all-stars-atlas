@@ -263,11 +263,6 @@ async function searchFlights(params) {
           PassengerTypeQuantity: passengers,
         }],
       },
-      TPA_Extensions: {
-        IntelliSellTransaction: {
-          RequestType: { Name: '200ITINS' },
-        },
-      },
     },
   };
 
