@@ -2212,6 +2212,7 @@ const FlightResults = () => {
   const children = searchParams.get("children") || "0";
   const infants = searchParams.get("infants") || "0";
   const cabinClass = searchParams.get("cabin") || searchParams.get("class") || "";
+  const carrierFilter = searchParams.get("carrier") || "";
   const totalPax = parseInt(adults) + parseInt(children) + parseInt(infants);
   const hasRequiredParams = isMultiCity ? multiCitySegments.length >= 2 : (!!fromCode && !!toCode && !!departDate);
   const isRoundTrip = !!returnDate && !isMultiCity;
