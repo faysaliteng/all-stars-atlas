@@ -2274,6 +2274,7 @@ const FlightResults = () => {
       children: children !== "0" ? children : undefined,
       infants: infants !== "0" ? infants : undefined,
       cabinClass: cabinClass || undefined,
+      carrier: carrierFilter && carrierFilter !== 'any' ? carrierFilter : undefined,
     };
     if (isMultiCity) {
       // Send segments as JSON to backend — single Sabre BFM request
