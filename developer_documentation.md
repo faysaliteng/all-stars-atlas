@@ -890,6 +890,16 @@ Interactive seat selection with:
 
 All providers are searched in parallel via `Promise.allSettled` with deduplication.
 
+### Deduplication Key (Critical)
+
+The backend dedup key in `flights.js` must include ALL leg-level data to avoid collapsing valid round-trip combinations:
+
+```
+key = flightNumber + departureTime + arrivalTime + destination + stops + stopCodes + direction + [all legs' flightNumber@departureTime]
+```
+
+Previous bug: using only first-leg data caused all round-trip combos sharing the same outbound (e.g., 14 Gulf Air DAC→JED combos with different returns) to collapse into 1 result.
+
 ### Preferred Airline Filter
 
 The search widget includes an optional airline dropdown. When selected, the `carrier` IATA code is passed as a query parameter to `GET /flights/search`. The backend applies a post-aggregation filter (`airlineCode === carrier`) after all providers return results, ensuring only flights from the selected airline are returned regardless of source provider.
