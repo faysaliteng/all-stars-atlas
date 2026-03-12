@@ -67,6 +67,9 @@ app.use('/api/passport', passportOcrRoutes);
 // Dashboard
 app.use('/api/dashboard', dashboardRoutes);
 
+// Rewards
+app.use('/api/rewards', rewardsRoutes);
+
 // Payment Gateways
 app.use('/api/payments/ssl', sslcommerzRoutes);
 app.use('/api/payments/bkash', bkashRoutes);
