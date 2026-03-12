@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.9.2] — 2026-03-12 — Sabre PNR DateTime Schema Fix
+
+### Fixed
+- **Sabre CreatePNR NotProcessed**: `EnhancedAirBookRQ` segment datetimes were sent with timezone offsets (e.g., `2026-04-15T21:55:00+06:00`), which violates Sabre schema validation
+- **DateTime normalization**: Added `toSabreDateTime()` in `sabre-flights.js` to convert segment datetimes into schema-safe values without timezone suffix before CreatePassengerNameRecordRQ submission
+- **Flight segment normalization**: Hardened numeric flight number extraction and party size fallback to prevent malformed segment payloads
+
+---
+
 ## [3.9.1] — 2026-03-12 — Sabre Compressed Response Fix
 
 ### Fixed

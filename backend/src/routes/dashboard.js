@@ -113,7 +113,7 @@ router.get('/bookings', async (req, res) => {
         paymentMethod: b.payment_method, paymentStatus: b.payment_status,
         details, passengerInfo: safeJsonParse(b.passenger_info, []),
         contactInfo: safeJsonParse(b.contact_info, {}), notes: b.notes,
-        pnr: details.gdsPnr || null,
+        pnr: b.pnr || details.gdsPnr || details.outbound?.pnr || null,
         paymentDeadline: b.payment_deadline || null,
         bookedAt: b.booked_at, updatedAt: b.updated_at,
       };

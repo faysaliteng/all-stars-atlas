@@ -163,7 +163,7 @@ router.get('/bookings', async (req, res) => {
         totalAmount: parseFloat(b.total_amount), currency: b.currency, paymentMethod: b.payment_method,
         paymentStatus: b.payment_status, paymentDeadline: b.payment_deadline,
         details,
-        pnr: details.gdsPnr || null,
+        pnr: b.pnr || details.gdsPnr || details.outbound?.pnr || null,
         passengerInfo: safeJsonParse(b.passenger_info, []),
         contactInfo: safeJsonParse(b.contact_info, {}),
         user: { name: `${b.first_name} ${b.last_name}`, email: b.user_email },
@@ -189,7 +189,7 @@ router.put('/bookings/:id', async (req, res) => {
     const bookingDetails = safeJsonParse(booking.details, {});
     const isFlightBooking = booking.booking_type === 'flight';
     const flightSource = bookingDetails.outbound?.source || '';
-    const gdsPnr = bookingDetails.gdsPnr || bookingDetails.outbound?.pnr || null;
+    const gdsPnr = booking.pnr || bookingDetails.gdsPnr || bookingDetails.outbound?.pnr || null;
     const gdsBookingId = bookingDetails.gdsBookingResult?.ttiBookingId || bookingDetails.gdsBookingResult?.bookingId || null;
     const bdfOrderId = bookingDetails.gdsBookingResult?.orderId || bookingDetails.outbound?._bdfOfferId || null;
 
