@@ -533,7 +533,7 @@ router.get('/settings', async (req, res) => {
         const integrationId = r.setting_key.replace('api_', '');
         try {
           const parsed = JSON.parse(r.setting_value);
-          apiKeys[integrationId] = parsed;
+          apiKeys[integrationId] = integrationId === 'sabre' ? normalizeSabreSettings(parsed) : parsed;
         } catch { apiKeys[integrationId] = {}; }
       } else if (r.setting_key.startsWith('social_oauth_')) {
         const provider = r.setting_key.replace('social_oauth_', '');
