@@ -192,11 +192,14 @@ async function getSeatMap(params) {
     });
 
     const xml = await res.text();
+    console.log(`[Sabre SOAP] SeatMap response length: ${xml.length}`);
+    console.log(`[Sabre SOAP] SeatMap XML (first 2000): ${xml.substring(0, 2000)}`);
 
     // Check for SOAP fault
     if (xml.includes('faultstring') || xml.includes('ErrorRS')) {
       const errMatch = xml.match(/faultstring>([^<]+)/) || xml.match(/Message[^>]*>([^<]+)/);
       console.log(`[Sabre SOAP] SeatMap error: ${errMatch ? errMatch[1] : 'Unknown error'}`);
+      console.log(`[Sabre SOAP] SeatMap error XML: ${xml.substring(0, 3000)}`);
       return null;
     }
 
@@ -279,10 +282,13 @@ async function getAncillaryOffers(params) {
     });
 
     const xml = await res.text();
+    console.log(`[Sabre SOAP] Ancillary response length: ${xml.length}`);
+    console.log(`[Sabre SOAP] Ancillary XML (first 2000): ${xml.substring(0, 2000)}`);
 
     if (xml.includes('faultstring') || xml.includes('ErrorRS')) {
       const errMatch = xml.match(/faultstring>([^<]+)/) || xml.match(/Message[^>]*>([^<]+)/);
       console.log(`[Sabre SOAP] Ancillary error: ${errMatch ? errMatch[1] : 'Unknown error'}`);
+      console.log(`[Sabre SOAP] Ancillary error XML: ${xml.substring(0, 3000)}`);
       return null;
     }
 
