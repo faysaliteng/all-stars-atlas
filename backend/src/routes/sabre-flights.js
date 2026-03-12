@@ -567,6 +567,11 @@ function normalizeGroupedResponse(response, params) {
           }
         }
 
+        // Default hand baggage to 7KG if not provided (standard IATA cabin allowance)
+        if (!handBaggageGlobal) {
+          handBaggageGlobal = '7KG';
+        }
+
         // Debug baggage result for first itinerary
         if (idx === 0) {
           console.log(`[Sabre] Resolved baggage: checked=${checkedBaggageGlobal}, hand=${handBaggageGlobal}, total infos=${allBaggageInfos.length}`);
