@@ -790,6 +790,14 @@ const RoundTripFlightCard = ({
           </div>
         </div>
 
+        {/* Fare Options Panel */}
+        <AnimatePresence>
+          {showFareOptions && (
+            <FareOptionsPanel flights={[{ ...outbound, price: totalPrice, baggage: outbound.baggage, handBaggage: outbound.handBaggage, fareDetails: outbound.fareDetails }]}
+              onBook={() => cardNavigate(`/flights/book?roundTrip=true&adults=${cardSearchParams.get("adults") || "1"}&children=${cardSearchParams.get("children") || "0"}&infants=${cardSearchParams.get("infants") || "0"}&cabin=${cardSearchParams.get("cabin") || "economy"}`, { state: { outboundFlight: outbound, returnFlight } })} />
+          )}
+        </AnimatePresence>
+
         {/* Expanded detail - tabbed view like FlightCard */}
         <AnimatePresence>
           {isExpanded && (() => {
