@@ -219,11 +219,24 @@ const FilterPanel = ({
     return { min: ds.length > 0 ? Math.min(...ds) : 0, max: ds.length > 0 ? Math.max(...ds) : 0 };
   }, [flights]);
 
-  const airlineList = useMemo(() => {
-    const map: Record<string, { name: string; count: number; cheapest: number }> = {};
+  // Baggage stats — extract unique baggage values from API data
+  const baggageStats = useMemo(() => {
+    const map: Record<string, number> = {};
     for (const f of flights) {
-      const name = f.airline || ''; if (!name) continue;
-      if (!map[name]) map[name] = { name, count: 0, cheapest: Infinity };
+      const bag = f.baggage || null;
+      if (bag) {
+        const key = String(bag).trim();
+        map[key] = (map[key] || 0) + 1;
+      }
+    }
+    return Object.entries(map).map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+  }, [flights]);
+
+  const airlineList = useMemo(() => {
+    const map: Record<string, { name: string; code: string; count: number; cheapest: number }> = {};
+    for (const f of flights) {
+      const name = f.airline || ''; const code = f.airlineCode || ''; if (!name) continue;
+      if (!map[name]) map[name] = { name, code, count: 0, cheapest: Infinity };
       map[name].count++;
       if ((f.price || Infinity) < map[name].cheapest) map[name].cheapest = f.price;
     }
