@@ -541,6 +541,7 @@ router.post('/book', authenticate, async (req, res) => {
       isRoundTrip: !!isRoundTrip,
       isDomestic: domestic,
       addOns: addOns || {},
+      specialServices: specialServices || {},
       baseFare, taxes, serviceCharge,
       travelDocuments: travelDocuments || [],
     };
