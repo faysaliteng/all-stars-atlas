@@ -880,6 +880,39 @@ const FlightBooking = () => {
                     {isRoundTrip && <FlightSegmentCard flight={returnFlight} label="Return" searchedCabinClass={searchCabin ? searchCabin.charAt(0).toUpperCase() + searchCabin.slice(1) : undefined} />}
                   </>
                 )}
+                {/* Baggage summary + airline support link */}
+                {outboundFlight && (
+                  <Card className="border-border">
+                    <CardContent className="p-3 sm:p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold flex items-center gap-2"><Luggage className="w-4 h-4 text-accent" /> Baggage Allowance</p>
+                        <AirlineSupportDialog
+                          airline={outboundFlight.airline} airlineCode={outboundFlight.airlineCode}
+                          hasBaggage={!!outboundFlight.baggage} hasHandBaggage={!!outboundFlight.handBaggage}
+                          hasSeatMap={seatMapData?.available === true} hasExtras={ancillarySource !== "none"}
+                          seatMapSource={seatMapSource} ancillarySource={ancillarySource}
+                        />
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div className={`flex items-start gap-3 p-3 rounded-lg border ${outboundFlight.baggage ? "border-accent/20 bg-accent/5" : "border-border bg-muted/30"}`}>
+                          <Briefcase className={`w-4 h-4 shrink-0 mt-0.5 ${outboundFlight.baggage ? "text-accent" : "text-muted-foreground"}`} />
+                          <div>
+                            <p className="text-xs font-semibold">Checked Baggage</p>
+                            <p className="text-[11px] text-muted-foreground">{outboundFlight.baggage || "Not provided by airline booking system"}</p>
+                          </div>
+                        </div>
+                        <div className={`flex items-start gap-3 p-3 rounded-lg border ${outboundFlight.handBaggage ? "border-accent/20 bg-accent/5" : "border-border bg-muted/30"}`}>
+                          <Package className={`w-4 h-4 shrink-0 mt-0.5 ${outboundFlight.handBaggage ? "text-accent" : "text-muted-foreground"}`} />
+                          <div>
+                            <p className="text-xs font-semibold">Hand Baggage</p>
+                            <p className="text-[11px] text-muted-foreground">{outboundFlight.handBaggage || "Not provided by airline booking system"}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Cabin Class: {searchCabin ? searchCabin.charAt(0).toUpperCase() + searchCabin.slice(1) : outboundFlight.cabinClass || "Economy"}</p>
+                    </CardContent>
+                  </Card>
+                )}
                 {!isMultiCity && !isRoundTrip && !outboundFlight && (
                   <Card className="border-dashed"><CardContent className="py-8 text-center"><p className="text-sm text-muted-foreground">Loading flight details...</p></CardContent></Card>
                 )}
