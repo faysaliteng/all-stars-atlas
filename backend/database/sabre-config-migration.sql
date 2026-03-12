@@ -1,10 +1,10 @@
 -- =============================================
 -- Seven Trip - Sabre GDS Configuration Seed
--- Run: mysql -u seventrip_user -p'YourStrongPassword123!' seventrip < database/sabre-config-migration.sql
+-- Run: cd ~/projects/all-stars-atlas && mysql -u seventrip_user -p'YourStrongPassword123!' seventrip < backend/database/sabre-config-migration.sql
 -- =============================================
 
-INSERT INTO system_settings (id, setting_key, setting_value, updated_at)
-VALUES (UUID(), 'api_sabre', JSON_OBJECT(
+INSERT INTO system_settings (setting_key, setting_value, updated_at)
+VALUES ('api_sabre', JSON_OBJECT(
   'enabled', 'true',
   'environment', 'cert',
   'pcc', 'J4YL',
