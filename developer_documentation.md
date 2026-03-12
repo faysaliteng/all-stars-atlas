@@ -904,6 +904,10 @@ Previous bug: using only first-leg data caused all round-trip combos sharing the
 
 Sabre BFM returns multiple `pricingInformation[]` entries per itinerary when branded fares are available. Each entry represents a different fare brand (e.g., "Economy Light", "Economy Smart") with its own pricing, baggage, refund/rebooking policies. The normalizer extracts brand names from `fareComponentDescs` and passes them as `fareDetails[]` with `brandName`, `brandCode`, `baggage`, `handBaggage`, `mealIncluded`, `seatSelection`, `rebookingAllowed`, `cancellationAllowed` fields. The frontend `FareOptionsPanel` renders these as scrollable columns with the cheapest marked "Best Value".
 
+### Sabre Compressed Response Handling
+
+Sabre BFM supports a `CompressResponse` flag that returns results as a base64-encoded gzip blob under the key `compressedResponse` instead of plain JSON. This caused a critical bug (v3.9.0) where the normalizer saw 0 itineraries because it only handles `groupedItineraryResponse` or `OTA_AirLowFareSearchRS`. **Fix (v3.9.1):** The `CompressResponse` flag is removed from the BFM request body. As a safety fallback, if `compressedResponse` is still detected in the response, the backend decompresses it via `zlib.gunzipSync(Buffer.from(data, 'base64'))` before passing to the normalizer.
+
 ### NDC Fares
 
 The BFM request includes `DataSources: { NDC: 'Enable' }`, but NDC content requires the Sabre agency PCC to have active NDC carrier agreements. Contact Sabre support to enable NDC content for your PCC if NDC fares are not appearing.

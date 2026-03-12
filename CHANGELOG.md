@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.9.1] — 2026-03-12 — Sabre Compressed Response Fix
+
+### Fixed
+- **Sabre BFM returning 0 flights**: Sabre's `CompressResponse: true` flag caused the API to return a `compressedResponse` (base64 gzip blob) instead of plain JSON. The normalizer didn't handle this, resulting in 0 flights for all searches
+- **Removed `CompressResponse`**: Disabled compressed response in BFM request body so Sabre returns plain `groupedItineraryResponse`
+- **Added gzip decompression fallback**: If Sabre still returns `compressedResponse`, the backend now decompresses it via `zlib.gunzipSync` before normalization
+
+---
+
 ## [3.9.0] — 2026-03-12 — Auto-Ticketing, API-Only Deadlines & Post-Booking Ancillaries
 
 ### Changed
