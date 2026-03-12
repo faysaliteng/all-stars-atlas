@@ -2443,8 +2443,8 @@ const FlightResults = () => {
             {/* Session Timer */}
             <div className="ml-auto flex items-center gap-2 shrink-0">
               <SessionTimer startTime={searchStartTime} />
-              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-5 h-9" onClick={applySearchEdit}>
-                <Search className="w-3.5 h-3.5 mr-1.5" /> Modify
+              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-6 h-10" onClick={applySearchEdit}>
+                <Search className="w-4 h-4 mr-1.5" /> Modify
               </Button>
             </div>
           </div>
