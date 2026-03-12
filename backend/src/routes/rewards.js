@@ -59,7 +59,7 @@ router.get('/history', authenticate, async (req, res) => {
 });
 
 // ── GET /rewards/coupons — User's coupons ──
-router.get('/coupons', authenticateToken, async (req, res) => {
+router.get('/coupons', authenticate, async (req, res) => {
   try {
     const [rows] = await db.query(
       'SELECT * FROM reward_coupons WHERE user_id = ? ORDER BY created_at DESC',
