@@ -678,6 +678,7 @@ interface TicketData {
   time?: string;
   passenger?: string;
   pnr?: string;
+  gdsPnr?: string;
   seat?: string;
   class?: string;
   bookingRef?: string;
@@ -690,6 +691,7 @@ interface TicketData {
   extraBaggage?: string[];
   totalFare?: number;
   currency?: string;
+  source?: string;
 }
 
 
