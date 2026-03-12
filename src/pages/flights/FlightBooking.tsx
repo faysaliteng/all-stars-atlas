@@ -757,6 +757,9 @@ const FlightBooking = () => {
               </p>
               <div className="bg-muted/50 rounded-xl p-4 text-left space-y-2">
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Booking Ref</span><span className="font-bold font-mono">{bookingResult.bookingRef}</span></div>
+                {(bookingResult.pnr || bookingResult.gdsPnr) && (
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">PNR (Airline)</span><span className="font-bold font-mono text-accent">{bookingResult.pnr || bookingResult.gdsPnr}</span></div>
+                )}
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Status</span>
                   <Badge className={bookingResult.payLater ? "bg-warning/10 text-warning border-warning/20" : "bg-accent/10 text-accent border-accent/20"}>
                     {bookingResult.payLater ? "On Hold" : "Confirmed"}
@@ -771,6 +774,18 @@ const FlightBooking = () => {
                   </div>
                 )}
               </div>
+              {/* Post-booking extras notice */}
+              {(bookingResult.pnr || bookingResult.gdsPnr) && (
+                <div className="flex items-start gap-3 p-4 bg-accent/5 border border-accent/20 rounded-xl text-left">
+                  <Package className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold">Add Extra Baggage & Meals</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your PNR <strong className="font-mono text-accent">{bookingResult.pnr || bookingResult.gdsPnr}</strong> has been generated. You can now purchase extra baggage, premium meals, and other add-ons from your <strong>Dashboard → Bookings</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
               {bookingResult.payLater && bookingResult.paymentDeadline && (
                 <div className="flex items-start gap-3 p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-left">
                   <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
