@@ -1794,11 +1794,11 @@ const FlightResults = () => {
                                 className="w-5 h-5 rounded-full object-contain shrink-0"
                                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                               />
-                              <div className="text-left min-w-0">
-                                <p className={`text-xs font-bold ${isActive ? "text-accent" : "text-foreground"}`}>
+                              <div className="text-left">
+                                <p className={`text-xs font-bold leading-tight ${isActive ? "text-accent" : "text-foreground"}`}>
                                   {a.code}
                                 </p>
-                                <p className={`text-[10px] whitespace-nowrap ${isActive ? "text-accent" : "text-muted-foreground"}`}>
+                                <p className={`text-[10px] leading-tight ${isActive ? "text-accent" : "text-muted-foreground"}`}>
                                   BDT {a.cheapest.toLocaleString()} ({a.count})
                                 </p>
                               </div>
