@@ -349,14 +349,14 @@ router.get('/search', async (req, res) => {
     // ── Apply per-airline fare rules from admin settings ──
     try {
       const [settingsRows] = await db.query(
-        "SELECT meta FROM system_settings WHERE setting_key IN ('markup_config', 'airline_markup_config')"
+        "SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('markup_config', 'airline_markup_config')"
       );
       let globalDiscount = 6.30;
       let globalAitVat = 0.3;
       let airlineOverrides = {};
 
       for (const row of settingsRows) {
-        const parsed = typeof row.meta === 'string' ? JSON.parse(row.meta) : (row.meta || {});
+        const parsed = typeof row.setting_value === 'string' ? JSON.parse(row.setting_value) : (row.setting_value || {});
         // markup_config stores per-segment configs; FLIGHT segment has fareSummaryDiscount/fareSummaryAitVat
         if (parsed.FLIGHT && parsed.FLIGHT.fareSummaryDiscount !== undefined) {
           globalDiscount = parseFloat(parsed.FLIGHT.fareSummaryDiscount) || 6.30;
