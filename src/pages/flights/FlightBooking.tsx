@@ -289,6 +289,12 @@ const FlightBooking = () => {
     s.unaccompaniedMinor || s.pet !== "none" || s.frequentFlyer.number || s.specialRequest.trim()
   );
 
+  // Ancillary data from real API ONLY — no fake fallbacks
+  const [mealOptions, setMealOptions] = useState<{ id: string; name: string; price: number; desc: string; icon?: string }[]>([]);
+  const [baggageOptions, setBaggageOptions] = useState<{ id: string; name: string; price: number; desc: string; icon?: string }[]>([]);
+  const [ancillarySource, setAncillarySource] = useState("none");
+  const [ancillaryLoading, setAncillaryLoading] = useState(false);
+
   // Travel document uploads (passport copy + visa copy) for international flights
   const [travelDocs, setTravelDocs] = useState<Record<string, { file: File; url?: string; uploading?: boolean }>>({});
   const [travelDocsUploaded, setTravelDocsUploaded] = useState<Record<string, { url: string; originalName: string; fieldname: string }>>({});
