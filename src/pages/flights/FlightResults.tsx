@@ -1897,8 +1897,7 @@ const FlightResults = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      {/* ─── BDFare-style Search Modification Bar ─── */}
+      {/* ─── BDFare-style Interactive Search Modification Bar ─── */}
       <div className="bg-foreground pt-20 sm:pt-28 lg:pt-36 pb-0">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex flex-wrap items-center gap-2 py-3">
@@ -1908,75 +1907,187 @@ const FlightResults = () => {
               <span className="text-xs sm:text-sm font-medium text-background">
                 {isMultiCity ? "Multi-City" : isRoundTrip ? "Return" : "One Way"}
               </span>
-              <ChevronDown className="w-3 h-3 text-background/50" />
             </div>
 
-            {/* Route */}
-            {isMultiCity ? (
+            {/* Route — clickable with inline airport picker */}
+            {!isMultiCity && (
+              <Popover open={showRouteEdit} onOpenChange={setShowRouteEdit}>
+                <PopoverTrigger asChild>
+                  <button className="bg-foreground/80 border border-muted-foreground/30 hover:border-accent/50 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                    <span className="text-xs sm:text-sm font-bold text-background">{fromCode || "—"}</span>
+                    <ArrowLeftRight className="w-3.5 h-3.5 text-background/50" />
+                    <span className="text-xs sm:text-sm font-bold text-background">{toCode || "—"}</span>
+                    <ChevronDown className="w-3 h-3 text-background/50 ml-0.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-3" align="start">
+                  <p className="text-xs font-bold text-muted-foreground mb-2">Edit Route</p>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium">From</label>
+                      <input
+                        className="w-full h-9 px-3 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-accent"
+                        value={editingField === "from" ? airportSearch : editFrom}
+                        onFocus={() => { setEditingField("from"); setAirportSearch(editFrom); }}
+                        onChange={(e) => setAirportSearch(e.target.value)}
+                        placeholder="Airport code or city"
+                      />
+                      {editingField === "from" && (
+                        <div className="max-h-32 overflow-y-auto border border-border rounded-md mt-1">
+                          {filteredAirports.map(a => (
+                            <button key={a.code} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 flex justify-between"
+                              onClick={() => { setEditFrom(a.code); setEditingField(null); setAirportSearch(""); }}>
+                              <span className="font-bold">{a.code}</span>
+                              <span className="text-muted-foreground truncate ml-2">{a.city} - {a.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium">To</label>
+                      <input
+                        className="w-full h-9 px-3 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-accent"
+                        value={editingField === "to" ? airportSearch : editTo}
+                        onFocus={() => { setEditingField("to"); setAirportSearch(editTo); }}
+                        onChange={(e) => setAirportSearch(e.target.value)}
+                        placeholder="Airport code or city"
+                      />
+                      {editingField === "to" && (
+                        <div className="max-h-32 overflow-y-auto border border-border rounded-md mt-1">
+                          {filteredAirports.map(a => (
+                            <button key={a.code} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 flex justify-between"
+                              onClick={() => { setEditTo(a.code); setEditingField(null); setAirportSearch(""); }}>
+                              <span className="font-bold">{a.code}</span>
+                              <span className="text-muted-foreground truncate ml-2">{a.city} - {a.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <Button size="sm" className="w-full bg-accent text-accent-foreground" onClick={applySearchEdit}>
+                      <Search className="w-3.5 h-3.5 mr-1.5" /> Search
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+            {isMultiCity && (
               <div className="bg-foreground/80 border border-muted-foreground/30 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0">
                 <span className="text-xs sm:text-sm font-medium text-background">
                   {multiCitySegments.map(s => s.from).join(" → ")} → {multiCitySegments[multiCitySegments.length - 1]?.to || "—"}
                 </span>
               </div>
-            ) : (
-              <>
-                <div className="bg-foreground/80 border border-muted-foreground/30 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs sm:text-sm font-bold text-background">{fromCode || "—"}</span>
-                  <span className="text-[10px] text-background/60">
-                    {AIRPORTS.find(a => a.code === fromCode)?.city || fromCode}
-                  </span>
-                </div>
-                <ArrowLeftRight className="w-4 h-4 text-background/50 shrink-0" />
-                <div className="bg-foreground/80 border border-muted-foreground/30 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs sm:text-sm font-bold text-background">{toCode || "—"}</span>
-                  <span className="text-[10px] text-background/60">
-                    {AIRPORTS.find(a => a.code === toCode)?.city || toCode}
-                  </span>
-                </div>
-              </>
             )}
 
-            {/* Dates */}
-            <div className="bg-foreground/80 border border-muted-foreground/30 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0">
-              <CalendarDays className="w-3.5 h-3.5 text-background/70" />
-              <span className="text-xs sm:text-sm font-medium text-background">
-                {isMultiCity
-                  ? multiCitySegments.map(s => s.date).filter(Boolean).join(", ")
-                  : departDate
-                    ? (() => { try { return format(new Date(departDate), "dd MMM, EEE, yy"); } catch { return departDate; } })()
-                    : "—"
-                }
-              </span>
-            </div>
-            {isRoundTrip && returnDate && (
-              <div className="bg-foreground/80 border border-muted-foreground/30 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0">
-                <CalendarDays className="w-3.5 h-3.5 text-background/70" />
-                <span className="text-xs sm:text-sm font-medium text-background">
-                  {(() => { try { return format(new Date(returnDate), "dd MMM, EEE, yy"); } catch { return returnDate; } })()}
-                </span>
-              </div>
+            {/* Prev Day button */}
+            {!isMultiCity && (
+              <button onClick={() => shiftDate(-1)}
+                className="bg-foreground/80 border border-muted-foreground/30 hover:border-accent/50 rounded-lg p-2 text-background/70 hover:text-accent transition-colors shrink-0"
+                title="Previous Day">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
             )}
 
-            {/* Passengers & Cabin */}
-            <div className="bg-foreground/80 border border-muted-foreground/30 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0">
-              <Users className="w-3.5 h-3.5 text-background/70" />
-              <span className="text-xs sm:text-sm font-medium text-background">
-                {totalPax} Person{totalPax > 1 ? "s" : ""}{cabinClass ? `, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ", Economy"}
-              </span>
-            </div>
+            {/* Dates — clickable with calendar picker */}
+            <Popover open={showDateEdit} onOpenChange={setShowDateEdit}>
+              <PopoverTrigger asChild>
+                <button className="bg-foreground/80 border border-muted-foreground/30 hover:border-accent/50 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                  <CalendarDays className="w-3.5 h-3.5 text-background/70" />
+                  <span className="text-xs sm:text-sm font-medium text-background">
+                    {isMultiCity
+                      ? multiCitySegments.map(s => s.date).filter(Boolean).join(", ")
+                      : departDate
+                        ? (() => { try { return format(new Date(departDate), "dd MMM, EEE"); } catch { return departDate; } })()
+                        : "—"
+                    }
+                    {isRoundTrip && returnDate && (() => { try { return ` — ${format(new Date(returnDate), "dd MMM, EEE")}`; } catch { return ""; } })()}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-background/50" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3" align="start">
+                <p className="text-xs font-bold text-muted-foreground mb-2">
+                  {isRoundTrip ? "Select Departure Date" : "Select Date"}
+                </p>
+                <Calendar mode="single" selected={editDepart} onSelect={(d) => { setEditDepart(d || undefined); if (!isRoundTrip) { setEditDepart(d || undefined); } }}
+                  disabled={(date) => date < new Date(new Date().toDateString())} />
+                {isRoundTrip && (
+                  <>
+                    <p className="text-xs font-bold text-muted-foreground mb-2 mt-3">Return Date</p>
+                    <Calendar mode="single" selected={editReturn} onSelect={(d) => setEditReturn(d || undefined)}
+                      disabled={(date) => date < (editDepart || new Date())} />
+                  </>
+                )}
+                <Button size="sm" className="w-full mt-3 bg-accent text-accent-foreground" onClick={applySearchEdit}>
+                  <Search className="w-3.5 h-3.5 mr-1.5" /> Search
+                </Button>
+              </PopoverContent>
+            </Popover>
 
-            {/* Airlines dropdown placeholder */}
-            <div className="bg-foreground/80 border border-muted-foreground/30 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0">
-              <span className="text-xs sm:text-sm text-background/60">Airlines</span>
-              <ChevronDown className="w-3 h-3 text-background/50" />
-            </div>
+            {/* Next Day button */}
+            {!isMultiCity && (
+              <button onClick={() => shiftDate(1)}
+                className="bg-foreground/80 border border-muted-foreground/30 hover:border-accent/50 rounded-lg p-2 text-background/70 hover:text-accent transition-colors shrink-0"
+                title="Next Day">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
 
-            {/* Search button */}
-            <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-5 h-9 shrink-0 ml-auto" asChild>
-              <Link to="/">
-                <Search className="w-3.5 h-3.5 mr-1.5" /> Search
-              </Link>
-            </Button>
+            {/* Passengers & Cabin — clickable with counter */}
+            <Popover open={showPaxEdit} onOpenChange={setShowPaxEdit}>
+              <PopoverTrigger asChild>
+                <button className="bg-foreground/80 border border-muted-foreground/30 hover:border-accent/50 rounded-lg px-3 py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                  <Users className="w-3.5 h-3.5 text-background/70" />
+                  <span className="text-xs sm:text-sm font-medium text-background">
+                    {totalPax} Pax{cabinClass ? `, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-background/50" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3" align="start">
+                <p className="text-xs font-bold text-muted-foreground mb-3">Passengers & Cabin</p>
+                <div className="space-y-3">
+                  {[
+                    { label: "Adults", value: editAdults, set: setEditAdults, min: 1, max: 9 },
+                    { label: "Children (2-11)", value: editChildren, set: setEditChildren, min: 0, max: 6 },
+                    { label: "Infants (0-2)", value: editInfants, set: setEditInfants, min: 0, max: editAdults },
+                  ].map(p => (
+                    <div key={p.label} className="flex items-center justify-between">
+                      <span className="text-xs font-medium">{p.label}</span>
+                      <div className="flex items-center gap-2">
+                        <button className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm hover:bg-muted"
+                          onClick={() => p.set(Math.max(p.min, p.value - 1))}>−</button>
+                        <span className="text-sm font-bold w-5 text-center">{p.value}</span>
+                        <button className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm hover:bg-muted"
+                          onClick={() => p.set(Math.min(p.max, p.value + 1))}>+</button>
+                      </div>
+                    </div>
+                  ))}
+                  <div>
+                    <label className="text-[10px] text-muted-foreground font-medium">Cabin Class</label>
+                    <select className="w-full h-9 px-2 text-sm border border-border rounded-md bg-background mt-1"
+                      value={editCabin} onChange={(e) => setEditCabin(e.target.value)}>
+                      <option value="economy">Economy</option>
+                      <option value="premium_economy">Premium Economy</option>
+                      <option value="business">Business</option>
+                      <option value="first">First</option>
+                    </select>
+                  </div>
+                  <Button size="sm" className="w-full bg-accent text-accent-foreground" onClick={applySearchEdit}>
+                    <Search className="w-3.5 h-3.5 mr-1.5" /> Search
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Session Timer */}
+            <div className="ml-auto flex items-center gap-2 shrink-0">
+              <SessionTimer startTime={searchStartTime} />
+              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-5 h-9" onClick={applySearchEdit}>
+                <Search className="w-3.5 h-3.5 mr-1.5" /> Modify
+              </Button>
+            </div>
           </div>
         </div>
       </div>
