@@ -2751,7 +2751,7 @@ const FlightResults = () => {
             {/* Main content */}
             <div className="flex-1 min-w-0 space-y-3">
               {/* Airline filter bar — real API data, 3D card with working scroll */}
-              {airlineStats.length > 0 && !isMultiCity && (
+              {airlineStats.length > 0 && (
                 <Card className="shadow-[0_4px_20px_-4px_hsl(var(--foreground)/0.08),0_1px_3px_hsl(var(--foreground)/0.06)] border-border/60 overflow-hidden">
                   <div className="flex items-center">
                     <button
