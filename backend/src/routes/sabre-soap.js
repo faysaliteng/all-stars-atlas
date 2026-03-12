@@ -318,33 +318,57 @@ function parseSeatMapXml(xml) {
   const rows = [];
   const columns = new Set();
 
-  // Extract all Row elements
-  const rowMatches = xml.matchAll(/<Row[^>]*>([\s\S]*?)<\/Row>/gi);
+  // Extract all Row elements (handle namespaced and non-namespaced)
+  const rowMatches = xml.matchAll(/<(?:\w+:)?Row(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?Row>/gi);
   for (const match of rowMatches) {
     const rowXml = match[1];
-    const rowNum = (rowXml.match(/<RowNumber>(\d+)<\/RowNumber>/) || [])[1];
+    const rowNum = (rowXml.match(/<(?:\w+:)?RowNumber>(\d+)<\//) || [])[1];
     if (!rowNum) continue;
 
     const seats = [];
-    const seatMatches = rowXml.matchAll(/<Seat[^>]*>([\s\S]*?)<\/Seat>/gi);
+    const seatMatches = rowXml.matchAll(/<(?:\w+:)?Seat(?:\s[^>]*)?>(([\s\S]*?))<\/(?:\w+:)?Seat>/gi);
     for (const seatMatch of seatMatches) {
-      const seatXml = seatMatch[1];
-      const col = (seatXml.match(/<Column>([A-Z])<\/Column>/) || [])[1];
+      const seatXml = seatMatch[0]; // full match including attributes
+      const seatInner = seatMatch[1];
+      
+      // v6 uses <Number>A</Number>, older uses <Column>A</Column>
+      const col = (seatInner.match(/<(?:\w+:)?Number>([A-Z])<\//) || seatInner.match(/<(?:\w+:)?Column>([A-Z])<\//) || [])[1];
       if (!col) continue;
       columns.add(col);
 
-      const available = !seatXml.includes('Occupied') && !seatXml.includes('Blocked');
-      const isExit = seatXml.includes('ExitRow') || seatXml.includes('EXIT');
-      const isWindow = seatXml.includes('Window');
-      const isAisle = seatXml.includes('Aisle');
-      const isMiddle = seatXml.includes('Middle');
+      // Check availability via occupiedInd attribute or Occupation detail
+      const occupiedAttr = seatXml.match(/occupiedInd="(true|false)"/);
+      const inoperativeAttr = seatXml.match(/inoperativeInd="(true|false)"/);
+      const hasSeatIsFree = seatInner.includes('SeatIsFree');
+      const hasOccupied = seatInner.includes('SeatIsOccupied') || seatInner.includes('Occupied');
+      const hasBlocked = seatInner.includes('Blocked') || (inoperativeAttr && inoperativeAttr[1] === 'true');
+      
+      let available;
+      if (occupiedAttr) {
+        available = occupiedAttr[1] === 'false' && !hasBlocked;
+      } else {
+        available = hasSeatIsFree || (!hasOccupied && !hasBlocked);
+      }
 
-      // Extract price if available
-      const priceMatch = seatXml.match(/<Amount[^>]*>([0-9.]+)<\/Amount>/);
-      const currencyMatch = seatXml.match(/<Currency[^>]*>([A-Z]+)<\/Currency>/);
+      // Location details
+      const isExit = seatXml.includes('exitRowInd="true"') || seatInner.includes('ExitRow') || seatInner.includes('EXIT');
+      const isWindow = seatInner.includes('Window');
+      const isAisle = seatInner.includes('Aisle');
+      const isMiddle = seatInner.includes('Middle');
+      const isPremium = seatXml.includes('premiumInd="true"');
+      const isChargeable = seatXml.includes('chargeableInd="true"');
+
+      // v6 price: <Offer><Price><TotalAmount>...</TotalAmount></Price></Offer>
+      // Also try <BasePrice> and older <Amount>
+      const priceMatch = seatInner.match(/<(?:\w+:)?TotalAmount>([0-9.]+)<\//) 
+        || seatInner.match(/<(?:\w+:)?BasePrice>([0-9.]+)<\//)
+        || seatInner.match(/<(?:\w+:)?Amount[^>]*>([0-9.]+)<\//);
+      const currencyMatch = seatInner.match(/currencyCode="([A-Z]+)"/) 
+        || seatInner.match(/<(?:\w+:)?Currency[^>]*>([A-Z]+)<\//);
 
       let type = 'standard';
       if (isExit) type = 'exit-row';
+      else if (isPremium) type = 'premium';
       else if (isWindow) type = 'window';
       else if (isAisle) type = 'aisle';
       else if (isMiddle) type = 'middle';
@@ -359,6 +383,8 @@ function parseSeatMapXml(xml) {
         currency: currencyMatch ? currencyMatch[1] : 'BDT',
         label: `${rowNum}${col}`,
         isExit,
+        isPremium,
+        isChargeable,
       });
     }
 
