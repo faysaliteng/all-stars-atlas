@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import {
   Plane, Building2, Search, Eye, Download, MoreHorizontal, RotateCcw, XCircle,
   FileText, Globe, Palmtree, CreditCard, Timer, Clock, Luggage, Shield,
-  ArrowRight, Users, AlertTriangle, Copy, Upload,
+  ArrowRight, Users, AlertTriangle, Copy, Upload, Package,
 } from "lucide-react";
 import { downloadCSV } from "@/lib/csv-export";
 import { generateTicketPDF } from "@/lib/pdf-generator";
