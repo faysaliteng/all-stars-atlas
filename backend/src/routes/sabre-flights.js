@@ -29,17 +29,24 @@ async function getSabreConfig() {
     const baseUrl = isProd
       ? (cfg.prod_url || 'https://api.platform.sabre.com')
       : (cfg.sandbox_url || 'https://api.cert.platform.sabre.com');
-    // Support both camelCase (from SQL seed) and snake_case (from admin panel)
-    const clientId = cfg.clientId || cfg.prod_client_id || cfg.sandbox_client_id || '';
-    const clientSecret = cfg.clientSecret || cfg.prod_client_secret || cfg.sandbox_client_secret || '';
+
+    const pick = (...vals) => vals.find(v => typeof v === 'string' && v.trim().length > 0)?.trim() || '';
+
+    // Pick env-specific credentials first to avoid cert/prod mismatch
+    const clientId = isProd
+      ? pick(cfg.clientId, cfg.prod_client_id, cfg.sandbox_client_id)
+      : pick(cfg.clientId, cfg.sandbox_client_id, cfg.prod_client_id);
+    const clientSecret = isProd
+      ? pick(cfg.clientSecret, cfg.prod_client_secret, cfg.sandbox_client_secret)
+      : pick(cfg.clientSecret, cfg.sandbox_client_secret, cfg.prod_client_secret);
     if (!clientId || !clientSecret) return null;
 
     // EPR + password required for OAuth v3 password grant
-    const epr = cfg.epr || '';
+    const epr = pick(cfg.epr);
     // Use environment-appropriate password
     const agencyPassword = isProd
-      ? (cfg.prodPassword || cfg.agency_password || '')
-      : (cfg.agencyPassword || cfg.agency_password || '');
+      ? pick(cfg.prodPassword, cfg.agency_password)
+      : pick(cfg.agencyPassword, cfg.agency_password);
     if (!epr || !agencyPassword) {
       console.error('[Sabre] EPR and agency_password are required for OAuth v3. Configure in Admin → Settings → API Integrations → Sabre GDS');
       return null;
