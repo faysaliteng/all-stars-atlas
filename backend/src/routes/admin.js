@@ -492,6 +492,33 @@ router.get('/reports', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ message: 'Something went wrong', status: 500 }); }
 });
 
+function pickFirstString(...values) {
+  return values.find(v => typeof v === 'string' && v.trim().length > 0)?.trim() || '';
+}
+
+function normalizeSabreSettings(input = {}, existing = {}) {
+  const merged = { ...existing, ...input };
+
+  const certClientId = pickFirstString(merged.cert_client_id, merged.sandbox_client_id, existing.cert_client_id, existing.sandbox_client_id);
+  const certClientSecret = pickFirstString(merged.cert_client_secret, merged.sandbox_client_secret, existing.cert_client_secret, existing.sandbox_client_secret);
+  const certPassword = pickFirstString(merged.agencyPassword, merged.agency_password, existing.agencyPassword, existing.agency_password);
+  const prodPassword = pickFirstString(merged.prodPassword, existing.prodPassword);
+
+  return {
+    ...merged,
+    // Keep both old/new key names so any deployed admin build can read/write safely
+    cert_client_id: certClientId,
+    sandbox_client_id: certClientId,
+    cert_client_secret: certClientSecret,
+    sandbox_client_secret: certClientSecret,
+    agencyPassword: certPassword,
+    agency_password: certPassword,
+    prodPassword,
+    cert_basic_auth: pickFirstString(merged.cert_basic_auth, existing.cert_basic_auth),
+    prod_basic_auth: pickFirstString(merged.prod_basic_auth, existing.prod_basic_auth),
+  };
+}
+
 // GET /admin/settings — returns all settings including API keys (masked)
 router.get('/settings', async (req, res) => {
   try {
@@ -506,7 +533,7 @@ router.get('/settings', async (req, res) => {
         const integrationId = r.setting_key.replace('api_', '');
         try {
           const parsed = JSON.parse(r.setting_value);
-          apiKeys[integrationId] = parsed;
+          apiKeys[integrationId] = integrationId === 'sabre' ? normalizeSabreSettings(parsed) : parsed;
         } catch { apiKeys[integrationId] = {}; }
       } else if (r.setting_key.startsWith('social_oauth_')) {
         const provider = r.setting_key.replace('social_oauth_', '');
@@ -564,7 +591,20 @@ router.put('/settings', async (req, res) => {
     // API integration config
     if (section === 'api_integration' && integration && keys) {
       const settingKey = `api_${integration}`;
-      const settingValue = JSON.stringify(keys);
+
+      // Merge with existing config to avoid dropping hidden/unrendered fields on partial saves
+      const [existingRows] = await db.query('SELECT setting_value FROM system_settings WHERE setting_key = ? LIMIT 1', [settingKey]);
+      let existingKeys = {};
+      if (existingRows.length > 0 && existingRows[0].setting_value) {
+        try { existingKeys = JSON.parse(existingRows[0].setting_value); } catch { existingKeys = {}; }
+      }
+
+      let mergedKeys = { ...existingKeys, ...keys };
+      if (integration === 'sabre') {
+        mergedKeys = normalizeSabreSettings(mergedKeys, existingKeys);
+      }
+
+      const settingValue = JSON.stringify(mergedKeys);
       await db.query(
         'INSERT INTO system_settings (setting_key, setting_value, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE setting_value = ?, updated_at = NOW()',
         [settingKey, settingValue, settingValue]
