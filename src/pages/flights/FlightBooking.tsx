@@ -1304,14 +1304,18 @@ const FlightBooking = () => {
                 {/* ── EXTRA BAGGAGE & MEALS ── */}
                 <Card>
                   <CardHeader className="bg-accent/5 border-b border-border">
-                    <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                      <Plus className="w-5 h-5 text-accent" /> Extra Baggage & Meals
-                      {ancillarySource !== "none" && (
-                        <Badge className="bg-accent/10 text-accent border-0 text-[9px] ml-2">
-                          {ancillarySource === "sabre" ? "Live Sabre Data" : ancillarySource === "tti" ? "Live Airline Data" : "No Extras Available"}
-                        </Badge>
-                      )}
-                    </CardTitle>
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                        <Plus className="w-5 h-5 text-accent" /> Extra Baggage & Meals
+                        <Badge className="bg-warning/10 text-warning border-0 text-[9px] ml-1">After Booking</Badge>
+                      </CardTitle>
+                      <AirlineSupportDialog
+                        airline={outboundFlight?.airline} airlineCode={outboundFlight?.airlineCode}
+                        hasBaggage={!!outboundFlight?.baggage} hasHandBaggage={!!outboundFlight?.handBaggage}
+                        hasSeatMap={seatMapData?.available === true} hasExtras={ancillarySource !== "none"}
+                        seatMapSource={seatMapSource} ancillarySource={ancillarySource}
+                      />
+                    </div>
                   </CardHeader>
                   <CardContent className="p-3 sm:p-5">
                     <Tabs defaultValue="baggage" className="w-full">
@@ -1325,7 +1329,7 @@ const FlightBooking = () => {
                           <Briefcase className="w-4 h-4 text-accent shrink-0" />
                           <div>
                             <p className="text-sm font-medium">Included: {outboundFlight?.baggage || "Check airline website for baggage details"}</p>
-                            <p className="text-xs text-muted-foreground">{outboundFlight?.baggage ? "Your fare includes this baggage allowance. Add extra below if available." : "Baggage information was not provided by the airline's booking system."}</p>
+                            <p className="text-xs text-muted-foreground">{outboundFlight?.baggage ? "Your fare includes this baggage allowance." : "Baggage information was not provided by the airline's booking system."}</p>
                           </div>
                         </div>
                         {baggageOptions.length > 0 ? (
@@ -1337,22 +1341,33 @@ const FlightBooking = () => {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground p-3">No extra baggage options available from this airline.</p>
+                          <div className="p-4 bg-muted/30 rounded-lg border border-border text-center space-y-2">
+                            <Package className="w-8 h-8 mx-auto text-muted-foreground/40" />
+                            <p className="text-sm font-medium text-muted-foreground">Extra baggage options available after booking</p>
+                            <p className="text-xs text-muted-foreground">Once your booking is confirmed and a PNR is generated, you can purchase extra baggage from your <strong>Dashboard → Bookings</strong>.</p>
+                          </div>
                         )}
                       </TabsContent>
 
                       <TabsContent value="meal" className="space-y-3">
-                        <p className="text-sm text-muted-foreground">Select your preferred meal for this flight.</p>
                         {mealOptions.length > 0 ? (
-                          <div className="space-y-2">
-                            {mealOptions.map(meal => (
-                              <AddOnCard key={meal.id} item={meal}
-                                selected={selectedMeal === meal.id}
-                                onSelect={() => setSelectedMeal(meal.id)} />
-                            ))}
-                          </div>
+                          <>
+                            <p className="text-sm text-muted-foreground">Select your preferred meal for this flight.</p>
+                            <div className="space-y-2">
+                              {mealOptions.map(meal => (
+                                <AddOnCard key={meal.id} item={meal}
+                                  selected={selectedMeal === meal.id}
+                                  onSelect={() => setSelectedMeal(meal.id)} />
+                              ))}
+                            </div>
+                          </>
                         ) : (
-                          <p className="text-sm text-muted-foreground p-3">No meal options available from this airline.</p>
+                          <div className="p-4 bg-muted/30 rounded-lg border border-border text-center space-y-2">
+                            <UtensilsCrossed className="w-8 h-8 mx-auto text-muted-foreground/40" />
+                            <p className="text-sm font-medium text-muted-foreground">Paid meal options available after booking</p>
+                            <p className="text-xs text-muted-foreground">Premium meal purchases require a PNR. You can add paid meals from your <strong>Dashboard → Bookings</strong> after confirmation.</p>
+                            <p className="text-xs text-accent">💡 Free meal requests (Halal, Vegetarian, etc.) can be set in Step 2 — Special Services.</p>
+                          </div>
                         )}
                       </TabsContent>
                     </Tabs>
