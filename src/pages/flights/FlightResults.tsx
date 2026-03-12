@@ -966,6 +966,7 @@ const FlightResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState("best");
+  const [airlineFilter, setAirlineFilter] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState([0, 200000]);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [stopsFilter, setStopsFilter] = useState("all");
