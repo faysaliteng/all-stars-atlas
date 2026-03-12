@@ -1026,6 +1026,67 @@ function getAirlineName(code) {
   return names[code] || code || 'Unknown';
 }
 
+function extractSabrePnrFromCreateResponse(response) {
+  const rs = response?.CreatePassengerNameRecordRS || {};
+  const itineraryRefs = [
+    rs?.ItineraryRef,
+    rs?.TravelItineraryRead?.TravelItinerary?.ItineraryRef,
+    rs?.TravelItineraryRead?.ItineraryRef,
+    response?.ItineraryRef,
+  ];
+
+  const pnrCandidates = [
+    rs?.ItineraryRef?.ID,
+    rs?.ItineraryRef?.id,
+    rs?.ItineraryRef?.Id,
+    rs?.TravelItineraryRead?.TravelItinerary?.ItineraryRef?.ID,
+    rs?.TravelItineraryRead?.TravelItinerary?.ItineraryRef?.id,
+    rs?.TravelItineraryRead?.TravelItinerary?.ItineraryRef?.Id,
+    rs?.TravelItineraryRead?.ItineraryRef?.ID,
+    rs?.TravelItineraryRead?.ItineraryRef?.id,
+    rs?.TravelItineraryRead?.ItineraryRef?.Id,
+    response?.RecordLocator,
+    response?.PNR,
+    response?.BookingReference,
+    response?.Locator,
+  ];
+
+  itineraryRefs.forEach((ref) => {
+    if (!ref || typeof ref !== 'object') return;
+    pnrCandidates.push(ref.RecordLocator, ref.BookingReference, ref.Locator, ref.ID, ref.id, ref.Id);
+  });
+
+  return pnrCandidates.find((value) => {
+    if (typeof value !== 'string') return false;
+    const trimmed = value.trim();
+    return /^[A-Z0-9]{5,8}$/i.test(trimmed);
+  }) || null;
+}
+
+function logSabreCreatePnrDebug(response) {
+  console.log('[Sabre] CreatePNR response keys:', JSON.stringify(Object.keys(response || {})));
+  const rs = response?.CreatePassengerNameRecordRS;
+
+  if (!rs) {
+    console.log('[Sabre] CreatePNR raw (truncated):', JSON.stringify(response).slice(0, 1000));
+    return;
+  }
+
+  console.log('[Sabre] RS keys:', JSON.stringify(Object.keys(rs)));
+  if (rs.ApplicationResults) {
+    console.log('[Sabre] ApplicationResults status:', rs.ApplicationResults.status);
+    if (rs.ApplicationResults.Error) {
+      console.log('[Sabre] RS Errors:', JSON.stringify(rs.ApplicationResults.Error).slice(0, 800));
+    }
+    if (rs.ApplicationResults.Warning) {
+      console.log('[Sabre] RS Warnings:', JSON.stringify(rs.ApplicationResults.Warning).slice(0, 800));
+    }
+  }
+  if (rs.ItineraryRef) {
+    console.log('[Sabre] ItineraryRef:', JSON.stringify(rs.ItineraryRef));
+  }
+}
+
 /**
  * Create a PNR in Sabre using CreatePassengerNameRecordRQ
  * Supports SSR: meals, wheelchair, medical, pets, UMNR, FF#, DOCS/DOCA
