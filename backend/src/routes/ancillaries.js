@@ -1,7 +1,12 @@
 /**
  * Ancillary services API — Seat Maps, Extra Baggage, Meals
  * 100% API-driven — NO mock/fallback data. Zero-mock enforcement.
- * Priority: Sabre SOAP (all airlines) → TTI (Air Astra)
+ *
+ * Strategy (Option C — Hybrid):
+ *   PRE-BOOKING:  BFM search data (baggage allowance from search results)
+ *   POST-BOOKING: Sabre SOAP GAO (requires PNR) → TTI
+ *   Seat Maps:    Sabre SOAP EnhancedSeatMapRQ (no PNR needed)
+ *
  * If no real data available, return empty arrays.
  */
 
@@ -27,31 +32,40 @@ function getSabreSoap() {
 
 /**
  * GET /api/flights/ancillaries
- * Priority: Sabre SOAP → TTI → Empty (zero-mock)
+ *
+ * Pre-booking (no PNR): Returns BFM-extracted baggage as includedBaggage.
+ *   Meals/extra baggage arrays will be empty (GAO needs PNR).
+ *
+ * Post-booking (with PNR): Tries Sabre SOAP GAO → TTI for real ancillary offers.
  */
 router.get('/ancillaries', async (req, res) => {
   try {
-    const { airlineCode, origin, destination, itineraryRef, cabinClass, flightNumber, departureDate, departureTime, adults, children } = req.query;
+    const {
+      airlineCode, origin, destination, itineraryRef, cabinClass,
+      flightNumber, departureDate, departureTime, adults, children,
+      pnr, // POST-BOOKING: PNR/booking ref for GAO
+    } = req.query;
 
     let meals = [];
     let baggage = [];
     let source = 'none';
 
-    // ── Priority 1: Sabre SOAP — works for ALL airlines in Sabre GDS ──
-    if (airlineCode && flightNumber && origin && destination && departureDate) {
+    // ── POST-BOOKING PATH: Sabre SOAP GAO (requires PNR context) ──
+    if (pnr && airlineCode && flightNumber && origin && destination && departureDate) {
       try {
         const sabreSoap = getSabreSoap();
         if (sabreSoap.getAncillaryOffers) {
-          console.log(`[Ancillaries] Trying Sabre SOAP for ${airlineCode}${flightNumber} ${origin}-${destination} ${departureDate}`);
+          console.log(`[Ancillaries] Trying Sabre SOAP GAO (PNR: ${pnr}) for ${airlineCode}${flightNumber} ${origin}-${destination}`);
           const sabreResult = await sabreSoap.getAncillaryOffers({
             origin, destination, departureDate, departureTime,
             marketingCarrier: airlineCode, flightNumber,
             cabinClass: cabinClass || 'Economy',
             adults: parseInt(adults) || 1,
             children: parseInt(children) || 0,
+            pnr, // Pass PNR for booking-context GAO
           });
 
-          if (sabreResult) {
+          if (sabreResult && !sabreResult._error) {
             source = 'sabre';
             if (sabreResult.meals?.length > 0) {
               meals = sabreResult.meals.map(m => ({
@@ -68,16 +82,18 @@ router.get('/ancillaries', async (req, res) => {
                 currency: b.currency || 'BDT',
               }));
             }
-            console.log(`[Ancillaries] Sabre SOAP: ${meals.length} meals, ${baggage.length} baggage options`);
+            console.log(`[Ancillaries] Sabre SOAP GAO: ${meals.length} meals, ${baggage.length} baggage options`);
+          } else {
+            console.log(`[Ancillaries] Sabre SOAP GAO returned error: ${sabreResult?._error ? sabreResult.message : 'no data'}`);
           }
         }
       } catch (sabreErr) {
-        console.log(`[Ancillaries] Sabre SOAP not available: ${sabreErr.message}, trying next source`);
+        console.log(`[Ancillaries] Sabre SOAP GAO failed: ${sabreErr.message}`);
       }
     }
 
-    // ── Priority 2: TTI — for Air Astra / S2 airlines ──
-    if (source === 'none' && ['2A', 'S2'].includes(airlineCode) && itineraryRef) {
+    // ── POST-BOOKING FALLBACK: TTI — for Air Astra / S2 airlines ──
+    if (source === 'none' && pnr && ['2A', 'S2'].includes(airlineCode) && itineraryRef) {
       try {
         const tti = getTTIHelpers();
         if (tti.getTTIConfig && tti.ttiRequest) {
@@ -117,17 +133,28 @@ router.get('/ancillaries', async (req, res) => {
       }
     }
 
-    // Included baggage comes from the search results (passed as query params)
+    // ── PRE-BOOKING: BFM-sourced included baggage (always available from search) ──
+    if (source === 'none' && !pnr) {
+      source = 'bfm';
+      console.log(`[Ancillaries] Pre-booking mode — returning BFM baggage data for ${airlineCode}${flightNumber}`);
+    }
+
+    // Included baggage comes from BFM search results (passed as query params)
     const includedChecked = req.query.checkedBaggage || null;
     const includedCabin = req.query.handBaggage || null;
 
     res.json({
-      meals, baggage, source,
+      meals,
+      baggage,
+      source,
       includedBaggage: {
         checked: includedChecked || null,
         cabin: includedCabin || null,
       },
       airline: airlineCode,
+      // Signal to frontend whether GAO data is available (post-booking only)
+      gaoAvailable: source === 'sabre' || source === 'tti',
+      preBooking: !pnr,
     });
   } catch (err) {
     console.error('[Ancillaries] Error:', err.message);
@@ -139,6 +166,7 @@ router.get('/ancillaries', async (req, res) => {
  * GET /api/flights/seat-map
  * Priority: Sabre SOAP → TTI → No data (zero-mock)
  * NO generated/fake layouts. Real API data only.
+ * NOTE: EnhancedSeatMapRQ does NOT require PNR — works pre-booking!
  */
 router.get('/seat-map', async (req, res) => {
   try {
@@ -147,7 +175,7 @@ router.get('/seat-map', async (req, res) => {
     let seatLayout = null;
     let source = 'none';
 
-    // ── Priority 1: Sabre SOAP — real seat map for any airline ──
+    // ── Priority 1: Sabre SOAP — real seat map for any airline (no PNR needed) ──
     if (airlineCode && flightNumber && origin && destination && departureDate) {
       try {
         const sabreSoap = getSabreSoap();
@@ -221,15 +249,15 @@ router.get('/seat-map', async (req, res) => {
 /**
  * GET /api/flights/sabre-soap-diagnostic
  * Tests both EnhancedSeatMapRQ and GetAncillaryOffersRQ with a real flight.
- * Usage: /api/flights/sabre-soap-diagnostic?origin=DAC&destination=BOM&departureDate=2026-03-20&airlineCode=AI&flightNumber=2184
  */
 router.get('/sabre-soap-diagnostic', async (req, res) => {
-  const { origin, destination, departureDate, airlineCode, flightNumber, cabinClass } = req.query;
+  const { origin, destination, departureDate, airlineCode, flightNumber, cabinClass, pnr } = req.query;
 
   if (!origin || !destination || !departureDate || !airlineCode || !flightNumber) {
     return res.json({
       error: 'Required params: origin, destination, departureDate, airlineCode, flightNumber',
       example: '/api/flights/sabre-soap-diagnostic?origin=DAC&destination=BOM&departureDate=2026-03-20&airlineCode=AI&flightNumber=2184',
+      note: 'Add &pnr=ABCDEF to test GetAncillaryOffersRQ (requires existing PNR)',
     });
   }
 
@@ -238,7 +266,7 @@ router.get('/sabre-soap-diagnostic', async (req, res) => {
   try {
     const sabreSoap = getSabreSoap();
 
-    // ── Test 1: EnhancedSeatMapRQ ──
+    // ── Test 1: EnhancedSeatMapRQ (no PNR needed) ──
     console.log(`[DIAG] Testing EnhancedSeatMapRQ for ${airlineCode}${flightNumber} ${origin}-${destination} ${departureDate}`);
     try {
       const BD_AIRPORTS = ['DAC', 'CXB', 'CGP', 'ZYL', 'JSR', 'RJH', 'SPD', 'BZL', 'IRD', 'TKR'];
@@ -268,37 +296,43 @@ router.get('/sabre-soap-diagnostic', async (req, res) => {
     } catch (err) {
       results.seatMap = { success: false, error: err.message };
       results.errors.push(`SeatMap: ${err.message}`);
-      console.error(`[DIAG] SeatMap error:`, err.message);
     }
 
-    // ── Test 2: GetAncillaryOffersRQ ──
-    console.log(`[DIAG] Testing GetAncillaryOffersRQ for ${airlineCode}${flightNumber} ${origin}-${destination} ${departureDate}`);
-    try {
-      const ancillaryResult = await sabreSoap.getAncillaryOffers({
-        origin, destination, departureDate,
-        marketingCarrier: airlineCode,
-        flightNumber: String(flightNumber).replace(/^[A-Z]{2}/i, ''),
-        cabinClass: cabinClass || 'Economy',
-        adults: 1,
-        children: 0,
-      });
+    // ── Test 2: GetAncillaryOffersRQ (requires PNR) ──
+    if (pnr) {
+      console.log(`[DIAG] Testing GetAncillaryOffersRQ (PNR: ${pnr}) for ${airlineCode}${flightNumber}`);
+      try {
+        const ancillaryResult = await sabreSoap.getAncillaryOffers({
+          origin, destination, departureDate,
+          marketingCarrier: airlineCode,
+          flightNumber: String(flightNumber).replace(/^[A-Z]{2}/i, ''),
+          cabinClass: cabinClass || 'Economy',
+          adults: 1, children: 0,
+          pnr,
+        });
+        results.ancillaries = {
+          success: !!(ancillaryResult && !ancillaryResult._error && (ancillaryResult.meals?.length > 0 || ancillaryResult.baggage?.length > 0)),
+          source: ancillaryResult?.source || 'sabre-soap',
+          mealsCount: ancillaryResult?.meals?.length || 0,
+          baggageCount: ancillaryResult?.baggage?.length || 0,
+          otherCount: ancillaryResult?.other?.length || 0,
+          meals: ancillaryResult?.meals || [],
+          baggage: ancillaryResult?.baggage || [],
+          other: ancillaryResult?.other || [],
+          rawData: ancillaryResult,
+          errorXml: ancillaryResult?._error ? ancillaryResult.rawXml : undefined,
+        };
+        console.log(`[DIAG] Ancillaries: ${results.ancillaries.success ? 'SUCCESS' : 'NO DATA'}`);
+      } catch (err) {
+        results.ancillaries = { success: false, error: err.message };
+        results.errors.push(`Ancillaries: ${err.message}`);
+      }
+    } else {
       results.ancillaries = {
-        success: !!(ancillaryResult && !ancillaryResult._error && (ancillaryResult.meals?.length > 0 || ancillaryResult.baggage?.length > 0)),
-        source: ancillaryResult?.source || 'sabre-soap',
-        mealsCount: ancillaryResult?.meals?.length || 0,
-        baggageCount: ancillaryResult?.baggage?.length || 0,
-        otherCount: ancillaryResult?.other?.length || 0,
-        meals: ancillaryResult?.meals || [],
-        baggage: ancillaryResult?.baggage || [],
-        other: ancillaryResult?.other || [],
-        rawData: ancillaryResult,
-        errorXml: ancillaryResult?._error ? ancillaryResult.rawXml : undefined,
+        skipped: true,
+        reason: 'GetAncillaryOffersRQ requires PNR. Add &pnr=ABCDEF to test.',
+        note: 'Pre-booking ancillary data (baggage) comes from BFM search results.',
       };
-      console.log(`[DIAG] Ancillaries: ${results.ancillaries.success ? 'SUCCESS' : 'NO DATA'} — ${results.ancillaries.mealsCount} meals, ${results.ancillaries.baggageCount} baggage`);
-    } catch (err) {
-      results.ancillaries = { success: false, error: err.message };
-      results.errors.push(`Ancillaries: ${err.message}`);
-      console.error(`[DIAG] Ancillaries error:`, err.message);
     }
 
   } catch (err) {
@@ -310,7 +344,13 @@ router.get('/sabre-soap-diagnostic', async (req, res) => {
     flight: `${airlineCode}${flightNumber}`,
     route: `${origin} → ${destination}`,
     date: departureDate,
+    pnr: pnr || 'NOT PROVIDED (GAO skipped)',
     timestamp: new Date().toISOString(),
+    architecture: {
+      seatMap: 'EnhancedSeatMapRQ — works pre-booking (no PNR needed)',
+      ancillaries: 'GetAncillaryOffersRQ — requires PNR (post-booking only)',
+      preBooking: 'Baggage allowance extracted from BFM search response',
+    },
     ...results,
   });
 });

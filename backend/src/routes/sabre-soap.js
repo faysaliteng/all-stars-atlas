@@ -219,7 +219,8 @@ async function getSeatMap(params) {
 
 /**
  * GetAncillaryOffersRQ v3.0.0 — query available ancillaries (baggage, meals, etc.)
- * @param {Object} params - { origin, destination, departureDate, departureTime, marketingCarrier, flightNumber, cabinClass }
+ * IMPORTANT: This API requires an existing PNR context. Use only POST-BOOKING.
+ * @param {Object} params - { origin, destination, departureDate, departureTime, marketingCarrier, flightNumber, cabinClass, pnr }
  * @returns {Object|null} parsed ancillary offers or null
  */
 async function getAncillaryOffers(params) {
