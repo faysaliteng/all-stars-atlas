@@ -395,6 +395,13 @@ router.get('/search', async (req, res) => {
       });
     }
 
+    // Apply preferred carrier filter (from search widget "Any Airline" dropdown)
+    if (carrier && carrier !== 'any') {
+      const carrierCode = carrier.toUpperCase();
+      flights = flights.filter(f => (f.airlineCode || '').toUpperCase() === carrierCode);
+      console.log(`[Search] Carrier filter "${carrierCode}" → ${flights.length} flights remaining`);
+    }
+
     // Apply client-side filters
     if (priceMin) flights = flights.filter(f => f.price >= parseFloat(priceMin));
     if (priceMax) flights = flights.filter(f => f.price <= parseFloat(priceMax));
