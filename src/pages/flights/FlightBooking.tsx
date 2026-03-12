@@ -1274,6 +1274,32 @@ const FlightBooking = () => {
                         </div>
                       </div>
                     )}
+                    {hasAnySSR && (
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Special Services (SSR)</h4>
+                        <div className="space-y-1.5">
+                          {paxSpecialServices.map((ss, pi) => {
+                            const items: string[] = [];
+                            if (ss.meal !== "none") items.push(MEAL_CODES.find(m => m.code === ss.meal)?.label || ss.meal);
+                            if (ss.wheelchair !== "none") items.push(WHEELCHAIR_OPTIONS.find(w => w.code === ss.wheelchair)?.label?.split("(")[0]?.trim() || ss.wheelchair);
+                            if (ss.medical) items.push("Medical (MEDA)");
+                            if (ss.blind) items.push("Blind (BLND)");
+                            if (ss.deaf) items.push("Deaf (DEAF)");
+                            if (ss.unaccompaniedMinor) items.push("Unaccompanied Minor");
+                            if (ss.pet !== "none") items.push(ss.pet === "PETC" ? "Pet in Cabin" : "Pet in Cargo");
+                            if (ss.frequentFlyer.number) items.push(`FF: ${ss.frequentFlyer.airline || ""}${ss.frequentFlyer.number}`);
+                            if (ss.specialRequest.trim()) items.push(`"${ss.specialRequest.trim()}"`);
+                            if (items.length === 0) return null;
+                            return (
+                              <div key={pi} className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-xs font-medium">{passengers[pi]?.firstName || `Pax ${pi + 1}`}:</span>
+                                {items.map((item, idx) => <Badge key={idx} variant="outline" className="text-[10px]">{item}</Badge>)}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
