@@ -572,6 +572,27 @@ router.post('/book', authenticate, async (req, res) => {
       }
     }
 
+    // If this is a Sabre-sourced flight, create PNR with SSR in Sabre
+    if (!gdsPnr && (flightSource === 'sabre' || flightData?._sabreSource)) {
+      console.log('[Booking] Sabre flight detected — creating GDS booking with SSR...');
+      try {
+        gdsBookingResult = await sabreCreateBooking({
+          flightData,
+          passengers: passengers || [],
+          contactInfo: contactInfo || {},
+          specialServices: specialServices || {},
+        });
+        if (gdsBookingResult.success && gdsBookingResult.pnr) {
+          gdsPnr = gdsBookingResult.pnr;
+          console.log('[Booking] Sabre PNR created:', gdsPnr);
+        } else {
+          console.warn('[Booking] Sabre booking failed:', gdsBookingResult.error, '— proceeding with local booking only');
+        }
+      } catch (sabreErr) {
+        console.error('[Booking] Sabre CreateBooking exception:', sabreErr.message, '— proceeding with local booking');
+      }
+    }
+
     await db.query(
       `INSERT INTO bookings (id, user_id, booking_type, booking_ref, status, total_amount, payment_method, payment_status, details, passenger_info, contact_info, payment_deadline)
        VALUES (?, ?, 'flight', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
