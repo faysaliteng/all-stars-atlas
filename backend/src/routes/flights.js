@@ -715,21 +715,27 @@ router.post('/cancel', authenticate, async (req, res) => {
 
     const details = typeof booking.details === 'string' ? JSON.parse(booking.details) : (booking.details || {});
     const gdsPnr = details.gdsPnr || booking.pnr;
-    const source = details.outbound?.source || '';
+    const sourceRaw = details.outbound?.source || details.source || booking.provider || '';
+    const source = String(sourceRaw).toLowerCase().trim();
 
     // Attempt GDS cancellation if PNR exists
     let gdsCancelResult = null;
     let gdsCancelFailed = false;
     if (gdsPnr) {
       try {
-        if (source === 'sabre') {
+        console.log(`[Cancel] Provider source detected: '${source}' | booking.provider='${booking.provider || ''}' | pnr='${gdsPnr}'`);
+
+        if (source.includes('sabre')) {
           const { cancelBooking: sabreCancelBooking } = require('./sabre-flights');
           gdsCancelResult = await sabreCancelBooking({ pnr: gdsPnr });
           if (!gdsCancelResult?.success) gdsCancelFailed = true;
-        } else if (source === 'tti') {
+        } else if (source.includes('tti')) {
           const { cancelBooking: ttiCancelBooking } = require('./tti-flights');
           gdsCancelResult = await ttiCancelBooking({ pnr: gdsPnr, bookingId: booking.id });
           if (!gdsCancelResult?.success) gdsCancelFailed = true;
+        } else {
+          gdsCancelFailed = true;
+          gdsCancelResult = { success: false, error: `Unsupported provider/source for cancellation: ${source || 'unknown'}` };
         }
       } catch (gdsErr) {
         console.error('[Cancel] GDS cancel error:', gdsErr.message);
