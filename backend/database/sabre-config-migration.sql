@@ -6,7 +6,7 @@
 INSERT INTO system_settings (setting_key, setting_value, updated_at)
 VALUES ('api_sabre', JSON_OBJECT(
   'enabled', 'true',
-  'environment', 'cert',
+  'environment', 'prod',
   'pcc', 'J4YL',
   'epr', '631470',
   'cert_client_id', '5B0K-JvBdOta',
