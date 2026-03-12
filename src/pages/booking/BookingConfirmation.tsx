@@ -150,6 +150,8 @@ const BookingConfirmation = () => {
     generateTicketPDF({
       bookingRef,
       pnr,
+      gdsPnr: pnr,
+      source: booking?.source || booking?.outbound?.source || "",
       isRoundTrip,
       outbound: outboundSegments,
       returnSegments,
