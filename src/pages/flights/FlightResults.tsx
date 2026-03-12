@@ -575,16 +575,78 @@ const FlightCard = ({
                     </div>
                   )}
 
-                  {/* Fare Summary Tab — real API data */}
-                  {activeDetailTab === "fare" && (
-                    <div className="max-w-md space-y-2 text-sm">
-                      <div className="flex justify-between py-1.5"><span className="text-muted-foreground">Base Fare</span><span className="font-semibold">৳{baseFare.toLocaleString()}</span></div>
-                      <div className="flex justify-between py-1.5"><span className="text-muted-foreground">Taxes & Fees</span><span className="font-semibold">{taxes > 0 ? `৳${taxes.toLocaleString()}` : "Included"}</span></div>
-                      <Separator />
-                      <div className="flex justify-between py-1.5 text-base"><span className="font-bold">Total Fare</span><span className="font-black text-accent">৳{price.toLocaleString()}</span></div>
-                      <p className="text-[11px] text-muted-foreground mt-2"><Info className="w-3 h-3 inline mr-1" />{refundable ? "This fare is refundable. Cancellation charges may apply." : "This fare is non-refundable. Change and cancellation fees apply as per airline policy."}</p>
-                    </div>
-                  )}
+                  {/* Fare Summary Tab — real API data, table layout matching reference */}
+                  {activeDetailTab === "fare" && (() => {
+                    const paxAdults = parseInt(cardSearchParams.get("adults") || "1");
+                    const paxChildren = parseInt(cardSearchParams.get("children") || "0");
+                    const paxInfants = parseInt(cardSearchParams.get("infants") || "0");
+                    // Use fareDetails from API if available, otherwise construct from top-level
+                    const fareRows: { paxType: string; baseFare: number; tax: number; other: number; discount: number; aitVat: number; count: number; amount: number }[] = [];
+                    
+                    // Check if flight has per-pax fare breakdown
+                    const fd = flight.fareDetails || [];
+                    if (fd.length > 0 && fd[0]?.baseFare) {
+                      // Use detailed fare breakdown from API
+                      fd.forEach((f: any) => {
+                        fareRows.push({
+                          paxType: f.paxType || "Adult",
+                          baseFare: f.baseFare || 0,
+                          tax: f.tax || f.taxes || 0,
+                          other: f.other || 0,
+                          discount: f.discount || 0,
+                          aitVat: f.aitVat || 0,
+                          count: f.count || f.paxCount || 1,
+                          amount: f.amount || f.total || ((f.baseFare || 0) + (f.tax || f.taxes || 0) + (f.other || 0) - (f.discount || 0) + (f.aitVat || 0)) * (f.count || f.paxCount || 1),
+                        });
+                      });
+                    } else {
+                      // Construct from top-level baseFare/taxes
+                      if (paxAdults > 0) fareRows.push({ paxType: "Adult", baseFare: baseFare, tax: taxes, other: 0, discount: 0, aitVat: 0, count: paxAdults, amount: price * paxAdults });
+                      if (paxChildren > 0) fareRows.push({ paxType: "Child", baseFare: Math.round(baseFare * 0.75), tax: taxes, other: 0, discount: 0, aitVat: 0, count: paxChildren, amount: Math.round(price * 0.75) * paxChildren });
+                      if (paxInfants > 0) fareRows.push({ paxType: "Infant", baseFare: Math.round(baseFare * 0.1), tax: Math.round(taxes * 0.5), other: 0, discount: 0, aitVat: 0, count: paxInfants, amount: Math.round(price * 0.1) * paxInfants });
+                    }
+                    const totalPayable = fareRows.reduce((s, r) => s + r.amount, 0);
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm border border-border rounded-lg overflow-hidden">
+                            <thead>
+                              <tr className="bg-muted/50">
+                                <th className="text-left px-3 py-2.5 font-semibold text-muted-foreground text-xs">Pax Type</th>
+                                <th className="text-left px-3 py-2.5 font-semibold text-muted-foreground text-xs">Base Fare</th>
+                                <th className="text-left px-3 py-2.5 font-semibold text-muted-foreground text-xs">Tax</th>
+                                <th className="text-left px-3 py-2.5 font-semibold text-muted-foreground text-xs">Other</th>
+                                <th className="text-left px-3 py-2.5 font-semibold text-muted-foreground text-xs">Discount</th>
+                                <th className="text-left px-3 py-2.5 font-semibold text-muted-foreground text-xs">AIT VAT</th>
+                                <th className="text-left px-3 py-2.5 font-semibold text-muted-foreground text-xs">Pax Count</th>
+                                <th className="text-right px-3 py-2.5 font-semibold text-muted-foreground text-xs">Amount</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {fareRows.map((row, i) => (
+                                <tr key={i} className="border-t border-border/50">
+                                  <td className="px-3 py-2.5 font-medium">{row.paxType}</td>
+                                  <td className="px-3 py-2.5">{row.baseFare.toLocaleString()}</td>
+                                  <td className="px-3 py-2.5">{row.tax.toLocaleString()}</td>
+                                  <td className="px-3 py-2.5">{row.other}</td>
+                                  <td className="px-3 py-2.5">{row.discount}</td>
+                                  <td className="px-3 py-2.5">{row.aitVat}</td>
+                                  <td className="px-3 py-2.5">{row.count}</td>
+                                  <td className="px-3 py-2.5 text-right font-semibold">BDT {row.amount.toLocaleString()}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="flex justify-end items-center gap-6 pt-1">
+                          <span className="font-bold text-sm">Total Payable</span>
+                          <span className="font-black text-base">BDT {totalPayable.toLocaleString()}</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground"><Info className="w-3 h-3 inline mr-1" />{refundable ? "This fare is refundable. Cancellation charges may apply." : "This fare is non-refundable. Change and cancellation fees apply as per airline policy."}</p>
+                      </div>
+                    );
+                  })()}
 
                   {/* Baggage Tab — real API data */}
                   {activeDetailTab === "baggage" && (
