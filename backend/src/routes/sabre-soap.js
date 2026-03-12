@@ -252,7 +252,7 @@ async function getAncillaryOffers(params) {
     </Security>
   </SOAP-ENV:Header>
   <SOAP-ENV:Body>
-    <GetAncillaryOffersRQ xmlns="http://stl.sabre.com/Merchandising/v4" version="3.0.0">
+    <GetAncillaryOffersRQ xmlns="http://services.sabre.com/merch/ancillary/offer/v03" version="3.0.0">
       <RequestType>Stateless</RequestType>
       <SummaryOnly>false</SummaryOnly>
       <FlightSegment origin="${params.origin}" destination="${params.destination}" departureDate="${params.departureDate}"${params.departureTime ? ` departureTime="${params.departureTime}"` : ''}>
