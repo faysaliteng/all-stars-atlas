@@ -488,13 +488,15 @@ const FlightBooking = () => {
   const outboundPrice = outboundFlight?.price || 0;
   const returnPrice = returnFlight?.price || 0;
 
-  // Multi-city: sum all segment prices
+  // Multi-city: sum all segment prices — derive baseFare as (price - taxes) for BDT consistency
   const multiCityTotalPrice = isMultiCity ? multiCityFlights.reduce((sum: number, f: any) => sum + (f?.price || 0), 0) : 0;
-  const multiCityTotalBaseFare = isMultiCity ? multiCityFlights.reduce((sum: number, f: any) => sum + (f?.baseFare ?? f?.price ?? 0), 0) : 0;
   const multiCityTotalTaxes = isMultiCity ? multiCityFlights.reduce((sum: number, f: any) => sum + (f?.taxes ?? 0), 0) : 0;
+  const multiCityTotalBaseFare = isMultiCity ? Math.max(0, multiCityTotalPrice - multiCityTotalTaxes) : 0;
 
-  const outboundBaseFare = outboundFlight?.baseFare ?? outboundPrice;
-  const returnBaseFare = returnFlight?.baseFare ?? returnPrice;
+  // CRITICAL: Always derive baseFare in BDT as (price - taxes) to avoid currency mismatch
+  // Sabre returns baseFare in foreign currency (USD) but price/taxes in BDT
+  const outboundBaseFare = Math.max(0, outboundPrice - (outboundFlight?.taxes ?? 0));
+  const returnBaseFare = Math.max(0, returnPrice - (returnFlight?.taxes ?? 0));
   const perPaxBaseFare = isMultiCity ? multiCityTotalBaseFare : (outboundBaseFare + returnBaseFare);
   const baseFare = perPaxBaseFare * totalPaxCount;
   // Zero-mock: use ONLY real tax data from GDS. If unavailable, show 0 (included in fare)
