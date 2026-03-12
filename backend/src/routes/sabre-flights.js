@@ -1359,50 +1359,79 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       }
     }
 
-    const response = await sabreRequest(config, '/v2.4.0/passenger/records?mode=create', body);
+    const requestVariants = [{
+      label: 'full_payload',
+      body,
+    }];
 
-    // Log full response keys for debugging
-    console.log('[Sabre] CreatePNR response keys:', JSON.stringify(Object.keys(response || {})));
-    const rs = response?.CreatePassengerNameRecordRS;
-    if (rs) {
-      console.log('[Sabre] RS keys:', JSON.stringify(Object.keys(rs)));
-      if (rs.ApplicationResults) {
-        console.log('[Sabre] ApplicationResults status:', rs.ApplicationResults.status);
-        if (rs.ApplicationResults.Error) {
-          console.log('[Sabre] RS Errors:', JSON.stringify(rs.ApplicationResults.Error).slice(0, 500));
-        }
-        if (rs.ApplicationResults.Warning) {
-          console.log('[Sabre] RS Warnings:', JSON.stringify(rs.ApplicationResults.Warning).slice(0, 500));
-        }
+    if (advancePassenger.length > 0) {
+      const bodyWithoutAdvancePassenger = JSON.parse(JSON.stringify(body));
+      const specialServiceInfo = bodyWithoutAdvancePassenger?.CreatePassengerNameRecordRQ?.SpecialReqDetails?.SpecialService?.SpecialServiceInfo;
+      if (specialServiceInfo?.AdvancePassenger) {
+        delete specialServiceInfo.AdvancePassenger;
       }
-      if (rs.ItineraryRef) console.log('[Sabre] ItineraryRef:', JSON.stringify(rs.ItineraryRef));
-    } else {
-      console.log('[Sabre] CreatePNR raw (truncated):', JSON.stringify(response).slice(0, 1000));
+      requestVariants.push({
+        label: 'without_docs_doca',
+        body: bodyWithoutAdvancePassenger,
+      });
     }
 
-    const pnrCandidates = [
-      rs?.ItineraryRef?.ID,
-      rs?.ItineraryRef?.id,
-      rs?.TravelItineraryRead?.TravelItinerary?.ItineraryRef?.ID,
-      rs?.TravelItineraryRead?.TravelItinerary?.ItineraryRef?.id,
-      rs?.TravelItineraryRead?.ItineraryRef?.ID,
-      rs?.TravelItineraryRead?.ItineraryRef?.id,
-      response?.ItineraryRef?.ID,
-      response?.RecordLocator,
-      response?.PNR,
-      response?.BookingReference,
-    ];
+    if (body?.CreatePassengerNameRecordRQ?.SpecialReqDetails) {
+      const bodyWithoutSpecialReqDetails = JSON.parse(JSON.stringify(body));
+      delete bodyWithoutSpecialReqDetails.CreatePassengerNameRecordRQ.SpecialReqDetails;
+      requestVariants.push({
+        label: 'without_special_req_details',
+        body: bodyWithoutSpecialReqDetails,
+      });
+    }
 
-    const pnr = pnrCandidates.find((value) =>
-      typeof value === 'string' && /^[A-Z0-9]{5,8}$/i.test(value.trim())
-    ) || null;
-    console.log('[Sabre] PNR created:', pnr);
+    let finalResponse = null;
+    let finalPnr = null;
+    let finalErrorMessage = '';
+    let successfulVariant = '';
 
-    return { success: !!pnr, pnr, rawResponse: response };
-  } catch (err) {
-    console.error('[Sabre] CreateBooking failed:', err.message);
-    return { success: false, error: err.message, pnr: null };
-  }
+    for (let attemptIndex = 0; attemptIndex < requestVariants.length; attemptIndex += 1) {
+      const variant = requestVariants[attemptIndex];
+
+      try {
+        const response = await sabreRequest(config, '/v2.4.0/passenger/records?mode=create', variant.body);
+        finalResponse = response;
+        logSabreCreatePnrDebug(response);
+
+        const pnr = extractSabrePnrFromCreateResponse(response);
+        if (pnr) {
+          finalPnr = pnr;
+          successfulVariant = variant.label;
+          break;
+        }
+
+        finalErrorMessage = `No PNR returned from ${variant.label}`;
+        console.warn(`[Sabre] ${finalErrorMessage}`);
+      } catch (err) {
+        finalErrorMessage = err.message;
+        console.error(`[Sabre] CreatePNR attempt failed (${variant.label}):`, err.message);
+
+        const shouldRetry = /VALIDATION_FAILED|NotProcessed|AdvancePassenger|SpecialReqDetails|Document/i.test(err.message || '');
+        const hasNextVariant = attemptIndex < requestVariants.length - 1;
+        if (!(shouldRetry && hasNextVariant)) {
+          break;
+        }
+        console.warn(`[Sabre] Retrying CreatePNR with fallback payload: ${requestVariants[attemptIndex + 1].label}`);
+      }
+    }
+
+    if (!finalPnr) {
+      return {
+        success: false,
+        error: finalErrorMessage || 'Sabre CreatePNR did not return a valid record locator',
+        pnr: null,
+        rawResponse: finalResponse,
+      };
+    }
+
+    console.log(`[Sabre] PNR created (${successfulVariant || 'unknown_variant'}):`, finalPnr);
+
+    return { success: true, pnr: finalPnr, rawResponse: finalResponse };
 }
 
 /**
