@@ -742,9 +742,9 @@ const RoundTripFlightCard = ({
   return (
     <Card className={`overflow-hidden transition-all border ${isExpanded ? "border-accent/30 shadow-md" : "border-border hover:shadow-md"}`}>
       <CardContent className="p-0">
-        <div className="flex flex-col sm:flex-row">
+        <div className="flex flex-col sm:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-3 p-3 sm:p-4 sm:w-44 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
+          <div className="flex items-center gap-3 p-3 sm:p-4 sm:w-36 lg:w-40 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
             <div className="flex flex-col items-center gap-1 shrink-0">
               {logo ? (
                 <img src={logo} alt={outbound.airline} className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
@@ -755,22 +755,22 @@ const RoundTripFlightCard = ({
                 </div>
               )}
             </div>
-            <div>
-              <p className="text-xs sm:text-sm font-bold leading-tight">{outbound.airline}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{flightNo}</p>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-bold leading-tight truncate">{outbound.airline}</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
           </div>
 
           {/* Both legs side by side */}
-          <div className="flex-1 flex flex-col sm:flex-row p-3 sm:p-4 gap-3 sm:gap-4">
+          <div className="flex-1 flex flex-col sm:flex-row p-3 sm:p-4 gap-3 sm:gap-3 min-w-0">
             <LegMini flight={outbound} label="Departure" labelColor="text-foreground" />
-            <div className="hidden sm:block w-px bg-border/60 self-stretch" />
+            <div className="hidden sm:block w-px bg-border/60 self-stretch shrink-0" />
             <div className="sm:hidden h-px bg-border/60" />
             <LegMini flight={returnFlight} label="Return" labelColor="text-foreground" />
           </div>
 
           {/* Price */}
-          <div className="flex flex-col items-end gap-1 p-4 sm:p-5 sm:w-52 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+          <div className="flex flex-col items-end gap-1 p-3 sm:p-4 sm:w-40 lg:w-48 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-2">
               {totalPrice === cheapest && totalPrice > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
