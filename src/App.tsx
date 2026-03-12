@@ -75,6 +75,7 @@ const DashboardSearchHistory = lazy(() => import("@/pages/dashboard/DashboardSea
 const DashboardETransactions = lazy(() => import("@/pages/dashboard/DashboardETransactions"));
 const DashboardPayLater = lazy(() => import("@/pages/dashboard/DashboardPayLater"));
 const DashboardInvoices = lazy(() => import("@/pages/dashboard/DashboardInvoices"));
+const DashboardRewards = lazy(() => import("@/pages/dashboard/DashboardRewards"));
 
 // Admin
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -186,6 +187,7 @@ const App = () => (
                 <Route path="e-transactions" element={<DashboardETransactions />} />
                 <Route path="pay-later" element={<DashboardPayLater />} />
                 <Route path="invoices" element={<DashboardInvoices />} />
+                <Route path="rewards" element={<DashboardRewards />} />
               </Route>
 
               {/* Admin Dashboard — Admin Protected */}

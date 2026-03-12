@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Ticket, CreditCard, Receipt, Users, Settings, LogOut, Plane, Menu, X,
-  Heart, FileText, Search, Clock, Smartphone, Sparkles, ChevronRight
+  Heart, FileText, Search, Clock, Smartphone, Sparkles, ChevronRight, Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ const sidebarGroups = [
     items: [
       { label: "Travellers", href: "/dashboard/travellers", icon: Users, gradient: "linear-gradient(135deg, #0ea5e9, #2563eb)" },
       { label: "Wishlist", href: "/dashboard/wishlist", icon: Heart, gradient: "linear-gradient(135deg, #f43f5e, #dc2626)" },
+      { label: "Reward Points", href: "/dashboard/rewards", icon: Gift, gradient: "linear-gradient(135deg, #f59e0b, #d97706)" },
       { label: "Search History", href: "/dashboard/search-history", icon: Search, gradient: "linear-gradient(135deg, #6366f1, #8b5cf6)" },
       { label: "Settings", href: "/dashboard/settings", icon: Settings, gradient: "linear-gradient(135deg, #64748b, #475569)" },
     ],
