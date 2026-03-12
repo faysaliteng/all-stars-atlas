@@ -269,7 +269,6 @@ const FlightBooking = () => {
   const [baggageOptions, setBaggageOptions] = useState<{ id: string; name: string; price: number; desc: string; icon?: string }[]>([]);
   const [ancillarySource, setAncillarySource] = useState("none");
   const [ancillaryLoading, setAncillaryLoading] = useState(false);
-  const hasRealExtras = ancillarySource !== "none" && (mealOptions.length > 0 || baggageOptions.length > 0);
 
   // Read passenger counts from URL
   const [searchParams] = useSearchParams();
