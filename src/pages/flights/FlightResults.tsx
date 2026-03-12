@@ -784,8 +784,8 @@ const RoundTripFlightCard = ({
           </div>
           <div className="shrink-0">
             <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground"
-              onClick={() => cardNavigate(`/flights/book?roundTrip=true&adults=${cardSearchParams.get("adults") || "1"}&children=${cardSearchParams.get("children") || "0"}&infants=${cardSearchParams.get("infants") || "0"}&cabin=${cardSearchParams.get("cabin") || "economy"}`, { state: { outboundFlight: outbound, returnFlight } })}>
-              View Prices <ChevronDown className="w-3.5 h-3.5 ml-1" />
+              onClick={() => setShowFareOptions(!showFareOptions)}>
+              View Prices {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
             </Button>
           </div>
         </div>
