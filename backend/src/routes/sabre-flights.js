@@ -1214,7 +1214,22 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
 
     const response = await sabreRequest(config, '/v2.4.0/passenger/records?mode=create', body);
 
-    const pnr = response.CreatePassengerNameRecordRS?.ItineraryRef?.ID || null;
+    const pnrCandidates = [
+      response.CreatePassengerNameRecordRS?.ItineraryRef?.ID,
+      response.CreatePassengerNameRecordRS?.ItineraryRef?.id,
+      response.CreatePassengerNameRecordRS?.TravelItineraryRead?.TravelItinerary?.ItineraryRef?.ID,
+      response.CreatePassengerNameRecordRS?.TravelItineraryRead?.TravelItinerary?.ItineraryRef?.id,
+      response.CreatePassengerNameRecordRS?.TravelItineraryRead?.ItineraryRef?.ID,
+      response.CreatePassengerNameRecordRS?.TravelItineraryRead?.ItineraryRef?.id,
+      response.ItineraryRef?.ID,
+      response.RecordLocator,
+      response.PNR,
+      response.BookingReference,
+    ];
+
+    const pnr = pnrCandidates.find((value) =>
+      typeof value === 'string' && /^[A-Z0-9]{5,8}$/i.test(value.trim())
+    ) || null;
     console.log('[Sabre] PNR created:', pnr);
 
     return { success: !!pnr, pnr, rawResponse: response };
