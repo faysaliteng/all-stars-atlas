@@ -16,6 +16,7 @@ import {
   AlertCircle, CheckCircle2, Timer, AlertTriangle, Package,
   ScanLine, Search, Share2, Save, Upload, X, Eye,
   Accessibility, Heart, Dog, Baby, MessageSquare, Star,
+  Armchair,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useCmsPageContent } from "@/hooks/useCmsContent";
@@ -27,6 +28,7 @@ import type { BookingFormField } from "@/lib/cms-defaults";
 import PassportScanner from "@/components/PassportScanner";
 import SearchPassengerModal from "@/components/SearchPassengerModal";
 import ShareItineraryModal from "@/components/ShareItineraryModal";
+import SeatMap from "@/components/flights/SeatMap";
 
 // ─── Bangladesh domestic airports ───
 const BD_AIRPORTS = ["DAC", "CXB", "CGP", "ZYL", "JSR", "RJH", "SPD", "BZL", "IRD", "TKR"];
