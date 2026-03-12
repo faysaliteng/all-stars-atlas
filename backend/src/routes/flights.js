@@ -246,7 +246,7 @@ router.get('/search', async (req, res) => {
       cabinClass, class: classParam, cabin,
       adults, children, infants,
       sort, priceMin, priceMax,
-      page = 1, limit = 50
+      page = 1, limit = 500
     } = req.query;
 
     // Normalize params (frontend sends various names)
