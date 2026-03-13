@@ -1,7 +1,17 @@
 # Seven Trip — API Changelog
 
 > All backend API changes, new endpoints, breaking changes, and schema updates per version.
-> Last updated: 2026-03-13 (v3.9.9.5)
+> Last updated: 2026-03-13 (v3.9.9.6)
+
+---
+
+## v3.9.9.6 — 2026-03-13
+
+### Changed
+- `POST /flights/book` now enforces passport DOCS SSR for both Sabre and TTI providers — all passengers must include `passportNumber`, `passportExpiry`, `dateOfBirth`, `gender`
+- Backend normalizer in `flights.js` maps frontend field aliases (`passport` → `passportNumber`, `dob` → `dateOfBirth`)
+- TTI CreateBooking payload includes `PassportNumber`, `PassportExpiry`, `DocumentInfo` for Air Astra
+- Frontend booking form requires passport fields for all flights (domestic + international)
 
 ---
 
