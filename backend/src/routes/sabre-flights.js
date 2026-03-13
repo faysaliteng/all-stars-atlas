@@ -1826,9 +1826,34 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       console.log(`[Sabre] Ticket time limit: ${ticketTimeLimit}`);
     }
 
-    const airlinePnr = extractDistinctSabreAirlinePnr(finalResponse, finalPnr);
+    let airlinePnr = extractDistinctSabreAirlinePnr(finalResponse, finalPnr);
     if (airlinePnr) {
       console.log(`[Sabre] Distinct airline locator found in CreatePNR response: ${airlinePnr}`);
+    }
+
+    // If no airline PNR from CreatePNR, retrieve PNR to get airline confirmation
+    // The airline PNR (e.g., 09HUEY from /DCBS*09HUEY) is often only available after EndTransaction
+    if (!airlinePnr) {
+      try {
+        console.log(`[Sabre] No airline PNR in CreatePNR response — retrieving PNR ${finalPnr} for airline confirmation...`);
+        const retrieveResult = await getBooking({ pnr: finalPnr });
+        if (retrieveResult.success) {
+          // Check vendorLocators from getBooking deep scan
+          if (retrieveResult.vendorLocators && retrieveResult.vendorLocators.length > 0) {
+            airlinePnr = retrieveResult.vendorLocators[0];
+            console.log(`[Sabre] ✓ Airline PNR from GetBooking vendorLocators: ${airlinePnr}`);
+          }
+          // Also try extracting from raw response with DC* pattern
+          if (!airlinePnr) {
+            airlinePnr = extractDistinctSabreAirlinePnr(retrieveResult.rawResponse, finalPnr);
+            if (airlinePnr) {
+              console.log(`[Sabre] ✓ Airline PNR from GetBooking deep scan: ${airlinePnr}`);
+            }
+          }
+        }
+      } catch (retrieveErr) {
+        console.warn(`[Sabre] GetBooking for airline PNR failed (non-fatal):`, retrieveErr.message);
+      }
     }
 
     return {
