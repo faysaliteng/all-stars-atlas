@@ -1731,12 +1731,29 @@ const FlightCard = ({
               <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[60px] sm:min-w-[100px]">
                 <div className="w-full relative">
                   <div className="w-full flex items-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
-                    <div className="flex-1 h-[1.5px] bg-border relative">
-                      <Plane className="w-4 h-4 text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    <div className="w-2 h-2 rounded-full bg-accent/70 ring-2 ring-accent/20" />
+                    <div className="flex-1 h-[1.5px] relative overflow-visible">
+                      {/* Gradient track */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-accent/40 via-accent/20 to-accent/40 rounded-full" />
+                      {/* Animated dashed overlay */}
+                      <div className="absolute inset-0 rounded-full" style={{
+                        backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, hsl(var(--accent) / 0.3) 4px, hsl(var(--accent) / 0.3) 8px)',
+                        animation: 'flight-dash 12s linear infinite',
+                      }} />
+                      {/* Animated plane */}
+                      <motion.div
+                        className="absolute top-1/2 -translate-y-1/2 z-10"
+                        animate={{ left: ['15%', '85%'] }}
+                        transition={{ duration: 4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+                      >
+                        <div className="relative">
+                          <div className="absolute -inset-1.5 bg-accent/15 rounded-full blur-sm" />
+                          <Plane className="w-4 h-4 text-accent drop-shadow-sm" style={{ filter: 'drop-shadow(0 0 3px hsl(var(--accent) / 0.4))' }} />
+                        </div>
+                      </motion.div>
                       <StopDotsWithTooltip flight={flight} stops={stops} />
                     </div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+                    <div className="w-2 h-2 rounded-full bg-accent/70 ring-2 ring-accent/20" />
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground font-medium">{duration}</p>
