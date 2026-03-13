@@ -1467,8 +1467,6 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
               ContactNumber: (() => {
                 const rawPhone = contactInfo?.phone || '01700000000';
                 const clean = rawPhone.replace(/[\s\-\(\)]/g, '').replace(/^\+/, '');
-                // Split into country code + local (BDFare format)
-                let cityCode = 'CGP'; // Default city code for Sabre
                 let phoneNum = clean;
                 // If starts with 880, strip it for local number
                 if (clean.startsWith('880')) {
@@ -1477,7 +1475,6 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
                 return [{
                   Phone: phoneNum,
                   PhoneUseType: 'H',
-                  AreaCityCode: cityCode,
                 }];
               })(),
             },
