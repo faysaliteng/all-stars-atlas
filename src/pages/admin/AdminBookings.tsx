@@ -456,6 +456,7 @@ const AdminBookings = () => {
                   <TableCell className="font-mono text-xs">{b.id}</TableCell>
                   <TableCell><div><p className="text-sm font-medium">{b.customer}</p><p className="text-xs text-muted-foreground">{b.email}</p></div></TableCell>
                   <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px]">{b.type}</Badge></TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{b.route}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {b.pnr && b.pnr !== "—" ? (
                       <span className="font-mono text-xs font-bold text-warning">{b.pnr}</span>
