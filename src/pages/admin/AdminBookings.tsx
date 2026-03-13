@@ -276,8 +276,9 @@ const AdminBookings = () => {
         setBulkCancelProgress(`Processing batch ${batchNum}...`);
         const result: any = await api.post('/admin/bookings/bulk-cancel', {
           filter: bulkCancelFilter,
-          batchSize,
+          batchSize: bulkCancelSkipGds ? 10 : 3,
           offset,
+          skipGds: bulkCancelSkipGds,
         });
 
         allResults.push(...(result.results || []));
