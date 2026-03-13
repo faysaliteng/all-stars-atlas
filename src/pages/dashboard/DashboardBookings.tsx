@@ -81,10 +81,9 @@ function mapBooking(b: any) {
   const title = origin && destination ? `${origin} → ${destination}` : details.route || details.destination || `${b.bookingType || "flight"} Booking`;
   const paxCount = passengers.length || 1;
 
-  // Dual PNR logic
-  const isSabre = (source === 'sabre');
-  const airlinePnrVal = details.airlinePnr || (isSabre ? (b.pnr || details.gdsPnr || null) : null);
-  const gdsBookingIdVal = details.gdsBookingId || details.gdsBookingResult?.ttiBookingId || (!isSabre ? (b.pnr || details.gdsPnr || null) : null);
+  // Dual PNR logic: airlinePnr = real airline confirmation, gdsPnr = GDS record locator (Booking ID)
+  const airlinePnrVal = details.airlinePnr || null;
+  const gdsPnrVal = b.pnr || details.gdsPnr || null;
 
   return {
     id: b.bookingRef || b.id, rawId: b.id, type: b.bookingType || "flight", status: b.status || "pending", title,
@@ -92,7 +91,7 @@ function mapBooking(b: any) {
     date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—",
     pnr: b.pnr || details.gdsPnr || "—",
     airlinePnr: airlinePnrVal,
-    gdsBookingId: gdsBookingIdVal,
+    gdsBookingId: gdsPnrVal,
     pax: paxCount,
     paymentDeadline: b.paymentDeadline || null,
     airline, airlineCode, flightNumber, cabinClass, departureTime, origin, destination, source,
