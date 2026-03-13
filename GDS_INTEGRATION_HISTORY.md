@@ -1,7 +1,7 @@
 # Seven Trip — GDS Integration History & Troubleshooting
 
 > Complete timeline of all GDS provider integrations, issues encountered, and solutions applied.
-> Last updated: 2026-03-13 (v3.9.9.5 — Production Sabre + Dual PNR + 30-Route Test Suite)
+> Last updated: 2026-03-13 (v3.9.9.6 — Full Provider Booking Wiring + Seat/Ancillary APIs)
 
 ---
 
