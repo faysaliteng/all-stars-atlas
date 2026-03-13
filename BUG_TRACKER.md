@@ -1,7 +1,7 @@
 # Seven Trip — Bug Tracker & Root Cause Analysis
 
 > Complete record of all bugs discovered and fixed during development.
-> Last updated: 2026-03-13 (v3.9.7)
+> Last updated: 2026-03-13 (v3.9.8)
 
 ---
 
@@ -41,6 +41,9 @@
 | M08 | v2.4 | Results pages showing data without search criteria | No validation on URL params | Added "No Search Criteria" guards |
 | M09 | v2.3 | FlightBooking showing hardcoded data | Static "07:30 DAC → 08:35 CXB" | Fetch real flight details via API |
 | M10 | v2.3 | BookingConfirmation always showing plane icon | No service-type icon mapping | Dynamic icon by booking type |
+| M11 | v3.9.8 | Post-booking ancillaries always return empty | Dashboard endpoint only tried GAO for `source === 'sabre'` — many bookings stored source differently | Removed restrictive source check; try GAO for ANY booking with valid PNR |
+| M12 | v3.9.8 | Post-booking seat map not available | No seat-map endpoint existed for post-booking flow | Added Sabre SOAP seat map call in `/dashboard/bookings/:id/ancillaries` response |
+| M13 | v3.9.8 | Post-booking extras page missing seat selection | `PostBookingExtras.tsx` only showed meals/baggage | Added `SeatMap` component with seat selection from API-returned layout |
 
 ---
 

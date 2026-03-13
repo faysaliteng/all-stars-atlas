@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, UtensilsCrossed, Luggage, Package, AlertCircle, CheckCircle2, ShoppingCart } from "lucide-react";
+import { ArrowLeft, UtensilsCrossed, Luggage, Package, AlertCircle, CheckCircle2, ShoppingCart, Plane, Info } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import SeatMap from "@/components/flights/SeatMap";
 
 interface AncillaryItem {
   id: string;
@@ -29,16 +30,18 @@ const PostBookingExtras = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedMeals, setSelectedMeals] = useState<string[]>([]);
   const [selectedBaggage, setSelectedBaggage] = useState<string[]>([]);
+  const [selectedSeats, setSelectedSeats] = useState<Record<number, string>>({});
+  const [seatPrices, setSeatPrices] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (!id) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
         const result = await api.get<any>(`/dashboard/bookings/${id}/ancillaries`);
         setData(result);
         if (!result.available) {
-          setError("No ancillary add-ons available for this booking from the airline.");
+          setError("No ancillary add-ons are currently available for this booking from the airline.");
         }
       } catch (err: any) {
         setError(err.message || "Failed to load ancillary offers");
@@ -46,11 +49,13 @@ const PostBookingExtras = () => {
         setLoading(false);
       }
     };
-    fetch();
+    fetchData();
   }, [id]);
 
   const meals: AncillaryItem[] = data?.meals || [];
   const baggage: AncillaryItem[] = data?.baggage || [];
+  const seatMapData = data?.seatMap || null;
+  const flightInfo = data?.flightInfo || {};
 
   const toggleMeal = (mealId: string) => {
     setSelectedMeals(prev => prev.includes(mealId) ? prev.filter(m => m !== mealId) : [...prev, mealId]);
@@ -59,10 +64,20 @@ const PostBookingExtras = () => {
     setSelectedBaggage(prev => prev.includes(bagId) ? prev.filter(b => b !== bagId) : [...prev, bagId]);
   };
 
+  const handleSeatSelect = (paxIndex: number, seatId: string, price: number) => {
+    setSelectedSeats(prev => ({ ...prev, [paxIndex]: seatId }));
+    setSeatPrices(prev => ({ ...prev, [paxIndex]: price }));
+  };
+  const handleSeatDeselect = (paxIndex: number) => {
+    setSelectedSeats(prev => { const n = { ...prev }; delete n[paxIndex]; return n; });
+    setSeatPrices(prev => { const n = { ...prev }; delete n[paxIndex]; return n; });
+  };
+
+  const totalSeatCost = Object.values(seatPrices).reduce((sum, p) => sum + p, 0);
   const totalCost = [
     ...selectedMeals.map(id => meals.find(m => m.id === id)?.price || 0),
     ...selectedBaggage.map(id => baggage.find(b => b.id === id)?.price || 0),
-  ].reduce((s, p) => s + p, 0);
+  ].reduce((s, p) => s + p, 0) + totalSeatCost;
 
   const handlePurchase = () => {
     toast({ title: "Coming Soon", description: "Post-booking ancillary purchase will be processed via your payment method on file." });
@@ -79,6 +94,9 @@ const PostBookingExtras = () => {
     );
   }
 
+  const hasSeatMap = seatMapData?.available && seatMapData?.layout;
+  const hasAnything = meals.length > 0 || baggage.length > 0 || hasSeatMap;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -87,16 +105,56 @@ const PostBookingExtras = () => {
           <h1 className="text-xl font-bold">Post-Booking Extras</h1>
           <p className="text-sm text-muted-foreground">
             PNR: <code className="bg-accent/10 text-accent px-1.5 py-0.5 rounded font-bold">{data?.pnr || "—"}</code>
-            {data?.source && <span className="ml-2">· Source: {data.source}</span>}
+            {flightInfo.airline && <span className="ml-2">· {flightInfo.airline} {flightInfo.flightNumber}</span>}
+            {flightInfo.origin && <span className="ml-1">({flightInfo.origin}→{flightInfo.destination})</span>}
+            {data?.source && data.source !== 'none' && <span className="ml-2">· Source: {data.source}</span>}
           </p>
         </div>
       </div>
 
-      {error && (
+      {error && !hasAnything && (
         <Card className="border-destructive/30 bg-destructive/5">
           <CardContent className="flex items-center gap-3 p-4">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
             <p className="text-sm">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Seat Map Section */}
+      {hasSeatMap && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg"><Plane className="w-5 h-5 text-accent" /> Seat Selection</CardTitle>
+            <CardDescription>Choose your preferred seats for this flight</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SeatMap
+              flightNumber={flightInfo.flightNumber || ""}
+              aircraft=""
+              cabinClass="Economy"
+              passengers={[{ firstName: "Passenger", lastName: "1", title: "Mr" }]}
+              selectedSeats={selectedSeats}
+              onSeatSelect={handleSeatSelect}
+              onSeatDeselect={handleSeatDeselect}
+              seatMapData={seatMapData}
+              seatMapSource={seatMapData?.source || "none"}
+              seatMapLoading={false}
+            />
+            <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+              <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <span>Seat selection is subject to airline confirmation. Final seat assignments will be confirmed at check-in. Seat prices are per passenger per segment.</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!hasSeatMap && (
+        <Card className="border-dashed">
+          <CardContent className="text-center py-8">
+            <Plane className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+            <p className="text-sm font-medium text-muted-foreground">Seat Selection Not Available</p>
+            <p className="text-xs text-muted-foreground mt-1">Real-time seat map data is not available for this airline. Seats will be assigned at check-in.</p>
           </CardContent>
         </Card>
       )}
@@ -160,7 +218,7 @@ const PostBookingExtras = () => {
         </Card>
       )}
 
-      {(selectedMeals.length > 0 || selectedBaggage.length > 0) && (
+      {(selectedMeals.length > 0 || selectedBaggage.length > 0 || Object.keys(selectedSeats).length > 0) && (
         <>
           <Separator />
           <Card className="border-accent/30 bg-accent/5">
@@ -169,7 +227,7 @@ const PostBookingExtras = () => {
                 <ShoppingCart className="w-5 h-5 text-accent" />
                 <div>
                   <p className="font-bold">
-                    {selectedMeals.length + selectedBaggage.length} item{selectedMeals.length + selectedBaggage.length > 1 ? "s" : ""} selected
+                    {selectedMeals.length + selectedBaggage.length + Object.keys(selectedSeats).length} item{selectedMeals.length + selectedBaggage.length + Object.keys(selectedSeats).length > 1 ? "s" : ""} selected
                   </p>
                   <p className="text-sm text-muted-foreground">Total: <span className="font-bold text-foreground">৳{totalCost.toLocaleString()}</span></p>
                 </div>
@@ -182,7 +240,7 @@ const PostBookingExtras = () => {
         </>
       )}
 
-      {!error && meals.length === 0 && baggage.length === 0 && (
+      {!hasAnything && !error && (
         <Card>
           <CardContent className="text-center py-12">
             <Package className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />

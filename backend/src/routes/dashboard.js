@@ -636,40 +636,73 @@ router.get('/bookings/:id/ancillaries', async (req, res) => {
       return res.status(400).json({ message: 'No GDS PNR available for this booking — ancillary add-ons require a valid PNR', status: 400 });
     }
 
-    // Use Sabre SOAP GetAncillaryOffersRQ (requires valid PNR in stateful session)
-    const flightSource = outbound.source || '';
+    // Try Sabre SOAP GetAncillaryOffersRQ for ANY booking with a valid PNR
+    // GAO only needs the PNR — it retrieves flight context from the reservation itself
     let meals = [];
     let baggage = [];
+    let seatMap = null;
     let source = 'none';
 
-    if (flightSource === 'sabre' || outbound._sabreSource) {
-      try {
-        const sabreSoap = require('./sabre-soap');
-        const ancillaryResult = await sabreSoap.getAncillaryOffers({
-          pnr: gdsPnr,
-          airlineCode: outbound.airlineCode || '',
-          origin: outbound.origin || '',
-          destination: outbound.destination || '',
-        });
+    console.log(`[PostBooking Ancillaries] Trying GAO for PNR ${gdsPnr}, airline: ${outbound.airlineCode || '?'}, route: ${outbound.origin || '?'}-${outbound.destination || '?'}`);
 
-        if (ancillaryResult && !ancillaryResult._error) {
-          source = 'sabre-gao';
-          if (ancillaryResult.meals) {
-            meals = ancillaryResult.meals.map(m => ({
-              id: m.id || m.code, code: m.code, name: m.name, price: m.price || 0,
-              description: m.description || '', category: m.category || 'meal', currency: m.currency || 'BDT',
-            }));
-          }
-          if (ancillaryResult.baggage) {
-            baggage = ancillaryResult.baggage.map(b => ({
-              id: b.id || b.code, code: b.code, name: b.name, price: b.price || 0,
-              description: b.description || '', weight: b.weight || '', currency: b.currency || 'BDT',
-            }));
-          }
+    try {
+      const sabreSoap = require('./sabre-soap');
+      const ancillaryResult = await sabreSoap.getAncillaryOffers({
+        pnr: gdsPnr,
+        airlineCode: outbound.airlineCode || '',
+        origin: outbound.origin || '',
+        destination: outbound.destination || '',
+      });
+
+      if (ancillaryResult && !ancillaryResult._error) {
+        source = 'sabre-gao';
+        if (ancillaryResult.meals?.length > 0) {
+          meals = ancillaryResult.meals.map(m => ({
+            id: m.id || m.code, code: m.code, name: m.name, price: m.price || 0,
+            description: m.description || '', category: m.category || 'meal', currency: m.currency || 'BDT',
+          }));
         }
-      } catch (err) {
-        console.error(`[PostBooking Ancillaries] Sabre GAO error for PNR ${gdsPnr}:`, err.message);
+        if (ancillaryResult.baggage?.length > 0) {
+          baggage = ancillaryResult.baggage.map(b => ({
+            id: b.id || b.code, code: b.code, name: b.name, price: b.price || 0,
+            description: b.description || '', weight: b.weight || '', currency: b.currency || 'BDT',
+          }));
+        }
+        console.log(`[PostBooking Ancillaries] GAO success: ${meals.length} meals, ${baggage.length} baggage`);
+      } else {
+        console.log(`[PostBooking Ancillaries] GAO returned no data: ${ancillaryResult?.message || 'empty'}`);
       }
+    } catch (err) {
+      console.error(`[PostBooking Ancillaries] Sabre GAO error for PNR ${gdsPnr}:`, err.message);
+    }
+
+    // Also try seat map for the first segment
+    try {
+      const sabreSoap = require('./sabre-soap');
+      const flightNumber = String(outbound.flightNumber || '').replace(/^[A-Z]{2}/i, '');
+      const depTime = outbound.departureTime || '';
+      const depDate = depTime ? depTime.substring(0, 10) : '';
+      if (outbound.airlineCode && flightNumber && outbound.origin && outbound.destination && depDate) {
+        console.log(`[PostBooking SeatMap] Trying for ${outbound.airlineCode}${flightNumber} ${outbound.origin}-${outbound.destination} ${depDate}`);
+        const seatResult = await sabreSoap.getSeatMap({
+          origin: outbound.origin,
+          destination: outbound.destination,
+          departureDate: depDate,
+          marketingCarrier: outbound.airlineCode,
+          operatingCarrier: outbound.airlineCode,
+          flightNumber,
+          cabinClass: outbound.cabinClass || 'Economy',
+          isDomestic: false,
+        });
+        if (seatResult && !seatResult._error && seatResult.rows?.length > 0) {
+          seatMap = seatResult;
+          console.log(`[PostBooking SeatMap] Success: ${seatResult.totalRows} rows`);
+        } else {
+          console.log(`[PostBooking SeatMap] No data for ${outbound.airlineCode}${flightNumber}`);
+        }
+      }
+    } catch (err) {
+      console.log(`[PostBooking SeatMap] Error: ${err.message}`);
     }
 
     res.json({
@@ -677,8 +710,16 @@ router.get('/bookings/:id/ancillaries', async (req, res) => {
       source,
       meals,
       baggage,
-      available: meals.length > 0 || baggage.length > 0,
+      seatMap: seatMap ? { layout: seatMap, source: 'sabre', available: true } : { layout: null, source: 'none', available: false },
+      available: meals.length > 0 || baggage.length > 0 || !!seatMap,
       bookingId: req.params.id,
+      flightInfo: {
+        airlineCode: outbound.airlineCode || null,
+        airline: outbound.airline || null,
+        flightNumber: outbound.flightNumber || null,
+        origin: outbound.origin || null,
+        destination: outbound.destination || null,
+      },
     });
   } catch (err) {
     console.error('Post-booking ancillaries error:', err);
