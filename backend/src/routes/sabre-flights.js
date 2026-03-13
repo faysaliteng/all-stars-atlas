@@ -1500,7 +1500,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         const hasSSR = !!variant.body?.CreatePassengerNameRecordRQ?.SpecialReqDetails?.SpecialService?.SpecialServiceInfo?.Service;
         console.log(`[Sabre] Has DOCS: ${hasDocs} | Has SSR: ${hasSSR}`);
 
-        const response = await sabreRequest(config, '/v2.4.0/passenger/records?mode=create', variant.body);
+        const response = await sabreRequest(config, '/v2.4.0/passenger/records?mode=create', variant.body, 'POST', 60000);
         finalResponse = response;
         logSabreCreatePnrDebug(response);
 
