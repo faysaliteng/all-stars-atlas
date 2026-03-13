@@ -1516,24 +1516,26 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           break;
         }
 
+        // No PNR extracted — try next variant
         finalErrorMessage = `No PNR returned from ${variant.label}`;
         console.warn(`[Sabre] ${finalErrorMessage}`);
         console.warn(`[Sabre] Response keys:`, JSON.stringify(Object.keys(response || {})));
-        // Continue to next variant — PNR extraction failed (likely NotProcessed/rejected)
         if (attemptIndex < requestVariants.length - 1) {
           console.warn(`[Sabre] Retrying with next variant: ${requestVariants[attemptIndex + 1].label}`);
-          continue;
         }
+        // loop continues to next variant automatically
+      } catch (err) {
         finalErrorMessage = err.message;
         console.error(`[Sabre] ✗ CreatePNR attempt failed (${variant.label}):`, err.message);
 
-        const shouldRetry = /VALIDATION_FAILED|NotProcessed|AdvancePassenger|SpecialReqDetails|Document|PersonName|NamePrefix|not allowed|UNABLE TO PROCESS|FORMAT|INVALID/i.test(err.message || '');
-        const hasNextVariant = attemptIndex < requestVariants.length - 1;
-        if (!(shouldRetry && hasNextVariant)) {
+        const shouldRetry = /VALIDATION_FAILED|NotProcessed|AdvancePassenger|SpecialReqDetails|Document|PersonName|NamePrefix|not allowed|UNABLE TO PROCESS|FORMAT|INVALID|CHECK FLIGHT/i.test(err.message || '');
+        if (shouldRetry && attemptIndex < requestVariants.length - 1) {
+          console.warn(`[Sabre] Retrying CreatePNR with fallback payload: ${requestVariants[attemptIndex + 1].label}`);
+          // loop continues to next variant
+        } else {
           console.error(`[Sabre] No more fallback variants — booking failed`);
           break;
         }
-        console.warn(`[Sabre] Retrying CreatePNR with fallback payload: ${requestVariants[attemptIndex + 1].label}`);
       }
     }
 
