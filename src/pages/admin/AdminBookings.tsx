@@ -442,6 +442,13 @@ const AdminBookings = () => {
           <Card className="border-destructive/30"><CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader><TableRow className="bg-destructive/5">
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allVisibleSelected}
+                    onCheckedChange={(checked) => toggleSelectAllVisible(Boolean(checked))}
+                    aria-label="Select all visible bookings"
+                  />
+                </TableHead>
                 <TableHead>ID</TableHead><TableHead>Customer</TableHead>
                 <TableHead className="hidden md:table-cell">Type</TableHead>
                 <TableHead className="hidden lg:table-cell">Route</TableHead>
