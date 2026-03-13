@@ -996,9 +996,20 @@ function extractDistinctSabreAirlinePnr(rawBooking, gdsPnr) {
         continue;
       }
       if (typeof value !== 'string') continue;
-      if (!/(vendorlocator|airlinelocator|airlinepnr|confirmationid|confirmationnumber|reservationnumber|locator|recordlocator)/i.test(key)) continue;
-      const code = value.trim().toUpperCase();
-      if (/^[A-Z0-9]{5,20}$/.test(code)) candidates.push(code);
+      
+      // Standard named fields
+      if (/(vendorlocator|airlinelocator|airlinepnr|confirmationid|confirmationnumber|reservationnumber|locator|recordlocator|supplierref|airlineconfirmation|operatingairlineconfirmation)/i.test(key)) {
+        const code = value.trim().toUpperCase();
+        if (/^[A-Z0-9]{5,20}$/.test(code)) candidates.push(code);
+      }
+      
+      // Extract from /DCBS*09HUEY or /DCAI*FCQGEC patterns in segment data
+      if (typeof value === 'string') {
+        const dcMatch = value.match(/\/DC[A-Z]{2}\*([A-Z0-9]{4,8})/i);
+        if (dcMatch) {
+          candidates.push(dcMatch[1].toUpperCase());
+        }
+      }
     }
   }
 
