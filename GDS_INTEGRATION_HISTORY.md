@@ -200,8 +200,10 @@ key = flightNumber + departureTime + arrivalTime + destination + stops +
 ### Provider Priority for Ancillaries
 ```
 Seat Map:  Sabre SOAP EnhancedSeatMapRQ (pre+post) → Sabre REST GetSeats v1 (post-booking PNR only) → TTI → "Not Available"
+Seat Assignment: POST /flights/assign-seats → Sabre UpdatePNR SSR RQST (post-booking) → TTI UpdateBooking SpecialService SEAT
 Meals:     Sabre SOAP GetAncillaryOffersRQ (post-booking only) → TTI → empty
 Baggage:   Sabre SOAP GetAncillaryOffersRQ (post-booking only) → TTI → empty
+Ancillary Purchase: POST /flights/purchase-ancillary → Sabre UpdatePNR SSR (XBAG, meal codes) via addAncillarySSR
 SSR:       REST CreatePNR (at booking time) — meals, wheelchair, medical, FF#
 ```
 
