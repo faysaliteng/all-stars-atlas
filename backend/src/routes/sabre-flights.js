@@ -1719,34 +1719,28 @@ async function getSeatsRest({ origin, destination, departureDate, airlineCode, f
   }
 
   try {
-    // GetSeats v2 — correct Sabre schema: SeatAvailabilityRQ wrapper
-    // Ref: Sabre REST API docs — /v2/offers/getseats
-    const rbd = cabinClass === 'Business' ? 'C' : cabinClass === 'First' ? 'F' : 'Y';
-    const body = {
-      SeatAvailabilityRQ: {
-        SeatMapQueryEnhanced: {
-          RequestType: 'Payload',
-          ConfirmationId: pnr,
-          Flight: [{
-            DepartureDate: departureDate,
-            Marketing: {
-              Carrier: airlineCode,
-              FlightNumber: parseInt(numericFlight, 10),
-            },
-            OperatingCarrierInfo: {
-              Carrier: airlineCode,
-            },
-            Origin: origin,
-            Destination: destination,
-          }],
-          CabinDefinition: [{
-            RBD: rbd,
-          }],
-        },
-      },
-    };
+    // GetSeats v3 — Sabre REST API
+    // Two modes: byPnrLocator (just PNR) or byReservationPayload (flight details)
+    // Ref: https://developer.sabre.com/sites/default/files/rest-files/getseatsv300.yaml
+    let response;
 
-    const response = await sabreRequest(config, '/v2/offers/getseats', body);
+    if (pnr) {
+      // Mode 1: byPnrLocator — simplest, just send the PNR
+      const body = { confirmationId: pnr };
+      console.log(`[Sabre] REST GetSeats v3 byPnrLocator: PNR=${pnr}`);
+      response = await sabreRequest(config, '/v3/offers/getseats/byPnrLocator', body);
+    } else if (offerId) {
+      // Mode 2: byReservationPayload with offerId (from BFM)
+      const rbd = cabinClass === 'Business' ? 'C' : cabinClass === 'First' ? 'F' : 'Y';
+      const body = {
+        offerId,
+        paxSegmentRefIds: [`SEG_${airlineCode}${numericFlight}_${departureDate}`],
+      };
+      console.log(`[Sabre] REST GetSeats v3 byReservationPayload: offerId=${offerId}`);
+      response = await sabreRequest(config, '/v3/offers/getseats/byReservationPayload', body);
+    } else {
+      return { success: false, source: 'sabre-rest', error: 'No PNR or offerId provided', rows: [], available: false };
+    }
 
     // Parse REST seat map response
     const seatMapResp = response?.GetSeatMapRS || response;

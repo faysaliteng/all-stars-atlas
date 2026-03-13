@@ -92,7 +92,7 @@
 | Mar 12 | v3.9.3 | DOCS schema fix (remove unsupported fields) |
 | Mar 13 | v3.9.7 | **NamePrefix removal** — title appended to GivenName |
 | Mar 13 | v3.9.9 | **Full endpoint coverage**: revalidatePrice, getBooking, checkTicketStatus, getSeatsRest; ticketing upgraded to v1.3.0 |
-| Mar 13 | v3.9.9.2 | **REST GetSeats schema fix**: v1→v2 endpoint, PascalCase wrapper `SeatAvailabilityRQ.SeatMapQueryEnhanced` |
+| Mar 13 | v3.9.9.3 | **REST GetSeats v3**: `/v3/offers/getseats/byPnrLocator` — correct endpoint path |
 
 ### Issues & Resolutions
 
@@ -191,13 +191,13 @@ key = flightNumber + departureTime + arrivalTime + destination + stops +
 
 ### Provider Priority for Ancillaries
 ```
-Seat Map:  Sabre SOAP EnhancedSeatMapRQ (pre+post) → Sabre REST GetSeats v2 (post-booking PNR only) → TTI → "Not Available"
+Seat Map:  Sabre SOAP EnhancedSeatMapRQ (pre+post) → Sabre REST GetSeats v3 (post-booking PNR only) → TTI → "Not Available"
 Meals:     Sabre SOAP GetAncillaryOffersRQ (post-booking only) → TTI → empty
 Baggage:   Sabre SOAP GetAncillaryOffersRQ (post-booking only) → TTI → empty
 SSR:       REST CreatePNR (at booking time) — meals, wheelchair, medical, FF#
 ```
 
-> **Note**: Sabre REST GetSeats v2 (`/v2/offers/getseats`) requires a PNR — it cannot do raw flight+date lookups like SOAP EnhancedSeatMapRQ. SOAP remains the primary seat map provider for pre-booking.
+> **Note**: Sabre REST GetSeats v3 (`/v3/offers/getseats/byPnrLocator`) requires a PNR — it cannot do raw flight+date lookups like SOAP EnhancedSeatMapRQ. SOAP remains the primary seat map provider for pre-booking.
 
 ### Production Airline Support Matrix (Verified 2026-03-13)
 ```

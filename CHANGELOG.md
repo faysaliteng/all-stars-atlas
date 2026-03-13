@@ -2,11 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
-## [3.9.9.2] — 2026-03-13 — Airline Support Matrix & REST GetSeats Schema Fix
+## [3.9.9.3] — 2026-03-13 — REST GetSeats v3 Endpoint Fix
 
 ### Fixed
-- **REST GetSeats payload schema**: Fixed `SeatAvailabilityRQ` wrapper to match Sabre v2 API schema (`/v2/offers/getseats`). Previous v1 payload used lowercase camelCase; v2 requires PascalCase with `SeatMapQueryEnhanced` wrapper
-- **REST GetSeats endpoint upgraded**: `/v1/offers/getseats` → `/v2/offers/getseats`
+- **REST GetSeats upgraded to v3**: `/v3/offers/getseats/byPnrLocator` (was `/v2/offers/getseats` which returned 404)
+- Uses simple `{ confirmationId: pnr }` payload instead of complex `SeatAvailabilityRQ` wrapper
 
 ### Verified — Production Airline Support Matrix (21 Airlines Tested)
 | Airline | Code | Route | Pre-Booking Seat Map | Rows | Source |
