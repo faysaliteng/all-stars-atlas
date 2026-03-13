@@ -155,6 +155,9 @@ const AdminBookings = () => {
 
   const filtered = applyFilters(successBookings);
   const filteredFailed = applyFilters(failedBookings);
+  const allVisibleBookings = [...filtered, ...filteredFailed];
+  const allVisibleIds = allVisibleBookings.map((b: any) => String(b.rawId || b.id));
+  const allVisibleSelected = allVisibleIds.length > 0 && allVisibleIds.every((id: string) => selectedBookingIds.includes(id));
 
   const updateBooking = async (b: any, updates: Record<string, any>) => {
     setActionLoading(b.rawId || b.id);
