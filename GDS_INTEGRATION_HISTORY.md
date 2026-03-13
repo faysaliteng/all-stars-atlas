@@ -91,6 +91,7 @@
 | Mar 12 | v3.9.2 | DateTime schema fix for PNR |
 | Mar 12 | v3.9.3 | DOCS schema fix (remove unsupported fields) |
 | Mar 13 | v3.9.7 | **NamePrefix removal** — title appended to GivenName |
+| Mar 13 | v3.9.9 | **Full endpoint coverage**: revalidatePrice, getBooking, checkTicketStatus, getSeatsRest; ticketing upgraded to v1.3.0 |
 
 ### Issues & Resolutions
 
