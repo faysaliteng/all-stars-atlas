@@ -23,7 +23,7 @@ LOGIN_RESP=$(curl -s -X POST "$API_BASE/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASS\"}")
 
-TOKEN=$(echo "$LOGIN_RESP" | jq -r '.token // empty')
+TOKEN=$(echo "$LOGIN_RESP" | jq -r '.accessToken // .token // empty')
 if [ -z "$TOKEN" ]; then
   echo "✗ Login failed: $(echo "$LOGIN_RESP" | jq -r '.message // "Unknown error"')"
   exit 1
