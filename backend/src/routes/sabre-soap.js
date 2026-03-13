@@ -507,6 +507,155 @@ function parseAncillaryXml(xml) {
 }
 
 /**
+ * Cancel a PNR via SOAP OTA_CancelLLSRQ within a stateful session.
+ * This works when REST cancel returns 403 NOT_AUTHORIZED.
+ * Flow: SessionCreate → Retrieve PNR → Cancel segments → EndTransaction → SessionClose
+ */
+async function cancelPnrViaSoap(pnr) {
+  const config = await getSabreConfig();
+  if (!config) throw new Error('Sabre API not configured');
+
+  console.log(`[Sabre SOAP] Cancel PNR via SOAP: ${pnr}`);
+
+  // Create a FRESH session (don't reuse cached — cancel needs its own context)
+  const oldCache = { ..._sessionCache };
+  _sessionCache = { token: null, conversationId: null, expiresAt: 0 };
+
+  let session;
+  try {
+    session = await createSession(config);
+  } catch (err) {
+    _sessionCache = oldCache; // restore
+    throw new Error(`SOAP session failed: ${err.message}`);
+  }
+
+  const soapUrl = getSoapEndpoint(config);
+  const { token, conversationId } = session;
+
+  try {
+    // Step 1: Retrieve PNR (TravelItineraryReadRQ)
+    const retrieveEnvelope = `<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header>
+    <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
+      <From><PartyId>Agency</PartyId></From>
+      <To><PartyId>Sabre_API</PartyId></To>
+      <ConversationId>${conversationId}</ConversationId>
+      <Action>TravelItineraryReadRQ</Action>
+    </MessageHeader>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
+      <BinarySecurityToken>${token}</BinarySecurityToken>
+    </Security>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <TravelItineraryReadRQ Version="3.10.0" xmlns="http://services.sabre.com/res/tir/v3_10">
+      <MessagingDetails><SubjectAreas><SubjectArea>FULL</SubjectArea></SubjectAreas></MessagingDetails>
+      <UniqueID ID="${pnr}"/>
+    </TravelItineraryReadRQ>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>`;
+
+    const retrieveRes = await fetch(soapUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'TravelItineraryReadRQ' },
+      body: retrieveEnvelope,
+      signal: AbortSignal.timeout(15000),
+    });
+    const retrieveXml = await retrieveRes.text();
+
+    // Check if PNR was retrieved successfully
+    const faultMatch = retrieveXml.match(/faultstring>([^<]+)/);
+    if (faultMatch) {
+      throw new Error(`PNR retrieve failed: ${faultMatch[1]}`);
+    }
+
+    console.log(`[Sabre SOAP] PNR ${pnr} retrieved in session, proceeding to cancel`);
+
+    // Step 2: Cancel all segments via OTA_CancelLLSRQ
+    const cancelEnvelope = `<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header>
+    <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
+      <From><PartyId>Agency</PartyId></From>
+      <To><PartyId>Sabre_API</PartyId></To>
+      <ConversationId>${conversationId}</ConversationId>
+      <Action>OTA_CancelLLSRQ</Action>
+    </MessageHeader>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
+      <BinarySecurityToken>${token}</BinarySecurityToken>
+    </Security>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <OTA_CancelRQ Version="2.0.2" xmlns="http://webservices.sabre.com/sabreXML/2011/10">
+      <Segment Type="entire"/>
+    </OTA_CancelRQ>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>`;
+
+    const cancelRes = await fetch(soapUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'OTA_CancelLLSRQ' },
+      body: cancelEnvelope,
+      signal: AbortSignal.timeout(15000),
+    });
+    const cancelXml = await cancelRes.text();
+
+    const cancelFault = cancelXml.match(/faultstring>([^<]+)/);
+    const cancelError = cancelXml.match(/<Error[^>]*>([^<]*)</) || cancelXml.match(/ErrorMessage>([^<]+)/);
+    if (cancelFault) {
+      throw new Error(`SOAP cancel fault: ${cancelFault[1]}`);
+    }
+
+    console.log(`[Sabre SOAP] Cancel response received for ${pnr}`);
+
+    // Step 3: End Transaction to save changes
+    const etEnvelope = `<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header>
+    <MessageHeader xmlns="http://www.ebxml.org/namespaces/messageHeader">
+      <From><PartyId>Agency</PartyId></From>
+      <To><PartyId>Sabre_API</PartyId></To>
+      <ConversationId>${conversationId}</ConversationId>
+      <Action>EndTransactionLLSRQ</Action>
+    </MessageHeader>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
+      <BinarySecurityToken>${token}</BinarySecurityToken>
+    </Security>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <EndTransactionRQ Version="2.0.9" xmlns="http://webservices.sabre.com/sabreXML/2011/10">
+      <EndTransaction Ind="true"/>
+      <Source ReceivedFrom="SEVEN TRIP API CANCEL"/>
+    </EndTransactionRQ>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>`;
+
+    const etRes = await fetch(soapUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'EndTransactionLLSRQ' },
+      body: etEnvelope,
+      signal: AbortSignal.timeout(15000),
+    });
+    const etXml = await etRes.text();
+
+    const etFault = etXml.match(/faultstring>([^<]+)/);
+    if (etFault) {
+      console.warn(`[Sabre SOAP] EndTransaction warning: ${etFault[1]}`);
+    }
+
+    console.log(`[Sabre SOAP] PNR ${pnr} cancelled and saved successfully`);
+    return { success: true, method: 'soap-cancel', pnr };
+
+  } catch (err) {
+    console.error(`[Sabre SOAP] Cancel failed for ${pnr}:`, err.message);
+    return { success: false, error: err.message, method: 'soap-cancel' };
+  } finally {
+    // Always close session
+    await closeSession(config, token, conversationId);
+  }
+}
+
+/**
  * Invalidate the SOAP session cache (e.g. after config change)
  */
 function clearSoapSessionCache() {
@@ -518,5 +667,6 @@ module.exports = {
   closeSession,
   getSeatMap,
   getAncillaryOffers,
+  cancelPnrViaSoap,
   clearSoapSessionCache,
 };
