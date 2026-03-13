@@ -77,10 +77,10 @@
 ### By Severity
 | Severity | Count | % |
 |----------|-------|---|
-| 🔴 Critical | 15 | 39% |
-| 🟡 Major | 10 | 26% |
-| 🟢 Minor | 12 | 32% |
-| **Total** | **37** | 100% |
+| 🔴 Critical | 17 | 40% |
+| 🟡 Major | 10 | 24% |
+| 🟢 Minor | 12 | 29% |
+| **Total** | **39** | 100% |
 
 ### By Category
 | Category | Count |
