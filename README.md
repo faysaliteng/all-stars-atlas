@@ -285,13 +285,19 @@ Express, mysql2, bcryptjs, jsonwebtoken, multer, uuid, cors, helmet, morgan, exp
 | Document | Description |
 |----------|-------------|
 | [README.md](./README.md) | This file — project overview |
-| [CHANGELOG.md](./CHANGELOG.md) | Version history (v1.0–v3.9.7) |
-| [ANALYTICS.md](./ANALYTICS.md) | Development analytics, bug tracker, GDS integration history |
-| [GDS_INTEGRATION_HISTORY.md](./GDS_INTEGRATION_HISTORY.md) | Complete GDS provider integration timeline & troubleshooting |
-| [BUG_TRACKER.md](./BUG_TRACKER.md) | All bugs found and fixed with root cause analysis |
-| [BACKEND_API_SPEC.md](./BACKEND_API_SPEC.md) | 90+ API endpoints with request/response schemas |
-| [Deployment.md](./Deployment.md) | VPS deployment automation guide (Ubuntu 24.04, Nginx, PM2, SSL) |
-| [developer_documentation.md](./developer_documentation.md) | Developer handbook (architecture, patterns, conventions) |
+| [CHANGELOG.md](./CHANGELOG.md) | Complete version history (v1.0–v3.9.7, 35+ releases) |
+| [ANALYTICS.md](./ANALYTICS.md) | Development analytics, timeline, codebase statistics, feature investment |
+| [BUG_TRACKER.md](./BUG_TRACKER.md) | 37+ bugs with root cause analysis and recurring patterns |
+| [GDS_INTEGRATION_HISTORY.md](./GDS_INTEGRATION_HISTORY.md) | GDS provider integration timeline, issues, and resolutions |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture deep dive (frontend, backend, GDS, state management) |
+| [SECURITY.md](./SECURITY.md) | Security measures, JWT flow, API key management, SSL, firewalls |
+| [API_CHANGELOG.md](./API_CHANGELOG.md) | Backend API changes per version (new endpoints, schema changes) |
+| [DEPLOYMENT_HISTORY.md](./DEPLOYMENT_HISTORY.md) | All 7 deployment records with exact commands and verification |
+| [DEPLOYMENT_COMMANDS.md](./DEPLOYMENT_COMMANDS.md) | Copy-paste deployment commands for VPS |
+| [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Solutions for all known issues (GDS, DB, frontend, deploy) |
+| [BACKEND_API_SPEC.md](./BACKEND_API_SPEC.md) | 90+ API endpoint specifications with request/response schemas |
+| [Deployment.md](./Deployment.md) | VPS deployment guide (Ubuntu 24.04, Nginx, PM2, SSL) |
+| [developer_documentation.md](./developer_documentation.md) | Developer handbook A-Z (architecture, patterns, conventions) |
 | [.lovable/plan.md](./.lovable/plan.md) | Project plan and phase completion tracking |
 
 ---
