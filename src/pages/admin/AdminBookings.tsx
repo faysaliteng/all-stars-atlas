@@ -1075,6 +1075,31 @@ const AdminBookings = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Delete Dialog */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" /> Delete Selected Bookings
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This will permanently delete <strong>{selectedBookingIds.length}</strong> selected booking(s) and related tickets/transactions. This cannot be undone.
+            </p>
+            <div className="p-3 rounded-lg border bg-destructive/5 border-destructive/20 text-xs text-muted-foreground">
+              Tip: use the table checkbox in header to select all visible bookings.
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={bulkDeleteLoading || selectedBookingIds.length === 0} onClick={handleBulkDelete}>
+              {bulkDeleteLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />} Delete All Selected
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
