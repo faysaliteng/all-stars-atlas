@@ -1001,8 +1001,8 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     const ttiBookingId = booking.Id || booking.BookingId || etFare0.Ref || seg0.Ref ||
                           response.BookingId || booking.Reference || booking.Ref || pax0.Ref || null;
 
-    // Backward-compatible top-level pnr: prefer airline locator, fallback to internal booking ID
-    const pnr = airlinePnr || ttiBookingId || null;
+    // Strict success criteria: booking is successful only when an actual airline/GDS PNR exists.
+    const pnr = airlinePnr || null;
 
     const ticketTimeLimit = seg0.TimeLimit || booking.TicketTimeLimit || booking.TimeLimit ||
                              response.TicketTimeLimit || null;
