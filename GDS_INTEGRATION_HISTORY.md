@@ -170,12 +170,24 @@
 - **Root Cause**: `sabre-soap.js` had its own `getSabreConfig` but cancel function used undefined variable
 - **Fix**: Added local config loader + exported `cancelPnrViaSoap`
 
+#### Issue #3: Host TA Pool Exhaustion (v3.9.9.9)
+- **Symptom**: All SOAP calls failing with "You have reached the limit of Host TAs allocated to you"
+- **Root Cause**: Multiple concurrent SOAP sessions (seat maps + cancel retries) leaked without proper `SessionCloseRQ`, exhausting Sabre's Host Terminal Address pool for PCC J4YL / TAM pool ABBDJ4YL
+- **Fix**: 
+  1. `resetSoapSessionCacheWithClose()` — closes stale session before creating new one
+  2. `isSoapSessionError()` regex gate — only retries on session/auth/network errors, not application errors
+  3. `cancelPnrViaSoap()` always closes session in `finally` block
+- **Recovery**: TA pool auto-recovers after stale sessions expire (~15-30 min)
+- **Verification**: PNR AQDAMJ (airline PNR FDDPE6) cancelled successfully after TA pool recovery
+
 ### Session Management
 - Token cached with 14-minute TTL (Sabre sessions expire at 15 min)
 - `createSession()` → `SessionCreateRQ` → extracts `BinarySecurityToken`
 - `closeSession()` → `SessionCloseRQ` → invalidates cache
+- `resetSoapSessionCacheWithClose()` — closes stale session then clears cache (v3.9.9.9)
 - All SOAP calls share the cached session token
-- Automatic retry with fresh session on fault detection
+- Automatic retry with fresh session on fault detection (gated by `isSoapSessionError()` regex)
+- **Host TA limit**: PCC J4YL has finite TA allocation. If exhausted, wait ~30 min or contact Sabre to release/increase
 
 ---
 
