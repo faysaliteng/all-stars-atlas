@@ -841,11 +841,22 @@ async function createBooking({ flightData, passengers, contactInfo }) {
   console.log('[TTI BOOKING] Selected itinerary:', selectedItinRef);
   console.log('[TTI BOOKING] Segments count:', segments.length, '| FareInfo.Itineraries:', (fareInfo.Itineraries || []).length, '| FareInfo.ETTicketFares:', (fareInfo.ETTicketFares || []).length);
 
+  if (!selectedItinRef) {
+    return { success: false, error: 'TTI booking error: Missing itinerary reference (_ttiItineraryRef)' };
+  }
+  if (!offerRef) {
+    return { success: false, error: 'TTI booking error: Missing Offer.Ref from search context. Book only from live TTI search result payload.' };
+  }
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return { success: false, error: 'TTI booking error: No valid TTI segments found for CreateBooking payload' };
+  }
+
   // Add RefItinerary to Offer — TTI requires this to know which itinerary to book
-  const offerWithRef = offer ? {
+  const offerWithRef = {
     ...offer,
+    Ref: offerRef,
     RefItinerary: selectedItinRef,
-  } : { RefItinerary: selectedItinRef };
+  };
 
   const request = {
     RequestInfo: { AuthenticationKey: config.key },
