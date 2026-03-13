@@ -1589,13 +1589,19 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       });
     }
 
-    // Variant 3: No SpecialReqDetails at all (some airlines reject DOCS/SSR for certain PCC configs)
-    const bodyNoSpecial = JSON.parse(JSON.stringify(body));
-    delete bodyNoSpecial.CreatePassengerNameRecordRQ.SpecialReqDetails;
-    requestVariants.push({
-      label: 'no_special_req',
-      body: bodyNoSpecial,
-    });
+    const hasPassportDocs = advancePassenger.some((entry) => entry?.Document?.Type === 'P');
+
+    // Variant 3: No SpecialReqDetails at all (fallback only when no passport DOCS are expected)
+    if (!hasPassportDocs) {
+      const bodyNoSpecial = JSON.parse(JSON.stringify(body));
+      delete bodyNoSpecial.CreatePassengerNameRecordRQ.SpecialReqDetails;
+      requestVariants.push({
+        label: 'no_special_req',
+        body: bodyNoSpecial,
+      });
+    } else {
+      console.warn('[Sabre] DOCS strict mode: skipping no_special_req fallback so booking cannot succeed without SSR DOCS');
+    }
 
     let finalResponse = null;
     let finalPnr = null;
