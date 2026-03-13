@@ -809,13 +809,13 @@ const FlightBooking = () => {
                 )}
               </div>
               {/* Post-booking extras notice */}
-              {(bookingResult.pnr || bookingResult.gdsPnr) && (
+              {(bookingResult.airlinePnr || bookingResult.pnr || bookingResult.gdsPnr) && (
                 <div className="flex items-start gap-3 p-4 bg-accent/5 border border-accent/20 rounded-xl text-left">
                   <Package className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-bold">Add Extra Baggage & Meals</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Your PNR <strong className="font-mono text-accent">{bookingResult.pnr || bookingResult.gdsPnr}</strong> has been generated. You can now purchase extra baggage, premium meals, and other add-ons from your <strong>Dashboard → Bookings</strong>.
+                      Your PNR <strong className="font-mono text-accent">{bookingResult.airlinePnr || bookingResult.pnr || bookingResult.gdsPnr}</strong> has been generated. You can now purchase extra baggage, premium meals, and other add-ons from your <strong>Dashboard → Bookings</strong>.
                     </p>
                   </div>
                 </div>
