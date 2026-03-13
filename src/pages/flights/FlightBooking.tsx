@@ -72,6 +72,17 @@ const AirlineSupportDialog = ({
   airline?: string; airlineCode?: string; hasBaggage: boolean; hasHandBaggage: boolean; 
   hasSeatMap: boolean; hasExtras: boolean; seatMapSource: string; ancillarySource: string;
 }) => {
+  const [allAirlines, setAllAirlines] = useState<any[]>([]);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    if (showAll && allAirlines.length === 0) {
+      api.get<any>("/flights/airline-capabilities")
+        .then((res) => setAllAirlines(res?.airlines || []))
+        .catch(() => {});
+    }
+  }, [showAll, allAirlines.length]);
+
   const features = [
     { 
       label: "Checked Baggage Info", 
@@ -114,7 +125,7 @@ const AirlineSupportDialog = ({
           <Info className="w-3 h-3" /> Airline data availability
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             {airlineCode && (
@@ -146,9 +157,88 @@ const AirlineSupportDialog = ({
           <div className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg border border-primary/10">
             <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground">
-              <strong>Extra baggage & meal purchases</strong> require a PNR (booking reference). Book your flight first, then add extras from your Dashboard → Bookings.
+              <strong>SSR services (meal preference, wheelchair, extra baggage request)</strong> are available for ALL airlines during Step 2 of the booking process — no PNR needed.
             </p>
           </div>
+
+          {/* All Airlines Capability Matrix */}
+          <Separator />
+          <button 
+            onClick={() => setShowAll(!showAll)}
+            className="w-full text-xs font-semibold text-accent hover:underline flex items-center justify-center gap-1.5 py-1"
+          >
+            <Plane className="w-3.5 h-3.5" />
+            {showAll ? "Hide" : "View"} All Airlines Capability Matrix
+          </button>
+
+          {showAll && (
+            <div className="space-y-1">
+              <div className="grid grid-cols-[1fr,auto,auto,auto,auto] gap-x-2 text-[10px] font-bold text-muted-foreground px-2 py-1.5 bg-muted/50 rounded-t-lg border-b">
+                <span>Airline</span>
+                <span className="text-center w-12">Seat Map</span>
+                <span className="text-center w-12">Baggage</span>
+                <span className="text-center w-8">SSR</span>
+                <span className="text-center w-12">Extras</span>
+              </div>
+              {allAirlines.length === 0 ? (
+                <div className="py-4 text-center text-xs text-muted-foreground">Loading...</div>
+              ) : (
+                allAirlines.map((a: any) => {
+                  const isCurrentAirline = a.airlineCode === airlineCode;
+                  return (
+                    <div 
+                      key={a.airlineCode} 
+                      className={`grid grid-cols-[1fr,auto,auto,auto,auto] gap-x-2 items-center text-[11px] px-2 py-1.5 rounded ${
+                        isCurrentAirline ? "bg-accent/10 border border-accent/20 font-semibold" : "hover:bg-muted/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <img 
+                          src={`https://images.kiwi.com/airlines/64/${a.airlineCode}.png`} 
+                          alt="" 
+                          className="w-4 h-4 object-contain shrink-0"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <span className="truncate">{a.airline}</span>
+                        <span className="text-[9px] text-muted-foreground font-mono">{a.airlineCode}</span>
+                        {isCurrentAirline && <Badge variant="default" className="text-[8px] h-3.5 px-1 bg-accent">Current</Badge>}
+                      </div>
+                      <div className="text-center w-12">
+                        {a.seatMap?.available ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-accent mx-auto" />
+                        ) : (
+                          <X className="w-3.5 h-3.5 text-muted-foreground/40 mx-auto" />
+                        )}
+                      </div>
+                      <div className="text-center w-12">
+                        {a.baggage?.hasChecked ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-accent mx-auto" />
+                        ) : (
+                          <X className="w-3.5 h-3.5 text-muted-foreground/40 mx-auto" />
+                        )}
+                      </div>
+                      <div className="text-center w-8">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-accent mx-auto" />
+                      </div>
+                      <div className="text-center w-12">
+                        {a.gaoAncillaries ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-accent mx-auto" />
+                        ) : (
+                          <span className="text-[9px] text-muted-foreground">SSR Only</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div className="text-[9px] text-muted-foreground px-2 pt-2 space-y-1 border-t mt-1">
+                <p><strong>Seat Map:</strong> Real-time seat layout via Sabre SOAP (pre-booking, no PNR needed)</p>
+                <p><strong>Baggage:</strong> Checked & hand baggage info from search results</p>
+                <p><strong>SSR:</strong> Meal preferences, wheelchair, extra baggage requests — works for ALL airlines</p>
+                <p><strong>Extras:</strong> Paid ancillaries (meals/baggage purchase) via Sabre GAO — requires EMD entitlement</p>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
