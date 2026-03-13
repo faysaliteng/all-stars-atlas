@@ -248,6 +248,25 @@ const AdminBookings = () => {
     setActionLoading(null);
   };
 
+  const handleBulkCancel = async () => {
+    setBulkCancelLoading(true);
+    setBulkCancelResult(null);
+    try {
+      const result: any = await api.post('/admin/bookings/bulk-cancel', { filter: bulkCancelFilter });
+      setBulkCancelResult(result);
+      toast({
+        title: `Bulk Cancel Complete`,
+        description: `${result.summary?.cancelled || 0} cancelled, ${result.summary?.failed || 0} failed, ${result.summary?.skipped || 0} skipped`,
+      });
+      qc.invalidateQueries({ queryKey: ['admin', 'bookings'] });
+      refetch();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Bulk cancel failed", variant: "destructive" });
+    } finally {
+      setBulkCancelLoading(false);
+    }
+  };
+
   const statCards = [
     { label: "Total Bookings", value: stats.total, icon: Ticket, color: "text-primary", bg: "bg-primary/10" },
     { label: "With PNR", value: stats.confirmed, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
