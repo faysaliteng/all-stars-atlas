@@ -110,12 +110,16 @@ const AdminBookings = () => {
     const routeDest = ob.destination || b.details?.destination || '';
     const route = routeOrigin && routeDest ? `${routeOrigin} → ${routeDest}` : (b.details?.route || '—');
 
+    const airlinePnr = b.details?.airlinePnr || null;
+    const gdsPnr = b.pnr || ob.gdsPnr || b.details?.gdsPnr || null;
+
     return {
       id: b.bookingRef || b.id, rawId: b.id,
       customer, email: b.user?.email || "",
       type: b.bookingType || "flight",
       route,
-      pnr: b.pnr || ob.gdsPnr || b.details?.gdsPnr || "—",
+      pnr: gdsPnr || "—",
+      airlinePnr,
       date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString('en-GB') : "—",
       status: b.status, amount: `৳${(b.totalAmount || 0).toLocaleString()}`,
       rawAmount: b.totalAmount || 0, paymentMethod: b.paymentMethod || "—",
