@@ -1695,6 +1695,7 @@ async function getBooking({ pnr }) {
 
     const response = await sabreRequest(config, '/v1/trip/orders/getBooking', body);
     console.log('[Sabre] GetBooking success for PNR:', pnr);
+    console.log('[Sabre] GetBooking response keys:', JSON.stringify(Object.keys(response || {})));
 
     // Extract useful booking info
     const booking = response || {};
@@ -1702,12 +1703,39 @@ async function getBooking({ pnr }) {
     const passengers = booking.travelers || booking.passengers || [];
     const ticketing = booking.ticketing || [];
 
+    // Deep-extract vendor/airline locators from the response
+    // Sabre GetBooking puts airline confirmations in various nested paths
+    const vendorLocators = [];
+    const stack = [response];
+    const visited = new Set();
+    while (stack.length) {
+      const node = stack.pop();
+      if (!node || typeof node !== 'object') continue;
+      if (visited.has(node)) continue;
+      visited.add(node);
+      if (Array.isArray(node)) { node.forEach(i => stack.push(i)); continue; }
+      for (const [k, v] of Object.entries(node)) {
+        if (v && typeof v === 'object') { stack.push(v); continue; }
+        if (typeof v !== 'string') continue;
+        // Match vendor/airline locator keys
+        if (/(vendorlocator|airlinelocator|airlinepnr|airlineconfirmation|vendorconfirmation|vendorPNR|otherPNR|supplierlocator)/i.test(k)) {
+          const code = v.trim().toUpperCase();
+          if (/^[A-Z0-9]{5,20}$/.test(code) && code !== pnr.toUpperCase()) {
+            vendorLocators.push(code);
+          }
+        }
+      }
+    }
+
+    console.log('[Sabre] GetBooking vendor locators found:', JSON.stringify(vendorLocators));
+
     return {
       success: true,
       pnr,
       flights,
       passengers,
       ticketing,
+      vendorLocators,
       status: booking.status || booking.bookingStatus || 'unknown',
       rawResponse: response,
     };
