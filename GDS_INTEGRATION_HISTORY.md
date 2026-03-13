@@ -266,7 +266,8 @@ SSR:       REST CreatePNR (at booking time) — meals, wheelchair, medical, FF#
 | Get Booking | Sabre REST | 1-2 seconds |
 | Ticket Status | Sabre REST | 1-2 seconds |
 | Ticketing | Sabre REST v1.3.0 | 3-8 seconds |
-| Booking Cancel | Sabre REST | 1-3 seconds |
+| Booking Cancel | Sabre SOAP (primary) | 3-8 seconds |
+| Booking Cancel | Sabre REST (403 blocked) | N/A — PCC lacks privileges |
 | Booking Cancel | TTI | 1-2 seconds |
 
 ---

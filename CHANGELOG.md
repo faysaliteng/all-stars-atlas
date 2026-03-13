@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.9.9.9] — 2026-03-13 — Sabre Cancel Hardening: SOAP Session Management + Host TA Recovery
+
+### Fixed
+- **Sabre cancel Host TA exhaustion**: Diagnosed and resolved "You have reached the limit of Host TAs allocated to you" error that blocked all SOAP-based cancellations
+- **SOAP session lifecycle**: Added `resetSoapSessionCacheWithClose()` that properly closes stale sessions before creating new ones, preventing TA pool leaks
+- **SOAP retry scope**: Seat map and cancel SOAP retries now only trigger on session/auth/network errors (regex-matched), preventing unnecessary retries on legitimate application errors that waste TA slots
+- **Cancel PNR resolution**: Added `resolveCancelLocators()` helper ensuring cancellation always uses the GDS PNR (not airline PNR) — verified PNR AQDAMJ cancelled successfully with airline PNR FDDPE6 intact
+- **Cancel safety guard**: Local booking status only transitions to "cancelled" when GDS confirms — blocks phantom cancellations when no valid GDS PNR exists
+
+### Verified
+- PNR AQDAMJ (Airlines PNR FDDPE6) — cancelled successfully via SOAP after TA pool recovery
+- SOAP diagnostic endpoint confirms session creation working: `sabre-soap-diagnostic` returns `seatMap.success: true`
+- REST cancel still returns 403 NOT_AUTHORIZED (PCC J4YL lacks REST cancel privileges — SOAP is primary cancel method)
+
+---
+
 ## [3.9.9.8] — 2026-03-13 — Dual PNR Display (Booking ID + Airlines PNR) Across All Dashboards & PDF
 
 ### Added

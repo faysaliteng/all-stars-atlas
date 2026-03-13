@@ -1,7 +1,7 @@
-# Seven Trip — Complete Backend API Specification (v3.9.9.7)
+# Seven Trip — Complete Backend API Specification (v3.9.9.9)
 
 > **Purpose**: This document is the ONLY reference your backend developer needs. It defines every API endpoint, database table, authentication logic, request/response schema, and business rule. The frontend is already 100% built and expects these exact endpoints and response shapes.
-> Last updated: 2026-03-13 (v3.9.9.7 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR)
+> Last updated: 2026-03-13 (v3.9.9.9 — Sabre Cancel Hardening + Host TA Recovery)
 
 ---
 

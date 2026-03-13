@@ -1,7 +1,7 @@
 # Seven Trip — System Architecture
 
 > Complete technical architecture documentation for the Seven Trip travel platform.
-> Last updated: 2026-03-13 (v3.9.9.8 — Dual PNR Display: Booking ID + Airlines PNR)
+> Last updated: 2026-03-13 (v3.9.9.9 — Sabre Cancel Hardening + Host TA Recovery)
 
 ---
 

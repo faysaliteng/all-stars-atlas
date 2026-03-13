@@ -1,7 +1,7 @@
-# Seven Trip — Bangladesh's #1 Travel Platform (v3.9.9.8)
+# Seven Trip — Bangladesh's #1 Travel Platform (v3.9.9.9)
 
 > Full-stack B2C travel agency web application. Book flights, hotels, visa, holiday packages, medical tourism, car rentals, eSIM, mobile recharge & utility bill payments.
-> Last updated: 2026-03-13 (v3.9.9.8 — Dual PNR Display: Booking ID + Airlines PNR)
+> Last updated: 2026-03-13 (v3.9.9.9 — Sabre Cancel Hardening + Host TA Recovery)
 
 **Live URL:** [https://seven-trip.com](https://seven-trip.com)
 **GitHub:** [https://github.com/digiwebdex/all-stars-atlas-d07a1d89](https://github.com/digiwebdex/all-stars-atlas-d07a1d89)

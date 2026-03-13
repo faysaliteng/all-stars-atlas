@@ -1,9 +1,9 @@
-# Seven Trip — Sabre GDS Working Payloads Reference (v3.9.9.8)
+# Seven Trip — Sabre GDS Working Payloads Reference (v3.9.9.9)
 
 > Complete, production-verified payloads for all Sabre API operations.
 > PCC: J4YL | EPR: 631470 | Environment: Production
 > REST: `https://api.platform.sabre.com` | SOAP: `https://webservices.platform.sabre.com`
-> Last verified: 2026-03-13 (PNR: GCCVGK, Airlines PNR: 09HUGY)
+> Last verified: 2026-03-13 (Cancel: PNR AQDAMJ via SOAP ✅ | Booking: PNR GCCVGK, Airlines PNR 09HUGY)
 
 ---
 

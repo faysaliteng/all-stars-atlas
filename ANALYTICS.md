@@ -16,7 +16,7 @@
 | **Enterprise Booking** | v2.3–v2.8 | Mar 8–9, 2026 | 2 days | 4-step booking, e-ticket PDF, round-trip pairing |
 | **Full Audit v2** | v3.0 | Mar 10, 2026 | 1 day | All booking flows call real APIs, hardcoded data removal |
 | **GDS Integration** | v3.1–v3.9 | Mar 10–13, 2026 | 4 days | Sabre REST+SOAP, multi-city, branded fares, seat maps, SSR |
-| **Full Endpoint Coverage** | v3.9.8–v3.9.9.7 | Mar 13, 2026 | 1 day | Post-booking ancillaries, price revalidation, REST seat map, ticket status, ticketing v1.3.0, passport DOCS SSR, DOCS strict mode, airline PNR from CreatePNR |
+| **Full Endpoint Coverage** | v3.9.8–v3.9.9.9 | Mar 13, 2026 | 1 day | Post-booking ancillaries, price revalidation, REST seat map, ticket status, ticketing v1.3.0, passport DOCS SSR, DOCS strict mode, airline PNR from CreatePNR, cancel hardening + Host TA recovery |
 
 **Total Development Time:** ~18 days (Mar 1–13, 2026)
 

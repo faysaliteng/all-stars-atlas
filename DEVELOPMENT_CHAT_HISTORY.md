@@ -369,6 +369,14 @@ Placeholder data persisting in production code. Lesson: zero-mock audit + automa
 - **New routes**: `POST /flights/revalidate-price`, `GET /flights/booking/:pnr`, `GET /flights/ticket-status/:pnr`, `GET /flights/seats-rest`
 - **Result**: All 12 Sabre cert endpoints now implemented
 
+### v3.9.9.9 — Mar 13 — Sabre Cancel Hardening + Host TA Recovery
+- **🔴 Bug C00z**: Sabre SOAP cancel blocked — "You have reached the limit of Host TAs allocated to you"
+- **Root Cause**: Concurrent SOAP sessions (seat maps + cancel retries) leaked without proper close, exhausting TA pool
+- **Fix**: `resetSoapSessionCacheWithClose()`, `isSoapSessionError()` retry gate, always-close in finally
+- **Added**: `resolveCancelLocators()` — ensures GDS PNR used for cancel (not airline PNR)
+- **Added**: Cancel safety guard — local status only changes on GDS confirmation
+- **Verified**: PNR AQDAMJ (airline PNR FDDPE6) cancelled successfully after TA pool recovery
+
 ### v3.9.9.7 — Mar 13 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR
 - **Analysis**: Studied Ticketlagbe HAR logs (`combined-air-booking`) and BDFare HAR — both use same Sabre backend and send full DOCS server-side
 - **Fixed**: `passport` field file path detection (was being sent as passport number to Sabre)

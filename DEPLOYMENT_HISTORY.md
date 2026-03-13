@@ -245,13 +245,37 @@ cd ~/projects/all-stars-atlas && git pull origin main && npm install && npm run 
 
 ---
 
+### Deploy #8 — 2026-03-13 — Sabre Cancel Hardening (v3.9.9.9)
+
+**Version:** v3.9.9.9
+**Type:** Backend Only
+**Duration:** ~2 minutes
+
+**What was deployed:**
+- SOAP session management hardening: `resetSoapSessionCacheWithClose()`, retry-only on session/auth errors
+- Cancel PNR resolution: `resolveCancelLocators()` ensures GDS PNR used
+- Cancel safety guard: blocks local status change without GDS confirmation
+- Enhanced cancel logging: shows bookingRef, gdsPnr, airlinePnr
+
+**Command:**
+```bash
+cd ~/projects/all-stars-atlas && git pull origin main && cd backend && npm install && pm2 restart seventrip-api
+```
+
+**Verification:**
+- ✅ PNR AQDAMJ (airline PNR FDDPE6) cancelled successfully via SOAP
+- ✅ SOAP diagnostic confirms session creation working
+- ✅ Host TA pool recovered after stale sessions expired
+
+---
+
 ## 📊 Deployment Statistics
 
 | Metric | Value |
 |--------|-------|
-| **Total Deployments** | 8 |
+| **Total Deployments** | 9 |
 | **Full Stack** | 5 |
-| **Backend Only** | 2 |
+| **Backend Only** | 3 |
 | **Nginx Only** | 1 |
 | **Database Only** | 1 |
 | **Average Deploy Time** | ~3 minutes (git pull → build → copy → restart) |

@@ -1,7 +1,24 @@
 # Seven Trip — API Changelog
 
 > All backend API changes, new endpoints, breaking changes, and schema updates per version.
-> Last updated: 2026-03-13 (v3.9.9.8)
+> Last updated: 2026-03-13 (v3.9.9.9)
+
+---
+
+## v3.9.9.9 — 2026-03-13
+
+### Changed
+- **Sabre SOAP cancel hardening**: `cancelPnrViaSoap()` now creates a dedicated session per cancel (not reused from seat map cache) to prevent Host TA exhaustion
+- **SOAP session management**: Added `resetSoapSessionCacheWithClose()` — properly closes stale sessions before retry, reducing leaked TAs
+- **SOAP retry filter**: `isSoapSessionError()` regex now gates retries to session/auth/network errors only — prevents Host TA waste on application-level errors
+- **Cancel PNR resolution**: `resolveCancelLocators()` ensures GDS PNR (not airline PNR) is always used for cancellation
+- **Cancel safety**: `/flights/cancel` blocks local status update when no valid GDS PNR exists
+- **Enhanced cancel logging**: Shows `bookingRef`, `gdsPnr`, and `airlinePnr` separately in cancel logs
+
+### Production Notes
+- REST cancel endpoints (`/v2.0.2/booking/cancel`, `/v2.0.0/booking/cancel`) return 403 NOT_AUTHORIZED — PCC J4YL lacks REST cancel privileges
+- SOAP cancel (`OTA_CancelLLSRQ`) is the confirmed working method
+- Host TA pool can be exhausted if too many concurrent SOAP sessions are opened — sessions auto-recover after ~15-30 min
 
 ---
 

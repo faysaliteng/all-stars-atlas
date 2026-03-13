@@ -1,7 +1,7 @@
 # Seven Trip — Security Documentation
 
 > All security measures, authentication flow, and best practices implemented in the platform.
-> Last updated: 2026-03-13 (v3.9.9.8 — Dual PNR Display + DOCS Upload Verified)
+> Last updated: 2026-03-13 (v3.9.9.9 — Sabre Cancel Hardening + SOAP Session TA Management)
 
 ---
 

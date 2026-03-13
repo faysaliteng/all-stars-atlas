@@ -147,6 +147,9 @@
 | DOCS strict mode | v3.9.9.7 — no fallback without passport data |
 | Smart field detection | v3.9.9.7 — file path vs passport number |
 | Retry-with-fresh-session | v3.9.7 — SOAP seat map |
+| Session close in finally | v3.9.9.9 — prevent TA leaks |
+| Retry-only on session errors | v3.9.9.9 — `isSoapSessionError()` regex gate |
+| GDS PNR-only cancel | v3.9.9.9 — `resolveCancelLocators()` |
 | Priority chain extraction | v3.9.6 — TTI airline PNR |
 | Dual PNR extraction | v3.9.9.7 — CreatePNR + GetBooking |
 | Dedup key comprehensive | v3.7.8 — all legs included |
