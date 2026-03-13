@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-13 (v3.9.9.8 — Dual PNR Display: Booking ID + Airlines PNR)
+> Last updated: 2026-03-13 (v3.9.9.9 — Sabre cancel hardening: GDS PNR-only + SOAP session retry fix)
 
 ---
 
