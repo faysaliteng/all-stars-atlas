@@ -1311,7 +1311,6 @@ const MultiCityExpandedDetails = ({ flight, segments }: { flight: any; segments:
                         </div>
                         <div className="flex-1 flex flex-col items-center justify-center pt-1 px-4">
                           <AnimatedFlightArc height={10} compact />
-                          </div>
                           <p className="text-xs text-muted-foreground font-medium -mt-0.5">{leg.duration || seg.duration}</p>
                         </div>
                         <div className="text-right shrink-0 max-w-[38%]">
