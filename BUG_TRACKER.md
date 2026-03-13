@@ -97,7 +97,7 @@
 | Component | Count |
 |-----------|-------|
 | Sabre REST | 8 |
-| Sabre SOAP | 3 |
+| Sabre SOAP | 4 |
 | TTI/ZENITH | 3 |
 | BDFare | 3 |
 | Frontend - Flight Results | 5 |
