@@ -857,7 +857,9 @@ router.post('/book', authenticate, async (req, res) => {
     const airlineCode = String(flightData?.airlineCode || '').toUpperCase();
     const isTtiFlight = flightSource.includes('tti') || flightSource.includes('astra') || ['2A', 'S2'].includes(airlineCode);
     const isSabreFlight = flightSource.includes('sabre') || !!flightData?._sabreSource;
-    const isGdsFlight = isTtiFlight || isSabreFlight;
+    const isBdfareFlight = flightSource.includes('bdfare') || flightSource.includes('bdf');
+    const isFlyhubFlight = flightSource.includes('flyhub');
+    const isGdsFlight = isTtiFlight || isSabreFlight || isBdfareFlight || isFlyhubFlight;
 
     if (isGdsFlight) {
       const missingPassportIndex = passengers.findIndex((p) => !p.passportNumber || !p.passportExpiry || !p.nationality);
