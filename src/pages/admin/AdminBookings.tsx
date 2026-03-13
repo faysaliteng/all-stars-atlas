@@ -255,15 +255,67 @@ const AdminBookings = () => {
     setActionLoading(null);
   };
 
+  const [bulkCancelProgress, setBulkCancelProgress] = useState<string>("");
+
   const handleBulkCancel = async () => {
     setBulkCancelLoading(true);
     setBulkCancelResult(null);
+    setBulkCancelProgress("");
+
+    const allResults: any[] = [];
+    let offset = 0;
+    const batchSize = 3;
+    let batchNum = 0;
+    let totalBookings = 0;
+
     try {
-      const result: any = await api.post('/admin/bookings/bulk-cancel', { filter: bulkCancelFilter });
-      setBulkCancelResult(result);
+      // Auto-loop through batches until server says no more
+      while (true) {
+        batchNum++;
+        setBulkCancelProgress(`Processing batch ${batchNum}...`);
+        const result: any = await api.post('/admin/bookings/bulk-cancel', {
+          filter: bulkCancelFilter,
+          batchSize,
+          offset,
+        });
+
+        allResults.push(...(result.results || []));
+        totalBookings = result.pagination?.totalBookings || totalBookings;
+
+        const processed = Math.min(offset + batchSize, totalBookings);
+        setBulkCancelProgress(`Processed ${processed}/${totalBookings} bookings (batch ${batchNum})`);
+
+        // Accumulate results for display
+        const accumulated = {
+          summary: {
+            total: allResults.length,
+            cancelled: allResults.filter((r: any) => r.status === 'cancelled').length,
+            failed: allResults.filter((r: any) => r.status === 'gds_failed' || r.status === 'error').length,
+            skipped: allResults.filter((r: any) => r.status === 'skipped').length,
+          },
+          results: allResults,
+        };
+        setBulkCancelResult(accumulated);
+
+        if (!result.pagination?.hasMore) break;
+        offset = result.pagination.nextOffset;
+      }
+
+      const final = {
+        summary: {
+          total: allResults.length,
+          cancelled: allResults.filter((r: any) => r.status === 'cancelled').length,
+          failed: allResults.filter((r: any) => r.status === 'gds_failed' || r.status === 'error').length,
+          skipped: allResults.filter((r: any) => r.status === 'skipped').length,
+        },
+        results: allResults,
+      };
+      setBulkCancelResult(final);
+      setBulkCancelProgress(`Done — ${final.summary.cancelled} cancelled, ${final.summary.failed} failed`);
+
       toast({
         title: `Bulk Cancel Complete`,
-        description: `${result.summary?.cancelled || 0} cancelled, ${result.summary?.failed || 0} failed, ${result.summary?.skipped || 0} skipped`,
+        description: `${final.summary.cancelled} cancelled, ${final.summary.failed} failed, ${final.summary.skipped} skipped`,
       });
       qc.invalidateQueries({ queryKey: ['admin', 'bookings'] });
       refetch();
