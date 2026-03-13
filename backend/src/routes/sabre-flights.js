@@ -1466,25 +1466,23 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           genderCode = genderCode === 'F' ? 'FI' : 'MI';
         }
 
-        // Country normalization (handles ISO2/ISO3 and common demonyms like "Bangladeshi")
-        const normalizeCountryCode = (value) => {
+        // Country extraction from source payload style (e.g. "Bangladesh,BD,BGD")
+        // Keep only explicit ISO2 token from provided values.
+        const extractIso2Country = (value) => {
           const raw = String(value || '').trim();
           if (!raw) return '';
 
+          const parts = raw.split(',').map((p) => p.trim().toUpperCase()).filter(Boolean);
+          for (const part of parts) {
+            if (/^[A-Z]{2}$/.test(part)) return part;
+          }
+
           const compact = raw.toUpperCase().replace(/[^A-Z]/g, '');
-          if (compact.length === 2) return compact;
-
-          const aliases = {
-            BANGLADESH: 'BD',
-            BANGLADESHI: 'BD',
-            BGD: 'BD',
-          };
-
-          return aliases[compact] || '';
+          return /^[A-Z]{2}$/.test(compact) ? compact : '';
         };
 
         const docCountry =
-          normalizeCountryCode(
+          extractIso2Country(
             pax.documentCountry ||
             pax.issueCountry ||
             pax.passportCountry ||
@@ -1492,7 +1490,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           ) || '';
 
         const nationality =
-          normalizeCountryCode(
+          extractIso2Country(
             pax.nationalityCountry ||
             pax.nationality ||
             pax.citizenshipCountry ||
@@ -1526,7 +1524,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
             Surname: String(pax.lastName || pax.surname || '').toUpperCase(),
           },
           SegmentNumber: 'A',
-          VendorPrefs: { Airline: { Hosted: false, Code: airlineCode } },
+          VendorPrefs: { Airline: { Hosted: false } },
         });
       }
 
