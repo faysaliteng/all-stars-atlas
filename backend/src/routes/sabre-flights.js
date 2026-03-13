@@ -1540,7 +1540,277 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
 }
 
 /**
- * Issue ticket via Sabre AirTicketRQ
+ * Revalidate/reprice an itinerary before booking
+ * Uses Sabre RevalidateItinerary v4 (BFM revalidation)
+ */
+async function revalidatePrice({ flights, adults = 1, children = 0, infants = 0, cabinClass }) {
+  const config = await getSabreConfig();
+  if (!config) throw new Error('Sabre API not configured');
+
+  console.log('[Sabre] Revalidating price for', flights?.length || 0, 'segments');
+
+  try {
+    const cabinMap = { 'Economy': 'Y', 'Premium Economy': 'S', 'Business': 'C', 'First': 'F' };
+    const cabinCode = cabinMap[cabinClass] || 'Y';
+
+    const originDestinations = (flights || []).map(seg => ({
+      DepartureDateTime: seg.departureTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
+      ArrivalDateTime: seg.arrivalTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
+      OriginLocation: { LocationCode: seg.origin },
+      DestinationLocation: { LocationCode: seg.destination },
+      FlightSegment: [{
+        DepartureDateTime: seg.departureTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
+        ArrivalDateTime: seg.arrivalTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
+        FlightNumber: String(seg.flightNumber || '').replace(/\D/g, ''),
+        NumberInParty: String(adults + children),
+        ResBookDesigCode: seg.bookingClass || cabinCode,
+        Status: 'NN',
+        OriginLocation: { LocationCode: seg.origin },
+        DestinationLocation: { LocationCode: seg.destination },
+        MarketingAirline: { Code: seg.airlineCode, FlightNumber: String(seg.flightNumber || '').replace(/\D/g, '') },
+      }],
+    }));
+
+    const paxTypes = [];
+    if (adults > 0) paxTypes.push({ Code: 'ADT', Quantity: String(adults) });
+    if (children > 0) paxTypes.push({ Code: 'CNN', Quantity: String(children) });
+    if (infants > 0) paxTypes.push({ Code: 'INF', Quantity: String(infants) });
+
+    const body = {
+      OTA_AirLowFareSearchRQ: {
+        Version: '4',
+        OriginDestinationInformation: originDestinations,
+        TravelerInfoSummary: {
+          AirTravelerAvail: [{ PassengerTypeQuantity: paxTypes }],
+        },
+        TPA_Extensions: {
+          IntelliSellTransaction: { RequestType: { Name: 'REVALIDATE' } },
+        },
+      },
+    };
+
+    const response = await sabreRequest(config, '/v4/shop/flights/revalidate', body);
+
+    // Extract revalidated pricing
+    const pricedItins = response?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary || [];
+    const results = pricedItins.map(itin => {
+      const fare = itin?.AirItineraryPricingInfo?.[0]?.ItinTotalFare || {};
+      return {
+        totalFare: parseFloat(fare?.TotalFare?.Amount || 0),
+        baseFare: parseFloat(fare?.BaseFare?.Amount || 0),
+        taxes: parseFloat(fare?.Taxes?.Tax?.[0]?.Amount || fare?.Taxes?.Amount || 0),
+        currency: fare?.TotalFare?.CurrencyCode || 'BDT',
+        validatingCarrier: itin?.ValidatingCarrierCode || '',
+        lastTicketDate: itin?.AirItineraryPricingInfo?.[0]?.LastTicketDate || null,
+      };
+    });
+
+    console.log(`[Sabre] Revalidation: ${results.length} priced itineraries`);
+    return { success: true, pricedItineraries: results, rawResponse: response };
+  } catch (err) {
+    console.error('[Sabre] RevalidatePrice failed:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Retrieve a booking via Sabre REST GetBooking
+ */
+async function getBooking({ pnr }) {
+  const config = await getSabreConfig();
+  if (!config) throw new Error('Sabre API not configured');
+
+  console.log('[Sabre] Retrieving booking PNR:', pnr);
+
+  try {
+    const body = {
+      confirmationId: pnr,
+    };
+
+    const response = await sabreRequest(config, '/v1/trip/orders/getBooking', body);
+    console.log('[Sabre] GetBooking success for PNR:', pnr);
+
+    // Extract useful booking info
+    const booking = response || {};
+    const flights = booking.flights || booking.airSegments || [];
+    const passengers = booking.travelers || booking.passengers || [];
+    const ticketing = booking.ticketing || [];
+
+    return {
+      success: true,
+      pnr,
+      flights,
+      passengers,
+      ticketing,
+      status: booking.status || booking.bookingStatus || 'unknown',
+      rawResponse: response,
+    };
+  } catch (err) {
+    console.error('[Sabre] GetBooking failed:', err.message);
+    return { success: false, error: err.message, pnr };
+  }
+}
+
+/**
+ * Check flight ticket status via Sabre REST
+ */
+async function checkTicketStatus({ pnr }) {
+  const config = await getSabreConfig();
+  if (!config) throw new Error('Sabre API not configured');
+
+  console.log('[Sabre] Checking ticket status for PNR:', pnr);
+
+  try {
+    const body = {
+      confirmationId: pnr,
+    };
+
+    const response = await sabreRequest(config, '/v1/trip/orders/checkFlightTickets', body);
+    console.log('[Sabre] CheckFlightTickets response received for PNR:', pnr);
+
+    const tickets = response?.tickets || response?.flightTickets || [];
+    const ticketList = (Array.isArray(tickets) ? tickets : [tickets]).filter(Boolean).map(t => ({
+      ticketNumber: t.ticketNumber || t.documentNumber || t.number || '',
+      status: t.status || t.ticketStatus || 'unknown',
+      passengerName: t.passengerName || t.travelerName || '',
+      issueDate: t.issueDate || t.dateOfIssue || '',
+      airline: t.airline || t.validatingCarrier || '',
+      couponStatus: t.coupons || t.couponStatus || [],
+    }));
+
+    return {
+      success: true,
+      pnr,
+      tickets: ticketList,
+      allTicketed: ticketList.length > 0 && ticketList.every(t => /^(ticketed|issued|active|open)/i.test(t.status)),
+      rawResponse: response,
+    };
+  } catch (err) {
+    console.error('[Sabre] CheckTicketStatus failed:', err.message);
+    return { success: false, error: err.message, pnr, tickets: [] };
+  }
+}
+
+/**
+ * Get seat map via Sabre REST /v1/offers/getseats
+ * Alternative to SOAP EnhancedSeatMapRQ — simpler auth, no session management
+ */
+async function getSeatsRest({ origin, destination, departureDate, airlineCode, flightNumber, cabinClass, pnr }) {
+  const config = await getSabreConfig();
+  if (!config) throw new Error('Sabre API not configured');
+
+  const numericFlight = String(flightNumber || '').replace(/\D/g, '');
+  console.log(`[Sabre] REST GetSeats: ${airlineCode}${numericFlight} ${origin}-${destination} ${departureDate}`);
+
+  try {
+    const body = {
+      GetSeatMapRQ: {
+        SeatMapQueryEnhanced: {
+          RequestType: pnr ? 'Stateful' : 'Payload',
+          ...(pnr ? { PNR: pnr } : {}),
+          Flight: [{
+            DepartureDate: departureDate,
+            DepartureTime: '00:00',
+            Marketing: {
+              Carrier: airlineCode,
+              FlightNumber: numericFlight,
+            },
+            Origin: origin,
+            Destination: destination,
+          }],
+          CabinDefinition: [{
+            RBD: cabinClass === 'Business' ? 'C' : cabinClass === 'First' ? 'F' : 'Y',
+          }],
+        },
+      },
+    };
+
+    const response = await sabreRequest(config, '/v1/offers/getseats', body);
+
+    // Parse REST seat map response
+    const seatMapResp = response?.GetSeatMapRS || response;
+    const seatMap = seatMapResp?.SeatMap || seatMapResp?.seatMap || [];
+    const mapArr = Array.isArray(seatMap) ? seatMap : [seatMap];
+
+    const rows = [];
+    const columns = new Set();
+    const exitRows = [];
+
+    for (const map of mapArr) {
+      const cabinRows = map?.Row || map?.Cabin?.Row || [];
+      const rowArr = Array.isArray(cabinRows) ? cabinRows : [cabinRows];
+
+      for (const row of rowArr) {
+        const rowNumber = parseInt(row.RowNumber || row.Number || 0);
+        if (!rowNumber) continue;
+
+        if (row.ExitRow === true || row.exitRow === true) {
+          exitRows.push(rowNumber);
+        }
+
+        const seats = [];
+        const seatArr = Array.isArray(row.Seat) ? row.Seat : (row.Seat ? [row.Seat] : []);
+
+        for (const seat of seatArr) {
+          const col = seat.Column || seat.SeatColumn || seat.Number || '';
+          columns.add(col);
+
+          const isOccupied = seat.Availability === 'Occupied' || seat.OccupiedInd === true
+            || seat.Availability === 'Blocked' || seat.Status === 'Occupied';
+          const price = parseFloat(seat.Fee?.Amount || seat.Price?.Amount || seat.SeatPrice || 0);
+          const currency = seat.Fee?.CurrencyCode || seat.Price?.CurrencyCode || 'BDT';
+
+          // Determine seat type
+          let type = 'standard';
+          const chars = seat.Characteristics || seat.Facilities || [];
+          const charArr = Array.isArray(chars) ? chars : [chars];
+          const charCodes = charArr.map(c => c?.Code || c || '').join(',');
+
+          if (charCodes.includes('W') || charCodes.includes('Window')) type = 'window';
+          else if (charCodes.includes('A') || charCodes.includes('Aisle')) type = 'aisle';
+          else if (charCodes.includes('M') || charCodes.includes('Middle')) type = 'middle';
+          if (charCodes.includes('E') || charCodes.includes('ExtraLegroom') || charCodes.includes('LE')) type = 'extra-legroom';
+
+          seats.push({
+            id: `${rowNumber}${col}`,
+            row: rowNumber,
+            col,
+            type,
+            status: isOccupied ? 'occupied' : 'available',
+            price,
+            currency,
+            label: `${rowNumber}${col}`,
+          });
+        }
+
+        if (seats.length > 0) {
+          rows.push({ rowNumber, seats });
+        }
+      }
+    }
+
+    const sortedCols = [...columns].sort();
+    console.log(`[Sabre] REST GetSeats: ${rows.length} rows, ${sortedCols.length} columns`);
+
+    return {
+      success: rows.length > 0,
+      source: 'sabre-rest',
+      rows,
+      columns: sortedCols,
+      exitRows,
+      totalRows: rows.length,
+      totalSeats: rows.reduce((sum, r) => sum + r.seats.length, 0),
+      available: rows.length > 0,
+      rawResponse: response,
+    };
+  } catch (err) {
+    console.error('[Sabre] REST GetSeats failed:', err.message);
+    return { success: false, source: 'sabre-rest', error: err.message, rows: [], available: false };
+  }
+}
+
+/**
+ * Issue ticket via Sabre AirTicketRQ v1.3.0
  */
 async function issueTicket({ pnr }) {
   const config = await getSabreConfig();
@@ -1558,7 +1828,7 @@ async function issueTicket({ pnr }) {
       },
     };
 
-    const response = await sabreRequest(config, '/v1.2.1/air/ticket', body);
+    const response = await sabreRequest(config, '/v1.3.0/air/ticket', body);
 
     const ticketNumbers = [];
     const docs = response.AirTicketRS?.Summary || [];
@@ -1638,7 +1908,6 @@ async function cancelBooking({ pnr }) {
       const msg = err?.message || 'Unknown Sabre error';
       restFailures.push({ method: variant.label, error: msg });
       console.warn(`[Sabre] Cancel via ${variant.label} failed:`, msg);
-      // Keep trying all REST variants; SOAP fallback runs after loop
     }
   }
 
@@ -1676,4 +1945,15 @@ async function cancelBooking({ pnr }) {
   }
 }
 
-module.exports = { searchFlights, createBooking, issueTicket, cancelBooking, getSabreConfig, clearSabreConfigCache };
+module.exports = {
+  searchFlights,
+  createBooking,
+  issueTicket,
+  cancelBooking,
+  revalidatePrice,
+  getBooking,
+  checkTicketStatus,
+  getSeatsRest,
+  getSabreConfig,
+  clearSabreConfigCache,
+};
