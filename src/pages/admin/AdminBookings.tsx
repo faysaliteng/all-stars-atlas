@@ -110,12 +110,16 @@ const AdminBookings = () => {
     const routeDest = ob.destination || b.details?.destination || '';
     const route = routeOrigin && routeDest ? `${routeOrigin} → ${routeDest}` : (b.details?.route || '—');
 
+    const airlinePnr = b.details?.airlinePnr || null;
+    const gdsPnr = b.pnr || ob.gdsPnr || b.details?.gdsPnr || null;
+
     return {
       id: b.bookingRef || b.id, rawId: b.id,
       customer, email: b.user?.email || "",
       type: b.bookingType || "flight",
       route,
-      pnr: b.pnr || ob.gdsPnr || b.details?.gdsPnr || "—",
+      pnr: gdsPnr || "—",
+      airlinePnr,
       date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString('en-GB') : "—",
       status: b.status, amount: `৳${(b.totalAmount || 0).toLocaleString()}`,
       rawAmount: b.totalAmount || 0, paymentMethod: b.paymentMethod || "—",
@@ -458,11 +462,16 @@ const AdminBookings = () => {
                   <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px]">{b.type}</Badge></TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{b.route}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {b.pnr && b.pnr !== "—" ? (
-                      <span className="font-mono text-xs font-bold text-warning">{b.pnr}</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                    <div className="space-y-0.5">
+                      {b.airlinePnr ? (
+                        <code className="font-mono text-xs font-bold text-accent">{b.airlinePnr}</code>
+                      ) : (
+                        <span className="text-[9px] text-muted-foreground italic">PNR Pending</span>
+                      )}
+                      {b.pnr && b.pnr !== "—" && (
+                        <span className="text-[9px] text-muted-foreground font-mono block">ID: {b.pnr}</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{b.date}</TableCell>
                   <TableCell><Badge variant="outline" className={`text-[11px] capitalize ${getStatusStyle(b.status)}`}>{statusLabel(b.status)}</Badge></TableCell>
@@ -721,7 +730,8 @@ const AdminBookings = () => {
                       {viewBooking.details.aircraft && <div><p className="text-xs text-muted-foreground">Aircraft</p><p className="font-medium">{viewBooking.details.aircraft}</p></div>}
                       {viewBooking.details.duration && <div><p className="text-xs text-muted-foreground">Duration</p><p className="font-medium">{viewBooking.details.duration}</p></div>}
                       {viewBooking.details.baggage && <div><p className="text-xs text-muted-foreground">Baggage</p><p className="font-medium">{viewBooking.details.baggage}</p></div>}
-                      {viewBooking.details.pnr && <div><p className="text-xs text-muted-foreground">PNR / GDS Ref</p><p className="font-bold font-mono text-primary">{viewBooking.details.pnr}</p></div>}
+                      {viewBooking.details.pnr && <div><p className="text-xs text-muted-foreground">Booking ID (GDS)</p><p className="font-bold font-mono text-primary">{viewBooking.pnr || viewBooking.details.pnr}</p></div>}
+                      {viewBooking.details.airlinePnr && <div><p className="text-xs text-muted-foreground">Airlines PNR</p><p className="font-bold font-mono text-accent">{viewBooking.details.airlinePnr}</p></div>}
                       {viewBooking.details.ttiBookingId && <div><p className="text-xs text-muted-foreground">TTI Booking ID</p><p className="font-mono text-xs">{viewBooking.details.ttiBookingId}</p></div>}
                       {viewBooking.details.source && <div><p className="text-xs text-muted-foreground">Source</p><Badge variant="outline" className="capitalize">{viewBooking.details.source}</Badge></div>}
                     </div>

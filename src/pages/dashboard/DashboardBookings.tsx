@@ -81,10 +81,9 @@ function mapBooking(b: any) {
   const title = origin && destination ? `${origin} → ${destination}` : details.route || details.destination || `${b.bookingType || "flight"} Booking`;
   const paxCount = passengers.length || 1;
 
-  // Dual PNR logic
-  const isSabre = (source === 'sabre');
-  const airlinePnrVal = details.airlinePnr || (isSabre ? (b.pnr || details.gdsPnr || null) : null);
-  const gdsBookingIdVal = details.gdsBookingId || details.gdsBookingResult?.ttiBookingId || (!isSabre ? (b.pnr || details.gdsPnr || null) : null);
+  // Dual PNR logic: airlinePnr = real airline confirmation, gdsPnr = GDS record locator (Booking ID)
+  const airlinePnrVal = details.airlinePnr || null;
+  const gdsPnrVal = b.pnr || details.gdsPnr || null;
 
   return {
     id: b.bookingRef || b.id, rawId: b.id, type: b.bookingType || "flight", status: b.status || "pending", title,
@@ -92,7 +91,7 @@ function mapBooking(b: any) {
     date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—",
     pnr: b.pnr || details.gdsPnr || "—",
     airlinePnr: airlinePnrVal,
-    gdsBookingId: gdsBookingIdVal,
+    gdsBookingId: gdsPnrVal,
     pax: paxCount,
     paymentDeadline: b.paymentDeadline || null,
     airline, airlineCode, flightNumber, cabinClass, departureTime, origin, destination, source,
@@ -245,7 +244,7 @@ const DashboardBookings = () => {
                             <span className="text-muted-foreground text-[9px] italic block">PNR Pending</span>
                           )}
                           {booking.gdsBookingId && (
-                            <span className="text-[9px] text-muted-foreground font-mono block">ID: {booking.gdsBookingId}</span>
+                            <span className="text-[9px] text-muted-foreground font-mono block">Booking ID: {booking.gdsBookingId}</span>
                           )}
                         </div>
                       </TableCell>
@@ -278,7 +277,7 @@ const DashboardBookings = () => {
                                 baggage: f?.baggage || "20Kg", status: "Confirmed", meal: f?.meal || "Meals",
                               });
                               generateTicketPDF({
-                                id: booking.id, pnr: booking.pnr !== "—" ? booking.pnr : undefined, gdsPnr: booking.pnr !== "—" ? booking.pnr : undefined, bookingRef: booking.id, source: booking.source,
+                                id: booking.id, pnr: booking.pnr !== "—" ? booking.pnr : undefined, gdsPnr: booking.gdsBookingId || (booking.pnr !== "—" ? booking.pnr : undefined), airlinePnr: booking.airlinePnr || undefined, bookingRef: booking.id, source: booking.source,
                                 airline: booking.airline || "Seven Trip", flightNo: booking.flightNumber || "",
                                 from: booking.origin || "", to: booking.destination || "",
                                 date: booking.departureTime || booking.date, time: booking.departureTime || "",

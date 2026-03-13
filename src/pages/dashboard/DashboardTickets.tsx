@@ -33,7 +33,7 @@ const DashboardTickets = () => {
   });
 
   const downloadPDF = (ticket: any) => {
-    generateTicketPDF({ ...ticket, gdsPnr: ticket.pnr, bookingRef: ticket.id, source: ticket.source });
+    generateTicketPDF({ ...ticket, gdsPnr: ticket.pnr, airlinePnr: ticket.details?.airlinePnr || undefined, bookingRef: ticket.id, source: ticket.source });
     toast({ title: "Downloaded", description: `E-Ticket-${ticket.pnr}.pdf saved` });
   };
 

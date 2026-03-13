@@ -136,13 +136,9 @@ function mapBooking(b: any) {
     baseFare = knownExtra > 0 ? Math.max(0, rawAmount - knownExtra) : rawAmount;
   }
 
-  // Dual PNR: Airlines PNR (actual airline record locator) vs GDS Booking ID (internal reference)
-  const airlinePnr = details.airlinePnr || null;
-  const gdsBookingId = details.gdsBookingId || details.gdsBookingResult?.ttiBookingId || null;
-  // For Sabre, the PNR IS the airline PNR (6-char locator)
-  const isSabre = (source === 'sabre');
-  const displayAirlinePnr = airlinePnr || (isSabre ? (b.pnr || details.gdsPnr || null) : null);
-  const displayGdsBookingId = gdsBookingId || (!isSabre ? (b.pnr || details.gdsPnr || null) : null);
+  // Dual PNR: Airlines PNR (actual airline confirmation) vs GDS Booking ID (GDS record locator)
+  const displayAirlinePnr = details.airlinePnr || null;
+  const displayGdsBookingId = b.pnr || details.gdsPnr || null;
 
   return {
     id: b.bookingRef || b.id, rawId: b.id, type: b.bookingType || "flight", status: b.status || "pending",
@@ -235,7 +231,8 @@ const DashboardBookingDetail = () => {
     const returnFlt = booking.returnFlight || booking.details?.return;
     generateTicketPDF({
       id: booking.id, pnr: booking.pnr !== "—" ? booking.pnr : undefined,
-      gdsPnr: booking.gdsPnr || undefined,
+      gdsPnr: booking.gdsBookingId || booking.pnr !== "—" ? booking.pnr : undefined,
+      airlinePnr: booking.airlinePnr || undefined,
       bookingRef: booking.id,
       source: booking.source,
       airline: booking.airline || "Seven Trip", flightNo: booking.flightNumber || "",
@@ -302,12 +299,12 @@ const DashboardBookingDetail = () => {
             </div>
           )}
 
-          {/* Booking meta — 5 columns: Booking ID, Airlines PNR, GDS Booking ID, Class, Journey */}
+          {/* Booking meta — 5 columns: Booking ID (GDS PNR), Airlines PNR, GDS Booking ID, Class, Journey */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Booking ID</p>
-              <p className="text-sm font-bold font-mono flex items-center gap-1 truncate">{booking.id}
-                <button onClick={() => copyText(booking.id, "Booking ID")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
+              <p className="text-sm font-bold font-mono flex items-center gap-1 truncate">{booking.gdsBookingId || booking.id}
+                <button onClick={() => copyText(booking.gdsBookingId || booking.id, "Booking ID")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
               </p>
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
@@ -321,14 +318,10 @@ const DashboardBookingDetail = () => {
               )}
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
-              <p className="text-[10px] uppercase text-muted-foreground font-medium">GDS Booking ID</p>
-              {booking.gdsBookingId ? (
-                <p className="text-sm font-bold font-mono text-accent flex items-center gap-1">{booking.gdsBookingId}
-                  <button onClick={() => copyText(booking.gdsBookingId!, "GDS Booking ID")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
-                </p>
-              ) : (
-                <p className="text-sm font-medium text-muted-foreground">—</p>
-              )}
+              <p className="text-[10px] uppercase text-muted-foreground font-medium">Booking Ref</p>
+              <p className="text-sm font-bold font-mono flex items-center gap-1 truncate">{booking.id}
+                <button onClick={() => copyText(booking.id, "Booking Ref")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
+              </p>
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Booking Class</p>

@@ -151,6 +151,7 @@ const BookingConfirmation = () => {
       bookingRef,
       pnr,
       gdsPnr: pnr,
+      airlinePnr: booking?.airlinePnr || undefined,
       source: booking?.source || booking?.outbound?.source || "",
       isRoundTrip,
       outbound: outboundSegments,
