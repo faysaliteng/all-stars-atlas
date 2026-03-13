@@ -300,7 +300,7 @@ const DashboardBookingDetail = () => {
             </div>
           )}
 
-          {/* Booking meta — 5 columns: Booking ID, Airlines PNR, GDS Source, Class, Journey */}
+          {/* Booking meta — 5 columns: Booking ID, Airlines PNR, GDS Booking ID, Class, Journey */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Booking ID</p>
@@ -310,13 +310,23 @@ const DashboardBookingDetail = () => {
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Airlines PNR</p>
-              <p className="text-sm font-bold font-mono text-accent flex items-center gap-1">{booking.pnr}
-                {booking.pnr !== "—" && <button onClick={() => copyText(booking.pnr, "Airlines PNR")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>}
-              </p>
+              {booking.airlinePnr ? (
+                <p className="text-sm font-bold font-mono text-accent flex items-center gap-1">{booking.airlinePnr}
+                  <button onClick={() => copyText(booking.airlinePnr!, "Airlines PNR")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-muted-foreground italic">Pending</p>
+              )}
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
-              <p className="text-[10px] uppercase text-muted-foreground font-medium">GDS Source</p>
-              <p className="text-sm font-bold capitalize">{booking.source === "db" ? "Local" : booking.source}</p>
+              <p className="text-[10px] uppercase text-muted-foreground font-medium">GDS Booking ID</p>
+              {booking.gdsBookingId ? (
+                <p className="text-sm font-bold font-mono text-accent flex items-center gap-1">{booking.gdsBookingId}
+                  <button onClick={() => copyText(booking.gdsBookingId!, "GDS Booking ID")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-muted-foreground">—</p>
+              )}
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Booking Class</p>
