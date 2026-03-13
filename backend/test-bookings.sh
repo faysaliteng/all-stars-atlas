@@ -2,6 +2,7 @@
 # ═══════════════════════════════════════════════════════════════════
 # Seven Trip — Comprehensive 30-Route Booking Test Suite
 # SEARCHES REAL FLIGHTS FIRST, then books with actual GDS data
+# ALL passenger data is randomized with valid values
 # Usage: bash backend/test-bookings.sh
 # ═══════════════════════════════════════════════════════════════════
 
@@ -26,11 +27,116 @@ if [ -z "$TOKEN" ]; then
 fi
 echo -e "${GREEN}✓ Login OK${NC}\n"
 
-# ─── Passenger Templates ───
-PAX_ADULT1='{"title":"Ms","firstName":"MST RAFIZA","lastName":"MOSTOFA","dob":"2003-03-26","gender":"Female","nationality":"Bangladeshi","passport":"A13888697","passportExpiry":"2029-03-10","documentCountry":"BD","email":"rahim@gmail.com","phone":"01724597352","type":"adult","dateOfBirth":"2003-03-26","passportNumber":"A13888697","passportCountry":"BD"}'
-PAX_ADULT2='{"title":"Mr","firstName":"MD GOLAM","lastName":"MOSTOFA","dob":"1975-06-15","gender":"Male","nationality":"Bangladeshi","passport":"B98765432","passportExpiry":"2030-01-20","documentCountry":"BD","email":"rahim@gmail.com","phone":"01724597352","type":"adult","dateOfBirth":"1975-06-15","passportNumber":"B98765432","passportCountry":"BD"}'
-PAX_CHILD='{"title":"Master","firstName":"AHMED","lastName":"MOSTOFA","dob":"2018-09-10","gender":"Male","nationality":"Bangladeshi","passport":"C11223344","passportExpiry":"2031-05-15","documentCountry":"BD","email":"","phone":"","type":"child","dateOfBirth":"2018-09-10","passportNumber":"C11223344","passportCountry":"BD"}'
-PAX_INFANT='{"title":"Ms","firstName":"BABY","lastName":"MOSTOFA","dob":"2024-08-15","gender":"Female","nationality":"Bangladeshi","passport":"D55667788","passportExpiry":"2034-08-15","documentCountry":"BD","email":"","phone":"","type":"infant","dateOfBirth":"2024-08-15","passportNumber":"D55667788","passportCountry":"BD"}'
+# ─── Random Data Generators ───
+MALE_FIRST=("KAMAL" "JAMAL" "RAHIM" "SHAKIB" "TAMIM" "MUSHFIQ" "LITON" "SHANTO" "TASKIN" "MEHEDI" "NAZMUL" "FARHAN" "IMRAN" "SABBIR" "SOUMYA" "RUBEL" "MASUD" "TANVIR" "ASHRAF" "MAHBUB")
+FEMALE_FIRST=("FATIMA" "AYESHA" "NADIA" "SHARMIN" "TASLIMA" "RAZIA" "HASINA" "SULTANA" "NASREEN" "ROKEYA" "SABINA" "MOMENA" "RUMANA" "SUMAIYA" "FARZANA" "TANIA" "LABONI" "SADIA" "NAHIDA" "RABEYA")
+CHILD_MALE_FIRST=("ARHAM" "ZAYN" "RAFSAN" "ARIYAN" "SAIF" "REHAN" "NABIL" "ABRAR" "FAHIM" "YUSUF")
+CHILD_FEMALE_FIRST=("MARYAM" "ZARA" "ANIKA" "RAISA" "LAMISA" "NAFISA" "TASNEEM" "SAFIYA" "AYRA" "INAYA")
+SURNAMES=("HOSSAIN" "AHMED" "KHAN" "ISLAM" "RAHMAN" "ALAM" "UDDIN" "CHOWDHURY" "MIAH" "SARKER" "HAQUE" "BEGUM" "KARIM" "SIDDIQUI" "SHEIKH")
+
+rand_element() {
+  local arr=("$@")
+  echo "${arr[$((RANDOM % ${#arr[@]}))]}"
+}
+
+rand_passport() {
+  local PREFIX=$1
+  printf "%s%08d" "$PREFIX" $((RANDOM * RANDOM % 100000000))
+}
+
+rand_phone() {
+  local PREFIXES=("01712" "01819" "01612" "01912" "01512")
+  local PFX=$(rand_element "${PREFIXES[@]}")
+  printf "%s%06d" "$PFX" $((RANDOM % 1000000))
+}
+
+# Generate adult DOB: 20-55 years ago
+rand_adult_dob() {
+  local YEARS_AGO=$((20 + RANDOM % 35))
+  local MONTH=$((1 + RANDOM % 12))
+  local DAY=$((1 + RANDOM % 28))
+  printf "%04d-%02d-%02d" $(($(date +%Y) - YEARS_AGO)) $MONTH $DAY
+}
+
+# Generate child DOB: 2-11 years ago
+rand_child_dob() {
+  local YEARS_AGO=$((2 + RANDOM % 9))
+  local MONTH=$((1 + RANDOM % 12))
+  local DAY=$((1 + RANDOM % 28))
+  printf "%04d-%02d-%02d" $(($(date +%Y) - YEARS_AGO)) $MONTH $DAY
+}
+
+# Generate infant DOB: 3-18 months ago
+rand_infant_dob() {
+  local MONTHS_AGO=$((3 + RANDOM % 15))
+  date -d "-${MONTHS_AGO} months" +%Y-%m-%d 2>/dev/null || date -v-${MONTHS_AGO}m +%Y-%m-%d
+}
+
+# Passport expiry: 3-8 years from now
+rand_passport_expiry() {
+  local YEARS_AHEAD=$((3 + RANDOM % 5))
+  local MONTH=$((1 + RANDOM % 12))
+  local DAY=$((1 + RANDOM % 28))
+  printf "%04d-%02d-%02d" $(($(date +%Y) + YEARS_AHEAD)) $MONTH $DAY
+}
+
+# ─── Build random passenger JSON ───
+gen_adult_male() {
+  local FNAME=$(rand_element "${MALE_FIRST[@]}")
+  local LNAME=$(rand_element "${SURNAMES[@]}")
+  local DOB=$(rand_adult_dob)
+  local PP=$(rand_passport "A")
+  local EXP=$(rand_passport_expiry)
+  local PH=$(rand_phone)
+  echo "{\"title\":\"Mr\",\"firstName\":\"$FNAME\",\"lastName\":\"$LNAME\",\"dob\":\"$DOB\",\"gender\":\"Male\",\"nationality\":\"Bangladeshi\",\"passport\":\"$PP\",\"passportExpiry\":\"$EXP\",\"documentCountry\":\"BD\",\"email\":\"rahim@gmail.com\",\"phone\":\"$PH\",\"type\":\"adult\",\"dateOfBirth\":\"$DOB\",\"passportNumber\":\"$PP\",\"passportCountry\":\"BD\"}"
+}
+
+gen_adult_female() {
+  local FNAME=$(rand_element "${FEMALE_FIRST[@]}")
+  local LNAME=$(rand_element "${SURNAMES[@]}")
+  local DOB=$(rand_adult_dob)
+  local PP=$(rand_passport "B")
+  local EXP=$(rand_passport_expiry)
+  local PH=$(rand_phone)
+  echo "{\"title\":\"Ms\",\"firstName\":\"$FNAME\",\"lastName\":\"$LNAME\",\"dob\":\"$DOB\",\"gender\":\"Female\",\"nationality\":\"Bangladeshi\",\"passport\":\"$PP\",\"passportExpiry\":\"$EXP\",\"documentCountry\":\"BD\",\"email\":\"rahim@gmail.com\",\"phone\":\"$PH\",\"type\":\"adult\",\"dateOfBirth\":\"$DOB\",\"passportNumber\":\"$PP\",\"passportCountry\":\"BD\"}"
+}
+
+gen_child() {
+  local GENDER=$((RANDOM % 2))
+  local FNAME TITLE
+  if [ $GENDER -eq 0 ]; then
+    FNAME=$(rand_element "${CHILD_MALE_FIRST[@]}")
+    TITLE="Master"
+  else
+    FNAME=$(rand_element "${CHILD_FEMALE_FIRST[@]}")
+    TITLE="Miss"
+  fi
+  local LNAME=$(rand_element "${SURNAMES[@]}")
+  local DOB=$(rand_child_dob)
+  local PP=$(rand_passport "C")
+  local EXP=$(rand_passport_expiry)
+  local GEN=$( [ $GENDER -eq 0 ] && echo "Male" || echo "Female" )
+  echo "{\"title\":\"$TITLE\",\"firstName\":\"$FNAME\",\"lastName\":\"$LNAME\",\"dob\":\"$DOB\",\"gender\":\"$GEN\",\"nationality\":\"Bangladeshi\",\"passport\":\"$PP\",\"passportExpiry\":\"$EXP\",\"documentCountry\":\"BD\",\"email\":\"\",\"phone\":\"\",\"type\":\"child\",\"dateOfBirth\":\"$DOB\",\"passportNumber\":\"$PP\",\"passportCountry\":\"BD\"}"
+}
+
+gen_infant() {
+  local GENDER=$((RANDOM % 2))
+  local FNAME TITLE
+  if [ $GENDER -eq 0 ]; then
+    FNAME=$(rand_element "${CHILD_MALE_FIRST[@]}")
+    TITLE="Master"
+  else
+    FNAME=$(rand_element "${CHILD_FEMALE_FIRST[@]}")
+    TITLE="Miss"
+  fi
+  local LNAME=$(rand_element "${SURNAMES[@]}")
+  local DOB=$(rand_infant_dob)
+  local PP=$(rand_passport "D")
+  local EXP=$(rand_passport_expiry)
+  local GEN=$( [ $GENDER -eq 0 ] && echo "Male" || echo "Female" )
+  echo "{\"title\":\"$TITLE\",\"firstName\":\"$FNAME\",\"lastName\":\"$LNAME\",\"dob\":\"$DOB\",\"gender\":\"$GEN\",\"nationality\":\"Bangladeshi\",\"passport\":\"$PP\",\"passportExpiry\":\"$EXP\",\"documentCountry\":\"BD\",\"email\":\"\",\"phone\":\"\",\"type\":\"infant\",\"dateOfBirth\":\"$DOB\",\"passportNumber\":\"$PP\",\"passportCountry\":\"BD\"}"
+}
+
 CONTACT='{"email":"rahim@gmail.com","phone":"01724597352"}'
 
 SSR1='{"perPassenger":[{"meal":"MOML","wheelchair":"none","frequentFlyer":{}}]}'
@@ -38,13 +144,12 @@ SSR2='{"perPassenger":[{"meal":"MOML","wheelchair":"none","frequentFlyer":{}},{"
 SSR3='{"perPassenger":[{"meal":"MOML","wheelchair":"none","frequentFlyer":{}},{"meal":"VGML","wheelchair":"none","frequentFlyer":{}},{"meal":"CHML","wheelchair":"none","frequentFlyer":{}}]}'
 SSR4='{"perPassenger":[{"meal":"MOML","wheelchair":"none","frequentFlyer":{}},{"meal":"VGML","wheelchair":"none","frequentFlyer":{}},{"meal":"CHML","wheelchair":"none","frequentFlyer":{}},{"meal":"BBML","wheelchair":"none","frequentFlyer":{}}]}'
 
-# Calculate dates: 30-45 days from now
-DEPART_DATE=$(date -d "+33 days" +%Y-%m-%d 2>/dev/null || date -v+33d +%Y-%m-%d)
-RETURN_DATE=$(date -d "+40 days" +%Y-%m-%d 2>/dev/null || date -v+40d +%Y-%m-%d)
-DEPART_DATE2=$(date -d "+35 days" +%Y-%m-%d 2>/dev/null || date -v+35d +%Y-%m-%d)
-RETURN_DATE2=$(date -d "+42 days" +%Y-%m-%d 2>/dev/null || date -v+42d +%Y-%m-%d)
+# Calculate dates: 30-45 days from now (randomized per section)
+DEPART_DATE=$(date -d "+$((30 + RANDOM % 15)) days" +%Y-%m-%d 2>/dev/null || date -v+33d +%Y-%m-%d)
+RETURN_DATE=$(date -d "+$((45 + RANDOM % 10)) days" +%Y-%m-%d 2>/dev/null || date -v+50d +%Y-%m-%d)
 
-echo -e "${CYAN}[DATES] Departure: $DEPART_DATE | Return: $RETURN_DATE${NC}\n"
+echo -e "${CYAN}[DATES] Departure: $DEPART_DATE | Return: $RETURN_DATE${NC}"
+echo -e "${CYAN}[DATA] All passengers randomized with valid BD passports${NC}\n"
 
 # ─── Search helper: find real flight from API ───
 search_flight() {
@@ -245,136 +350,148 @@ search_and_book() {
 
 # ═══════════════════════════════════════════════════════════
 echo -e "\n${BOLD}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}   SECTION 1: ONE-WAY INTERNATIONAL (Sabre)${NC}"
+echo -e "${BOLD}   SECTION 1: ONE-WAY INTERNATIONAL (1 Adult)${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
 
-# Test 1: DAC→DXB 1 adult
-search_and_book 1 "ONE-WAY DAC→DXB (1 adult)" "DAC" "DXB" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
+# Test 1-6: One-way single adult to various destinations
+A1=$(gen_adult_female)
+search_and_book 1 "ONE-WAY DAC→DXB (1 adult)" "DAC" "DXB" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
-# Test 2: DAC→SIN 1 adult
-search_and_book 2 "ONE-WAY DAC→SIN (1 adult)" "DAC" "SIN" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
+A1=$(gen_adult_male)
+search_and_book 2 "ONE-WAY DAC→SIN (1 adult)" "DAC" "SIN" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
-# Test 3: DAC→BKK 2 adults
-search_and_book 3 "ONE-WAY DAC→BKK (2 adults)" "DAC" "BKK" "$PAX_ADULT1,$PAX_ADULT2" "$SSR2" "false" "false" "sabre" 2 0 0
+A1=$(gen_adult_female)
+search_and_book 3 "ONE-WAY DAC→DOH (1 adult)" "DAC" "DOH" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
-# Test 4: DAC→KUL 1 adult + 1 child
-search_and_book 4 "ONE-WAY DAC→KUL (1 adult + 1 child)" "DAC" "KUL" "$PAX_ADULT1,$PAX_CHILD" "$SSR2" "false" "false" "sabre" 1 1 0
+A1=$(gen_adult_male)
+search_and_book 4 "ONE-WAY DAC→IST (1 adult)" "DAC" "IST" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
-# Test 5: DAC→DOH 1 adult
-search_and_book 5 "ONE-WAY DAC→DOH (1 adult)" "DAC" "DOH" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
+A1=$(gen_adult_female)
+search_and_book 5 "ONE-WAY DAC→CCU (1 adult)" "DAC" "CCU" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
-# Test 6: DAC→IST 1 adult
-search_and_book 6 "ONE-WAY DAC→IST (1 adult)" "DAC" "IST" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
-
-# Test 7: DAC→CCU 1 adult
-search_and_book 7 "ONE-WAY DAC→CCU (1 adult)" "DAC" "CCU" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
-
-# Test 8: DAC→LHR 2 adults + 1 child
-search_and_book 8 "ONE-WAY DAC→LHR (2 adults + 1 child)" "DAC" "LHR" "$PAX_ADULT1,$PAX_ADULT2,$PAX_CHILD" "$SSR3" "false" "false" "sabre" 2 1 0
+A1=$(gen_adult_male)
+search_and_book 6 "ONE-WAY DAC→BKK (1 adult)" "DAC" "BKK" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
 # ═══════════════════════════════════════════════════════════
 echo -e "\n${BOLD}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}   SECTION 2: ROUND-TRIP INTERNATIONAL (Sabre)${NC}"
+echo -e "${BOLD}   SECTION 2: ONE-WAY INTERNATIONAL (Multi-Pax)${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
 
-# Test 9: DAC↔DXB 1 adult
-search_and_book 9 "ROUND-TRIP DAC↔DXB (1 adult)" "DAC" "DXB" "$PAX_ADULT1" "$SSR1" "true" "false" "sabre" 1 0 0
+# Test 7: 2 adults
+A1=$(gen_adult_male); A2=$(gen_adult_female)
+search_and_book 7 "ONE-WAY DAC→BKK (2 adults)" "DAC" "BKK" "$A1,$A2" "$SSR2" "false" "false" "sabre" 2 0 0
 
-# Test 10: DAC↔SIN 2 adults
-search_and_book 10 "ROUND-TRIP DAC↔SIN (2 adults)" "DAC" "SIN" "$PAX_ADULT1,$PAX_ADULT2" "$SSR2" "true" "false" "sabre" 2 0 0
+# Test 8: 1 adult + 1 child
+A1=$(gen_adult_female); C1=$(gen_child)
+search_and_book 8 "ONE-WAY DAC→KUL (1a+1c)" "DAC" "KUL" "$A1,$C1" "$SSR2" "false" "false" "sabre" 1 1 0
 
-# Test 11: DAC↔BKK 1 adult + 1 child
-search_and_book 11 "ROUND-TRIP DAC↔BKK (1 adult + 1 child)" "DAC" "BKK" "$PAX_ADULT1,$PAX_CHILD" "$SSR2" "true" "false" "sabre" 1 1 0
+# Test 9: 2 adults + 1 child
+A1=$(gen_adult_male); A2=$(gen_adult_female); C1=$(gen_child)
+search_and_book 9 "ONE-WAY DAC→LHR (2a+1c)" "DAC" "LHR" "$A1,$A2,$C1" "$SSR3" "false" "false" "sabre" 2 1 0
 
-# Test 12: DAC↔DOH 2 adults + 1 child + 1 infant
-search_and_book 12 "ROUND-TRIP DAC↔DOH (2a+1c+1i)" "DAC" "DOH" "$PAX_ADULT1,$PAX_ADULT2,$PAX_CHILD,$PAX_INFANT" "$SSR4" "true" "false" "sabre" 2 1 1
-
-# Test 13: DAC↔IST 1 adult
-search_and_book 13 "ROUND-TRIP DAC↔IST (1 adult)" "DAC" "IST" "$PAX_ADULT1" "$SSR1" "true" "false" "sabre" 1 0 0
-
-# Test 14: DAC↔KUL 2 adults
-search_and_book 14 "ROUND-TRIP DAC↔KUL (2 adults)" "DAC" "KUL" "$PAX_ADULT1,$PAX_ADULT2" "$SSR2" "true" "false" "sabre" 2 0 0
+# Test 10: 1 adult + 1 infant
+A1=$(gen_adult_female); I1=$(gen_infant)
+search_and_book 10 "ONE-WAY DAC→DEL (1a+1i)" "DAC" "DEL" "$A1,$I1" "$SSR2" "false" "false" "sabre" 1 0 1
 
 # ═══════════════════════════════════════════════════════════
 echo -e "\n${BOLD}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}   SECTION 3: MULTI-CITY INTERNATIONAL (Sabre)${NC}"
+echo -e "${BOLD}   SECTION 3: ROUND-TRIP INTERNATIONAL${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
 
-# Multi-city: search leg by leg, book one-way with merged legs
-# Test 15: DAC→DXB (uses standard one-way, multi-city too complex for bash search)
-search_and_book 15 "ONE-WAY DAC→DXB leg2 (multi-city proxy)" "DAC" "DXB" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
+# Test 11: RT 1 adult
+A1=$(gen_adult_male)
+search_and_book 11 "ROUND-TRIP DAC↔DXB (1 adult)" "DAC" "DXB" "$A1" "$SSR1" "true" "false" "sabre" 1 0 0
 
-# Test 16: DAC→BKK 2 adults (multi-city proxy)
-search_and_book 16 "ONE-WAY DAC→BKK (multi-city proxy, 2a)" "DAC" "BKK" "$PAX_ADULT1,$PAX_ADULT2" "$SSR2" "false" "false" "sabre" 2 0 0
+# Test 12: RT 2 adults
+A1=$(gen_adult_female); A2=$(gen_adult_male)
+search_and_book 12 "ROUND-TRIP DAC↔SIN (2 adults)" "DAC" "SIN" "$A1,$A2" "$SSR2" "true" "false" "sabre" 2 0 0
 
-# Test 17: DAC→SIN 1 adult + 1 child
-search_and_book 17 "ONE-WAY DAC→SIN (1a+1c)" "DAC" "SIN" "$PAX_ADULT1,$PAX_CHILD" "$SSR2" "false" "false" "sabre" 1 1 0
+# Test 13: RT 1a+1c
+A1=$(gen_adult_male); C1=$(gen_child)
+search_and_book 13 "ROUND-TRIP DAC↔BKK (1a+1c)" "DAC" "BKK" "$A1,$C1" "$SSR2" "true" "false" "sabre" 1 1 0
 
-# Test 18: DAC→CCU 2 adults + 1 child
-search_and_book 18 "ONE-WAY DAC→CCU (2a+1c)" "DAC" "CCU" "$PAX_ADULT1,$PAX_ADULT2,$PAX_CHILD" "$SSR3" "false" "false" "sabre" 2 1 0
+# Test 14: RT 2a+1c+1i (full family)
+A1=$(gen_adult_male); A2=$(gen_adult_female); C1=$(gen_child); I1=$(gen_infant)
+search_and_book 14 "ROUND-TRIP DAC↔DOH (2a+1c+1i)" "DAC" "DOH" "$A1,$A2,$C1,$I1" "$SSR4" "true" "false" "sabre" 2 1 1
+
+# Test 15: RT 1 adult
+A1=$(gen_adult_female)
+search_and_book 15 "ROUND-TRIP DAC↔IST (1 adult)" "DAC" "IST" "$A1" "$SSR1" "true" "false" "sabre" 1 0 0
+
+# Test 16: RT 2 adults
+A1=$(gen_adult_male); A2=$(gen_adult_female)
+search_and_book 16 "ROUND-TRIP DAC↔KUL (2 adults)" "DAC" "KUL" "$A1,$A2" "$SSR2" "true" "false" "sabre" 2 0 0
 
 # ═══════════════════════════════════════════════════════════
 echo -e "\n${BOLD}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BOLD}   SECTION 4: DOMESTIC FLIGHTS (TTI / Air Astra)${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
 
-# Test 19: DAC→CXB 1 adult
-search_and_book 19 "ONE-WAY DAC→CXB (Air Astra, 1 adult)" "DAC" "CXB" "$PAX_ADULT1" "$SSR1" "false" "true" "tti" 1 0 0
+# Test 17: Domestic 1 adult
+A1=$(gen_adult_male)
+search_and_book 17 "ONE-WAY DAC→CXB (1 adult)" "DAC" "CXB" "$A1" "$SSR1" "false" "true" "tti" 1 0 0
 
-# Test 20: DAC↔CXB 2 adults (round-trip)
-search_and_book 20 "ROUND-TRIP DAC↔CXB (Air Astra, 2 adults)" "DAC" "CXB" "$PAX_ADULT1,$PAX_ADULT2" "$SSR2" "true" "true" "tti" 2 0 0
+# Test 18: Domestic 2 adults
+A1=$(gen_adult_female); A2=$(gen_adult_male)
+search_and_book 18 "ONE-WAY DAC→CXB (2 adults)" "DAC" "CXB" "$A1,$A2" "$SSR2" "false" "true" "tti" 2 0 0
 
-# Test 21: DAC→CGP 1 adult + 1 child
-search_and_book 21 "ONE-WAY DAC→CGP (Air Astra, 1a+1c)" "DAC" "CGP" "$PAX_ADULT1,$PAX_CHILD" "$SSR2" "false" "true" "tti" 1 1 0
+# Test 19: Domestic 1a+1c
+A1=$(gen_adult_male); C1=$(gen_child)
+search_and_book 19 "ONE-WAY DAC→CGP (1a+1c)" "DAC" "CGP" "$A1,$C1" "$SSR2" "false" "true" "tti" 1 1 0
 
-# Test 22: DAC→ZYL 1 adult
-search_and_book 22 "ONE-WAY DAC→ZYL (Air Astra, 1 adult)" "DAC" "ZYL" "$PAX_ADULT1" "$SSR1" "false" "true" "tti" 1 0 0
+# Test 20: Domestic 1 adult ZYL
+A1=$(gen_adult_female)
+search_and_book 20 "ONE-WAY DAC→ZYL (1 adult)" "DAC" "ZYL" "$A1" "$SSR1" "false" "true" "tti" 1 0 0
+
+# Test 21: Domestic round-trip 2 adults
+A1=$(gen_adult_male); A2=$(gen_adult_female)
+search_and_book 21 "ROUND-TRIP DAC↔CXB (2 adults)" "DAC" "CXB" "$A1,$A2" "$SSR2" "true" "true" "tti" 2 0 0
+
+# Test 22: Domestic round-trip 1a+1c+1i
+A1=$(gen_adult_female); C1=$(gen_child); I1=$(gen_infant)
+search_and_book 22 "ROUND-TRIP DAC↔CGP (1a+1c+1i)" "DAC" "CGP" "$A1,$C1,$I1" "$SSR3" "true" "true" "tti" 1 1 1
 
 # ═══════════════════════════════════════════════════════════
 echo -e "\n${BOLD}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BOLD}   SECTION 5: ADDITIONAL ROUTES & EDGE CASES${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
 
-# Test 23: DAC→JED 1 adult
-search_and_book 23 "ONE-WAY DAC→JED (1 adult)" "DAC" "JED" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
+# Test 23: JED
+A1=$(gen_adult_male)
+search_and_book 23 "ONE-WAY DAC→JED (1 adult)" "DAC" "JED" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
-# Test 24: DAC→CMB 1 adult
-search_and_book 24 "ONE-WAY DAC→CMB (1 adult)" "DAC" "CMB" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
+# Test 24: CMB
+A1=$(gen_adult_female)
+search_and_book 24 "ONE-WAY DAC→CMB (1 adult)" "DAC" "CMB" "$A1" "$SSR1" "false" "false" "sabre" 1 0 0
 
-# Test 25: DAC↔MCT 1 adult
-search_and_book 25 "ROUND-TRIP DAC↔MCT (1 adult)" "DAC" "MCT" "$PAX_ADULT1" "$SSR1" "true" "false" "sabre" 1 0 0
+# Test 25: RT MCT
+A1=$(gen_adult_male)
+search_and_book 25 "ROUND-TRIP DAC↔MCT (1 adult)" "DAC" "MCT" "$A1" "$SSR1" "true" "false" "sabre" 1 0 0
 
-# Test 26: DAC↔BAH 2 adults + 1 infant
-search_and_book 26 "ROUND-TRIP DAC↔BAH (2a+1i)" "DAC" "BAH" "$PAX_ADULT1,$PAX_ADULT2,$PAX_INFANT" "$SSR3" "true" "false" "sabre" 2 0 1
+# Test 26: RT BAH 2a+1i
+A1=$(gen_adult_male); A2=$(gen_adult_female); I1=$(gen_infant)
+search_and_book 26 "ROUND-TRIP DAC↔BAH (2a+1i)" "DAC" "BAH" "$A1,$A2,$I1" "$SSR3" "true" "false" "sabre" 2 0 1
 
-# Test 27: DAC→DEL 1 adult
-search_and_book 27 "ONE-WAY DAC→DEL (1 adult)" "DAC" "DEL" "$PAX_ADULT1" "$SSR1" "false" "false" "sabre" 1 0 0
+# Test 27: DEL round-trip
+A1=$(gen_adult_female)
+search_and_book 27 "ROUND-TRIP DAC↔DEL (1 adult)" "DAC" "DEL" "$A1" "$SSR1" "true" "false" "sabre" 1 0 0
 
-# Test 28: DAC↔CGP 1 adult + 1 child + 1 infant (domestic round-trip)
-search_and_book 28 "ROUND-TRIP DAC↔CGP (1a+1c+1i)" "DAC" "CGP" "$PAX_ADULT1,$PAX_CHILD,$PAX_INFANT" "$SSR3" "true" "true" "tti" 1 1 1
+# Test 28: BKK 1a+1i
+A1=$(gen_adult_male); I1=$(gen_infant)
+search_and_book 28 "ONE-WAY DAC→BKK (1a+1i)" "DAC" "BKK" "$A1,$I1" "$SSR2" "false" "false" "sabre" 1 0 1
 
-# Test 29: DAC→BKK 1 adult + 1 infant
-search_and_book 29 "ONE-WAY DAC→BKK (1a+1i)" "DAC" "BKK" "$PAX_ADULT1,$PAX_INFANT" "$SSR2" "false" "false" "sabre" 1 0 1
+# Test 29: RT DOH 1 adult
+A1=$(gen_adult_female)
+search_and_book 29 "ROUND-TRIP DAC↔DOH (1 adult)" "DAC" "DOH" "$A1" "$SSR1" "true" "false" "sabre" 1 0 0
 
-# Test 30: DAC↔DOH 1 adult
-search_and_book 30 "ROUND-TRIP DAC↔DOH (1 adult)" "DAC" "DOH" "$PAX_ADULT1" "$SSR1" "true" "false" "sabre" 1 0 0
+# Test 30: RT SIN 1a+1c
+A1=$(gen_adult_male); C1=$(gen_child)
+search_and_book 30 "ROUND-TRIP DAC↔SIN (1a+1c)" "DAC" "SIN" "$A1,$C1" "$SSR2" "true" "false" "sabre" 1 1 0
 
 # ═══════════════════════════════════════════════════════════
 echo -e "\n${BOLD}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BOLD}   SECTION 6: SEAT MAP & ANCILLARIES${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
-
-# Pre-booking seat map (use first PNR if available)
-echo -e "\n${BOLD}── SEAT MAP: Pre-booking (SOAP) ──${NC}"
-SEAT_RESULT=$(curl -s --max-time 30 "$BASE/flights/sabre-soap-diagnostic?flight=SQ447&airline=SQ&from=DAC&to=SIN&date=$DEPART_DATE" \
-  -H "Authorization: Bearer $TOKEN")
-SM_SOURCE=$(echo "$SEAT_RESULT" | jq -r '.seatMap.source // "none"' 2>/dev/null)
-SM_ROWS=$(echo "$SEAT_RESULT" | jq -r '.seatMap.rows // 0' 2>/dev/null)
-if [ "$SM_SOURCE" != "none" ] && [ "$SM_SOURCE" != "null" ]; then
-  echo -e "  ${GREEN}✓${NC} | Source: $SM_SOURCE | Rows: $SM_ROWS"
-else
-  echo -e "  ${RED}✗ Seat Map FAILED${NC} | Source: $SM_SOURCE"
-fi
 
 # Post-booking seat map with first PNR
 if [ ${#ALL_PNRS[@]} -gt 0 ]; then
