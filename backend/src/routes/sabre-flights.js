@@ -1692,10 +1692,10 @@ async function checkTicketStatus({ pnr }) {
 }
 
 /**
- * Get seat map via Sabre REST /v1/offers/getseats (v2)
+ * Get seat map via Sabre REST GetSeats (tries multiple schema variants/endpoints).
  * NOTE: This API requires either an offerId from prior BFM/NDC search,
- * or a PNR (confirmationId). It does NOT support raw flight+date lookup
- * like SOAP EnhancedSeatMapRQ does. Falls back gracefully.
+ * or a PNR (confirmationId/locator). It does NOT support raw flight+date lookup
+ * like SOAP EnhancedSeatMapRQ does.
  */
 async function getSeatsRest({ origin, destination, departureDate, airlineCode, flightNumber, cabinClass, pnr, offerId }) {
   const config = await getSabreConfig();
