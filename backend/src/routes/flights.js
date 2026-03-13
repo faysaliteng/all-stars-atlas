@@ -221,44 +221,17 @@ router.post('/purchase-ancillary', authenticate, async (req, res) => {
     const providerSource = String(source || '').toLowerCase();
 
     if (providerSource.includes('sabre') || !providerSource) {
-      // Sabre: Add ancillary SSRs via UpdatePassengerNameRecord
-      const { assignSeats, getSabreConfig } = require('./sabre-flights');
-      const config = await getSabreConfig();
-      if (!config) return res.status(500).json({ message: 'Sabre not configured' });
-
-      const { sabreRequest } = require('./sabre-flights');
-
-      // Build SSR list for ancillaries
+      const { addAncillarySSR } = require('./sabre-flights');
       const ssrList = ancillaries.map(anc => ({
-        SSR_Code: anc.code || 'OTHS',
-        Text: anc.text || `${anc.code} - ${anc.type}`,
-        PersonName: { NameNumber: `${(anc.passengerIndex || 0) + 1}.1` },
-        SegmentNumber: String(anc.segmentNumber || 'A'),
-        VendorPrefs: anc.airlineCode ? { Airline: { Code: anc.airlineCode } } : undefined,
+        code: anc.code || 'OTHS',
+        text: anc.text || `${anc.code} - ${anc.type}`,
+        passengerIndex: anc.passengerIndex || 0,
+        segmentNumber: anc.segmentNumber || 'A',
+        airlineCode: anc.airlineCode || '',
       }));
 
-      const body = {
-        CreatePassengerNameRecordRQ: {
-          targetCity: config.pcc,
-          SpecialReqDetails: {
-            SpecialService: {
-              SpecialServiceInfo: {
-                Service: ssrList,
-              },
-            },
-          },
-          PostProcessing: {
-            EndTransaction: { Source: { ReceivedFrom: 'SEVEN TRIP ANC' } },
-          },
-        },
-      };
-
-      try {
-        const response = await sabreRequest(config, `/v2.4.0/passenger/records?mode=update&recordLocator=${pnr}`, body, 'POST', 30000);
-        return res.json({ success: true, message: `${ancillaries.length} ancillary service(s) added to PNR ${pnr}`, rawResponse: response });
-      } catch (sabreErr) {
-        return res.json({ success: false, error: sabreErr.message });
-      }
+      const result = await addAncillarySSR({ pnr, ssrList });
+      return res.json(result);
     }
 
     return res.status(400).json({ message: `Ancillary purchase not supported for provider: ${source}` });
