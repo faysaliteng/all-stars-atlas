@@ -747,6 +747,8 @@ router.post('/book', authenticate, async (req, res) => {
       currency: 'BDT',
       bookingType: 'flight',
       pnr: gdsPnr || null,
+      airlinePnr: airlinePnr || null,
+      gdsBookingId: gdsBookingId || null,
       gdsBooked: !!(gdsBookingResult?.success),
       createdAt: new Date().toISOString(),
     });

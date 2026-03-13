@@ -937,23 +937,43 @@ async function createBooking({ flightData, passengers, contactInfo }) {
       console.log('[TTI BOOKING] ETTicketFare[0] scalars:', JSON.stringify(etScalars));
     }
 
-    // ── IMPORTANT: Airline PNR vs Internal Booking ID ──
-    // Airline PNR = actual record locator (e.g., "00KSQZ") — only from RecordLocator/AirlinePNR fields
-    // TTI Booking ID = internal reference (e.g., "1654483") — from ETTicketFare.Ref, Booking.Id, etc.
-    // Do NOT use ETTicketFare.Ref or Segment.Ref as airline PNR — those are internal IDs
-    const airlinePnr = booking.RecordLocator || booking.BookingReference || booking.PNR || 
-                 seg0.RecordLocator || seg0.AirlinePNR || seg0.PNR || seg0.BookingReference ||
-                 pax0.RecordLocator || pax0.PNR || pax0.BookingReference ||
-                 response.BookingReference || response.PNR || response.RecordLocator || 
-                 null;
-    
-    // Internal TTI booking ID — used for cancel/ticket operations
+    const normalizeCode = (val) => {
+      if (!val) return null;
+      const code = String(val).trim().toUpperCase();
+      return code || null;
+    };
+
+    const isLikelyAirlinePnr = (val) => {
+      const code = normalizeCode(val);
+      if (!code) return false;
+      return /^[A-Z0-9]{5,8}$/.test(code);
+    };
+
+    const airlinePnrCandidates = [
+      booking.RecordLocator,
+      seg0.RecordLocator,
+      seg0.AirlinePNR,
+      pax0.RecordLocator,
+      response.RecordLocator,
+      booking.PNR,
+      seg0.PNR,
+      pax0.PNR,
+      booking.BookingReference,
+      seg0.BookingReference,
+      pax0.BookingReference,
+      response.BookingReference,
+    ];
+
+    const airlinePnr = airlinePnrCandidates
+      .map(normalizeCode)
+      .find((code) => isLikelyAirlinePnr(code)) || null;
+
     const ttiBookingId = booking.Id || booking.BookingId || etFare0.Ref || seg0.Ref ||
                           response.BookingId || booking.Reference || booking.Ref || pax0.Ref || null;
-    
-    // Use airline PNR if available, otherwise use ttiBookingId as fallback identifier
+
+    // Backward-compatible top-level pnr: prefer airline locator, fallback to internal booking ID
     const pnr = airlinePnr || ttiBookingId || null;
-    
+
     const ticketTimeLimit = seg0.TimeLimit || booking.TicketTimeLimit || booking.TimeLimit ||
                              response.TicketTimeLimit || null;
 
