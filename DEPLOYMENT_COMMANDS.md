@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-13 (v3.9.9.4 — REST GetSeats v1 confirmed endpoint from Sabre developer portal)
+> Last updated: 2026-03-13 (v3.9.9.4 — GetSeats v3+v1 probing with SOAP fallback + viewership restriction hints)
 
 ---
 
