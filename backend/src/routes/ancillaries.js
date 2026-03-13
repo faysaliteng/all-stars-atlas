@@ -204,7 +204,29 @@ router.get('/seat-map', async (req, res) => {
       }
     }
 
-    // ── Priority 2: TTI — for Air Astra / S2 ──
+    // ── Priority 2: Sabre REST /v1/offers/getseats fallback ──
+    if (!seatLayout && airlineCode && flightNumber && origin && destination && departureDate) {
+      try {
+        const { getSeatsRest } = require('./sabre-flights');
+        if (getSeatsRest) {
+          console.log(`[SeatMap] Trying Sabre REST GetSeats for ${airlineCode}${flightNumber}`);
+          const restResult = await getSeatsRest({
+            origin, destination, departureDate, airlineCode,
+            flightNumber: flightNumber.replace(/^[A-Z]{2}/i, ''),
+            cabinClass: cabinClass || 'Economy',
+          });
+          if (restResult && restResult.rows && restResult.rows.length > 0) {
+            source = 'sabre-rest';
+            seatLayout = restResult;
+            console.log(`[SeatMap] Sabre REST: ${restResult.totalRows} rows`);
+          }
+        }
+      } catch (restErr) {
+        console.log(`[SeatMap] Sabre REST not available: ${restErr.message}`);
+      }
+    }
+
+    // ── Priority 3: TTI — for Air Astra / S2 ──
     if (!seatLayout && ['2A', 'S2'].includes(airlineCode) && itineraryRef) {
       try {
         const tti = getTTIHelpers();
