@@ -710,19 +710,23 @@ async function createBooking({ flightData, passengers, contactInfo }) {
   const searchPassengers = flightData._ttiPassengers || [];
   console.log('[TTI BOOKING] Search Passengers (groups):', JSON.stringify(searchPassengers));
   
-  // Build a map of passenger type → search group Ref
-  // e.g., { AD: "1", CHD: "2" }
+  // Build a map of passenger type → search group Ref and Quantity
+  // e.g., { AD: { ref: "1", qty: 2 }, CHD: { ref: "2", qty: 1 } }
   const paxGroupMap = {};
   for (const sp of searchPassengers) {
     if (sp.PassengerTypeCode && sp.Ref) {
-      if (!paxGroupMap[sp.PassengerTypeCode]) paxGroupMap[sp.PassengerTypeCode] = [];
-      paxGroupMap[sp.PassengerTypeCode].push(sp.Ref);
+      paxGroupMap[sp.PassengerTypeCode] = {
+        ref: sp.Ref,
+        qty: sp.PassengerQuantity || 1,
+      };
     }
   }
   console.log('[TTI BOOKING] Passenger group map:', JSON.stringify(paxGroupMap));
   
-  // Track how many passengers we've assigned to each group
-  const paxGroupUsed = {};
+  // ── CRITICAL FIX: Each NAMED passenger must have a UNIQUE Ref ──
+  // TTI search uses group refs (1 ref for all adults), but CreateBooking
+  // with named passengers needs individual unique refs (1, 2, 3...)
+  let globalRefCounter = 1;
   
   const ttiPassengers = passengers.map((p, i) => {
     // Fix nationality: must be ISO 2-letter country code, NOT a city/birth place
@@ -732,37 +736,58 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     // Determine passenger type
     const paxType = p.type === 'child' ? 'CHD' : p.type === 'infant' ? 'INF' : 'AD';
 
-    // Find the search passenger group ref for this type
-    const groupRefs = paxGroupMap[paxType] || paxGroupMap['AD'] || [];
-    const usedCount = paxGroupUsed[paxType] || 0;
-    const groupRef = groupRefs[usedCount] || groupRefs[0] || String(i + 1);
-    paxGroupUsed[paxType] = usedCount + 1;
+    // Each named passenger gets a unique sequential Ref
+    const uniqueRef = String(globalRefCounter++);
 
     const firstName = String(p.firstName || p.givenName || '').toUpperCase();
     const lastName = String(p.lastName || p.surname || '').toUpperCase();
-    const title = String(p.title || 'Mr').toUpperCase();
+    const rawTitle = String(p.title || 'Mr').toUpperCase().replace(/\./g, '');
     const rawDob = p.dateOfBirth || p.dob || null;
     const rawPassport = p.passportNumber || p.passport || null;
     const rawPassportExpiry = p.passportExpiry || null;
     const genderRaw = String(p.gender || '').toLowerCase();
-    const genderCode = genderRaw.startsWith('f') ? 'F' : genderRaw.startsWith('m') ? 'M' : (title === 'MR' ? 'M' : 'F');
+    const genderCode = genderRaw.startsWith('f') ? 'F' : genderRaw.startsWith('m') ? 'M' : (rawTitle === 'MR' || rawTitle === 'MASTER' || rawTitle === 'MSTR' ? 'M' : 'F');
+
+    // ── CivilityCode mapping for TTI ──
+    // TTI accepts: MR, MRS, MS, MISS, MSTR (Master for boys)
+    // Children: boys = MSTR, girls = MISS
+    // Infants: boys = MSTR, girls = MISS (or MS)
+    let civilityCode = rawTitle;
+    if (paxType === 'CHD' || paxType === 'INF') {
+      if (genderCode === 'M') {
+        civilityCode = 'MSTR';
+      } else {
+        civilityCode = 'MISS';
+      }
+    } else {
+      // Adult civility code normalization
+      if (civilityCode === 'MASTER') civilityCode = 'MR';
+      if (!['MR', 'MRS', 'MS', 'MISS'].includes(civilityCode)) {
+        civilityCode = genderCode === 'M' ? 'MR' : 'MS';
+      }
+    }
 
     const dobDate = rawDob ? new Date(rawDob) : null;
     const passportExpiryDate = rawPassportExpiry ? new Date(rawPassportExpiry) : null;
 
+    // Contact info: only provide for adults, not children/infants
+    const isAdult = paxType === 'AD';
+    const email = isAdult ? (p.email || contactInfo?.email || '') : '';
+    const phone = isAdult ? (p.phone || contactInfo?.phone || '') : '';
+
     return {
-      Ref: groupRef,
+      Ref: uniqueRef,
       RefItinerary: selectedItinRef,
       PassengerTypeCode: paxType,
       PassengerQuantity: 1,
       NameElement: {
-        CivilityCode: title,
+        CivilityCode: civilityCode,
         Firstname: firstName,
         Middlename: null,
         Surname: lastName,
         Extensions: null,
       },
-      Title: title,
+      Title: civilityCode,
       FirstName: firstName,
       LastName: lastName,
       GivenName: firstName,
@@ -780,20 +805,19 @@ async function createBooking({ flightData, passengers, contactInfo }) {
         ExpiryDate: passportExpiryDate && !isNaN(passportExpiryDate.getTime()) ? `/Date(${passportExpiryDate.getTime()})/` : null,
         NationalityCode: natCode,
       } : null,
-      ContactInfo: {
-        Email: p.email || contactInfo?.email || '',
-        Phone: p.phone || contactInfo?.phone || '',
-      },
-      Email: p.email || contactInfo?.email || '',
-      Phone: p.phone || contactInfo?.phone || '',
+      ContactInfo: (email || phone) ? {
+        Email: email,
+        Phone: phone,
+      } : null,
+      Email: email || null,
+      Phone: phone || null,
       Extensions: null,
     };
   });
   
-  console.log('[TTI BOOKING] Named passengers:', JSON.stringify(ttiPassengers.map(p => ({ Ref: p.Ref, RefItinerary: p.RefItinerary, Type: p.PassengerTypeCode, Name: p.FirstName + ' ' + p.LastName }))));
+  console.log('[TTI BOOKING] Named passengers:', JSON.stringify(ttiPassengers.map(p => ({ Ref: p.Ref, RefItinerary: p.RefItinerary, Type: p.PassengerTypeCode, Name: p.FirstName + ' ' + p.LastName, CivilityCode: p.NameElement?.CivilityCode }))));
 
   // ── CRITICAL: TTI CreateBooking requires Offer.Ref from SearchFlights response ──
-  // For strict GDS mode, fail fast if this context is missing.
   const offer = flightData._ttiOffer || null;
   const offerRef = offer?.Ref || offer?.ref || null;
   
@@ -823,23 +847,61 @@ async function createBooking({ flightData, passengers, contactInfo }) {
   }
 
   // ── Build FareInfo with ONLY the selected itinerary ──
+  // CRITICAL FIX: Expand ETTicketFares to have one entry per named passenger
+  // TTI search returns 1 fare per passenger GROUP (e.g., 1 AD fare for 2 adults)
+  // CreateBooking needs 1 fare per NAMED passenger with unique RefPassenger
   const fullFareInfo = flightData._ttiFullFareInfo || {};
   
-  // Filter to only the selected itinerary and its associated fares
-  const filteredFareInfo = {
-    ...fullFareInfo,
-    Itineraries: (fullFareInfo.Itineraries || []).filter(it => it.Ref === selectedItinRef),
-    ETTicketFares: (fullFareInfo.ETTicketFares || []).filter(f => 
-      f.RefItinerary === selectedItinRef || !f.RefItinerary
-    ),
-  };
+  // Filter to only the selected itinerary
+  const filteredItineraries = (fullFareInfo.Itineraries || []).filter(it => it.Ref === selectedItinRef);
+  const filteredETFares = (fullFareInfo.ETTicketFares || []).filter(f => 
+    f.RefItinerary === selectedItinRef || !f.RefItinerary
+  );
   
-  // If filtering removed everything, fall back to full FareInfo
-  const fareInfo = filteredFareInfo.Itineraries.length > 0 ? filteredFareInfo : fullFareInfo;
+  // Expand fares: create one fare entry per named passenger
+  const expandedETFares = [];
+  // Group named passengers by type
+  const paxByType = {};
+  for (const tp of ttiPassengers) {
+    if (!paxByType[tp.PassengerTypeCode]) paxByType[tp.PassengerTypeCode] = [];
+    paxByType[tp.PassengerTypeCode].push(tp);
+  }
+  
+  for (const fare of filteredETFares) {
+    // Find which passenger type this fare belongs to via RefPassenger → search group
+    const fareRefPax = fare.RefPassenger || fare.Ref;
+    let matchedType = null;
+    for (const [type, group] of Object.entries(paxGroupMap)) {
+      if (group.ref === fareRefPax || group.ref === String(fareRefPax)) {
+        matchedType = type;
+        break;
+      }
+    }
+    
+    if (matchedType && paxByType[matchedType]) {
+      // Create one fare entry for each named passenger of this type
+      for (const pax of paxByType[matchedType]) {
+        expandedETFares.push({
+          ...fare,
+          RefPassenger: pax.Ref,  // Unique ref per named passenger
+        });
+      }
+    } else {
+      // Can't match — just push with original ref
+      expandedETFares.push(fare);
+    }
+  }
+  
+  const fareInfo = {
+    ...fullFareInfo,
+    Itineraries: filteredItineraries.length > 0 ? filteredItineraries : (fullFareInfo.Itineraries || []),
+    ETTicketFares: expandedETFares.length > 0 ? expandedETFares : filteredETFares,
+  };
   
   console.log('[TTI BOOKING] Offer:', offer ? `Ref=${offer.Ref}` : 'MISSING!');
   console.log('[TTI BOOKING] Selected itinerary:', selectedItinRef);
   console.log('[TTI BOOKING] Segments count:', segments.length, '| FareInfo.Itineraries:', (fareInfo.Itineraries || []).length, '| FareInfo.ETTicketFares:', (fareInfo.ETTicketFares || []).length);
+  console.log('[TTI BOOKING] ETTicketFare RefPassengers:', JSON.stringify(expandedETFares.map(f => f.RefPassenger)));
 
   if (!selectedItinRef) {
     return { success: false, error: 'TTI booking error: Missing itinerary reference (_ttiItineraryRef)' };
