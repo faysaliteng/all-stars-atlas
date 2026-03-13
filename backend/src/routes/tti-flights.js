@@ -775,11 +775,12 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     const email = isAdult ? (p.email || contactInfo?.email || '') : '';
     const phone = isAdult ? (p.phone || contactInfo?.phone || '') : '';
 
+    // TTI Passenger schema ONLY accepts: Ref, RefClient, PassengerQuantity, PassengerTypeCode, NameElement, Extensions
+    // All other fields (DateOfBirth, Passport, etc.) are IGNORED — they must go via SpecialServices DOCS SSR
     return {
       Ref: uniqueRef,
-      RefItinerary: selectedItinRef,
-      PassengerTypeCode: paxType,
       PassengerQuantity: 1,
+      PassengerTypeCode: paxType,
       NameElement: {
         CivilityCode: civilityCode,
         Firstname: firstName,
@@ -787,31 +788,20 @@ async function createBooking({ flightData, passengers, contactInfo }) {
         Surname: lastName,
         Extensions: null,
       },
-      Title: civilityCode,
-      FirstName: firstName,
-      LastName: lastName,
-      GivenName: firstName,
-      Surname: lastName,
-      DateOfBirth: dobDate && !isNaN(dobDate.getTime()) ? `/Date(${dobDate.getTime()})/` : null,
-      Gender: genderCode,
-      GenderCode: genderCode,
-      Nationality: natCode,
-      NationalityCode: natCode,
-      PassportNumber: rawPassport || null,
-      PassportExpiry: passportExpiryDate && !isNaN(passportExpiryDate.getTime()) ? `/Date(${passportExpiryDate.getTime()})/` : null,
-      DocumentInfo: rawPassport ? {
-        DocumentNumber: rawPassport,
-        DocumentType: 'P',
-        ExpiryDate: passportExpiryDate && !isNaN(passportExpiryDate.getTime()) ? `/Date(${passportExpiryDate.getTime()})/` : null,
-        NationalityCode: natCode,
-      } : null,
-      ContactInfo: (email || phone) ? {
-        Email: email,
-        Phone: phone,
-      } : null,
-      Email: email || null,
-      Phone: phone || null,
       Extensions: null,
+      // ── Internal fields for DOCS SSR builder (NOT sent to TTI) ──
+      _internal: {
+        firstName,
+        lastName,
+        genderCode,
+        natCode,
+        rawPassport,
+        dobDate,
+        passportExpiryDate,
+        email,
+        phone,
+        paxType,
+      },
     };
   });
   
@@ -920,66 +910,86 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     RefItinerary: selectedItinRef,
   };
 
-  // ── Build SpecialServices for child/infant passengers ──
-  // TTI CHLD/INFT SSRs require DateOfBirth in the Data field
+  // ── Build SpecialServices: DOCS (passport) for ALL passengers + CHLD/INFT SSRs ──
+  // TTI Passenger schema ONLY accepts Ref/PassengerQuantity/PassengerTypeCode/NameElement
+  // All identity data (DOB, passport, gender, nationality) MUST go via SpecialServices DOCS SSR
   const specialServices = [];
   const adultPassengers = ttiPassengers.filter(p => p.PassengerTypeCode === 'AD');
 
   ttiPassengers.forEach((tp, idx) => {
-    const pax = passengers[idx];
+    const int = tp._internal || {};
+
+    // DOCS SSR — passport/travel document for EVERY passenger
+    if (int.rawPassport) {
+      const dobMs = int.dobDate && !isNaN(int.dobDate.getTime()) ? int.dobDate.getTime() : null;
+      const expiryMs = int.passportExpiryDate && !isNaN(int.passportExpiryDate.getTime()) ? int.passportExpiryDate.getTime() : null;
+      specialServices.push({
+        Code: 'DOCS',
+        RefPassenger: tp.Ref,
+        Data: {
+          Docs: {
+            Documents: [{
+              DocumentTypeCode: 'P',
+              DocumentNumber: String(int.rawPassport).toUpperCase(),
+              IssueCountryCode: int.natCode || 'BD',
+              NationalityCountryCode: int.natCode || 'BD',
+              DateOfBirth: dobMs ? `/Date(${dobMs})/` : null,
+              Gender: int.genderCode || null,
+              DocumentExpiryDate: expiryMs ? `/Date(${expiryMs})/` : null,
+              Firstname: int.firstName || null,
+              Surname: int.lastName || null,
+            }],
+          },
+        },
+        Status: null, Text: null, RefSegment: null, TechnicalType: null, Extensions: null, Available: null,
+      });
+      console.log(`[TTI BOOKING] DOCS SSR pax ${idx + 1}: passport=${int.rawPassport} dob=${dobMs ? new Date(dobMs).toISOString().slice(0,10) : 'N/A'} gender=${int.genderCode} expiry=${expiryMs ? new Date(expiryMs).toISOString().slice(0,10) : 'N/A'} country=${int.natCode}`);
+    }
+
+    // CHLD SSR
     if (tp.PassengerTypeCode === 'CHD') {
-      const dobDate = tp.DateOfBirth; // Already in /Date(ms)/ format
-      if (dobDate) {
+      const dobMs = int.dobDate && !isNaN(int.dobDate.getTime()) ? int.dobDate.getTime() : null;
+      if (dobMs) {
         specialServices.push({
-          Code: 'CHLD',
-          RefPassenger: tp.Ref,
-          Data: {
-            Chld: {
-              DateOfBirth: dobDate,
-              RefPassengerWithSeat: null,
-            },
-          },
-          Status: null,
-          Text: null,
-          RefSegment: null,
-          TechnicalType: null,
-          Extensions: null,
-          Available: null,
-        });
-      }
-    } else if (tp.PassengerTypeCode === 'INF') {
-      const dobDate = tp.DateOfBirth;
-      // Infant must reference the adult they're travelling with
-      const associatedAdult = adultPassengers[0] || ttiPassengers[0];
-      if (dobDate) {
-        specialServices.push({
-          Code: 'INFT',
-          RefPassenger: tp.Ref,
-          Data: {
-            Inft: {
-              DateOfBirth: dobDate,
-              RefPassengerWithSeat: associatedAdult?.Ref || '1',
-            },
-          },
-          Status: null,
-          Text: null,
-          RefSegment: null,
-          TechnicalType: null,
-          Extensions: null,
-          Available: null,
+          Code: 'CHLD', RefPassenger: tp.Ref,
+          Data: { Chld: { DateOfBirth: `/Date(${dobMs})/`, RefPassengerWithSeat: null } },
+          Status: null, Text: null, RefSegment: null, TechnicalType: null, Extensions: null, Available: null,
         });
       }
     }
+
+    // INFT SSR
+    if (tp.PassengerTypeCode === 'INF') {
+      const dobMs = int.dobDate && !isNaN(int.dobDate.getTime()) ? int.dobDate.getTime() : null;
+      const associatedAdult = adultPassengers[0] || ttiPassengers[0];
+      if (dobMs) {
+        specialServices.push({
+          Code: 'INFT', RefPassenger: tp.Ref,
+          Data: { Inft: { DateOfBirth: `/Date(${dobMs})/`, RefPassengerWithSeat: associatedAdult?.Ref || '1' } },
+          Status: null, Text: null, RefSegment: null, TechnicalType: null, Extensions: null, Available: null,
+        });
+      }
+    }
+
+    // PCTC SSR — contact info
+    if (int.paxType === 'AD' && (int.email || int.phone)) {
+      specialServices.push({
+        Code: 'PCTC', RefPassenger: tp.Ref,
+        Data: { Pctc: { Email: int.email || null, Phone: int.phone || null } },
+        Status: null, Text: null, RefSegment: null, TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
   });
 
-  if (specialServices.length > 0) {
-    console.log('[TTI BOOKING] SpecialServices:', JSON.stringify(specialServices.map(s => ({ Code: s.Code, RefPassenger: s.RefPassenger }))));
-  }
+  console.log('[TTI BOOKING] SpecialServices:', JSON.stringify(specialServices.map(s => ({ Code: s.Code, RefPassenger: s.RefPassenger }))));
+
+  // Strip _internal fields before sending to TTI (they're not part of the schema)
+  const cleanPassengers = ttiPassengers.map(({ _internal, ...rest }) => rest);
 
   const request = {
     RequestInfo: { AuthenticationKey: config.key },
     Offer: offerWithRef,              // CRITICAL: Links to search session + selected itinerary
-    Passengers: ttiPassengers,
+    Passengers: cleanPassengers,
     Segments: segments,
     FareInfo: fareInfo,
     SpecialServices: specialServices.length > 0 ? specialServices : null,
