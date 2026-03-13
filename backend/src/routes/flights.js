@@ -598,6 +598,8 @@ router.post('/book', authenticate, async (req, res) => {
     // If this is a TTI/Air Astra flight, create booking in GDS first
     let gdsPnr = null;
     let gdsBookingResult = null;
+    let airlinePnr = null; // Actual airline record locator (e.g., "00KSQZ")
+    let gdsBookingId = null; // Internal GDS booking ID (e.g., "1654483")
     const flightSource = flightData?.source || '';
     if (flightSource === 'tti' || (flightData?.airlineCode === '2A' || flightData?.airlineCode === 'S2')) {
       console.log('[Booking] TTI/Air Astra flight detected — creating GDS booking...');
@@ -605,7 +607,9 @@ router.post('/book', authenticate, async (req, res) => {
         gdsBookingResult = await ttiCreateBooking({ flightData, passengers: passengers || [], contactInfo: contactInfo || {} });
         if (gdsBookingResult.success && gdsBookingResult.pnr) {
           gdsPnr = gdsBookingResult.pnr;
-          console.log('[Booking] TTI PNR created:', gdsPnr);
+          airlinePnr = gdsBookingResult.airlinePnr || null;
+          gdsBookingId = gdsBookingResult.ttiBookingId || null;
+          console.log('[Booking] TTI PNR:', gdsPnr, '| Airline PNR:', airlinePnr, '| Booking ID:', gdsBookingId);
           // Use TTI time limit if available
           if (gdsBookingResult.ticketTimeLimit && payLater) {
             const ttiDeadline = new Date(gdsBookingResult.ticketTimeLimit);
@@ -657,7 +661,7 @@ router.post('/book', authenticate, async (req, res) => {
       `INSERT INTO bookings (id, user_id, booking_type, booking_ref, pnr, status, ticket_status, provider, route, total_amount, payment_method, payment_status, details, passenger_info, contact_info, payment_deadline)
        VALUES (?, ?, 'flight', ?, ?, ?, 'not_issued', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [bookingId, req.user.sub, bookingRef, gdsPnr || null, status, flightProvider, flightRoute, totalAmount || 0, paymentMethod || 'pay_later', payStatus,
-       JSON.stringify({ ...details, gdsPnr, gdsBookingResult: gdsBookingResult || null }),
+       JSON.stringify({ ...details, gdsPnr, airlinePnr, gdsBookingId, gdsBookingResult: gdsBookingResult || null }),
        JSON.stringify(passengers || []), JSON.stringify(contactInfo || {}),
        paymentDeadline]
     );
@@ -724,6 +728,7 @@ router.post('/cancel', authenticate, async (req, res) => {
 
     // For TTI, provider booking id from GDS response is required (local booking.id is NOT valid for TTI Cancel API)
     const ttiBookingId = details?.gdsBookingResult?.ttiBookingId
+      || details?.gdsBookingId
       || details?.ttiBookingId
       || details?.outbound?._ttiBookingId
       || null;

@@ -136,12 +136,22 @@ function mapBooking(b: any) {
     baseFare = knownExtra > 0 ? Math.max(0, rawAmount - knownExtra) : rawAmount;
   }
 
+  // Dual PNR: Airlines PNR (actual airline record locator) vs GDS Booking ID (internal reference)
+  const airlinePnr = details.airlinePnr || null;
+  const gdsBookingId = details.gdsBookingId || details.gdsBookingResult?.ttiBookingId || null;
+  // For Sabre, the PNR IS the airline PNR (6-char locator)
+  const isSabre = (source === 'sabre');
+  const displayAirlinePnr = airlinePnr || (isSabre ? (b.pnr || details.gdsPnr || null) : null);
+  const displayGdsBookingId = gdsBookingId || (!isSabre ? (b.pnr || details.gdsPnr || null) : null);
+
   return {
     id: b.bookingRef || b.id, rawId: b.id, type: b.bookingType || "flight", status: b.status || "pending",
     amount: `৳${rawAmount.toLocaleString()}`, rawAmount,
     date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—",
     pnr: b.pnr || details.gdsPnr || "—",
     gdsPnr: details.gdsPnr || b.pnr || null,
+    airlinePnr: displayAirlinePnr,
+    gdsBookingId: displayGdsBookingId,
     pax: passengers.length || 1,
     paxNames: passengers.map((p: any) => `${p.firstName || ""} ${p.lastName || ""}`.trim()).filter(Boolean),
     ticketNo: b.ticketNo || "—",
@@ -185,7 +195,9 @@ const DashboardBookingDetail = () => {
       setCancelOpen(false);
       refetch();
     } catch (err: any) {
-      toast({ title: "Cancel Failed", description: err.message || "Could not cancel booking.", variant: "destructive" });
+      const errMsg = err.gdsError || err.message || "Could not cancel booking.";
+      const hint = err.hint || "";
+      toast({ title: "Cancel Failed", description: `${errMsg}${hint ? ` — ${hint}` : ""}`, variant: "destructive" });
     } finally {
       setCancelLoading(false);
     }
@@ -290,7 +302,7 @@ const DashboardBookingDetail = () => {
             </div>
           )}
 
-          {/* Booking meta — 5 columns: Booking ID, Airlines PNR, GDS Source, Class, Journey */}
+          {/* Booking meta — 5 columns: Booking ID, Airlines PNR, GDS Booking ID, Class, Journey */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Booking ID</p>
@@ -300,13 +312,23 @@ const DashboardBookingDetail = () => {
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Airlines PNR</p>
-              <p className="text-sm font-bold font-mono text-accent flex items-center gap-1">{booking.pnr}
-                {booking.pnr !== "—" && <button onClick={() => copyText(booking.pnr, "Airlines PNR")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>}
-              </p>
+              {booking.airlinePnr ? (
+                <p className="text-sm font-bold font-mono text-accent flex items-center gap-1">{booking.airlinePnr}
+                  <button onClick={() => copyText(booking.airlinePnr!, "Airlines PNR")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-muted-foreground italic">Pending</p>
+              )}
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
-              <p className="text-[10px] uppercase text-muted-foreground font-medium">GDS Source</p>
-              <p className="text-sm font-bold capitalize">{booking.source === "db" ? "Local" : booking.source}</p>
+              <p className="text-[10px] uppercase text-muted-foreground font-medium">GDS Booking ID</p>
+              {booking.gdsBookingId ? (
+                <p className="text-sm font-bold font-mono text-accent flex items-center gap-1">{booking.gdsBookingId}
+                  <button onClick={() => copyText(booking.gdsBookingId!, "GDS Booking ID")} className="shrink-0"><Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" /></button>
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-muted-foreground">—</p>
+              )}
             </div>
             <div className="p-3 bg-muted/30 rounded-lg">
               <p className="text-[10px] uppercase text-muted-foreground font-medium">Booking Class</p>
@@ -507,10 +529,12 @@ const DashboardBookingDetail = () => {
               </DialogHeader>
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">Are you sure you want to cancel <strong>{booking.id}</strong>?</p>
-                {booking.pnr !== "—" && (
+                {(booking.pnr !== "—" || booking.gdsBookingId) && (
                   <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 text-sm">
                     <p className="font-semibold text-destructive">⚠️ GDS Cancellation</p>
-                    <p className="text-xs text-muted-foreground mt-1">This will attempt to cancel PNR <strong className="font-mono">{booking.pnr}</strong> in the airline system. Cancellation fees may apply.</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This will attempt to cancel {booking.airlinePnr ? `PNR ${booking.airlinePnr}` : `Booking ${booking.gdsBookingId || booking.pnr}`} in the airline system. Cancellation fees may apply.
+                    </p>
                   </div>
                 )}
                 <Textarea placeholder="Reason for cancellation (optional)" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />

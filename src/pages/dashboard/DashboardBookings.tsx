@@ -81,11 +81,19 @@ function mapBooking(b: any) {
   const title = origin && destination ? `${origin} → ${destination}` : details.route || details.destination || `${b.bookingType || "flight"} Booking`;
   const paxCount = passengers.length || 1;
 
+  // Dual PNR logic
+  const isSabre = (source === 'sabre');
+  const airlinePnrVal = details.airlinePnr || (isSabre ? (b.pnr || details.gdsPnr || null) : null);
+  const gdsBookingIdVal = details.gdsBookingId || details.gdsBookingResult?.ttiBookingId || (!isSabre ? (b.pnr || details.gdsPnr || null) : null);
+
   return {
     id: b.bookingRef || b.id, rawId: b.id, type: b.bookingType || "flight", status: b.status || "pending", title,
     amount: `৳${(b.totalAmount || 0).toLocaleString()}`, rawAmount: b.totalAmount || 0,
     date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—",
-    pnr: b.pnr || details.gdsPnr || "—", pax: paxCount,
+    pnr: b.pnr || details.gdsPnr || "—",
+    airlinePnr: airlinePnrVal,
+    gdsBookingId: gdsBookingIdVal,
+    pax: paxCount,
     paymentDeadline: b.paymentDeadline || null,
     airline, airlineCode, flightNumber, cabinClass, departureTime, origin, destination, source,
     isDomestic: details.isDomestic ?? isDomesticRoute(origin, destination),
@@ -220,7 +228,16 @@ const DashboardBookings = () => {
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{booking.date}</TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        {booking.pnr && booking.pnr !== "—" ? <code className="text-xs bg-accent/10 text-accent px-1.5 py-0.5 rounded font-bold">{booking.pnr}</code> : <span className="text-muted-foreground text-xs">—</span>}
+                        <div className="space-y-0.5">
+                          {booking.airlinePnr ? (
+                            <code className="text-xs bg-accent/10 text-accent px-1.5 py-0.5 rounded font-bold block w-fit">{booking.airlinePnr}</code>
+                          ) : (
+                            <span className="text-muted-foreground text-[9px] italic block">PNR Pending</span>
+                          )}
+                          {booking.gdsBookingId && (
+                            <span className="text-[9px] text-muted-foreground font-mono block">ID: {booking.gdsBookingId}</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-sm">{booking.pax}</TableCell>
                       <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{displayStatus(booking.status)}</Badge></TableCell>
