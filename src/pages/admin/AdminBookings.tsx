@@ -124,14 +124,20 @@ const AdminBookings = () => {
 
   const bookings = apiBookings;
 
+  // Split: bookings WITH PNR = success, WITHOUT PNR = failed
+  const hasPnr = (b: any) => b.pnr && b.pnr !== "—" && b.pnr.trim().length > 0;
+  const successBookings = bookings.filter((b: any) => hasPnr(b));
+  const failedBookings = bookings.filter((b: any) => !hasPnr(b));
+
   const stats = {
     total: bookings.length,
-    confirmed: bookings.filter((b: any) => ["confirmed", "completed", "ticketed"].includes(b.status)).length,
-    pending: bookings.filter((b: any) => ["pending", "on_hold", "processing"].includes(b.status)).length,
-    cancelled: bookings.filter((b: any) => ["cancelled", "failed", "void", "no_show"].includes(b.status)).length,
+    confirmed: successBookings.length,
+    pending: successBookings.filter((b: any) => ["pending", "on_hold", "processing"].includes(b.status)).length,
+    cancelled: successBookings.filter((b: any) => ["cancelled", "failed", "void", "no_show"].includes(b.status)).length,
+    failed: failedBookings.length,
   };
 
-  const filtered = bookings.filter((b: any) => {
+  const applyFilters = (list: any[]) => list.filter((b: any) => {
     if (statusFilter !== "all" && b.status !== statusFilter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -139,6 +145,9 @@ const AdminBookings = () => {
     }
     return true;
   });
+
+  const filtered = applyFilters(successBookings);
+  const filteredFailed = applyFilters(failedBookings);
 
   const updateBooking = async (b: any, updates: Record<string, any>) => {
     setActionLoading(b.rawId || b.id);
@@ -238,9 +247,9 @@ const AdminBookings = () => {
 
   const statCards = [
     { label: "Total Bookings", value: stats.total, icon: Ticket, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Confirmed", value: stats.confirmed, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
+    { label: "With PNR", value: stats.confirmed, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
     { label: "Pending", value: stats.pending, icon: Clock, color: "text-warning", bg: "bg-warning/10" },
-    { label: "Cancelled", value: stats.cancelled, icon: XCircle, color: "text-destructive", bg: "bg-destructive/10" },
+    { label: "Failed (No PNR)", value: stats.failed, icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10" },
   ];
 
   // Passenger info can be array or object
@@ -341,6 +350,51 @@ const AdminBookings = () => {
           </Table>
         </CardContent></Card>
       </DataLoader>
+
+      {/* ── Failed Bookings (No PNR) ── */}
+      {filteredFailed.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold flex items-center gap-2 text-destructive">
+            <AlertTriangle className="w-5 h-5" /> Failed Bookings (No PNR) — {filteredFailed.length}
+          </h2>
+          <Card className="border-destructive/30"><CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow className="bg-destructive/5">
+                <TableHead>ID</TableHead><TableHead>Customer</TableHead>
+                <TableHead className="hidden md:table-cell">Type</TableHead>
+                <TableHead className="hidden lg:table-cell">Route</TableHead>
+                <TableHead className="hidden md:table-cell">Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {filteredFailed.map((b: any) => (
+                  <TableRow key={b.id} className="cursor-pointer hover:bg-destructive/5" onClick={() => openDetail(b)}>
+                    <TableCell className="font-mono text-xs">{b.id}</TableCell>
+                    <TableCell><div><p className="text-sm font-medium">{b.customer}</p><p className="text-xs text-muted-foreground">{b.email}</p></div></TableCell>
+                    <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px]">{b.type}</Badge></TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm">{b.route}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{b.date}</TableCell>
+                    <TableCell><Badge variant="destructive" className="text-[11px]">Failed</Badge></TableCell>
+                    <TableCell className="text-right font-semibold text-sm">{b.amount}</TableCell>
+                    <TableCell>
+                      <DropdownMenu modal={false}><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openDetail(b); }}><Eye className="w-4 h-4 mr-2" /> View Details</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); archiveBooking(b); }}><Archive className="w-4 h-4 mr-2" /> Archive</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteConfirm(b); }}><Trash2 className="w-4 h-4 mr-2" /> Delete Permanently</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </div>
+      )}
 
       {/* ── Comprehensive Booking Detail Dialog ── */}
       <Dialog open={!!viewBooking} onOpenChange={() => { setViewBooking(null); setEditMode(false); }}>
