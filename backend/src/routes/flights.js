@@ -492,6 +492,224 @@ router.get('/search', async (req, res) => {
       }
     }
 
+    // ── Multi-city per-segment fallback ──
+    // If unified BFM returned 0 multi-city results, search each segment individually
+    // across all providers, then combine into multi-city itinerary cards (like BDFare)
+    if (isMultiCity && flights.filter(f => f.isMultiCity || f.direction === 'multicity').length === 0 && multiCitySegments.length >= 2) {
+      console.log(`[Search] Multi-city unified returned 0 — falling back to per-segment search for ${multiCitySegments.length} segments`);
+
+      // Search each segment in parallel across all providers
+      const segmentResults = await Promise.all(
+        multiCitySegments.map(async (seg, idx) => {
+          const segParams = {
+            origin: seg.from,
+            destination: seg.to,
+            departDate: seg.date,
+            adults: adultCount,
+            children: childCount,
+            infants: infantCount,
+            cabinClass: cabClass || undefined,
+          };
+          console.log(`[Search] Segment ${idx + 1}: ${seg.from}→${seg.to} on ${seg.date}`);
+
+          const results = await Promise.allSettled([
+            ttiSearch(segParams).catch(() => []),
+            bdfSearch(segParams).catch(() => []),
+            flyhubSearch(segParams).catch(() => []),
+            sabreSearch(segParams).catch(() => []),
+            galileoSearch(segParams).catch(() => []),
+            ndcSearch(segParams).catch(() => []),
+            searchAllLCCs(segParams).catch(() => []),
+          ]);
+
+          let segFlights = [];
+          for (const r of results) {
+            if (r.status === 'fulfilled') segFlights.push(...(r.value || []));
+          }
+          // Filter out return-direction flights; only keep outbound/one-way
+          segFlights = segFlights.filter(f => f.direction !== 'return');
+          // Sort by price
+          segFlights.sort((a, b) => (a.price || 0) - (b.price || 0));
+          console.log(`[Search] Segment ${idx + 1} (${seg.from}→${seg.to}): ${segFlights.length} flights found`);
+          return segFlights;
+        })
+      );
+
+      // Check all segments have at least 1 result
+      const allSegmentsHaveFlights = segmentResults.every(sr => sr.length > 0);
+
+      if (allSegmentsHaveFlights) {
+        // Build combined multi-city cards by grouping top flights from each segment
+        // Take top N from each segment and create combinations
+        const MAX_PER_SEGMENT = 30;
+        const trimmed = segmentResults.map(sr => sr.slice(0, MAX_PER_SEGMENT));
+
+        // Group by airline across segments for same-airline combos first, then mixed
+        const airlineGroups = {};
+        for (let si = 0; si < trimmed.length; si++) {
+          for (const f of trimmed[si]) {
+            const code = f.airlineCode || 'XX';
+            if (!airlineGroups[code]) airlineGroups[code] = Array.from({ length: trimmed.length }, () => []);
+            airlineGroups[code][si].push(f);
+          }
+        }
+
+        const combinedFlights = [];
+        const usedKeys = new Set();
+
+        // 1) Same-airline combinations
+        for (const [code, segArrays] of Object.entries(airlineGroups)) {
+          const allHave = segArrays.every(arr => arr.length > 0);
+          if (!allHave) continue;
+
+          // Take cheapest from each segment for this airline
+          for (let ci = 0; ci < Math.min(segArrays[0].length, 5); ci++) {
+            const combo = segArrays.map((arr, si) => arr[Math.min(ci, arr.length - 1)]);
+            const comboKey = combo.map(f => `${f.flightNumber}-${f.departureTime}`).join('|');
+            if (usedKeys.has(comboKey)) continue;
+            usedKeys.add(comboKey);
+
+            const segments = combo.map((f, si) => ({
+              segmentIndex: si,
+              origin: f.origin,
+              destination: f.destination,
+              departureTime: f.departureTime,
+              arrivalTime: f.arrivalTime,
+              duration: f.duration,
+              durationMinutes: f.durationMinutes || 0,
+              stops: f.stops || 0,
+              stopCodes: f.stopCodes || [],
+              airline: f.airline,
+              airlineCode: f.airlineCode,
+              flightNumber: f.flightNumber,
+              legs: f.legs || [f],
+              baggage: f.baggage,
+              handBaggage: f.handBaggage,
+              aircraft: f.legs?.[0]?.aircraft || '',
+              price: f.price || 0,
+              baseFare: f.baseFare || 0,
+              taxes: f.taxes || 0,
+              source: f.source,
+              refundable: f.refundable || false,
+              _originalFlight: f, // keep reference for booking
+            }));
+
+            const totalPrice = segments.reduce((s, seg) => s + (seg.price || 0), 0);
+            const totalBaseFare = segments.reduce((s, seg) => s + (seg.baseFare || 0), 0);
+            const totalTaxes = segments.reduce((s, seg) => s + (seg.taxes || 0), 0);
+            const totalDuration = segments.reduce((s, seg) => s + (seg.durationMinutes || 0), 0);
+
+            combinedFlights.push({
+              id: `mc-combo-${combinedFlights.length}`,
+              source: segments[0].source || 'sabre',
+              direction: 'multicity',
+              isMultiCity: true,
+              isCombined: true, // flag: built from per-segment searches
+              segmentCount: segments.length,
+              segments,
+              airline: segments[0].airline,
+              airlineCode: segments[0].airlineCode,
+              airlineLogo: null,
+              flightNumber: segments.map(s => s.flightNumber).join(', '),
+              origin: segments[0].origin,
+              destination: segments[segments.length - 1].destination,
+              departureTime: segments[0].departureTime,
+              arrivalTime: segments[segments.length - 1].arrivalTime,
+              duration: formatDuration(totalDuration),
+              durationMinutes: totalDuration,
+              stops: segments.reduce((s, seg) => s + seg.stops, 0),
+              stopCodes: segments.flatMap(s => s.stopCodes),
+              cabinClass: cabClass || 'Economy',
+              price: totalPrice,
+              baseFare: totalBaseFare,
+              taxes: totalTaxes,
+              currency: 'BDT',
+              refundable: segments.every(s => s.refundable),
+              baggage: segments[0].baggage,
+              handBaggage: segments[0].handBaggage,
+              legs: segments.flatMap(s => s.legs || []),
+            });
+          }
+        }
+
+        // 2) Mixed-airline: cheapest per segment regardless of airline
+        for (let ci = 0; ci < Math.min(trimmed[0].length, 15); ci++) {
+          const combo = trimmed.map((segArr, si) => segArr[Math.min(ci, segArr.length - 1)]);
+          const comboKey = combo.map(f => `${f.flightNumber}-${f.departureTime}`).join('|');
+          if (usedKeys.has(comboKey)) continue;
+          usedKeys.add(comboKey);
+
+          const segments = combo.map((f, si) => ({
+            segmentIndex: si,
+            origin: f.origin,
+            destination: f.destination,
+            departureTime: f.departureTime,
+            arrivalTime: f.arrivalTime,
+            duration: f.duration,
+            durationMinutes: f.durationMinutes || 0,
+            stops: f.stops || 0,
+            stopCodes: f.stopCodes || [],
+            airline: f.airline,
+            airlineCode: f.airlineCode,
+            flightNumber: f.flightNumber,
+            legs: f.legs || [f],
+            baggage: f.baggage,
+            handBaggage: f.handBaggage,
+            aircraft: f.legs?.[0]?.aircraft || '',
+            price: f.price || 0,
+            baseFare: f.baseFare || 0,
+            taxes: f.taxes || 0,
+            source: f.source,
+            refundable: f.refundable || false,
+            _originalFlight: f,
+          }));
+
+          const totalPrice = segments.reduce((s, seg) => s + (seg.price || 0), 0);
+          const totalBaseFare = segments.reduce((s, seg) => s + (seg.baseFare || 0), 0);
+          const totalTaxes = segments.reduce((s, seg) => s + (seg.taxes || 0), 0);
+          const totalDuration = segments.reduce((s, seg) => s + (seg.durationMinutes || 0), 0);
+
+          combinedFlights.push({
+            id: `mc-mix-${combinedFlights.length}`,
+            source: 'combined',
+            direction: 'multicity',
+            isMultiCity: true,
+            isCombined: true,
+            segmentCount: segments.length,
+            segments,
+            airline: segments.map(s => s.airline).filter((v, i, a) => a.indexOf(v) === i).join(' + '),
+            airlineCode: segments[0].airlineCode,
+            airlineLogo: null,
+            flightNumber: segments.map(s => s.flightNumber).join(', '),
+            origin: segments[0].origin,
+            destination: segments[segments.length - 1].destination,
+            departureTime: segments[0].departureTime,
+            arrivalTime: segments[segments.length - 1].arrivalTime,
+            duration: formatDuration(totalDuration),
+            durationMinutes: totalDuration,
+            stops: segments.reduce((s, seg) => s + seg.stops, 0),
+            stopCodes: segments.flatMap(s => s.stopCodes),
+            cabinClass: cabClass || 'Economy',
+            price: totalPrice,
+            baseFare: totalBaseFare,
+            taxes: totalTaxes,
+            currency: 'BDT',
+            refundable: segments.every(s => s.refundable),
+            baggage: segments[0].baggage,
+            handBaggage: segments[0].handBaggage,
+            legs: segments.flatMap(s => s.legs || []),
+          });
+        }
+
+        // Sort combined by price and add to flights
+        combinedFlights.sort((a, b) => a.price - b.price);
+        flights.push(...combinedFlights);
+        console.log(`[Search] Multi-city fallback: built ${combinedFlights.length} combined itineraries`);
+      } else {
+        console.log(`[Search] Multi-city fallback: some segments have no flights — ${segmentResults.map((sr, i) => `Seg${i + 1}:${sr.length}`).join(', ')}`);
+      }
+    }
+
     // Deduplicate flights from multiple providers
     // Key includes ALL leg flight numbers + times to preserve different round-trip/connection combos
     const seen = new Set();
@@ -679,6 +897,13 @@ function parseDurationToMinutes(dur) {
   const minMatch = dur.match(/(\d+)\s*m/i);
   if (minMatch) return parseInt(minMatch[1]);
   return 0;
+}
+
+function formatDuration(mins) {
+  if (!mins || mins <= 0) return '0h 0m';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h ${m}m`;
 }
 
 // GET /flights/:id
