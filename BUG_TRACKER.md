@@ -1,7 +1,7 @@
 # Seven Trip — Bug Tracker & Root Cause Analysis
 
 > Complete record of all bugs discovered and fixed during development.
-> Last updated: 2026-03-13 (v3.9.9)
+> Last updated: 2026-03-13 (v3.9.9.2)
 
 ---
 
@@ -9,6 +9,7 @@
 
 | # | Version | Bug | Root Cause | Fix | Impact |
 |---|---------|-----|-----------|-----|--------|
+| C00 | v3.9.9.2 | REST GetSeats v2 schema validation error | Payload used v1 camelCase format; v2 requires PascalCase `SeatAvailabilityRQ.SeatMapQueryEnhanced` wrapper | Fixed payload schema + endpoint `/v1/` → `/v2/` | REST seat maps broken |
 | C01 | v3.9.7 | Sabre PNR creation failing (400) | `NamePrefix` property not allowed in `PersonName` schema | Removed `NamePrefix`, title appended to `GivenName` | All Sabre bookings blocked |
 | C02 | v3.9.7 | Seat map returning null on production | Stale SOAP session token in cache | Auto-retry with session cache clearing | Seat selection unavailable |
 | C03 | v3.9.6 | TTI cancel using wrong ID | Sent internal TTI ID instead of airline PNR | Extract PNR from gdsResponse with priority chain | Cancellations failing |

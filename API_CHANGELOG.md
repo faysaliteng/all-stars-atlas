@@ -1,7 +1,20 @@
 # Seven Trip — API Changelog
 
 > All backend API changes, new endpoints, breaking changes, and schema updates per version.
-> Last updated: 2026-03-13 (v3.9.9)
+> Last updated: 2026-03-13 (v3.9.9.2)
+
+---
+
+## v3.9.9.2 — 2026-03-13
+
+### Fixed
+- `GET /flights/seats-rest` — Fixed REST GetSeats payload to use Sabre v2 schema (`SeatAvailabilityRQ.SeatMapQueryEnhanced` PascalCase wrapper)
+- Endpoint changed from `/v1/offers/getseats` → `/v2/offers/getseats`
+
+### Verified — Airline Support Matrix
+- **Pre-booking seat maps working**: EK (33 rows), SQ (35), AI (23), TG (26), TK (35), CZ (35) — all via Sabre SOAP
+- **Not working from DAC**: BG, BS, 2A, QR, SV, GF, KU, WY, EY, FZ, G9, MH, CX, 6E, UL (Sabre limitation, not code bug)
+- **Post-booking ancillaries**: GAO requires active PNR (auto-cancelled PNRs return "Proper request mode" error)
 
 ---
 
@@ -11,7 +24,7 @@
 - `POST /flights/revalidate-price` — Sabre BFM revalidation (`/v4/shop/flights/revalidate`) to verify fare before booking
 - `GET /flights/booking/:pnr` — Retrieve PNR details via Sabre REST (`/v1/trip/orders/getBooking`)
 - `GET /flights/ticket-status/:pnr` — Check ticket issuance status (`/v1/trip/orders/checkFlightTickets`)
-- `GET /flights/seats-rest` — REST seat map via `/v1/offers/getseats` (alternative to SOAP)
+- `GET /flights/seats-rest` — REST seat map via `/v2/offers/getseats` (requires PNR)
 
 ### Backend Changes
 - **Ticketing upgraded**: `issueTicket()` now uses `/v1.3.0/air/ticket` (was v1.2.1)
