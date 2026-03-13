@@ -92,12 +92,12 @@ router.get('/stats', async (req, res) => {
 // GET /dashboard/bookings
 router.get('/bookings', async (req, res) => {
   try {
-    const { status, type, search, page = 1, limit = 20 } = req.query;
+    const { status, type, search, page = 1, limit = 100 } = req.query;
     let sql = 'SELECT * FROM bookings WHERE user_id = ? AND (archived IS NULL OR archived = 0)';
     const params = [req.user.sub];
     if (status) { sql += ' AND status = ?'; params.push(status); }
     if (type) { sql += ' AND booking_type = ?'; params.push(type); }
-    if (search) { sql += ' AND booking_ref LIKE ?'; params.push(`%${search}%`); }
+    if (search) { sql += ' AND (booking_ref LIKE ? OR pnr LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const [countResult] = await db.query(sql.replace('SELECT *', 'SELECT COUNT(*) as total'), params);
