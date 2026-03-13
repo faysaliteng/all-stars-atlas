@@ -970,15 +970,30 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     }
     console.log('[TTI BOOKING] Full response (5000):', JSON.stringify(response).substring(0, 5000));
 
+    // ── ALWAYS log InvalidData FIRST — TTI includes it alongside ResponseInfo.Error ──
+    if (response.InvalidData) {
+      console.error('[TTI BOOKING] ❌ InvalidData details:', JSON.stringify(response.InvalidData, null, 2));
+    }
+    // Also check for InvalidData inside Booking or at other locations
+    if (response.Booking?.InvalidData) {
+      console.error('[TTI BOOKING] ❌ Booking.InvalidData:', JSON.stringify(response.Booking.InvalidData, null, 2));
+    }
+    // Log ALL top-level keys to find where InvalidData lives
+    console.log('[TTI BOOKING] All response top-level keys:', Object.keys(response));
+    
     if (response.ResponseInfo?.Error) {
       const err = response.ResponseInfo.Error;
       console.error('[TTI BOOKING] API Error:', JSON.stringify(err));
-      throw new Error(`TTI booking error: ${err.Message || err.Code || 'Unknown error'}`);
+      // Log Extensions — TTI often puts InvalidData details here
+      if (err.Extensions) {
+        console.error('[TTI BOOKING] Error.Extensions:', JSON.stringify(err.Extensions, null, 2));
+      }
+      const invalidDataStr = response.InvalidData ? ` | InvalidData: ${JSON.stringify(response.InvalidData).substring(0, 1000)}` : '';
+      throw new Error(`TTI booking error: ${err.Message || err.Code || 'Unknown error'}${invalidDataStr}`);
     }
 
-    // Check InvalidData — TTI returns this when booking data is rejected
+    // Standalone InvalidData check (no ResponseInfo.Error)
     if (response.InvalidData) {
-      console.error('[TTI BOOKING] ❌ InvalidData:', JSON.stringify(response.InvalidData));
       throw new Error(`TTI booking rejected: ${JSON.stringify(response.InvalidData).substring(0, 500)}`);
     }
 
