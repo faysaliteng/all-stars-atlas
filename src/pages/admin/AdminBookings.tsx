@@ -70,6 +70,10 @@ const AdminBookings = () => {
   const [payLinkName, setPayLinkName] = useState("");
   const [payLinkPlatform, setPayLinkPlatform] = useState("email");
   const [deleteConfirm, setDeleteConfirm] = useState<any>(null);
+  const [bulkCancelOpen, setBulkCancelOpen] = useState(false);
+  const [bulkCancelFilter, setBulkCancelFilter] = useState<"reserved" | "all_with_pnr">("reserved");
+  const [bulkCancelLoading, setBulkCancelLoading] = useState(false);
+  const [bulkCancelResult, setBulkCancelResult] = useState<any>(null);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -244,6 +248,25 @@ const AdminBookings = () => {
     setActionLoading(null);
   };
 
+  const handleBulkCancel = async () => {
+    setBulkCancelLoading(true);
+    setBulkCancelResult(null);
+    try {
+      const result: any = await api.post('/admin/bookings/bulk-cancel', { filter: bulkCancelFilter });
+      setBulkCancelResult(result);
+      toast({
+        title: `Bulk Cancel Complete`,
+        description: `${result.summary?.cancelled || 0} cancelled, ${result.summary?.failed || 0} failed, ${result.summary?.skipped || 0} skipped`,
+      });
+      qc.invalidateQueries({ queryKey: ['admin', 'bookings'] });
+      refetch();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Bulk cancel failed", variant: "destructive" });
+    } finally {
+      setBulkCancelLoading(false);
+    }
+  };
+
   const statCards = [
     { label: "Total Bookings", value: stats.total, icon: Ticket, color: "text-primary", bg: "bg-primary/10" },
     { label: "With PNR", value: stats.confirmed, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
@@ -265,7 +288,12 @@ const AdminBookings = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-bold">All Bookings</h1>
-        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExport}><Download className="w-4 h-4 mr-1.5" /> Export CSV</Button>
+        <div className="flex gap-2">
+          <Button variant="destructive" size="sm" onClick={() => { setBulkCancelOpen(true); setBulkCancelResult(null); }}>
+            <Ban className="w-4 h-4 mr-1.5" /> Cancel All Reserved
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport}><Download className="w-4 h-4 mr-1.5" /> Export CSV</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -913,6 +941,68 @@ const AdminBookings = () => {
             <Button variant="destructive" disabled={!!actionLoading} onClick={() => deleteBooking(deleteConfirm)}>
               {actionLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />} Delete Forever
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Cancel Dialog */}
+      <Dialog open={bulkCancelOpen} onOpenChange={setBulkCancelOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Ban className="w-5 h-5" /> Bulk Cancel Bookings via GDS
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This will call the GDS cancel API for each booking and update the local status. Only bookings with confirmed PNRs will be processed.
+            </p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cancel scope:</label>
+              <Select value={bulkCancelFilter} onValueChange={(v) => setBulkCancelFilter(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="reserved">Reserved (on_hold) only — {stats.pending} bookings</SelectItem>
+                  <SelectItem value="all_with_pnr">All active with PNR — {stats.confirmed} bookings</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {bulkCancelResult && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{bulkCancelResult.summary?.cancelled || 0}</p>
+                    <p className="text-[10px] text-muted-foreground">Cancelled</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-destructive/10">
+                    <p className="text-lg font-bold text-destructive">{bulkCancelResult.summary?.failed || 0}</p>
+                    <p className="text-[10px] text-muted-foreground">Failed</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-muted">
+                    <p className="text-lg font-bold text-muted-foreground">{bulkCancelResult.summary?.skipped || 0}</p>
+                    <p className="text-[10px] text-muted-foreground">Skipped</p>
+                  </div>
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1 text-xs font-mono bg-muted/50 p-3 rounded-lg border">
+                  {bulkCancelResult.results?.map((r: any, i: number) => (
+                    <div key={i} className={`flex justify-between ${r.status === 'cancelled' ? 'text-emerald-600' : r.status === 'gds_failed' || r.status === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      <span>{r.bookingRef} ({r.pnr || '—'})</span>
+                      <span>{r.status === 'cancelled' ? '✓ Cancelled' : r.status === 'gds_failed' ? `✗ ${r.reason?.slice(0, 40)}` : r.status === 'error' ? `✗ ${r.reason?.slice(0, 40)}` : `⊘ ${r.reason}`}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setBulkCancelOpen(false)}>Close</Button>
+            {!bulkCancelResult && (
+              <Button variant="destructive" disabled={bulkCancelLoading} onClick={handleBulkCancel}>
+                {bulkCancelLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Ban className="w-4 h-4 mr-1" />}
+                {bulkCancelLoading ? 'Cancelling via GDS...' : 'Cancel All via GDS'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
