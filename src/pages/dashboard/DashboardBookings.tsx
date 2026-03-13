@@ -228,7 +228,16 @@ const DashboardBookings = () => {
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{booking.date}</TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        {booking.pnr && booking.pnr !== "—" ? <code className="text-xs bg-accent/10 text-accent px-1.5 py-0.5 rounded font-bold">{booking.pnr}</code> : <span className="text-muted-foreground text-xs">—</span>}
+                        <div className="space-y-0.5">
+                          {booking.airlinePnr ? (
+                            <code className="text-xs bg-accent/10 text-accent px-1.5 py-0.5 rounded font-bold block w-fit">{booking.airlinePnr}</code>
+                          ) : (
+                            <span className="text-muted-foreground text-[9px] italic block">PNR Pending</span>
+                          )}
+                          {booking.gdsBookingId && (
+                            <span className="text-[9px] text-muted-foreground font-mono block">ID: {booking.gdsBookingId}</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-sm">{booking.pax}</TableCell>
                       <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{displayStatus(booking.status)}</Badge></TableCell>
