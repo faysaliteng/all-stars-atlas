@@ -195,7 +195,9 @@ const DashboardBookingDetail = () => {
       setCancelOpen(false);
       refetch();
     } catch (err: any) {
-      toast({ title: "Cancel Failed", description: err.message || "Could not cancel booking.", variant: "destructive" });
+      const errMsg = err.gdsError || err.message || "Could not cancel booking.";
+      const hint = err.hint || "";
+      toast({ title: "Cancel Failed", description: `${errMsg}${hint ? ` — ${hint}` : ""}`, variant: "destructive" });
     } finally {
       setCancelLoading(false);
     }
