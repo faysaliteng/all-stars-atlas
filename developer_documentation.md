@@ -979,3 +979,28 @@ Migration: `backend/database/reward-points-migration.sql`
 ### Internal Helper
 
 `awardBookingPoints(userId, bookingId, fareAmount, serviceType)` — called from booking routes after confirmation to credit points.
+
+---
+
+## Airline Support Matrix (Verified 2026-03-13)
+
+### Pre-Booking Features (No PNR needed)
+| Feature | Source | Working Airlines |
+|---------|--------|-----------------|
+| Seat Map View | Sabre SOAP EnhancedSeatMapRQ | EK, SQ, AI, TG, TK, CZ (6/21 tested) |
+| Baggage Allowance | BFM search response | All Sabre-sourced flights |
+| SSR Selection (meals, wheelchair) | UI form → REST CreatePNR | All airlines |
+
+### Post-Booking Features (PNR required)
+| Feature | Source | Requirement |
+|---------|--------|------------|
+| Seat Selection/Upgrade | REST GetSeats v2 | Active PNR |
+| Extra Baggage Purchase | SOAP GetAncillaryOffersRQ (GAO) | Active PNR |
+| Meal Selection | SOAP GetAncillaryOffersRQ (GAO) | Active PNR |
+| Ticket Status | REST checkFlightTickets | Active PNR |
+| Price Revalidation | REST BFM revalidate | Pre-PNR |
+
+### Key Limitations
+- GAO returns "Proper request mode" error on auto-cancelled PNRs
+- REST GetSeats requires v2 endpoint with `SeatAvailabilityRQ.SeatMapQueryEnhanced` PascalCase schema
+- 15/21 airlines from DAC have no seat map data in Sabre (carrier-level restriction, not a code issue)
