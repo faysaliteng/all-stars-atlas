@@ -596,15 +596,12 @@ async function cancelPnrViaSoap(pnr) {
 
   console.log(`[Sabre SOAP] Cancel PNR via SOAP: ${pnr}`);
 
-  // Create a FRESH session (don't reuse cached — cancel needs its own context)
-  const oldCache = { ..._sessionCache };
-  _sessionCache = { token: null, conversationId: null, expiresAt: 0 };
-
+  // Reuse cached session if valid; otherwise create one.
+  // This avoids unnecessary SessionCreate calls and reduces Host TA exhaustion.
   let session;
   try {
     session = await createSession(config);
   } catch (err) {
-    _sessionCache = oldCache; // restore
     throw new Error(`SOAP session failed: ${err.message}`);
   }
 
