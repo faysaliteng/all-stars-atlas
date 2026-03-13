@@ -1,7 +1,7 @@
 # Seven Trip — Complete Deployment History
 
 > Every deployment to production with exact commands, what changed, and verification steps.
-> Last updated: 2026-03-13 (v3.9.9.6)
+> Last updated: 2026-03-13 (v3.9.9.7)
 
 ---
 
@@ -249,8 +249,9 @@ cd ~/projects/all-stars-atlas && git pull origin main && npm install && npm run 
 
 | Metric | Value |
 |--------|-------|
-| **Total Deployments** | 7 |
+| **Total Deployments** | 8 |
 | **Full Stack** | 5 |
+| **Backend Only** | 2 |
 | **Nginx Only** | 1 |
 | **Database Only** | 1 |
 | **Average Deploy Time** | ~3 minutes (git pull → build → copy → restart) |

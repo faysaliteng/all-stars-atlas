@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.9.9.7] — 2026-03-13 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR + Ticketlagbe Reference
+
+### Added
+- **DOCS strict mode**: When passport DOCS are present in AdvancePassenger, the `no_special_req` fallback variant is disabled — booking MUST succeed with DOCS or fail explicitly, preventing silent PNR creation without passport data in GDS
+- **Airline PNR extraction from CreatePNR response**: `extractDistinctSabreAirlinePnr()` now runs immediately on the CreatePNR response before falling back to GetBooking, matching how Ticketlagbe extracts `airlinesPNR` directly from booking result
+- **Smart passport field resolution**: New logic detects if `passport` field contains a file path (e.g., `traveller/passport/xxx.jpg`) vs actual passport number, checking `passportNumber`, `passportNo`, `documentNumber`, `travelDocumentNumber` fields in priority order
+- **Extended field alias support**: Sabre payload now maps `prefix` → `title`, `passportEx` → `passportExpiry`, `nationalityCountry` → `nationality`, `contactPhone`/`contactEmail` in contact info, `givenName`/`surname` as name fallbacks
+- **Enhanced vendor locator regex**: Deep scan for airline PNR now includes `reservationNumber` and `confirmationNumber` keys across CreatePNR, GetBooking, and flights.js extractors
+
+### Changed
+- `createBooking()` return object now includes `airlinePnr` and `createVariant` fields
+- flights.js Sabre booking block: uses `gdsBookingResult.airlinePnr` first, falls back to GetBooking only when not found in CreatePNR response
+- Nationality extraction hardened: strips non-alpha characters, validates 2-letter code, defaults to `BD`
+
+### Fixed
+- **Passport field misidentification**: Previously `pax.passport` containing a file upload path (`traveller/passport/xxx.jpg`) was treated as a passport number, causing invalid DOCS SSR — now detected and skipped with warning log
+- **AreaCityCode validation error**: Removed `AreaCityCode` from `ContactNumber` payload (Sabre schema rejection)
+
+### Reference
+- Analyzed Ticketlagbe HAR (`combined-air-booking` endpoint) to confirm their frontend sends `prefix, firstName, lastName, gender, dateOfBirth, nationalityCountry, passportNo, passportEx, phone, email` — backend handles all Sabre DOCS/SSR injection server-side
+- Ticketlagbe response confirms airline PNR (`airlinesPNR: "FBI86I"`) returned directly in booking response alongside GDS PNR (`pnr: "OHKTDQ"`)
+
+---
+
 ## [3.9.9.6] — 2026-03-13 — Passport DOCS SSR for Sabre + TTI + Frontend Mandatory Validation
 
 ### Added

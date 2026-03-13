@@ -1,7 +1,7 @@
 # Seven Trip — System Architecture
 
 > Complete technical architecture documentation for the Seven Trip travel platform.
-> Last updated: 2026-03-13 (v3.9.9.6 — Passport DOCS SSR for Sabre + TTI + Frontend Mandatory Validation)
+> Last updated: 2026-03-13 (v3.9.9.7 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR)
 
 ---
 
@@ -128,8 +128,12 @@ GET /flights/search?from=DAC&to=DXB&date=2026-04-15&adults=1
 │  PNR Schema Rules:                                          │
 │  • No NamePrefix in PersonName (title → GivenName)          │
 │  • DateTime without timezone offsets (toSabreDateTime)       │
-│  • DOCS: only Type/Number/IssueCountry/NationalityCountry   │
+│  • DOCS: Full payload (Type/Number/Expiry/DOB/Gender/Name)  │
+│  •   with VendorPrefs.Airline.Hosted=false + airline Code    │
+│  • DOCS Strict Mode: no fallback to no_special_req when     │
+│  •   passport docs exist (prevents silent DOCS omission)    │
 │  • No CompressResponse flag in BFM request                  │
+│  • Airline PNR extracted from CreatePNR + GetBooking         │
 └─────────────────────────────────────────────────────────────┘
 ```
 

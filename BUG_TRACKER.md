@@ -1,7 +1,7 @@
 # Seven Trip — Bug Tracker & Root Cause Analysis
 
 > Complete record of all bugs discovered and fixed during development.
-> Last updated: 2026-03-13 (v3.9.9.6)
+> Last updated: 2026-03-13 (v3.9.9.7)
 
 ---
 
@@ -9,7 +9,9 @@
 
 | # | Version | Bug | Root Cause | Fix | Impact |
 |---|---------|-----|-----------|-----|--------|
-| C00 | v3.9.9.5 | One-way & multi-city Sabre bookings failing silently | Error caught but not returned to client; no `gdsError` in response | Added `gdsError` field to booking response + detailed logging per CreatePNR attempt | Bookings appeared local-only |
+| C00 | v3.9.9.7 | Sabre DOCS silently dropped — PNR created without passport data | `passport` field contained upload path not number; `no_special_req` fallback succeeded without DOCS | Smart passport field detection + DOCS strict mode (disable no_special_req fallback when DOCS exist) | Passport data missing from airline records |
+| C00a | v3.9.9.7 | Sabre booking fails with AreaCityCode validation | `AreaCityCode` not allowed in `ContactNumber` schema | Removed `AreaCityCode` from phone mapping | Bookings blocked |
+| C00b | v3.9.9.5 | One-way & multi-city Sabre bookings failing silently | Error caught but not returned to client; no `gdsError` in response | Added `gdsError` field to booking response + detailed logging per CreatePNR attempt | Bookings appeared local-only |
 | C00b | v3.9.9.5 | Pre-booking seat map returning `success: false` | `/seats-rest` required PNR; no SOAP fallback for pre-booking | Added SOAP `EnhancedSeatMapRQ` fallback when no PNR | Seat maps unavailable pre-booking |
 | C00c | v3.9.9.5 | Airline PNR same as GDS PNR | GetBooking extraction only checked 2 paths | 4-method deep extraction with JSON deep scan | Users can't check in with airline |
 | C00d | v3.9.9.2 | REST GetSeats v2 schema validation error | Payload used v1 camelCase format; v2 requires PascalCase `SeatAvailabilityRQ.SeatMapQueryEnhanced` wrapper | Fixed payload schema + endpoint `/v1/` → `/v2/` | REST seat maps broken |
@@ -75,10 +77,10 @@
 ### By Severity
 | Severity | Count | % |
 |----------|-------|---|
-| 🔴 Critical | 15 | 39% |
-| 🟡 Major | 10 | 26% |
-| 🟢 Minor | 12 | 32% |
-| **Total** | **37** | 100% |
+| 🔴 Critical | 17 | 40% |
+| 🟡 Major | 10 | 24% |
+| 🟢 Minor | 12 | 29% |
+| **Total** | **39** | 100% |
 
 ### By Category
 | Category | Count |
@@ -93,7 +95,7 @@
 ### By Component
 | Component | Count |
 |-----------|-------|
-| Sabre REST | 6 |
+| Sabre REST | 8 |
 | Sabre SOAP | 3 |
 | TTI/ZENITH | 3 |
 | BDFare | 3 |
@@ -140,9 +142,12 @@
 | Measure | Implemented In |
 |---------|---------------|
 | Zero-mock enforcement | v3.0+ — no hardcoded flight/hotel data |
-| Schema-safe payload builders | v3.9.3+ — `toSabreDateTime()`, stripped DOCS |
+| Schema-safe payload builders | v3.9.3+ — `toSabreDateTime()`, full DOCS |
+| DOCS strict mode | v3.9.9.7 — no fallback without passport data |
+| Smart field detection | v3.9.9.7 — file path vs passport number |
 | Retry-with-fresh-session | v3.9.7 — SOAP seat map |
 | Priority chain extraction | v3.9.6 — TTI airline PNR |
+| Dual PNR extraction | v3.9.9.7 — CreatePNR + GetBooking |
 | Dedup key comprehensive | v3.7.8 — all legs included |
 | `safeJsonParse()` utility | v2.1 — prevents JSON.parse crashes |
 | Centralized validators | v3.5.1 — `isScopeInvalidRoute()` |

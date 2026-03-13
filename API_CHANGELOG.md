@@ -1,7 +1,20 @@
 # Seven Trip — API Changelog
 
 > All backend API changes, new endpoints, breaking changes, and schema updates per version.
-> Last updated: 2026-03-13 (v3.9.9.6)
+> Last updated: 2026-03-13 (v3.9.9.7)
+
+---
+
+## v3.9.9.7 — 2026-03-13
+
+### Changed
+- `POST /flights/book` Sabre path now returns `airlinePnr` extracted from CreatePNR response (before falling back to separate GetBooking call)
+- `createBooking()` in `sabre-flights.js` returns `{ success, pnr, airlinePnr, createVariant, ticketTimeLimit, rawResponse }`
+- **DOCS strict mode**: When passport DOCS entries exist in AdvancePassenger, the `no_special_req` fallback variant is disabled — booking must succeed with DOCS or fail explicitly
+- Passport field resolution: detects file paths (e.g., `traveller/passport/xxx.jpg`) in `passport` field and skips them; checks `passportNumber`, `passportNo`, `documentNumber`, `travelDocumentNumber` in priority order
+- Extended vendor locator regex: `reservationNumber` and `confirmationNumber` keys now included in airline PNR deep scan
+- Removed `AreaCityCode` from Sabre `ContactNumber` schema (caused validation error)
+- Contact info fallbacks: `contactPhone`/`contactEmail` aliases now supported alongside `phone`/`email`
 
 ---
 

@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-13 (v3.9.9.6 — Passport DOCS SSR for Sabre + TTI + Frontend Mandatory Validation)
+> Last updated: 2026-03-13 (v3.9.9.7 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR)
 
 ---
 
@@ -132,6 +132,8 @@ pm2 logs seventrip-api --lines 30
 
 | Date | Change | Deploy Command |
 |------|--------|----------------|
+| 2026-03-13 | **v3.9.9.7** Sabre DOCS strict mode: `no_special_req` fallback disabled when passport DOCS exist; airline PNR extracted from CreatePNR response; smart passport field detection (file path vs number); `AreaCityCode` removed from ContactNumber; extended vendor locator regex (`reservationNumber`, `confirmationNumber`) | Backend Only |
+| 2026-03-13 | **v3.9.9.6** Full DOCS payload for Sabre (9 fields) with `VendorPrefs.Airline.Hosted=false`; CTCM/CTCE SSR auto-generation; TTI passport injection | Backend Only |
 | 2026-03-13 | **v3.9.9.4** `/flights/seats-rest` hardened: probes Sabre GetSeats v3+v1, returns explicit PNR viewership hint (`700102`), and falls back to SOAP EnhancedSeatMapRQ when REST fails | Backend Only |
 | 2026-03-13 | **v3.9.7** Sabre PNR fix: removed `NamePrefix` from `PersonName` (400 schema error), title appended to `GivenName`. SOAP seat map: auto-retry with fresh session on stale token. Verified PNR JIUKMY + seat maps (AI/EK/SQ) working | Standard Deployment |
 | 2026-03-13 | TTI cancel fix: uses airline PNR (not internal TTI ID) for cancellation — probe matrix identified correct payload shape. Sabre SOAP cancel fallback: local config loader + export fix. NDC investigation: BFM request correct (`NDC: Enable`) but PCC J4YL lacks NDC entitlements — contact Sabre to activate. Unified flight card animations for all trip types | Standard Deployment |

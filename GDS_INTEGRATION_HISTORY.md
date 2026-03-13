@@ -1,7 +1,7 @@
 # Seven Trip — GDS Integration History & Troubleshooting
 
 > Complete timeline of all GDS provider integrations, issues encountered, and solutions applied.
-> Last updated: 2026-03-13 (v3.9.9.6 — Full Provider Booking Wiring + Seat/Ancillary APIs)
+> Last updated: 2026-03-13 (v3.9.9.7 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR)
 
 ---
 
@@ -96,6 +96,8 @@
 | Mar 13 | v3.9.7 | **NamePrefix removal** — title appended to GivenName |
 | Mar 13 | v3.9.9 | **Full endpoint coverage**: revalidatePrice, getBooking, checkTicketStatus, getSeatsRest; ticketing upgraded to v1.3.0 |
 | Mar 13 | v3.9.9.4 | **REST GetSeats resilience**: v3+v1 contract probing, explicit PNR viewership handling (700102), SOAP fallback when REST fails |
+| Mar 13 | v3.9.9.6 | **Full DOCS payload**: Type, Number, ExpirationDate, DateOfBirth, Gender, IssueCountry, Nationality, GivenName, Surname |
+| Mar 13 | v3.9.9.7 | **DOCS strict mode**: no fallback to `no_special_req` when passport DOCS exist; airline PNR from CreatePNR response; smart passport field detection (file path vs number); AreaCityCode removed |
 
 ### Issues & Resolutions
 
@@ -111,14 +113,13 @@
 
 #### Issue #3: DOCS Schema Validation (v3.9.3)
 - **Symptom**: 400 validation error on PNR creation
-- **Root Cause**: `AdvancePassenger.Document` included unsupported fields (`DateOfBirth`, `FirstName`, `LastName`, `Gender`)
-- **Fix**: Stripped to schema-safe fields only (`Type`, `Number`, `IssueCountry`, `NationalityCountry`, `ExpirationDate`)
+- **Root Cause**: `AdvancePassenger.Document` included unsupported fields
+- **Fix**: Initially stripped to minimal fields, later (v3.9.9.6) expanded to full payload with correct field names
 
-#### Issue #4: NamePrefix Rejection (v3.9.7) — LATEST
+#### Issue #4: NamePrefix Rejection (v3.9.7)
 - **Symptom**: `ERR.SP.CLIENT.VALIDATION_FAILED` — `NamePrefix` property not allowed in `PersonName`
 - **Root Cause**: Sabre schema does not accept `NamePrefix` as a property of `PersonName`
-- **Fix**: Removed `NamePrefix`; title appended to `GivenName` (e.g., `"JOHN MR"`) per Sabre standard
-- **Verification**: PNR `JIUKMY` created successfully via `full_payload` variant
+- **Fix**: Removed `NamePrefix`; title appended to `GivenName` (e.g., `"MR JOHN"`) per Sabre standard
 
 #### Issue #5: Round-Trip Deduplication (v3.7.8)
 - **Symptom**: Round-trip search showing only 1 result instead of hundreds
@@ -128,12 +129,21 @@
 #### Issue #6: NDC Fares Not Appearing
 - **Status**: Not a code issue — PCC J4YL lacks NDC entitlements
 - **Action Required**: Contact Sabre account manager to activate NDC carrier agreements
-- **Code Status**: `DataSources: { NDC: "Enable" }` already in BFM request
 
 #### Issue #7: REST GetSeats PNR Access/Schema Mismatch (v3.9.9.4)
-- **Symptom**: `/flights/seats-rest` returned 400 `Failed to read HTTP message` or viewership/security errors for some PNRs
-- **Root Cause**: Mixed contract behavior across GetSeats versions + PNR ownership/viewership constraints (`code 700102`)
-- **Fix**: Probe v3 and v1 payload variants, surface `hint` for viewership restrictions, and auto-fallback to SOAP EnhancedSeatMapRQ for reliable seat visibility
+- **Symptom**: `/flights/seats-rest` returned 400 or viewership errors
+- **Fix**: Probe v3 and v1 payload variants, surface `hint` for viewership restrictions, auto-fallback to SOAP
+
+#### Issue #8: DOCS Not Appearing in Sabre (v3.9.9.6–v3.9.9.7)
+- **Symptom**: PNR created successfully but `*PD` command shows no passport data
+- **Root Cause (v3.9.9.6)**: Bare-minimum DOCS fields silently rejected by Sabre; `VendorPrefs.Airline.Hosted: true` wrong
+- **Root Cause (v3.9.9.7)**: `passport` field contained file upload path not passport number; `no_special_req` fallback created PNR without DOCS
+- **Fix**: Full DOCS payload (9 fields) + `Hosted: false` + airline Code + smart passport field detection + DOCS strict mode
+- **Reference**: Analyzed Ticketlagbe and BDFare HAR logs — both send same expanded DOCS payload server-side
+
+#### Issue #9: AreaCityCode Validation Error (v3.9.9.7)
+- **Symptom**: `ERR.SP.CLIENT.VALIDATION_FAILED` — `AreaCityCode` not allowed in `ContactNumber`
+- **Fix**: Removed `AreaCityCode` field from ContactNumbers mapping
 
 ---
 
