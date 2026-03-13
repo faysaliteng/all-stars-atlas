@@ -126,10 +126,10 @@
 - **Lesson**: Add defensive parsing with multiple format fallbacks
 - **Occurrences**: C06, C08, M02
 
-### Pattern 3: Cache Staleness
-- Cached tokens/configs expire but cache doesn't self-invalidate
-- **Lesson**: Always add retry-with-fresh-cache logic for auth tokens
-- **Occurrences**: C02, C07
+### Pattern 3: Cache Staleness / Session Pool Exhaustion
+- Cached tokens expire but cache doesn't self-invalidate; concurrent sessions can exhaust TA pools
+- **Lesson**: Always add retry-with-fresh-cache logic AND proper session close. Gate retries to session/auth errors only.
+- **Occurrences**: C02, C07, C00z
 
 ### Pattern 4: Mock Data Leakage
 - Placeholder/hardcoded data persisting in production code
