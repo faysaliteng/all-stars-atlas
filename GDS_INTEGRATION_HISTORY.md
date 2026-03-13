@@ -26,6 +26,8 @@
 | Mar 10 | v3.0 | Enhanced seat availability extraction from AirCoupons |
 | Mar 11 | v3.3 | Cabin class mapping (case-insensitive) |
 | Mar 13 | v3.9.6 | **Critical fix**: Cancel API requires airline PNR, not TTI booking ID |
+| Mar 13 | v3.9.9.6 | **CHLD/INFT SSR fix**: Added SpecialServices with DateOfBirth for child/infant passengers |
+| Mar 13 | v3.9.6 | **Critical fix**: Cancel API requires airline PNR, not TTI booking ID |
 
 ### Issues & Resolutions
 
