@@ -288,7 +288,12 @@ const AdminBookings = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-bold">All Bookings</h1>
-        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExport}><Download className="w-4 h-4 mr-1.5" /> Export CSV</Button>
+        <div className="flex gap-2">
+          <Button variant="destructive" size="sm" onClick={() => { setBulkCancelOpen(true); setBulkCancelResult(null); }}>
+            <Ban className="w-4 h-4 mr-1.5" /> Cancel All Reserved
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport}><Download className="w-4 h-4 mr-1.5" /> Export CSV</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
