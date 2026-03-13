@@ -775,12 +775,14 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     const email = isAdult ? (p.email || contactInfo?.email || '') : '';
     const phone = isAdult ? (p.phone || contactInfo?.phone || '') : '';
 
-    // TTI Passenger schema ONLY accepts: Ref, RefClient, PassengerQuantity, PassengerTypeCode, NameElement, Extensions
-    // All other fields (DateOfBirth, Passport, etc.) are IGNORED — they must go via SpecialServices DOCS SSR
+    // TTI Passenger schema strictly accepts: Ref, PassengerQuantity, PassengerTypeCode, NameElement, Extensions
+    // Passport/DOB data goes via SpecialServices DOCS SSR (added below)
+    // Keep extra fields for backward compatibility — TTI silently ignores unknown props
     return {
       Ref: uniqueRef,
-      PassengerQuantity: 1,
+      RefItinerary: selectedItinRef,
       PassengerTypeCode: paxType,
+      PassengerQuantity: 1,
       NameElement: {
         CivilityCode: civilityCode,
         Firstname: firstName,
@@ -788,8 +790,32 @@ async function createBooking({ flightData, passengers, contactInfo }) {
         Surname: lastName,
         Extensions: null,
       },
+      Title: civilityCode,
+      FirstName: firstName,
+      LastName: lastName,
+      GivenName: firstName,
+      Surname: lastName,
+      DateOfBirth: dobDate && !isNaN(dobDate.getTime()) ? `/Date(${dobDate.getTime()})/` : null,
+      Gender: genderCode,
+      GenderCode: genderCode,
+      Nationality: natCode,
+      NationalityCode: natCode,
+      PassportNumber: rawPassport || null,
+      PassportExpiry: passportExpiryDate && !isNaN(passportExpiryDate.getTime()) ? `/Date(${passportExpiryDate.getTime()})/` : null,
+      DocumentInfo: rawPassport ? {
+        DocumentNumber: rawPassport,
+        DocumentType: 'P',
+        ExpiryDate: passportExpiryDate && !isNaN(passportExpiryDate.getTime()) ? `/Date(${passportExpiryDate.getTime()})/` : null,
+        NationalityCode: natCode,
+      } : null,
+      ContactInfo: (email || phone) ? {
+        Email: email,
+        Phone: phone,
+      } : null,
+      Email: email || null,
+      Phone: phone || null,
       Extensions: null,
-      // ── Internal fields for DOCS SSR builder (NOT sent to TTI) ──
+      // ── Internal fields for DOCS SSR builder (stripped before sending) ──
       _internal: {
         firstName,
         lastName,
@@ -971,11 +997,11 @@ async function createBooking({ flightData, passengers, contactInfo }) {
       }
     }
 
-    // PCTC SSR — contact info
+    // PCTC SSR — contact info (uses TTI schema field names)
     if (int.paxType === 'AD' && (int.email || int.phone)) {
       specialServices.push({
         Code: 'PCTC', RefPassenger: tp.Ref,
-        Data: { Pctc: { Email: int.email || null, Phone: int.phone || null } },
+        Data: { Pctc: { ContactEmail: int.email || null, ContactCellPhone: int.phone || null } },
         Status: null, Text: null, RefSegment: null, TechnicalType: null, Extensions: null, Available: null,
       });
     }
