@@ -378,4 +378,67 @@ router.get('/sabre-soap-diagnostic', async (req, res) => {
   });
 });
 
+/**
+ * GET /api/flights/airline-capabilities
+ * Returns cached airline capability matrix from probe results.
+ * If no probe file exists, returns a hardcoded baseline from known Sabre behavior.
+ */
+router.get('/airline-capabilities', async (req, res) => {
+  try {
+    // Try to load probe results from file
+    const fs = require('fs');
+    const path = require('path');
+    const probeFile = path.join(__dirname, '../../airline-capabilities.json');
+    
+    if (fs.existsSync(probeFile)) {
+      const data = JSON.parse(fs.readFileSync(probeFile, 'utf8'));
+      return res.json({
+        source: 'probe',
+        lastProbed: fs.statSync(probeFile).mtime.toISOString(),
+        airlines: data,
+      });
+    }
+
+    // Fallback: baseline capabilities based on Sabre architecture knowledge
+    // SSR (meals/wheelchair/baggage requests) works for ALL airlines via Sabre
+    // Seat maps via SOAP EnhancedSeatMapRQ work for most major carriers
+    // GAO (paid ancillaries) requires EMD entitlement per airline on PCC
+    const baseline = [
+      { airlineCode: 'EK', airline: 'Emirates', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'QR', airline: 'Qatar Airways', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'SQ', airline: 'Singapore Airlines', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'AI', airline: 'Air India', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'TK', airline: 'Turkish Airlines', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'SV', airline: 'Saudi Arabian Airlines', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'MH', airline: 'Malaysia Airlines', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'TG', airline: 'Thai Airways', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'UL', airline: 'SriLankan Airlines', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'WY', airline: 'Oman Air', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'GF', airline: 'Gulf Air', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'EY', airline: 'Etihad Airways', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'FZ', airline: 'flydubai', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'G9', airline: 'Air Arabia', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: '6E', airline: 'IndiGo', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'ET', airline: 'Ethiopian Airlines', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'BG', airline: 'Biman Bangladesh', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'BS', airline: 'US-Bangla Airlines', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'VQ', airline: 'Novoair', seatMap: { available: false, note: 'Not available via Sabre' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: '2A', airline: 'Air Astra', seatMap: { available: false, note: 'TTI provider — no Sabre seat map' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'S2', airline: 'Air Astra', seatMap: { available: false, note: 'TTI provider — no Sabre seat map' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'LH', airline: 'Lufthansa', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'BA', airline: 'British Airways', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+      { airlineCode: 'CX', airline: 'Cathay Pacific', seatMap: { available: true, note: 'Sabre SOAP EnhancedSeatMapRQ' }, baggage: { hasChecked: true, hasHand: true }, ssrMeals: true, ssrWheelchair: true, ssrExtraBaggage: true, ssrSeatRequest: true, gaoAncillaries: false },
+    ];
+
+    res.json({
+      source: 'baseline',
+      note: 'Run bash backend/probe-airline-capabilities.sh on VPS to get live-tested results',
+      airlines: baseline,
+    });
+  } catch (err) {
+    console.error('Airline capabilities error:', err.message);
+    res.status(500).json({ message: 'Failed to load airline capabilities' });
+  }
+});
+
 module.exports = router;
