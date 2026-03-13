@@ -1216,9 +1216,9 @@ export async function printTicketPDF(ticket: TicketData) {
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  const printAirlinesPnr = ticket.pnr || ticket.gdsPnr || "";
-  const printSysRef = ticket.bookingRef || ticket.id || "";
-  doc.text(`Reservation: ${printSysRef}${printAirlinesPnr && printAirlinesPnr !== printSysRef ? `  |  Airlines PNR: ${printAirlinesPnr}` : ""}`, lm, y);
+  const printAirlinesPnr = ticket.airlinePnr || "";
+  const printSysRef = ticket.gdsPnr || ticket.bookingRef || ticket.id || "";
+  doc.text(`Booking ID: ${printSysRef}${printAirlinesPnr ? `  |  Airlines PNR: ${printAirlinesPnr}` : ""}`, lm, y);
   y += 8;
 
   const firstCode = outboundSegments[0]?.airlineCode || "";
