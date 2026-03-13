@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.9.9.6] — 2026-03-13 — Passport DOCS SSR for Sabre + TTI + Frontend Mandatory Validation
+
+### Added
+- **Mandatory passport fields for all flights**: Frontend now requires Passport Number and Expiry Date for both domestic and international bookings
+- **Sabre DOCS SSR enforcement**: `advancePassenger` Document object includes `Number`, `ExpirationDate`, `DateOfBirth`, `Gender`, `GivenName`, `Surname` — all mandatory uppercase fields
+- **TTI passport injection**: `PassportNumber`, `PassportExpiry`, `DocumentInfo` passed in CreateBooking payload for Air Astra and other TTI carriers
+- **Backend field normalization**: `flights.js` normalizer maps `passport` → `passportNumber`, `dob` → `dateOfBirth` ensuring consistent field names across all GDS providers
+
+### Changed
+- Frontend booking form no longer conditionally hides passport fields — always visible and required
+- Backend logs passport data presence per passenger for debugging
+
+---
+
 ## [3.9.9.5] — 2026-03-13 — Production Sabre + 30-Route Booking Test Suite + Dual PNR
 
 ### Added

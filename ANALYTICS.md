@@ -41,7 +41,7 @@
 | **Frontend Components** | 100+ |
 | **Backend Route Files** | 25 |
 | **Changelog Versions** | 35+ releases |
-| **Documentation Files** | 12 (.md files) |
+| **Documentation Files** | 20 (.md files) |
 
 ---
 
