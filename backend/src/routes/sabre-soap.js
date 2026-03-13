@@ -58,6 +58,24 @@ async function getSabreConfig() {
 }
 
 // ── SOAP endpoint mapping ──
+function getSoapEndpoint(config) {
+  const isProd = config.environment === 'production' || config.environment === 'prod';
+  return isProd
+    ? 'https://webservices.platform.sabre.com'
+    : 'https://webservices.cert.platform.sabre.com';
+}
+
+// ── SOAP client credentials (per Sabre JV_BD docs) ──
+function getSoapClientCredentials(config) {
+  const isProd = config.environment === 'production' || config.environment === 'prod';
+  return {
+    clientId: '5B0K-JvBdOta',
+    clientSecret: isProd ? 'M1uty91x' : 'Pl67azTy',
+  };
+}
+
+// ── Session token cache (reuse across calls, 15min TTL) ──
+let _sessionCache = { token: null, conversationId: null, expiresAt: 0 };
 
 /**
  * Create a SOAP session — returns BinarySecurityToken
