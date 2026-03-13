@@ -1,7 +1,7 @@
 # Seven Trip — Security Documentation
 
 > All security measures, authentication flow, and best practices implemented in the platform.
-> Last updated: 2026-03-13 (v3.9.9.7 — Sabre DOCS Strict Mode — booking fails if passport DOCS cannot be inserted)
+> Last updated: 2026-03-13 (v3.9.9.8 — Dual PNR Display + DOCS Upload Verified)
 
 ---
 

@@ -1,7 +1,18 @@
 # Seven Trip — API Changelog
 
 > All backend API changes, new endpoints, breaking changes, and schema updates per version.
-> Last updated: 2026-03-13 (v3.9.9.7)
+> Last updated: 2026-03-13 (v3.9.9.8)
+
+---
+
+## v3.9.9.8 — 2026-03-13
+
+### Changed (Frontend Only)
+- All dashboards (user + admin) now display dual PNR: "Booking ID" (GDS PNR) + "Airlines PNR" (airline confirmation)
+- E-Ticket PDF generator renders separate "BOOKING ID" and "AIRLINES PNR" header sections
+- Post-booking success screen (`FlightBooking.tsx`) shows `airlinePnr` from booking response
+- `BookingConfirmation.tsx`, `DashboardTickets.tsx` pass `airlinePnr` to PDF generator
+- No backend API changes — `airlinePnr` already returned in `POST /flights/book` response since v3.9.9.7
 
 ---
 

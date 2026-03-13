@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.9.9.8] — 2026-03-13 — Dual PNR Display (Booking ID + Airlines PNR) Across All Dashboards & PDF
+
+### Added
+- **Dual PNR display system**: GDS PNR shown as "Booking ID", Airline PNR shown as "Airlines PNR" across all user-facing and admin interfaces
+- **User Dashboard Bookings**: PNR column shows Airlines PNR prominently with accent styling, Booking ID as secondary mono text
+- **User Dashboard Booking Detail**: Dedicated "Airlines PNR" and "Booking ID" fields in booking info card with copy-friendly styling
+- **Admin Dashboard Bookings**: Both PNRs visible in booking table and detail modal
+- **E-Ticket PDF**: Separate "BOOKING ID" and "AIRLINES PNR" sections in ticket header with distinct styling
+- **Post-Booking Confirmation**: FlightBooking success screen shows both Booking ID and Airlines PNR
+- **Booking Confirmation Page**: Both PNR fields passed through to PDF download and display
+- **Dashboard Tickets**: Airlines PNR passed to PDF generator for e-ticket downloads
+
+### Changed
+- All PNR display logic standardized: `airlinePnr` = real airline confirmation (e.g., `09HUGY`), `gdsBookingId/pnr` = GDS record locator (e.g., `GCCVGK`)
+- PDF generator accepts `airlinePnr` as separate field; renders distinct from `gdsPnr`/`bookingRef`
+- Removed old fallback logic where GDS PNR was shown as "Airline PNR" — now correctly separated
+
+### Verified
+- Sabre booking: GDS PNR `GCCVGK` + Airlines PNR `09HUGY` — both extracted and displayed correctly
+- DOCS upload working: passport/visa document upload with OCR/MRZ verification functional
+- Title format: `MST RAFIZA MS` (title at end) accepted by Sabre without errors
+
+---
+
 ## [3.9.9.7] — 2026-03-13 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR + Ticketlagbe Reference
 
 ### Added
