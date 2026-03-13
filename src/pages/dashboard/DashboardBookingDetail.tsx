@@ -231,7 +231,8 @@ const DashboardBookingDetail = () => {
     const returnFlt = booking.returnFlight || booking.details?.return;
     generateTicketPDF({
       id: booking.id, pnr: booking.pnr !== "—" ? booking.pnr : undefined,
-      gdsPnr: booking.gdsPnr || undefined,
+      gdsPnr: booking.gdsBookingId || booking.pnr !== "—" ? booking.pnr : undefined,
+      airlinePnr: booking.airlinePnr || undefined,
       bookingRef: booking.id,
       source: booking.source,
       airline: booking.airline || "Seven Trip", flightNo: booking.flightNumber || "",
