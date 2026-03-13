@@ -1522,7 +1522,6 @@ router.post('/cancel', authenticate, async (req, res) => {
     }
 
     const details = typeof booking.details === 'string' ? JSON.parse(booking.details) : (booking.details || {});
-    const gdsPnr = details.gdsPnr || booking.pnr;
     const sourceRaw = details.outbound?.source || details.source || booking.provider || '';
     const source = String(sourceRaw).toLowerCase().trim();
 
@@ -1531,6 +1530,9 @@ router.post('/cancel', authenticate, async (req, res) => {
     const isTtiSource = source.includes('tti') || source.includes('astra') || ['2A', 'S2'].includes(airlineCode);
     const isBdfareSource = source.includes('bdfare') || source.includes('bdf');
     const isFlyhubSource = source.includes('flyhub');
+    const isGdsProvider = isSabreSource || isTtiSource || isBdfareSource || isFlyhubSource;
+
+    const { gdsPnr, airlinePnr } = resolveCancelLocators(booking, details);
 
     // For TTI, provider booking id from GDS response is required (local booking.id is NOT valid for TTI Cancel API)
     const ttiBookingId = details?.gdsBookingResult?.ttiBookingId
