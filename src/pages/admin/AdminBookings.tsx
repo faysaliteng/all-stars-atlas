@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -74,6 +75,9 @@ const AdminBookings = () => {
   const [bulkCancelFilter, setBulkCancelFilter] = useState<"reserved" | "all_with_pnr">("reserved");
   const [bulkCancelLoading, setBulkCancelLoading] = useState(false);
   const [bulkCancelResult, setBulkCancelResult] = useState<any>(null);
+  const [selectedBookingIds, setSelectedBookingIds] = useState<string[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -151,6 +155,9 @@ const AdminBookings = () => {
 
   const filtered = applyFilters(successBookings);
   const filteredFailed = applyFilters(failedBookings);
+  const allVisibleBookings = [...filtered, ...filteredFailed];
+  const allVisibleIds = allVisibleBookings.map((b: any) => String(b.rawId || b.id));
+  const allVisibleSelected = allVisibleIds.length > 0 && allVisibleIds.every((id: string) => selectedBookingIds.includes(id));
 
   const updateBooking = async (b: any, updates: Record<string, any>) => {
     setActionLoading(b.rawId || b.id);
@@ -267,6 +274,38 @@ const AdminBookings = () => {
     }
   };
 
+  const toggleSelectOne = (bookingId: string, checked: boolean) => {
+    setSelectedBookingIds((prev) => checked ? [...new Set([...prev, bookingId])] : prev.filter((id) => id !== bookingId));
+  };
+
+  const toggleSelectAllVisible = (checked: boolean) => {
+    setSelectedBookingIds((prev) => {
+      if (checked) return [...new Set([...prev, ...allVisibleIds])];
+      const visibleSet = new Set(allVisibleIds);
+      return prev.filter((id) => !visibleSet.has(id));
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBookingIds.length === 0) return;
+    setBulkDeleteLoading(true);
+    try {
+      const result: any = await api.post('/admin/bookings/bulk-delete', { bookingIds: selectedBookingIds });
+      toast({
+        title: 'Bulk Delete Complete',
+        description: `${result.summary?.deleted || 0} deleted, ${result.summary?.notFound || 0} not found`,
+      });
+      setSelectedBookingIds([]);
+      setBulkDeleteOpen(false);
+      qc.invalidateQueries({ queryKey: ['admin', 'bookings'] });
+      refetch();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Bulk delete failed', variant: 'destructive' });
+    } finally {
+      setBulkDeleteLoading(false);
+    }
+  };
+
   const statCards = [
     { label: "Total Bookings", value: stats.total, icon: Ticket, color: "text-primary", bg: "bg-primary/10" },
     { label: "With PNR", value: stats.confirmed, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
@@ -288,9 +327,12 @@ const AdminBookings = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl sm:text-2xl font-bold">All Bookings</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="destructive" size="sm" onClick={() => { setBulkCancelOpen(true); setBulkCancelResult(null); }}>
             <Ban className="w-4 h-4 mr-1.5" /> Cancel All Reserved
+          </Button>
+          <Button variant="destructive" size="sm" disabled={selectedBookingIds.length === 0} onClick={() => setBulkDeleteOpen(true)}>
+            <Trash2 className="w-4 h-4 mr-1.5" /> Delete Selected ({selectedBookingIds.length})
           </Button>
           <Button variant="outline" size="sm" onClick={handleExport}><Download className="w-4 h-4 mr-1.5" /> Export CSV</Button>
         </div>
@@ -320,6 +362,13 @@ const AdminBookings = () => {
         <Card><CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader><TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allVisibleSelected}
+                  onCheckedChange={(checked) => toggleSelectAllVisible(Boolean(checked))}
+                  aria-label="Select all visible bookings"
+                />
+              </TableHead>
               <TableHead>ID</TableHead><TableHead>Customer</TableHead>
               <TableHead className="hidden md:table-cell">Type</TableHead>
               <TableHead className="hidden lg:table-cell">Route</TableHead>
@@ -332,13 +381,19 @@ const AdminBookings = () => {
             </TableRow></TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No bookings found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-12">No bookings found</TableCell></TableRow>
               ) : filtered.map((b: any) => (
                 <TableRow key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(b)}>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedBookingIds.includes(String(b.rawId || b.id))}
+                      onCheckedChange={(checked) => toggleSelectOne(String(b.rawId || b.id), Boolean(checked))}
+                      aria-label={`Select booking ${b.id}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{b.id}</TableCell>
                   <TableCell><div><p className="text-sm font-medium">{b.customer}</p><p className="text-xs text-muted-foreground">{b.email}</p></div></TableCell>
                   <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px]">{b.type}</Badge></TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm">{b.route}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {b.pnr && b.pnr !== "—" ? (
                       <span className="font-mono text-xs font-bold text-warning">{b.pnr}</span>
@@ -387,6 +442,13 @@ const AdminBookings = () => {
           <Card className="border-destructive/30"><CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader><TableRow className="bg-destructive/5">
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allVisibleSelected}
+                    onCheckedChange={(checked) => toggleSelectAllVisible(Boolean(checked))}
+                    aria-label="Select all visible bookings"
+                  />
+                </TableHead>
                 <TableHead>ID</TableHead><TableHead>Customer</TableHead>
                 <TableHead className="hidden md:table-cell">Type</TableHead>
                 <TableHead className="hidden lg:table-cell">Route</TableHead>
@@ -398,6 +460,13 @@ const AdminBookings = () => {
               <TableBody>
                 {filteredFailed.map((b: any) => (
                   <TableRow key={b.id} className="cursor-pointer hover:bg-destructive/5" onClick={() => openDetail(b)}>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedBookingIds.includes(String(b.rawId || b.id))}
+                        onCheckedChange={(checked) => toggleSelectOne(String(b.rawId || b.id), Boolean(checked))}
+                        aria-label={`Select booking ${b.id}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-mono text-xs">{b.id}</TableCell>
                     <TableCell><div><p className="text-sm font-medium">{b.customer}</p><p className="text-xs text-muted-foreground">{b.email}</p></div></TableCell>
                     <TableCell className="hidden md:table-cell"><Badge variant="outline" className="text-[10px]">{b.type}</Badge></TableCell>
@@ -1003,6 +1072,31 @@ const AdminBookings = () => {
                 {bulkCancelLoading ? 'Cancelling via GDS...' : 'Cancel All via GDS'}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Dialog */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" /> Delete Selected Bookings
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This will permanently delete <strong>{selectedBookingIds.length}</strong> selected booking(s) and related tickets/transactions. This cannot be undone.
+            </p>
+            <div className="p-3 rounded-lg border bg-destructive/5 border-destructive/20 text-xs text-muted-foreground">
+              Tip: use the table checkbox in header to select all visible bookings.
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={bulkDeleteLoading || selectedBookingIds.length === 0} onClick={handleBulkDelete}>
+              {bulkDeleteLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />} Delete All Selected
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -518,6 +518,46 @@ router.post('/bookings/bulk-cancel', async (req, res) => {
   }
 });
 
+// POST /admin/bookings/bulk-delete — permanent delete for selected bookings
+router.post('/bookings/bulk-delete', async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body?.bookingIds) ? req.body.bookingIds.filter(Boolean) : [];
+    if (ids.length === 0) {
+      return res.status(400).json({ message: 'bookingIds[] required', status: 400 });
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    const [rows] = await db.query(`SELECT id, booking_ref FROM bookings WHERE id IN (${placeholders})`, ids);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No matching bookings found', status: 404 });
+    }
+
+    const foundIds = rows.map(r => r.id);
+    const foundPlaceholders = foundIds.map(() => '?').join(',');
+
+    // Delete children first
+    await db.query(`DELETE FROM tickets WHERE booking_id IN (${foundPlaceholders})`, foundIds);
+    await db.query(`DELETE FROM transactions WHERE booking_id IN (${foundPlaceholders})`, foundIds);
+    await db.query(`DELETE FROM bookings WHERE id IN (${foundPlaceholders})`, foundIds);
+
+    console.log(`[Admin] Bulk deleted ${foundIds.length} bookings by ${req.user.email}`);
+
+    return res.json({
+      message: `Deleted ${foundIds.length} booking(s) permanently`,
+      summary: {
+        requested: ids.length,
+        deleted: foundIds.length,
+        notFound: ids.length - foundIds.length,
+      },
+      deletedBookings: rows.map(r => ({ id: r.id, bookingRef: r.booking_ref })),
+    });
+  } catch (err) {
+    console.error('[Admin] Bulk delete error:', err.message);
+    res.status(500).json({ message: 'Bulk delete failed', status: 500, error: err.message });
+  }
+});
+
 // DELETE /admin/bookings/:id — permanent delete
 router.delete('/bookings/:id', async (req, res) => {
   try {

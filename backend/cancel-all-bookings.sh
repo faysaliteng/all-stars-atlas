@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════
-#   SEVEN TRIP — BULK CANCEL ALL RESERVED BOOKINGS
-#   Cancels all on_hold (Reserved) bookings via GDS APIs
+#   SEVEN TRIP — BULK CANCEL BOOKINGS
+#   Cancels bookings via Admin bulk-cancel API and prints per-PNR status
 # ═══════════════════════════════════════════════════════════
 
 set -euo pipefail
@@ -11,6 +11,68 @@ ADMIN_EMAIL="${ADMIN_EMAIL:-admin@seventrip.com.bd}"
 ADMIN_PASS="${ADMIN_PASS:-Admin@123456}"
 FILTER="${1:-reserved}"  # reserved | all_with_pnr
 
+if ! command -v jq >/dev/null 2>&1; then
+  echo "✗ jq is required. Install: apt-get install -y jq"
+  exit 1
+fi
+
+request_json() {
+  local method="$1"
+  local url="$2"
+  local payload="${3:-}"
+  local token="${4:-}"
+
+  local tmp_body
+  tmp_body=$(mktemp)
+  local http_code
+
+  if [ -n "$token" ]; then
+    if [ -n "$payload" ]; then
+      http_code=$(curl -sS -L -A "SevenTrip-BulkCancel/1.0" -o "$tmp_body" -w "%{http_code}" \
+        -X "$method" "$url" \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $token" \
+        --data "$payload")
+    else
+      http_code=$(curl -sS -L -A "SevenTrip-BulkCancel/1.0" -o "$tmp_body" -w "%{http_code}" \
+        -X "$method" "$url" \
+        -H "Accept: application/json" \
+        -H "Authorization: Bearer $token")
+    fi
+  else
+    if [ -n "$payload" ]; then
+      http_code=$(curl -sS -L -A "SevenTrip-BulkCancel/1.0" -o "$tmp_body" -w "%{http_code}" \
+        -X "$method" "$url" \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        --data "$payload")
+    else
+      http_code=$(curl -sS -L -A "SevenTrip-BulkCancel/1.0" -o "$tmp_body" -w "%{http_code}" \
+        -X "$method" "$url" \
+        -H "Accept: application/json")
+    fi
+  fi
+
+  local body
+  body=$(cat "$tmp_body")
+  rm -f "$tmp_body"
+
+  if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+    echo "✗ HTTP $http_code from $url" >&2
+    echo "${body:0:600}" >&2
+    return 1
+  fi
+
+  if ! echo "$body" | jq -e . >/dev/null 2>&1; then
+    echo "✗ Non-JSON response from $url" >&2
+    echo "${body:0:600}" >&2
+    return 1
+  fi
+
+  echo "$body"
+}
+
 echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "   SEVEN TRIP — BULK CANCEL BOOKINGS (filter: $FILTER)"
@@ -19,21 +81,22 @@ echo ""
 
 # Login
 echo "[AUTH] Logging in as $ADMIN_EMAIL ..."
-LOGIN_RESP=$(curl -s -X POST "$API_BASE/auth/login" \
-  -H "Content-Type: application/json" \
-  -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASS\"}")
-
+LOGIN_PAYLOAD=$(jq -nc --arg email "$ADMIN_EMAIL" --arg password "$ADMIN_PASS" '{email:$email,password:$password}')
+LOGIN_RESP=$(request_json "POST" "$API_BASE/auth/login" "$LOGIN_PAYLOAD")
 TOKEN=$(echo "$LOGIN_RESP" | jq -r '.accessToken // .token // empty')
+
 if [ -z "$TOKEN" ]; then
-  echo "✗ Login failed: $(echo "$LOGIN_RESP" | jq -r '.message // "Unknown error"')"
+  echo "✗ Login failed: $(echo "$LOGIN_RESP" | jq -r '.message // .error // "Unknown error"')"
+  echo "Raw response: $(echo "$LOGIN_RESP" | head -c 300)"
   exit 1
 fi
+
 echo "✓ Login OK"
 echo ""
 
-# First, show what will be cancelled
+# Preview impacted bookings
 echo "[INFO] Fetching bookings to cancel..."
-BOOKINGS=$(curl -s -H "Authorization: Bearer $TOKEN" "$API_BASE/admin/bookings?limit=500")
+BOOKINGS=$(request_json "GET" "$API_BASE/admin/bookings?limit=1000" "" "$TOKEN")
 TOTAL=$(echo "$BOOKINGS" | jq '.total // 0')
 
 if [ "$FILTER" = "reserved" ]; then
@@ -44,11 +107,12 @@ elif [ "$FILTER" = "all_with_pnr" ]; then
   COUNT=$(echo "$BOOKINGS" | jq '[.data[] | select(.pnr != null and .pnr != "" and .status != "cancelled" and .status != "void" and .status != "failed")] | length')
   echo "  Total bookings: $TOTAL"
   echo "  All active with PNR (to cancel): $COUNT"
+else
+  echo "✗ Invalid filter '$FILTER'. Use: reserved | all_with_pnr"
+  exit 1
 fi
 
 echo ""
-
-# List PNRs that will be cancelled
 echo "[PNRs to cancel]:"
 if [ "$FILTER" = "reserved" ]; then
   echo "$BOOKINGS" | jq -r '.data[] | select(.status == "on_hold" and .pnr != null and .pnr != "") | "  \(.bookingRef) | PNR: \(.pnr) | Route: \(.details.outbound.origin // "?")→\(.details.outbound.destination // "?") | Source: \(.details.outbound.source // "unknown")"'
@@ -57,7 +121,7 @@ else
 fi
 
 echo ""
-read -p "Proceed with cancellation? (yes/no): " CONFIRM
+read -r -p "Proceed with cancellation? (yes/no): " CONFIRM
 if [ "$CONFIRM" != "yes" ]; then
   echo "Aborted."
   exit 0
@@ -65,10 +129,8 @@ fi
 
 echo ""
 echo "[CANCELLING] Sending bulk cancel request..."
-RESULT=$(curl -s -X POST "$API_BASE/admin/bookings/bulk-cancel" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"filter\":\"$FILTER\"}")
+CANCEL_PAYLOAD=$(jq -nc --arg filter "$FILTER" '{filter:$filter}')
+RESULT=$(request_json "POST" "$API_BASE/admin/bookings/bulk-cancel" "$CANCEL_PAYLOAD" "$TOKEN")
 
 echo ""
 echo "═══════════════════════════════════════════════════════════"
@@ -87,7 +149,6 @@ echo "  ✗ Failed:        $FAILED"
 echo "  ⊘ Skipped:       $SKIPPED"
 echo ""
 
-# Show detailed results
 echo "[DETAILED RESULTS]:"
 echo "$RESULT" | jq -r '.results[] | "  \(.bookingRef) | PNR: \(.pnr // "-") | \(.status) \(if .reason then "— " + .reason else "" end)"'
 
