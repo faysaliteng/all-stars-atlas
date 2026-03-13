@@ -26,6 +26,36 @@ if [ -z "$TOKEN" ]; then
 fi
 echo -e "${GREEN}✓ Login OK${NC}\n"
 
+# ─── Pre-flight: Check Sabre Config ───
+echo -e "${CYAN}[CONFIG] Checking Sabre API configuration...${NC}"
+HEALTH=$(curl -s "$BASE/health" 2>/dev/null)
+echo -e "  API Health: $(echo "$HEALTH" | jq -r '.status // "unknown"' 2>/dev/null)"
+
+# Quick booking test to verify config (will show gdsError if misconfigured)
+echo -e "${CYAN}[CONFIG] Testing Sabre connectivity with minimal booking...${NC}"
+CONFIG_TEST=$(curl -s "$BASE/flights/book" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "flightData":{"source":"sabre","_sabreSource":true,"airline":"Test","airlineCode":"EK","flightNumber":"EK585","origin":"DAC","destination":"DXB","departureTime":"2026-04-15T21:55:00","arrivalTime":"2026-04-16T01:30:00","bookingClass":"Y","cabinClass":"Economy","price":1,"baseFare":1,"taxes":0,"legs":[{"origin":"DAC","destination":"DXB","departureTime":"2026-04-15T21:55:00","arrivalTime":"2026-04-16T01:30:00","flightNumber":"EK585","airlineCode":"EK","bookingClass":"Y"}]},
+  "passengers":[{"title":"Mr","firstName":"TEST","lastName":"CONFIG","dob":"1990-01-01","gender":"Male","nationality":"Bangladeshi","passport":"Z99999999","passportExpiry":"2030-01-01","documentCountry":"BD","email":"test@test.com","phone":"01700000000","type":"adult"}],
+  "contactInfo":{"email":"test@test.com","phone":"01700000000"},
+  "isRoundTrip":false,"isDomestic":false,"payLater":true,"totalAmount":1,"baseFare":1,"taxes":0,"serviceCharge":0,
+  "specialServices":{"perPassenger":[{"meal":"none","wheelchair":"none","frequentFlyer":{}}]}
+}')
+CT_PNR=$(echo "$CONFIG_TEST" | jq -r '.pnr // "null"')
+CT_BOOKED=$(echo "$CONFIG_TEST" | jq -r '.gdsBooked // false')
+CT_ERROR=$(echo "$CONFIG_TEST" | jq -r '.gdsError // "none"')
+if [ "$CT_BOOKED" = "true" ]; then
+  echo -e "  ${GREEN}✓ Sabre PRODUCTION is working!${NC} PNR: $CT_PNR"
+  ALL_PNRS+=("$CT_PNR")
+else
+  echo -e "  ${RED}✗ Sabre booking failed: $CT_ERROR${NC}"
+  echo -e "  ${YELLOW}Check PM2 logs: pm2 logs seventrip-api --lines 50${NC}"
+  echo -e "  ${YELLOW}The remaining tests will still run to collect all errors.${NC}"
+fi
+echo ""
+
 # ─── Passenger Templates ───
 PAX_ADULT1='{
   "title":"Ms","firstName":"MST RAFIZA","lastName":"MOSTOFA",
