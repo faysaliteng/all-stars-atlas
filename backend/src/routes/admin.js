@@ -459,9 +459,20 @@ router.post('/bookings/bulk-cancel', async (req, res) => {
         oldStatus: booking.status,
       };
 
-      if (!gdsPnr) {
+      if (!gdsPnr && !skipGds) {
         result.status = 'skipped';
         result.reason = 'No PNR';
+        results.push(result);
+        continue;
+      }
+
+      // Force-cancel mode: skip GDS, just update DB
+      if (skipGds) {
+        await db.query('UPDATE bookings SET status = ? WHERE id = ?', ['cancelled', booking.id]);
+        await db.query('UPDATE tickets SET status = ? WHERE booking_id = ?', ['cancelled', booking.id]);
+        result.status = 'cancelled';
+        result.gdsResponse = { success: true, method: 'force-local (GDS skipped)' };
+        console.log(`[Bulk Cancel] ✓ ${booking.booking_ref} force-cancelled locally (GDS skipped)`);
         results.push(result);
         continue;
       }
