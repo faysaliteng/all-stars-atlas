@@ -1466,9 +1466,43 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           genderCode = genderCode === 'F' ? 'FI' : 'MI';
         }
 
-        // Nationality — 2-letter country code
-        const nationalitySource = pax.nationalityCountry || pax.nationality || pax.citizenshipCountry || pax.countryCode || 'BD';
-        const nationality = String(nationalitySource).trim().toUpperCase().replace(/[^A-Z]/g, '').substring(0, 2) || 'BD';
+        // Country normalization (handles ISO2/ISO3 and common demonyms like "Bangladeshi")
+        const normalizeCountryCode = (value) => {
+          const raw = String(value || '').trim();
+          if (!raw) return '';
+
+          const compact = raw.toUpperCase().replace(/[^A-Z]/g, '');
+          if (compact.length === 2) return compact;
+
+          const aliases = {
+            BANGLADESH: 'BD',
+            BANGLADESHI: 'BD',
+            BGD: 'BD',
+          };
+
+          return aliases[compact] || '';
+        };
+
+        const docCountry =
+          normalizeCountryCode(
+            pax.documentCountry ||
+            pax.issueCountry ||
+            pax.passportCountry ||
+            pax.passportIssueCountry
+          ) || '';
+
+        const nationality =
+          normalizeCountryCode(
+            pax.nationalityCountry ||
+            pax.nationality ||
+            pax.citizenshipCountry ||
+            pax.countryCode ||
+            pax.documentCountry
+          ) ||
+          docCountry ||
+          'BD';
+
+        const issueCountry = docCountry || nationality;
 
         // Full DOCS payload matching what Sabre requires
         const docPayload = {
@@ -1477,7 +1511,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           ExpirationDate: expiryFormatted,
           ...(dobFormatted ? { DateOfBirth: dobFormatted } : {}),
           Gender: genderCode,
-          IssueCountry: nationality,
+          IssueCountry: issueCountry,
           Nationality: nationality,
           GivenName: String(pax.firstName || pax.givenName || '').toUpperCase(),
           Surname: String(pax.lastName || pax.surname || '').toUpperCase(),
