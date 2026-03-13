@@ -1353,22 +1353,9 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         }
         const nationality = docCountry;
 
-        // Format DOB for DOCS: YYYY-MM-DD
-        let dobFormatted = '';
-        const rawDob = pax.dateOfBirth || pax.dob || '';
-        if (rawDob) {
-          const dRaw = String(rawDob).replace(/['"]/g, '').trim();
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dRaw)) {
-            dobFormatted = dRaw;
-          } else {
-            const dd = new Date(dRaw);
-            if (!isNaN(dd.getTime())) dobFormatted = dd.toISOString().slice(0, 10);
-          }
+        if (!expiryFormatted) {
+          throw new Error(`Missing or invalid passport expiry for passenger ${i + 1}`);
         }
-
-        // Gender: M or F (Sabre standard)
-        const genderRaw = (pax.gender || '').toUpperCase();
-        const genderCode = genderRaw.startsWith('F') ? 'F' : 'M';
 
         // Keep Document schema-safe for Sabre validation
         // Required by user: always push passport data, never downgrade by stripping DOCS.
@@ -1377,14 +1364,8 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           Number: String(passportNo).toUpperCase(),
           IssueCountry: docCountry,
           NationalityCountry: nationality,
+          ExpirationDate: expiryFormatted,
         };
-
-        if (expiryFormatted) {
-          docPayload.ExpirationDate = expiryFormatted;
-        } else {
-          // Force an explicit value when expiry parsing fails so upstream validation can catch bad input.
-          docPayload.ExpirationDate = '2099-12-31';
-        }
 
         console.log(`[Sabre] DOCS pax ${i + 1}: ${docPayload.Number} | ${docPayload.IssueCountry} | exp=${docPayload.ExpirationDate}`);
 
