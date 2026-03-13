@@ -1440,7 +1440,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           Document: docPayload,
           PersonName: { NameNumber: nameNumber },
           SegmentNumber: 'A',
-          VendorPrefs: { Airline: { Hosted: true } },
+          VendorPrefs: { Airline: { Hosted: false, Code: airlineCode } },
         });
       }
 
