@@ -919,6 +919,12 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     const seg0 = booking.Segments?.[0] || {};
     const pax0 = booking.Passengers?.[0] || {};
     const etFare0 = booking.FareInfo?.ETTicketFares?.[0] || {};
+    const pnrInfo = booking.PnrInformation || {};
+
+    // Log PnrInformation — this is where Air Astra's airline PNR typically lives
+    if (booking.PnrInformation) {
+      console.log('[TTI BOOKING] PnrInformation:', JSON.stringify(booking.PnrInformation).substring(0, 1000));
+    }
     
     // Log passenger scalars to discover PNR location
     if (booking.Passengers?.length) {
@@ -950,6 +956,16 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     };
 
     const airlinePnrCandidates = [
+      // PnrInformation fields (most likely location for airline PNR)
+      pnrInfo.RecordLocator,
+      pnrInfo.PNR,
+      pnrInfo.BookingReference,
+      pnrInfo.AirlinePNR,
+      pnrInfo.Locator,
+      pnrInfo.Code,
+      // Also check if PnrInformation is a string directly
+      typeof booking.PnrInformation === 'string' ? booking.PnrInformation : null,
+      // Original candidates
       booking.RecordLocator,
       seg0.RecordLocator,
       seg0.AirlinePNR,
