@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 # Seven Trip — Airline Capability Probe Script
-# Tests seat maps (SOAP EnhancedSeatMapRQ) and GAO (ancillaries)
+# Tests seat maps (SOAP EnhancedSeatMapRQ) and baggage
 # for all major airlines on popular routes from DAC
 #
 # Usage: bash backend/probe-airline-capabilities.sh
@@ -9,8 +9,13 @@
 # ═══════════════════════════════════════════════════════════════
 
 API_BASE="http://localhost:3001/api"
-OUTPUT_FILE="backend/airline-capabilities.json"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+OUTPUT_FILE="$SCRIPT_DIR/airline-capabilities.json"
+RAW_FILE="/tmp/airline_caps_raw.json"
 DEPART=$(date -d "+30 days" +%Y-%m-%d)
+
+# Cleanup previous raw file
+rm -f "$RAW_FILE"
 
 # Login
 TOKEN=$(curl -s "$API_BASE/auth/login" \
@@ -24,31 +29,32 @@ fi
 
 echo "✅ Logged in. Testing airline capabilities..."
 echo "📅 Departure date: $DEPART"
+echo "📁 Output: $OUTPUT_FILE"
 echo ""
 
-# Routes to test — covers most airlines available from DAC
+# Routes to test
 declare -a ROUTES=(
-  "DAC:DXB"   # Emirates, flydubai, Air Arabia, Air India, Biman, US-Bangla
-  "DAC:SIN"   # Singapore Airlines, Biman, IndiGo
-  "DAC:KUL"   # Malaysia Airlines, AirAsia, Biman
-  "DAC:BKK"   # Thai Airways, Biman
-  "DAC:DOH"   # Qatar Airways, Biman
-  "DAC:IST"   # Turkish Airlines
-  "DAC:JED"   # Saudi Arabian, Biman
-  "DAC:LHR"   # British Airways, Biman, Emirates
-  "DAC:DEL"   # Air India, IndiGo
-  "DAC:CMB"   # SriLankan Airlines
-  "DAC:MCT"   # Oman Air
-  "DAC:BAH"   # Gulf Air
-  "DAC:CXB"   # Domestic — Air Astra, Biman, US-Bangla, Novoair
-  "DAC:CGP"   # Domestic — Air Astra, US-Bangla
+  "DAC:DXB"
+  "DAC:SIN"
+  "DAC:KUL"
+  "DAC:BKK"
+  "DAC:DOH"
+  "DAC:IST"
+  "DAC:JED"
+  "DAC:LHR"
+  "DAC:DEL"
+  "DAC:CMB"
+  "DAC:MCT"
+  "DAC:BAH"
+  "DAC:CXB"
+  "DAC:CGP"
 )
 
-# Collect all unique airlines from searches
-declare -A AIRLINE_RESULTS
+# Track tested airlines to avoid duplicates
+declare -A TESTED_AIRLINES
 
 echo "═══════════════════════════════════════════════════"
-echo " PHASE 1: Search flights to discover airlines"
+echo " Searching flights & testing seat maps per airline"
 echo "═══════════════════════════════════════════════════"
 
 for ROUTE in "${ROUTES[@]}"; do
@@ -62,42 +68,12 @@ for ROUTE in "${ROUTES[@]}"; do
   TOTAL=$(echo "$SEARCH" | jq '.total // 0' 2>/dev/null)
   echo "   Found $TOTAL flights"
   
-  # Extract unique airlines
-  AIRLINES=$(echo "$SEARCH" | jq -r '[.data[]? | {code: .airlineCode, name: .airline, source: .source, flightNumber: .flightNumber, origin: .origin, destination: .destination, departureTime: .departureTime, baggage: .baggage, handBaggage: .handBaggage}] | unique_by(.code) | .[]' 2>/dev/null)
-  
-  echo "$SEARCH" | jq -r '.data[]? | "\(.airlineCode)|\(.airline)|\(.source)|\(.flightNumber)|\(.origin)|\(.destination)|\(.departureTime)|\(.baggage // "none")|\(.handBaggage // "none")"' 2>/dev/null | sort -u | while IFS='|' read -r CODE NAME SOURCE FNUM ORIG DEST DTIME BAG HBAG; do
-    if [ -n "$CODE" ] && [ "$CODE" != "null" ]; then
-      KEY="${CODE}_${ORIG}_${DEST}"
-      if [ -z "${AIRLINE_RESULTS[$KEY]}" ]; then
-        AIRLINE_RESULTS[$KEY]="$CODE|$NAME|$SOURCE|$FNUM|$ORIG|$DEST|$DTIME|$BAG|$HBAG"
-        echo "   ✓ $CODE ($NAME) via $SOURCE — $ORIG→$DEST $FNUM | Bag: $BAG | Hand: $HBAG"
-      fi
-    fi
-  done
-done
-
-echo ""
-echo "═══════════════════════════════════════════════════"
-echo " PHASE 2: Test seat maps for each airline"
-echo "═══════════════════════════════════════════════════"
-
-# Now test seat maps for unique airlines
-# We'll use the ancillaries endpoint which tries seat map internally
-RESULTS="["
-FIRST=true
-
-for ROUTE in "${ROUTES[@]}"; do
-  IFS=':' read -r FROM TO <<< "$ROUTE"
-  
-  SEARCH=$(curl -s "$API_BASE/flights/search?from=$FROM&to=$TO&date=$DEPART&adults=1&cabinClass=Economy&page=1&limit=200" \
-    -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-  
   # Get first flight per airline on this route
   echo "$SEARCH" | jq -c '[.data[]? | {code: .airlineCode, name: .airline, source: .source, flightNumber: .flightNumber, origin: .origin, destination: .destination, departureTime: .departureTime, baggage: .baggage, handBaggage: .handBaggage}] | unique_by(.code) | .[]' 2>/dev/null | while read -r FLIGHT; do
     CODE=$(echo "$FLIGHT" | jq -r '.code')
     NAME=$(echo "$FLIGHT" | jq -r '.name')
     SOURCE=$(echo "$FLIGHT" | jq -r '.source')
-    FNUM=$(echo "$FLIGHT" | jq -r '.flightNumber' | sed 's/^[A-Z]*//') 
+    FNUM_RAW=$(echo "$FLIGHT" | jq -r '.flightNumber')
     ORIG=$(echo "$FLIGHT" | jq -r '.origin')
     DEST=$(echo "$FLIGHT" | jq -r '.destination')
     DTIME=$(echo "$FLIGHT" | jq -r '.departureTime')
@@ -106,21 +82,27 @@ for ROUTE in "${ROUTES[@]}"; do
     
     if [ -z "$CODE" ] || [ "$CODE" = "null" ]; then continue; fi
     
+    # Use the raw flight number as-is (it already includes airline code)
+    FNUM="$FNUM_RAW"
+    
+    # Extract just the numeric part for seat map call
+    FNUM_NUM=$(echo "$FNUM_RAW" | sed "s/^${CODE}//")
+    
     # Extract date from departure time
     DEP_DATE=$(echo "$DTIME" | cut -c1-10)
     if [ -z "$DEP_DATE" ] || [ "$DEP_DATE" = "null" ]; then DEP_DATE="$DEPART"; fi
     
-    echo ""
-    echo "🪑 Testing seat map: $CODE ($NAME) $ORIG→$DEST $CODE$FNUM on $DEP_DATE..."
+    echo "   ✓ $CODE ($NAME) $ORIG→$DEST $FNUM | Bag: $BAG | Hand: $HBAG"
     
-    # Test seat map via ancillaries endpoint
-    SEAT_RESULT=$(curl -s "$API_BASE/flights/ancillaries?airlineCode=$CODE&origin=$ORIG&destination=$DEST&flightNumber=$CODE$FNUM&departureDate=$DEP_DATE&cabinClass=Economy" \
+    # Test seat map via dedicated seat-map endpoint (uses SOAP EnhancedSeatMapRQ)
+    echo -n "     🪑 Seat map: "
+    SEAT_RESULT=$(curl -s "$API_BASE/flights/seat-map?airlineCode=$CODE&origin=$ORIG&destination=$DEST&flightNumber=$FNUM_NUM&departureDate=$DEP_DATE&cabinClass=Economy" \
       -H "Authorization: Bearer $TOKEN" 2>/dev/null)
     
-    SEAT_AVAILABLE=$(echo "$SEAT_RESULT" | jq '.seatMap.available // false' 2>/dev/null)
-    SEAT_ROWS=$(echo "$SEAT_RESULT" | jq '.seatMap.layout.totalRows // 0' 2>/dev/null)
-    SEAT_TOTAL=$(echo "$SEAT_RESULT" | jq '.seatMap.layout.totalSeats // 0' 2>/dev/null)
-    SEAT_SOURCE=$(echo "$SEAT_RESULT" | jq -r '.seatMap.source // "none"' 2>/dev/null)
+    SEAT_AVAILABLE=$(echo "$SEAT_RESULT" | jq '.available // false' 2>/dev/null)
+    SEAT_ROWS=$(echo "$SEAT_RESULT" | jq '.layout.totalRows // 0' 2>/dev/null)
+    SEAT_TOTAL=$(echo "$SEAT_RESULT" | jq '.layout.totalSeats // 0' 2>/dev/null)
+    SEAT_SOURCE=$(echo "$SEAT_RESULT" | jq -r '.source // "none"' 2>/dev/null)
     
     HAS_BAGGAGE="false"
     HAS_HAND="false"
@@ -128,56 +110,52 @@ for ROUTE in "${ROUTES[@]}"; do
     if [ "$HBAG" != "none" ] && [ "$HBAG" != "null" ] && [ -n "$HBAG" ]; then HAS_HAND="true"; fi
     
     if [ "$SEAT_AVAILABLE" = "true" ]; then
-      echo "   ✅ Seat map: $SEAT_ROWS rows, $SEAT_TOTAL seats (source: $SEAT_SOURCE)"
+      echo "✅ $SEAT_ROWS rows, $SEAT_TOTAL seats (source: $SEAT_SOURCE)"
     else
-      echo "   ❌ Seat map: Not available"
+      echo "❌ Not available"
     fi
-    echo "   📦 Baggage: $BAG | Hand: $HBAG"
     
-    # Output JSON line
-    echo "{\"airlineCode\":\"$CODE\",\"airline\":\"$NAME\",\"source\":\"$SOURCE\",\"route\":\"$ORIG-$DEST\",\"seatMap\":{\"available\":$SEAT_AVAILABLE,\"rows\":$SEAT_ROWS,\"seats\":$SEAT_TOTAL,\"source\":\"$SEAT_SOURCE\"},\"baggage\":{\"checked\":\"$BAG\",\"hand\":\"$HBAG\",\"hasChecked\":$HAS_BAGGAGE,\"hasHand\":$HAS_HAND},\"gao\":{\"available\":false,\"note\":\"Requires EMD entitlement on PCC\"},\"ssrSupported\":true,\"testedAt\":\"$(date -Iseconds)\",\"flightNumber\":\"$CODE$FNUM\"}" >> /tmp/airline_caps_raw.json
+    # Write JSON line
+    echo "{\"airlineCode\":\"$CODE\",\"airline\":\"$NAME\",\"source\":\"$SOURCE\",\"route\":\"$ORIG-$DEST\",\"seatMap\":{\"available\":$SEAT_AVAILABLE,\"rows\":$SEAT_ROWS,\"seats\":$SEAT_TOTAL,\"source\":\"$SEAT_SOURCE\"},\"baggage\":{\"checked\":\"$BAG\",\"hand\":\"$HBAG\",\"hasChecked\":$HAS_BAGGAGE,\"hasHand\":$HAS_HAND},\"ssrSupported\":true,\"testedAt\":\"$(date -Iseconds)\",\"flightNumber\":\"$FNUM\"}" >> "$RAW_FILE"
   done
 done
 
 echo ""
 echo "═══════════════════════════════════════════════════"
-echo " PHASE 3: Consolidating results"
+echo " Consolidating results"
 echo "═══════════════════════════════════════════════════"
 
-# Consolidate: pick best result per airline (prefer seat map available)
-if [ -f /tmp/airline_caps_raw.json ]; then
-  # Deduplicate by airlineCode, keeping the one with seatMap.available=true if any
+if [ -f "$RAW_FILE" ]; then
   jq -s '
     group_by(.airlineCode) | map(
-      sort_by(.seatMap.available | if . then 0 else 1 end) | .[0] |
+      . as $all |
+      (map(select(.seatMap.available)) | first) // .[0] |
       {
         airlineCode,
         airline,
         source,
-        routes: [.route],
+        routes: [$all[].route] | unique,
         seatMap: {
-          available: .seatMap.available,
-          rows: .seatMap.rows,
-          seats: .seatMap.seats,
-          source: .seatMap.source,
-          note: (if .seatMap.available then "Real-time seat map from Sabre SOAP" else "Not available for this airline" end)
+          available: ($all | map(select(.seatMap.available)) | length > 0),
+          rows: ([$all[].seatMap.rows] | max),
+          seats: ([$all[].seatMap.seats] | max),
+          source: .seatMap.source
         },
         baggage: {
-          hasChecked: .baggage.hasChecked,
-          hasHand: .baggage.hasHand,
-          checked: .baggage.checked,
-          hand: .baggage.hand
+          hasChecked: ($all | map(select(.baggage.hasChecked)) | length > 0),
+          hasHand: ($all | map(select(.baggage.hasHand)) | length > 0),
+          samples: [$all[] | {route, checked: .baggage.checked, hand: .baggage.hand}] | unique_by(.route) | .[0:3]
         },
         ssrMeals: true,
         ssrWheelchair: true,
         ssrExtraBaggage: true,
         ssrSeatRequest: true,
         gaoAncillaries: false,
-        gaoNote: "Requires EMD entitlement agreement with airline on PCC J4YL",
+        gaoNote: "Requires EMD entitlement on PCC",
         testedAt: .testedAt
       }
     ) | sort_by(.airlineCode)
-  ' /tmp/airline_caps_raw.json > "$OUTPUT_FILE"
+  ' "$RAW_FILE" > "$OUTPUT_FILE"
   
   TOTAL_AIRLINES=$(jq 'length' "$OUTPUT_FILE")
   SEAT_MAP_COUNT=$(jq '[.[] | select(.seatMap.available)] | length' "$OUTPUT_FILE")
@@ -193,15 +171,14 @@ if [ -f /tmp/airline_caps_raw.json ]; then
   echo "   GAO paid ancillaries: 0 (requires EMD entitlements)"
   echo ""
   echo "📋 Airline Matrix:"
-  jq -r '.[] | "   \(.airlineCode) \(.airline | .[0:25]) | SeatMap: \(if .seatMap.available then "✅" else "❌" end) | Baggage: \(if .baggage.hasChecked then "✅ \(.baggage.checked)" else "❌" end) | SSR: ✅"' "$OUTPUT_FILE"
+  jq -r '.[] | "   \(.airlineCode) \(.airline | .[0:25] | . + " " * (26 - length)) | SeatMap: \(if .seatMap.available then "✅" else "❌" end) | Baggage: \(if .baggage.hasChecked then "✅" else "❌" end) | SSR: ✅"' "$OUTPUT_FILE"
   
-  # Cleanup
-  rm -f /tmp/airline_caps_raw.json
+  rm -f "$RAW_FILE"
 else
   echo "❌ No results collected"
 fi
 
 echo ""
 echo "═══════════════════════════════════════════════════"
-echo " Done! Deploy frontend to show results."
+echo " Done! Restart API to serve: pm2 restart seventrip-api"
 echo "═══════════════════════════════════════════════════"
