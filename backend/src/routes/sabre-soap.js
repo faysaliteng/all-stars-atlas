@@ -723,8 +723,13 @@ async function cancelPnrViaSoap(pnr) {
     return { success: true, method: 'soap-cancel', pnr };
 
   } catch (err) {
-    console.error(`[Sabre SOAP] Cancel failed for ${pnr}:`, err.message);
-    return { success: false, error: err.message, method: 'soap-cancel' };
+    const rawError = err?.message || 'SOAP cancel failed';
+    const enrichedError = /limit of host tas|host tas allocated/i.test(rawError)
+      ? `${rawError} | Sabre Host TA limit reached on PCC. Wait for active sessions to expire or ask Sabre to increase/release TA allocation.`
+      : rawError;
+
+    console.error(`[Sabre SOAP] Cancel failed for ${pnr}:`, enrichedError);
+    return { success: false, error: enrichedError, method: 'soap-cancel' };
   } finally {
     // Always close session
     await closeSession(config, token, conversationId);
