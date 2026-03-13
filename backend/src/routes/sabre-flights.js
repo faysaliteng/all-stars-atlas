@@ -1066,7 +1066,34 @@ function extractSabrePnrFromCreateResponse(response) {
     pnrCandidates.push(ref.RecordLocator, ref.BookingReference, ref.Locator, ref.ID, ref.id, ref.Id);
   });
 
-  return pnrCandidates.find((value) => {
+  const deepCandidates = [];
+  const visited = new Set();
+  const stack = [response];
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== 'object') continue;
+    if (visited.has(node)) continue;
+    visited.add(node);
+
+    if (Array.isArray(node)) {
+      node.forEach((item) => stack.push(item));
+      continue;
+    }
+
+    for (const [k, v] of Object.entries(node)) {
+      if (v && typeof v === 'object') {
+        stack.push(v);
+        continue;
+      }
+      if (typeof v !== 'string') continue;
+      if (/(recordlocator|bookingreference|locator|confirmationid|pnr)$/i.test(k)) {
+        deepCandidates.push(v);
+      }
+    }
+  }
+
+  const allCandidates = [...pnrCandidates, ...deepCandidates];
+  return allCandidates.find((value) => {
     if (typeof value !== 'string') return false;
     const trimmed = value.trim();
     return /^[A-Z0-9]{5,8}$/i.test(trimmed);
