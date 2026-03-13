@@ -1470,24 +1470,16 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       body,
     }];
 
-    if (advancePassenger.length > 0) {
-      const bodyWithoutAdvancePassenger = JSON.parse(JSON.stringify(body));
-      const specialServiceInfo = bodyWithoutAdvancePassenger?.CreatePassengerNameRecordRQ?.SpecialReqDetails?.SpecialService?.SpecialServiceInfo;
-      if (specialServiceInfo?.AdvancePassenger) {
-        delete specialServiceInfo.AdvancePassenger;
+    if (ssrList.length > 0) {
+      // Keep passport DOCS, but allow retry without optional SSR service codes.
+      const bodyDocsOnly = JSON.parse(JSON.stringify(body));
+      const specialServiceInfo = bodyDocsOnly?.CreatePassengerNameRecordRQ?.SpecialReqDetails?.SpecialService?.SpecialServiceInfo;
+      if (specialServiceInfo?.Service) {
+        delete specialServiceInfo.Service;
       }
       requestVariants.push({
-        label: 'without_docs_doca',
-        body: bodyWithoutAdvancePassenger,
-      });
-    }
-
-    if (body?.CreatePassengerNameRecordRQ?.SpecialReqDetails) {
-      const bodyWithoutSpecialReqDetails = JSON.parse(JSON.stringify(body));
-      delete bodyWithoutSpecialReqDetails.CreatePassengerNameRecordRQ.SpecialReqDetails;
-      requestVariants.push({
-        label: 'without_special_req_details',
-        body: bodyWithoutSpecialReqDetails,
+        label: 'docs_only_no_ssr',
+        body: bodyDocsOnly,
       });
     }
 
