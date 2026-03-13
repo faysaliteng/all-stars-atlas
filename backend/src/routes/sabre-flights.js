@@ -1504,24 +1504,27 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
 
         const issueCountry = docCountry || nationality;
 
-        // Full DOCS payload matching what Sabre requires
+        // Full DOCS payload — Document contains ONLY document fields;
+        // personal fields go under PersonName (per Sabre v2.4.0 schema)
         const docPayload = {
           Type: 'P',
           Number: passportNo,
           ExpirationDate: expiryFormatted,
-          ...(dobFormatted ? { DateOfBirth: dobFormatted } : {}),
-          Gender: genderCode,
           IssueCountry: issueCountry,
-          Nationality: nationality,
-          GivenName: String(pax.firstName || pax.givenName || '').toUpperCase(),
-          Surname: String(pax.lastName || pax.surname || '').toUpperCase(),
+          NationalityCountry: nationality,
         };
 
-        console.log(`[Sabre] DOCS pax ${i + 1}: ${docPayload.Number} | exp=${docPayload.ExpirationDate} | dob=${docPayload.DateOfBirth || 'N/A'} | gender=${docPayload.Gender} | nat=${docPayload.Nationality}`);
+        console.log(`[Sabre] DOCS pax ${i + 1}: ${docPayload.Number} | exp=${docPayload.ExpirationDate} | dob=${dobFormatted || 'N/A'} | gender=${genderCode} | nat=${nationality}`);
 
         advancePassenger.push({
           Document: docPayload,
-          PersonName: { NameNumber: nameNumber },
+          PersonName: {
+            NameNumber: nameNumber,
+            ...(dobFormatted ? { DateOfBirth: dobFormatted } : {}),
+            Gender: genderCode,
+            GivenName: String(pax.firstName || pax.givenName || '').toUpperCase(),
+            Surname: String(pax.lastName || pax.surname || '').toUpperCase(),
+          },
           SegmentNumber: 'A',
           VendorPrefs: { Airline: { Hosted: false, Code: airlineCode } },
         });
