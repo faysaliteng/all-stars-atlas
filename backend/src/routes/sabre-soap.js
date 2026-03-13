@@ -77,6 +77,22 @@ function getSoapClientCredentials(config) {
 // ── Session token cache (reuse across calls, 15min TTL) ──
 let _sessionCache = { token: null, conversationId: null, expiresAt: 0 };
 
+const SOAP_SESSION_ERROR_RE = /(binarysecuritytoken|security token|invalid session|session not found|stale session|authentication failed|host tas allocated|limit of host tas|not authorized)/i;
+
+function isSoapSessionError(message) {
+  return SOAP_SESSION_ERROR_RE.test(String(message || ''));
+}
+
+async function resetSoapSessionCacheWithClose(config) {
+  const hadToken = !!_sessionCache.token;
+  const { token, conversationId } = _sessionCache;
+  _sessionCache = { token: null, conversationId: null, expiresAt: 0 };
+
+  if (hadToken && token) {
+    await closeSession(config, token, conversationId);
+  }
+}
+
 /**
  * Create a SOAP session — returns BinarySecurityToken
  */
