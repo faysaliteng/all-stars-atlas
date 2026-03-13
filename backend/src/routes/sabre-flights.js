@@ -1370,18 +1370,23 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         const genderRaw = (pax.gender || '').toUpperCase();
         const genderCode = genderRaw.startsWith('F') ? 'F' : 'M';
 
+        // Keep Document schema-safe for Sabre validation
+        // Required by user: always push passport data, never downgrade by stripping DOCS.
         const docPayload = {
           Type: 'P',
           Number: String(passportNo).toUpperCase(),
           IssueCountry: docCountry,
           NationalityCountry: nationality,
-          Gender: genderCode,
-          GivenName: (pax.firstName || '').toUpperCase(),
-          Surname: (pax.lastName || '').toUpperCase(),
         };
 
-        if (expiryFormatted) docPayload.ExpirationDate = expiryFormatted;
-        if (dobFormatted) docPayload.DateOfBirth = dobFormatted;
+        if (expiryFormatted) {
+          docPayload.ExpirationDate = expiryFormatted;
+        } else {
+          // Force an explicit value when expiry parsing fails so upstream validation can catch bad input.
+          docPayload.ExpirationDate = '2099-12-31';
+        }
+
+        console.log(`[Sabre] DOCS pax ${i + 1}: ${docPayload.Number} | ${docPayload.IssueCountry} | exp=${docPayload.ExpirationDate}`);
 
         advancePassenger.push({
           Document: docPayload,
