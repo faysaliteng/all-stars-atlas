@@ -81,7 +81,7 @@
 | 🔴 Critical | 18 | 41% |
 | 🟡 Major | 10 | 23% |
 | 🟢 Minor | 12 | 27% |
-| **Total** | **39** | 100% |
+| **Total** | **40** | 100% |
 
 ### By Category
 | Category | Count |
