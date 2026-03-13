@@ -1640,20 +1640,20 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
     }];
 
     if (advancePassenger.length > 0) {
-      // Variant 2: Keep SSR + DOCS, but strip non-portable DOCS fields rejected by stricter Sabre schemas
+      // Variant 2: Strip NationalityCountry from Document (keep PersonName fields)
       requestVariants.push({
         label: 'full_payload_docs_minimal',
-        body: toSchemaSafeDocsBody(body, { includeIssueCountry: true }),
+        body: toSchemaSafeDocsBody(body),
       });
 
-      // Variant 3: Keep SSR + DOCS with ultra-minimal Document (Type/Number/ExpirationDate only)
+      // Variant 3: Strip NationalityCountry + strip PersonName personal fields
       requestVariants.push({
-        label: 'full_payload_docs_ultra_minimal',
-        body: toSchemaSafeDocsBody(body, { includeIssueCountry: false }),
+        label: 'full_payload_docs_bare',
+        body: toSchemaSafeDocsBody(body, { stripPersonalFields: true }),
       });
 
-      // Variant 4: Keep only DOCS (no meal/wheelchair SSR) with schema-safe DOCS
-      const bodyDocsOnly = toSchemaSafeDocsBody(body, { includeIssueCountry: true });
+      // Variant 4: DOCS-only (no SSR) with minimal Document
+      const bodyDocsOnly = toSchemaSafeDocsBody(body);
       const specialServiceInfo2 = bodyDocsOnly?.CreatePassengerNameRecordRQ?.SpecialReqDetails?.SpecialService?.SpecialServiceInfo;
       if (specialServiceInfo2?.Service) {
         delete specialServiceInfo2.Service;
@@ -1661,17 +1661,6 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       requestVariants.push({
         label: 'docs_only_no_ssr',
         body: bodyDocsOnly,
-      });
-
-      // Variant 5: DOCS-only + ultra-minimal Document for strict schemas
-      const bodyDocsOnlyUltra = toSchemaSafeDocsBody(body, { includeIssueCountry: false });
-      const specialServiceInfo3 = bodyDocsOnlyUltra?.CreatePassengerNameRecordRQ?.SpecialReqDetails?.SpecialService?.SpecialServiceInfo;
-      if (specialServiceInfo3?.Service) {
-        delete specialServiceInfo3.Service;
-      }
-      requestVariants.push({
-        label: 'docs_only_ultra_minimal_no_ssr',
-        body: bodyDocsOnlyUltra,
       });
     }
 
