@@ -1115,6 +1115,40 @@ function extractSabrePnrFromCreateResponse(response) {
   }) || null;
 }
 
+function extractDistinctSabreAirlinePnr(payload, gdsPnr) {
+  const gds = String(gdsPnr || '').trim().toUpperCase();
+  const candidates = [];
+  const stack = [payload];
+  const visited = new Set();
+
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== 'object') continue;
+    if (visited.has(node)) continue;
+    visited.add(node);
+
+    if (Array.isArray(node)) {
+      node.forEach((item) => stack.push(item));
+      continue;
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+      if (value && typeof value === 'object') {
+        stack.push(value);
+        continue;
+      }
+      if (typeof value !== 'string') continue;
+      if (!/(vendorlocator|airlinelocator|airlinepnr|reservationnumber|confirmationnumber|vendorconfirmation|supplierlocator|otherpnr)/i.test(key)) continue;
+      const code = value.trim().toUpperCase();
+      if (/^[A-Z0-9]{5,20}$/.test(code)) {
+        candidates.push(code);
+      }
+    }
+  }
+
+  return candidates.find((code) => code !== gds) || null;
+}
+
 function logSabreCreatePnrDebug(response) {
   console.log('[Sabre] CreatePNR response keys:', JSON.stringify(Object.keys(response || {})));
   const rs = response?.CreatePassengerNameRecordRS;
