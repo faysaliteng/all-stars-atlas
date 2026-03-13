@@ -1,7 +1,7 @@
-# Seven Trip — Development Analytics & Project History
+# Seven Trip — Complete Development Analytics & Project History
 
-> Comprehensive analytical overview of the Seven Trip platform development lifecycle.
-> Last updated: 2026-03-13 (v3.9.7)
+> Comprehensive analytical overview of the Seven Trip platform — from first commit to production v3.9.7.
+> Last updated: 2026-03-13
 
 ---
 
@@ -41,6 +41,7 @@
 | **Frontend Components** | 100+ |
 | **Backend Route Files** | 25 |
 | **Changelog Versions** | 35+ releases |
+| **Documentation Files** | 12 (.md files) |
 
 ---
 
@@ -72,30 +73,34 @@
 - Pure React frontend with mock data
 - localStorage-based CMS
 - No real API integration
+- shadcn/ui component library with Tailwind CSS
+- Dark/light theme system
 
 ### Phase 2: API Integration (v1.8–v2.2)
 - Real backend with Express + MySQL
-- JWT authentication with refresh tokens
-- SMS + Email notification system
-- Social login (Google + Facebook)
-- Zero-mock enforcement — all mock data removed
+- JWT authentication with refresh tokens (15min access + 7-day refresh)
+- SMS (BulkSMSBD) + Email (Resend) notification system — 10 triggers
+- Social login (Google GSI + Facebook SDK v19.0)
+- Zero-mock enforcement — all mock data removed from codebase
+- DataLoader component with skeleton/error/retry states
 
 ### Phase 3: GDS Integration (v2.5–v3.9.7)
-- TTI/ZENITH for Air Astra domestic flights
-- BDFare for Bangladesh carrier aggregation
-- FlyHub for 450+ airline access
-- Sabre REST for international flights (BFM v5)
-- Sabre SOAP for real-time seat maps + ancillaries
-- Multi-provider parallel search with deduplication
-- Real PNR creation, ticketing, and cancellation
+- TTI/ZENITH for Air Astra domestic flights (WCF SOAP-like)
+- BDFare for Bangladesh carrier aggregation (REST API v2)
+- FlyHub for 450+ airline access (REST API)
+- Sabre REST for international flights (BFM v5, OAuth v3)
+- Sabre SOAP for real-time seat maps (EnhancedSeatMapRQ v6) + ancillaries (GetAncillaryOffersRQ v3)
+- Multi-provider parallel search with `Promise.allSettled` + deduplication
+- Real PNR creation, ticketing, and cancellation across all providers
 
 ### Phase 4: Enterprise Features (v3.5–v3.9.7)
-- 4-step mandatory booking flow with SSR injection
-- Passport OCR with MRZ validation (ICAO 9303)
-- QR/Barcode cross-validation
-- Branded fares from Sabre
-- Auto-ticketing on payment confirmation
-- Reward points system
+- 4-step mandatory booking flow with SSR injection (16 meal codes, wheelchair, medical, UMNR, pets, FF#, DOCA, OSI)
+- Passport OCR with MRZ validation (ICAO 9303 check digits)
+- QR/Barcode cross-validation with confidence scoring
+- Branded fares from Sabre (Economy Light/Smart with per-brand policies)
+- Auto-ticketing on payment confirmation (SSLCommerz/bKash/Nagad → GDS ticket issue)
+- Reward points system (earn 1% + redeem as coupons)
+- Interactive aircraft-aware seat maps (narrowbody 3-3, widebody 3-3-3, ATR 2-2)
 
 ---
 
@@ -113,30 +118,33 @@
 
 ---
 
+## 📱 Responsive Design History
+
+| Issue | Version Fixed | Root Cause | Fix |
+|-------|--------------|------------|-----|
+| White space on mobile (right side) | v2.7 | Logo images 144-192px, needed 40-48px | Normalized logo heights |
+| Horizontal overflow | v2.7 | Missing `overflow-x: hidden` on root | Added to html + PublicLayout |
+| Flight card overflow (1024-1280px) | v3.7.2 | Fixed-width columns too wide for sidebar layout | Reduced widths + `min-w-0` |
+| Search bar too dark | v3.7.3 | Dark `bg-foreground` replaced with `bg-card` | White search bar redesign |
+| Pure black dark mode | v3.7.4 | 6% lightness → 14% lightness | Softened backgrounds |
+| Broken CSS class names (mobile) | v2.7 | Corrupted Tailwind classes in sidebar | Fixed class names |
+
+---
+
 ## 🔐 Security Measures Implemented
 
 | Measure | Version | Details |
 |---------|---------|---------|
-| JWT with refresh rotation | v1.2 | 15min access + 7-day refresh |
+| JWT with refresh rotation | v1.2 | 15min access + 7-day refresh, auto-rotation |
 | API keys in database | v2.5 | All keys in `system_settings`, not `.env` |
-| Rate limiting | v1.9 | Auth endpoints rate-limited |
-| Helmet.js headers | v1.9 | XSS, HSTS, X-Frame-Options |
-| Passport OCR validation | v3.3 | ICAO 9303 check digits |
-| Document gating | v3.6 | International tickets blocked without passport |
-| CORS whitelist | v1.9 | Only seven-trip.com allowed |
+| Rate limiting | v1.9 | Auth endpoints rate-limited via express-rate-limit |
+| Helmet.js headers | v1.9 | XSS, HSTS, X-Frame-Options, X-Content-Type-Options |
+| Passport OCR validation | v3.3 | ICAO 9303 check digits (passport number, DOB, expiry, composite) |
+| Document gating | v3.6 | International tickets blocked without passport upload |
+| CORS whitelist | v1.9 | Only seven-trip.com.bd allowed |
 | SSL/TLS | Deployment | Let's Encrypt with auto-renewal |
-
----
-
-## 📱 Responsive Design History
-
-| Issue | Version Fixed | Root Cause |
-|-------|--------------|------------|
-| White space on mobile (right side) | v2.7 | Logo images 144-192px, needed 40-48px |
-| Horizontal overflow | v2.7 | Missing `overflow-x: hidden` on root |
-| Flight card overflow (1024-1280px) | v3.7.2 | Fixed-width columns too wide for sidebar layout |
-| Search bar too dark | v3.7.3 | Dark `bg-foreground` replaced with `bg-card` |
-| Pure black dark mode | v3.7.4 | 6% lightness → 14% lightness |
+| Password hashing | v1.2 | bcryptjs with salt rounds |
+| Admin route guards | v1.3 | Role-based access (customer/admin/super_admin) |
 
 ---
 
@@ -151,6 +159,20 @@
 | **FlyHub** | ✅ Active | ✅ AirSearch | ✅ AirBook | ✅ AirCancel | ✅ AirTicketing | — | — |
 | **Galileo** | 🔧 Planned | — | — | — | — | — | — |
 | **NDC** | ⏳ Pending PCC activation | — | — | — | — | — | — |
+
+---
+
+## 📊 Performance Metrics
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Build size (gzipped) | ~450KB JS + ~80KB CSS | Vite manual chunks for vendor/UI/charts/PDF |
+| Code splitting | 70+ lazy-loaded routes | Every page is React.lazy loaded |
+| Hero video | Instant playback | `preload="auto"`, `fetchpriority="high"` |
+| Image loading | Lazy | `loading="lazy"`, `decoding="async"` |
+| Font loading | Preloaded | Plus Jakarta Sans critical weights |
+| API response (flight search) | 2-6 seconds | Multi-provider parallel, varies by GDS |
+| Server warm-up | On first visit | Parallel `/health` + CMS prefetch |
 
 ---
 
@@ -178,3 +200,41 @@
 | Mobile App | No native app | Responsive PWA-ready web |
 | Multi-currency payment | BDT only | Currency conversion display only |
 | Real-time price updates | Prices cached during search session | Re-search for latest fares |
+
+---
+
+## 📝 Technology Stack Summary
+
+| Category | Technologies |
+|----------|-------------|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui (40+ components), Framer Motion |
+| **State** | React Query (server), Context API (auth/theme), React Hook Form + Zod |
+| **Backend** | Node.js 20+, Express.js, MySQL 8 / MariaDB 10.6+ |
+| **Auth** | JWT (access + refresh), Google GSI OAuth, Facebook SDK v19 |
+| **Payments** | SSLCommerz, bKash (tokenized), Nagad |
+| **GDS** | TTI/ZENITH, BDFare, FlyHub, Sabre REST+SOAP |
+| **Notifications** | BulkSMSBD (SMS), Resend (email), 10 branded templates |
+| **PDF** | jsPDF (e-tickets, invoices, money receipts, QR codes) |
+| **Hosting** | Ubuntu 24.04 VPS (Hostinger KVM 2), Nginx, PM2, Let's Encrypt |
+| **CI/CD** | GitHub Actions (`.github/workflows/deploy.yml`) |
+
+---
+
+## 📄 Documentation Index
+
+| File | Description | Lines |
+|------|-------------|-------|
+| `README.md` | Project overview, features, setup | ~310 |
+| `CHANGELOG.md` | Version history (v1.0–v3.9.7, 35+ releases) | ~710 |
+| `ANALYTICS.md` | This file — development analytics & history | — |
+| `BUG_TRACKER.md` | 37+ bugs with root cause analysis | ~140 |
+| `GDS_INTEGRATION_HISTORY.md` | GDS provider integration timeline | ~220 |
+| `DEPLOYMENT_HISTORY.md` | All deployment records with commands | — |
+| `DEPLOYMENT_COMMANDS.md` | Copy-paste deployment commands | ~150 |
+| `ARCHITECTURE.md` | System architecture deep dive | — |
+| `SECURITY.md` | Security measures & best practices | — |
+| `API_CHANGELOG.md` | Backend API changes per version | — |
+| `BACKEND_API_SPEC.md` | 90+ endpoint specifications | ~1980 |
+| `Deployment.md` | VPS deployment guide (beginner-friendly) | ~795 |
+| `developer_documentation.md` | Developer handbook A-Z | ~976 |
+| `.lovable/plan.md` | Project plan & phase tracking | ~127 |
