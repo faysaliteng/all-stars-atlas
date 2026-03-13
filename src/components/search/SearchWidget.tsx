@@ -803,12 +803,12 @@ const SearchWidget = () => {
 
             <div className={`${tripType === "roundtrip" ? "col-span-1 sm:col-span-1" : ""} md:col-span-2 search-field border-b md:border-b-0 flex-col items-start ${dateErrorClass("depart")}`}>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Departure</div>
-              <Popover>
+              <Popover open={openDatePopover === "depart"} onOpenChange={(o) => setOpenDatePopover(o ? "depart" : null)}>
                 <PopoverTrigger className="w-full text-left">
                   <DateDisplay date={departDate} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={departDate} onSelect={(d) => { setDepartDate(d); clearDateError("depart"); }} initialFocus disabled={(date) => date < new Date()} />
+                  <Calendar mode="single" selected={departDate} onSelect={(d) => { setDepartDate(d); clearDateError("depart"); setOpenDatePopover(null); }} initialFocus className="pointer-events-auto" disabled={(date) => date < new Date()} />
                 </PopoverContent>
               </Popover>
             </div>
