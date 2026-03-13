@@ -136,12 +136,22 @@ function mapBooking(b: any) {
     baseFare = knownExtra > 0 ? Math.max(0, rawAmount - knownExtra) : rawAmount;
   }
 
+  // Dual PNR: Airlines PNR (actual airline record locator) vs GDS Booking ID (internal reference)
+  const airlinePnr = details.airlinePnr || null;
+  const gdsBookingId = details.gdsBookingId || details.gdsBookingResult?.ttiBookingId || null;
+  // For Sabre, the PNR IS the airline PNR (6-char locator)
+  const isSabre = (source === 'sabre');
+  const displayAirlinePnr = airlinePnr || (isSabre ? (b.pnr || details.gdsPnr || null) : null);
+  const displayGdsBookingId = gdsBookingId || (!isSabre ? (b.pnr || details.gdsPnr || null) : null);
+
   return {
     id: b.bookingRef || b.id, rawId: b.id, type: b.bookingType || "flight", status: b.status || "pending",
     amount: `৳${rawAmount.toLocaleString()}`, rawAmount,
     date: b.bookedAt ? new Date(b.bookedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—",
     pnr: b.pnr || details.gdsPnr || "—",
     gdsPnr: details.gdsPnr || b.pnr || null,
+    airlinePnr: displayAirlinePnr,
+    gdsBookingId: displayGdsBookingId,
     pax: passengers.length || 1,
     paxNames: passengers.map((p: any) => `${p.firstName || ""} ${p.lastName || ""}`.trim()).filter(Boolean),
     ticketNo: b.ticketNo || "—",
