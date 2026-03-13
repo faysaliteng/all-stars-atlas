@@ -1095,7 +1095,13 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
   const config = await getSabreConfig();
   if (!config) throw new Error('Sabre API not configured');
 
+  console.log('[Sabre] ═══════════════════════════════════════════════════');
   console.log('[Sabre] Creating PNR for', flightData?.origin, '→', flightData?.destination);
+  console.log('[Sabre] Environment:', config.environment, '| BaseURL:', config.baseUrl);
+  console.log('[Sabre] PCC:', config.pcc, '| EPR:', config.epr);
+  console.log('[Sabre] Passengers:', passengers?.length, '| Legs:', flightData?.legs?.length || 0);
+  console.log('[Sabre] Airline:', flightData?.airlineCode, '| Flight:', flightData?.flightNumber);
+  console.log('[Sabre] IsMultiCity:', !!flightData?.isMultiCity, '| Source:', flightData?.source);
 
   try {
     const paxSegments = [];
