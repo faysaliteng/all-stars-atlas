@@ -1038,6 +1038,21 @@ function getAirlineName(code) {
 
 function extractSabrePnrFromCreateResponse(response) {
   const rs = response?.CreatePassengerNameRecordRS || {};
+
+  // CRITICAL: Check ApplicationResults status FIRST — if NotProcessed, the PNR was never created
+  const appStatus = rs?.ApplicationResults?.status || '';
+  if (appStatus === 'NotProcessed' || appStatus === 'Incomplete') {
+    const errors = rs?.ApplicationResults?.Error || [];
+    const errArr = Array.isArray(errors) ? errors : [errors];
+    const errMsgs = errArr.map(e => {
+      const sysResults = e?.SystemSpecificResults || {};
+      const msgArr = Array.isArray(sysResults) ? sysResults : [sysResults];
+      return msgArr.map(s => s?.Message || s?.ShortText || '').filter(Boolean).join('; ');
+    }).filter(Boolean).join(' | ');
+    console.error(`[Sabre] CreatePNR REJECTED by GDS: status=${appStatus} errors=${errMsgs}`);
+    return null;
+  }
+
   const itineraryRefs = [
     rs?.ItineraryRef,
     rs?.TravelItineraryRead?.TravelItinerary?.ItineraryRef,
