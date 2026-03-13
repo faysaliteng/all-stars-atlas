@@ -1852,7 +1852,7 @@ async function getBooking({ pnr }) {
         if (v && typeof v === 'object') { stack.push(v); continue; }
         if (typeof v !== 'string') continue;
         // Match vendor/airline locator keys
-        if (/(vendorlocator|airlinelocator|airlinepnr|airlineconfirmation|vendorconfirmation|vendorPNR|otherPNR|supplierlocator)/i.test(k)) {
+        if (/(vendorlocator|airlinelocator|airlinepnr|airlineconfirmation|vendorconfirmation|vendorPNR|otherPNR|supplierlocator|reservationnumber|confirmationnumber)/i.test(k)) {
           const code = v.trim().toUpperCase();
           if (/^[A-Z0-9]{5,20}$/.test(code) && code !== pnr.toUpperCase()) {
             vendorLocators.push(code);
