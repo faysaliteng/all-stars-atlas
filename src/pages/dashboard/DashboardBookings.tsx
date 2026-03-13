@@ -250,7 +250,13 @@ const DashboardBookings = () => {
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-sm">{booking.pax}</TableCell>
-                      <TableCell><Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{displayStatus(booking.status)}</Badge></TableCell>
+                      <TableCell>
+                        {isFailedTab ? (
+                          <Badge variant="destructive" className="text-[10px]"><AlertTriangle className="w-3 h-3 mr-1" />Failed</Badge>
+                        ) : (
+                          <Badge variant="outline" className={`text-[10px] ${statusColors[booking.status] || ""}`}>{displayStatus(booking.status)}</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right font-semibold text-sm">{booking.amount}</TableCell>
                       <TableCell>
                         <DropdownMenu modal={false}>
