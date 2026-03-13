@@ -1458,7 +1458,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         finalErrorMessage = err.message;
         console.error(`[Sabre] CreatePNR attempt failed (${variant.label}):`, err.message);
 
-        const shouldRetry = /VALIDATION_FAILED|NotProcessed|AdvancePassenger|SpecialReqDetails|Document/i.test(err.message || '');
+        const shouldRetry = /VALIDATION_FAILED|NotProcessed|AdvancePassenger|SpecialReqDetails|Document|PersonName|NamePrefix|not allowed/i.test(err.message || '');
         const hasNextVariant = attemptIndex < requestVariants.length - 1;
         if (!(shouldRetry && hasNextVariant)) {
           break;
