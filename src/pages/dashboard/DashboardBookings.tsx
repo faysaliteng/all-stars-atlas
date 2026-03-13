@@ -118,20 +118,30 @@ const DashboardBookings = () => {
 
   const resolved = (data as any) || {};
   const rawBookings = resolved?.data || resolved?.bookings || [];
-  const bookings = rawBookings.map(mapBooking);
+  const allMapped = rawBookings.map(mapBooking);
+
+  // Split: bookings WITH PNR = valid, WITHOUT PNR = failed
+  const hasPnr = (b: any) => b.pnr && b.pnr !== "—" && b.pnr.trim().length > 0;
+  const validBookings = allMapped.filter((b: any) => hasPnr(b));
+  const failedBookings = allMapped.filter((b: any) => !hasPnr(b));
+
+  // Show failed bookings only in "Failed" or "All" tab
+  const isFailedTab = activeTab === "Failed";
+  const bookings = isFailedTab ? failedBookings : validBookings;
 
   const tabCounts: Record<string, number> = resolved?.tabCounts || {};
   if (!tabCounts["All"]) {
-    tabCounts["All"] = bookings.length;
+    tabCounts["All"] = validBookings.length;
+    tabCounts["Failed"] = failedBookings.length;
     statusTabs.forEach(tab => {
-      if (tab !== "All") {
+      if (tab !== "All" && tab !== "Failed") {
         const tabKey = tab === "Reserved" ? "on_hold" : tab.toLowerCase().replace(/ /g, "_");
-        tabCounts[tab] = bookings.filter((b: any) => b.status?.toLowerCase() === tabKey || displayStatus(b.status) === tab).length;
+        tabCounts[tab] = validBookings.filter((b: any) => b.status?.toLowerCase() === tabKey || displayStatus(b.status) === tab).length;
       }
     });
   }
 
-  const total = resolved?.total || bookings.length;
+  const total = isFailedTab ? failedBookings.length : validBookings.length;
   const totalPages = Math.ceil(total / Number(perPage)) || 1;
   const paginatedBookings = bookings.slice((page - 1) * Number(perPage), page * Number(perPage));
 
