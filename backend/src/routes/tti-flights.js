@@ -775,11 +775,12 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     const email = isAdult ? (p.email || contactInfo?.email || '') : '';
     const phone = isAdult ? (p.phone || contactInfo?.phone || '') : '';
 
+    // TTI Passenger schema ONLY accepts: Ref, RefClient, PassengerQuantity, PassengerTypeCode, NameElement, Extensions
+    // All other fields (DateOfBirth, Passport, etc.) are IGNORED — they must go via SpecialServices DOCS SSR
     return {
       Ref: uniqueRef,
-      RefItinerary: selectedItinRef,
-      PassengerTypeCode: paxType,
       PassengerQuantity: 1,
+      PassengerTypeCode: paxType,
       NameElement: {
         CivilityCode: civilityCode,
         Firstname: firstName,
@@ -787,31 +788,20 @@ async function createBooking({ flightData, passengers, contactInfo }) {
         Surname: lastName,
         Extensions: null,
       },
-      Title: civilityCode,
-      FirstName: firstName,
-      LastName: lastName,
-      GivenName: firstName,
-      Surname: lastName,
-      DateOfBirth: dobDate && !isNaN(dobDate.getTime()) ? `/Date(${dobDate.getTime()})/` : null,
-      Gender: genderCode,
-      GenderCode: genderCode,
-      Nationality: natCode,
-      NationalityCode: natCode,
-      PassportNumber: rawPassport || null,
-      PassportExpiry: passportExpiryDate && !isNaN(passportExpiryDate.getTime()) ? `/Date(${passportExpiryDate.getTime()})/` : null,
-      DocumentInfo: rawPassport ? {
-        DocumentNumber: rawPassport,
-        DocumentType: 'P',
-        ExpiryDate: passportExpiryDate && !isNaN(passportExpiryDate.getTime()) ? `/Date(${passportExpiryDate.getTime()})/` : null,
-        NationalityCode: natCode,
-      } : null,
-      ContactInfo: (email || phone) ? {
-        Email: email,
-        Phone: phone,
-      } : null,
-      Email: email || null,
-      Phone: phone || null,
       Extensions: null,
+      // ── Internal fields for DOCS SSR builder (NOT sent to TTI) ──
+      _internal: {
+        firstName,
+        lastName,
+        genderCode,
+        natCode,
+        rawPassport,
+        dobDate,
+        passportExpiryDate,
+        email,
+        phone,
+        paxType,
+      },
     };
   });
   
