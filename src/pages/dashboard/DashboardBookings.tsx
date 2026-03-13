@@ -111,9 +111,9 @@ const DashboardBookings = () => {
   const [page, setPage] = useState(1);
   const [docVerifyBooking, setDocVerifyBooking] = useState<any>(null);
 
-  const statusParam = activeTab !== "All" ? (activeTab === "Reserved" ? "on_hold" : activeTab.toLowerCase().replace(/[ -]/g, "_")) : undefined;
+  const statusParam = (activeTab !== "All" && activeTab !== "Failed") ? (activeTab === "Reserved" ? "on_hold" : activeTab.toLowerCase().replace(/[ -]/g, "_")) : undefined;
   const { data, isLoading, error, refetch } = useDashboardBookings({
-    status: statusParam, search: search || undefined, limit: Number(perPage), page,
+    status: statusParam, search: search || undefined, limit: 100, page,
   });
 
   const resolved = (data as any) || {};
