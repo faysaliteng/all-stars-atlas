@@ -121,15 +121,33 @@ router.get('/ticket-status/:pnr', authenticate, async (req, res) => {
   }
 });
 
-// ─── Sabre REST: Seat Map (alternative to SOAP) ───
+// ─── Seat Map (REST with SOAP fallback for pre-booking) ───
 router.get('/seats-rest', async (req, res) => {
   try {
     const { origin, destination, departureDate, airlineCode, flightNumber, cabinClass, pnr } = req.query;
     if (!origin || !destination || !departureDate || !airlineCode || !flightNumber) {
       return res.status(400).json({ message: 'Required: origin, destination, departureDate, airlineCode, flightNumber' });
     }
-    const result = await sabreGetSeatsRest({ origin, destination, departureDate, airlineCode, flightNumber, cabinClass, pnr });
-    res.json(result);
+
+    // If PNR exists, try REST first
+    if (pnr) {
+      const result = await sabreGetSeatsRest({ origin, destination, departureDate, airlineCode, flightNumber, cabinClass, pnr });
+      if (result?.success) return res.json(result);
+      console.log('[SeatsRest] REST failed for PNR, falling back to SOAP...');
+    }
+
+    // Pre-booking or REST fallback: use SOAP EnhancedSeatMapRQ (no PNR needed)
+    try {
+      const { getSeatMap } = require('./sabre-soap');
+      const soapResult = await getSeatMap({ origin, destination, departureDate, airlineCode, flightNumber, cabinClass });
+      if (soapResult && (soapResult.rows?.length > 0 || soapResult.totalRows > 0)) {
+        return res.json({ success: true, ...soapResult, source: 'sabre-soap' });
+      }
+    } catch (soapErr) {
+      console.error('[SeatsRest] SOAP fallback error:', soapErr.message);
+    }
+
+    res.json({ success: false, source: 'none', error: 'No seat map available from REST or SOAP', rows: [], available: false });
   } catch (err) {
     console.error('[SeatsRest] Error:', err.message);
     res.status(500).json({ message: 'Failed to load seat map', error: err.message });
@@ -885,6 +903,7 @@ router.post('/book', authenticate, async (req, res) => {
       airlinePnr: airlinePnr || null,
       gdsBookingId: gdsBookingId || null,
       gdsBooked: !!(gdsBookingResult?.success),
+      gdsError: gdsBookingResult && !gdsBookingResult.success ? (gdsBookingResult.error || null) : null,
       createdAt: new Date().toISOString(),
     });
   } catch (err) {
