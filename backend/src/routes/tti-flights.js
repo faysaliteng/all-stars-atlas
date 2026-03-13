@@ -957,6 +957,7 @@ async function createBooking({ flightData, passengers, contactInfo }) {
 
     const airlinePnrCandidates = [
       // PnrInformation fields (most likely location for airline PNR)
+      pnrInfo.PnrCode,
       pnrInfo.RecordLocator,
       pnrInfo.PNR,
       pnrInfo.BookingReference,
