@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-13 (v3.9.9.6 — Passport DOCS SSR for Sabre + TTI + Frontend Mandatory Validation)
+> Last updated: 2026-03-13 (v3.9.9.7 — Sabre DOCS Strict Mode + Airline PNR from CreatePNR)
 
 ---
 
