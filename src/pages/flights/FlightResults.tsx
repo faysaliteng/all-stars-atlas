@@ -2879,13 +2879,57 @@ const FlightResults = () => {
       <div className="bg-card border-b border-border pt-20 sm:pt-28 lg:pt-36 pb-0">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex flex-wrap items-center gap-2.5 py-3">
-            {/* Trip Type pill */}
-            <div className="bg-muted border border-border rounded-lg px-4 py-2 flex items-center gap-2 shrink-0">
-              <Plane className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground">
-                {isMultiCity ? "Multi-City" : isRoundTrip ? "Return" : "One Way"}
-              </span>
-            </div>
+            {/* Trip Type pill — clickable to switch */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
+                  <Plane className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold text-foreground">
+                    {isMultiCity ? "Multi-City" : isRoundTrip ? "Round Trip" : "One Way"}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="start">
+                <div className="space-y-1">
+                  {[
+                    { label: "One Way", key: "oneway" },
+                    { label: "Round Trip", key: "roundtrip" },
+                    { label: "Multi-City", key: "multicity" },
+                  ].map(t => {
+                    const isActive =
+                      (t.key === "oneway" && !isRoundTrip && !isMultiCity) ||
+                      (t.key === "roundtrip" && isRoundTrip) ||
+                      (t.key === "multicity" && isMultiCity);
+                    return (
+                      <button key={t.key} onClick={() => {
+                        if (t.key === "multicity") {
+                          navigate("/");
+                          return;
+                        }
+                        const p = new URLSearchParams(searchParams);
+                        if (t.key === "oneway") {
+                          p.delete("return");
+                          p.delete("tripType");
+                        } else if (t.key === "roundtrip") {
+                          if (!returnDate) {
+                            const dep = new Date(departDate || Date.now());
+                            dep.setDate(dep.getDate() + 7);
+                            p.set("return", format(dep, "yyyy-MM-dd"));
+                          }
+                          p.delete("tripType");
+                        }
+                        navigate(`/flights?${p.toString()}`);
+                      }}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted text-foreground"}`}>
+                        {isActive && <Check className="w-3.5 h-3.5" />}
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* Route pill */}
             {!isMultiCity && (
