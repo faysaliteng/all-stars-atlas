@@ -11,12 +11,12 @@
 
 /* Flight arc arrow scroll animations */
 @keyframes arrow-scroll-right {
-  0% { transform: translateX(-36px); }
-  100% { transform: translateX(0px); }
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
 }
 @keyframes arrow-scroll-left {
-  0% { transform: translateX(0px); }
-  100% { transform: translateX(-36px); }
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
 @keyframes shake {
