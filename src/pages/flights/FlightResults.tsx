@@ -2031,41 +2031,41 @@ const FlightCard = ({
         {/* ── Main card row ── */}
         <div className="flex flex-col sm:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-2 p-2.5 sm:p-3 sm:w-32 lg:w-36 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
+          <div className="flex items-center gap-2.5 p-3 sm:p-4 sm:w-36 lg:w-40 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
             <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
-                <img src={logo} alt={flight.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(flight.airlineCode || "").toUpperCase()}</span></div>`; }} />
+                <img src={logo} alt={flight.airline} className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(flight.airlineCode || "").toUpperCase()}</span></div>`; }} />
               ) : (
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-muted flex items-center justify-center">
                   <span className="text-[10px] font-bold text-muted-foreground">{(flight.airlineCode || "").toUpperCase()}</span>
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] sm:text-xs font-bold leading-tight truncate">{flight.airline}</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
+              <p className="text-xs sm:text-[13px] font-bold leading-tight truncate">{flight.airline}</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
           </div>
 
-          {/* Flight times + baggage info */}
-          <div className="flex-1 p-2.5 sm:p-3 min-w-0">
+          {/* Flight times */}
+          <div className="flex-1 p-3 sm:p-4 min-w-0">
             {/* Route label header */}
-            <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-2 text-[10px] sm:text-xs font-bold shadow-sm bg-accent/15 text-accent border border-accent/30">
-              <Plane className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2.5 text-[10px] sm:text-xs font-bold shadow-sm bg-accent/15 text-accent border border-accent/30">
+              <Plane className="w-3.5 h-3.5" />
               <span>DEPARTURE: {fromCode} → {toCode}</span>
               <span className="flight-date text-[10px] ml-0.5">• {departDateStr}</span>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-3">
               {/* Departure */}
               <div className="text-center shrink-0">
-                <p className="text-xs sm:text-sm font-bold text-foreground">{fromCode}</p>
-                <p className="text-sm sm:text-base font-black tracking-tight flight-time">{departTime}</p>
-                {(() => { const g = formatGMT(flight.departureTime); return g ? <p className="text-[9px] sm:text-[10px] text-muted-foreground">{g}</p> : null; })()}
+                <p className="text-sm font-bold text-foreground">{fromCode}</p>
+                <p className="text-base sm:text-lg font-black tracking-tight flight-time leading-tight">{departTime}</p>
+                {(() => { const g = formatGMT(flight.departureTime); return g ? <p className="text-[10px] text-muted-foreground leading-tight">{g}</p> : null; })()}
               </div>
 
-              {/* Duration bar */}
-              <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[50px] sm:min-w-[80px]">
+              {/* Duration arc */}
+              <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[60px] sm:min-w-[80px]">
                 {stops > 0 && legs.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
@@ -2099,7 +2099,7 @@ const FlightCard = ({
                 ) : (
                   <AnimatedFlightArc compact direction="departure" />
                 )}
-                <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">{duration}</p>
+                <p className="text-[10px] text-muted-foreground font-medium">{duration}</p>
                 <div className="flex items-center gap-1.5">
                   <p className={`text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
                   {distanceKm && (
@@ -2112,89 +2112,25 @@ const FlightCard = ({
 
               {/* Arrival */}
               <div className="text-center shrink-0">
-                <p className="text-xs sm:text-sm font-bold text-foreground">{toCode}</p>
-                <p className="text-sm sm:text-base font-black tracking-tight flight-time">
+                <p className="text-sm font-bold text-foreground">{toCode}</p>
+                <p className="text-base sm:text-lg font-black tracking-tight flight-time leading-tight">
                   {arriveTime}
                   {nextDay && <sup className="text-[8px] text-destructive font-bold ml-0.5">+1</sup>}
                 </p>
-                {(() => { const g = formatGMT(flight.arrivalTime); return g ? <p className="text-[9px] sm:text-[10px] text-muted-foreground">{g}</p> : null; })()}
+                {(() => { const g = formatGMT(flight.arrivalTime); return g ? <p className="text-[10px] text-muted-foreground leading-tight">{g}</p> : null; })()}
               </div>
-            </div>
-
-            {/* Baggage + Seats + Class info row — elegant pill badges */}
-            <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
-              {handBaggage && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
-                  <Briefcase className="w-3 h-3" /> {handBaggage}
-                </span>
-              )}
-              {baggage && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
-                  <Luggage className="w-3 h-3" /> {baggage}
-                </span>
-              )}
-              {availableSeats !== null && (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
-                  availableSeats <= 4
-                    ? "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
-                    : availableSeats <= 9
-                      ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200/60 dark:border-orange-800/40 text-orange-600 dark:text-orange-400"
-                      : "bg-accent/5 border-accent/20 text-accent"
-                }`}>
-                  <Armchair className="w-3 h-3" /> {availableSeats} Seats Left
-                </span>
-              )}
-              {cabinDisplay && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] font-semibold text-muted-foreground">
-                  <Plane className="w-3 h-3" /> {cabinDisplay}
-                </span>
-              )}
-              {/* Refundable / Non-Refundable pill */}
-              {(() => {
-                const best = getBestFareDetail(flight);
-                const isRefundable = best?.refundable ?? flight.refundable ?? false;
-                return (
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
-                    isRefundable
-                      ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
-                      : "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
-                  }`}>
-                    {isRefundable ? "Refundable" : "Non-Refundable"}
-                  </span>
-                );
-              })()}
-              {stops === 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
-                  Direct
-                </span>
-              )}
-              {/* Sabre GDS capability badges */}
-              {(() => {
-                const isSabre = String(source).toLowerCase().includes('sabre') || !!flight._sabreSource || !!flight._sabreSeqNumber;
-                if (!isSabre) return null;
-                return (
-                  <>
-                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
-                      💺 Seat Map
-                    </span>
-                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
-                      🍽 Meals
-                    </span>
-                  </>
-                );
-              })()}
             </div>
           </div>
 
           {/* Price section */}
-          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-44 lg:w-48 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+          <div className="flex flex-col items-end justify-center gap-1 p-3 sm:p-4 sm:w-44 lg:w-52 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-1.5">
               {grossPrice === cheapest && price > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
               )}
               {price > 0 && (
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[8px] font-bold flex items-center gap-0.5 px-1.5 py-0">
-                  <span className="text-xs">🪙</span> +{calcRewardPoints(price).toLocaleString()}
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300/50 dark:border-amber-700/50 text-[9px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px]">🪙</span> +{calcRewardPoints(price).toLocaleString()} Points
                 </Badge>
               )}
             </div>
@@ -2205,17 +2141,17 @@ const FlightCard = ({
               ) : null}
               <div className="hidden sm:block text-right min-w-0">
                 <p className="text-[10px] font-bold leading-tight truncate max-w-[70px]">{flight.airline}</p>
-                <p className="text-[8px] text-muted-foreground truncate">{flightNo}</p>
+                <p className="text-[9px] text-muted-foreground truncate">{flightNo}</p>
               </div>
             </div>
-            <p className="text-base sm:text-lg lg:text-xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
             {discount > 0 && (
-              <p className="text-[10px] font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
+              <p className="text-[11px] font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
             )}
-            <p className="text-[9px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
+            <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover open={showPriceBreakdown} onOpenChange={setShowPriceBreakdown}>
               <PopoverTrigger asChild>
-                <button className="text-[11px] text-accent font-semibold flex items-center gap-1 hover:underline mt-0.5">
+                <button className="text-[11px] sm:text-xs text-accent font-semibold flex items-center gap-1 hover:underline">
                   Price Breakdown <ChevronRight className="w-3 h-3" />
                 </button>
               </PopoverTrigger>
@@ -2234,31 +2170,91 @@ const FlightCard = ({
           </div>
         </div>
 
-        {/* ── Info bar: Flight Details ▲ | Refundable  Book & Hold | View Prices ▼ ── */}
-        <div className="flex items-center px-2.5 sm:px-4 py-2 bg-muted/30 border-t border-border/50">
-          {/* Left: Flight Details toggle */}
-          <button className="flex items-center gap-1 text-accent font-bold text-[11px] sm:text-xs hover:underline shrink-0" onClick={onToggleExpand}>
-            Flight Details {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
+        {/* Baggage + Seats + Class info row */}
+        <div className="flex items-center flex-wrap gap-1.5 px-3 sm:px-4 py-2 border-t border-border/30">
+          {handBaggage && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] sm:text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+              <Briefcase className="w-3 h-3" /> {handBaggage}
+            </span>
+          )}
+          {baggage && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] sm:text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+              <Luggage className="w-3 h-3" /> {baggage}
+            </span>
+          )}
+          {availableSeats !== null && (
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] sm:text-[11px] font-bold ${
+              availableSeats <= 4
+                ? "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
+                : availableSeats <= 9
+                  ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200/60 dark:border-orange-800/40 text-orange-600 dark:text-orange-400"
+                  : "bg-accent/5 border-accent/20 text-accent"
+            }`}>
+              <Armchair className="w-3 h-3" /> {availableSeats} Seats Left
+            </span>
+          )}
+          {cabinDisplay && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] sm:text-[11px] font-semibold text-muted-foreground">
+              <Plane className="w-3 h-3" /> {cabinDisplay}
+            </span>
+          )}
+          {(() => {
+            const best = getBestFareDetail(flight);
+            const isRefundable = best?.refundable ?? flight.refundable ?? false;
+            return (
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] sm:text-[11px] font-bold ${
+                isRefundable
+                  ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
+                  : "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
+              }`}>
+                {isRefundable ? "Refundable" : "Non-Refundable"}
+              </span>
+            );
+          })()}
+          {stops === 0 && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] sm:text-[11px] font-bold text-accent">
+              Direct
+            </span>
+          )}
+          {(() => {
+            const isSabre = String(source).toLowerCase().includes('sabre') || !!flight._sabreSource || !!flight._sabreSeqNumber;
+            if (!isSabre) return null;
+            return (
+              <>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] sm:text-[11px] font-bold text-accent">
+                  💺 Seat Map
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] sm:text-[11px] font-bold text-accent">
+                  🍽 Meals
+                </span>
+              </>
+            );
+          })()}
+        </div>
 
-          {/* Center: Refundable + Book & Hold badges */}
-          <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4">
-            <span className={`font-bold text-[11px] sm:text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
+        {/* ── Info bar ── */}
+        <div className="flex items-center px-3 sm:px-4 py-2.5 bg-muted/30 border-t border-border/50">
+          <button className="flex items-center gap-1 text-accent font-bold text-xs hover:underline shrink-0" onClick={onToggleExpand}>
+            Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+          <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
+            <span className={`font-bold text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {flight.airlineCode?.toUpperCase() !== "BG" && (
-              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-[11px] sm:text-xs hidden sm:inline">Book &amp; Hold</span>
+              <>
+                <Separator orientation="vertical" className="h-4" />
+                <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs hidden sm:inline">Book &amp; Hold</span>
+              </>
             )}
           </div>
-
-          {/* Right: View Prices / Select button */}
           <div className="shrink-0">
             {selectionMode ? (
-              <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs" onClick={onSelect}>
+              <Button size="sm" className="font-bold h-8 sm:h-9 px-4 sm:px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-xs" onClick={onSelect}>
                 {isSelected ? <><Check className="w-3 h-3 mr-1" /> Selected</> : "Select"}
               </Button>
             ) : (
-              <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs"
+              <Button size="sm" className="font-bold h-8 sm:h-9 px-4 sm:px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-xs"
                 onClick={() => setShowFareOptions(!showFareOptions)}>
-                View Prices {fareDetailsCount > 1 && <Badge className="ml-1 bg-accent-foreground/20 text-accent-foreground border-0 text-[9px] px-1 py-0">{fareDetailsCount}</Badge>} {showFareOptions ? <ChevronUp className="w-3 h-3 ml-0.5" /> : <ChevronDown className="w-3 h-3 ml-0.5" />}
+                View Prices {fareDetailsCount > 1 && <Badge className="ml-1 bg-accent-foreground/20 text-accent-foreground border-0 text-[9px] px-1 py-0">{fareDetailsCount}</Badge>} {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-0.5" /> : <ChevronDown className="w-3.5 h-3.5 ml-0.5" />}
               </Button>
             )}
           </div>
