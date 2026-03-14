@@ -685,7 +685,7 @@ const SearchWidget = ({ flightOnly, initialFlightValues, compact }: SearchWidget
   const tabContent: Record<string, React.ReactNode> = {
     // ====== FLIGHT ======
     flight: (
-      <div className="space-y-4">
+      <div className={compact ? "space-y-2" : "space-y-4"}>
         {/* Domestic / International Toggle */}
         <div className="flex gap-2">
           {(["domestic", "international"] as const).map((scope) => (
