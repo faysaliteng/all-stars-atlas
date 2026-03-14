@@ -1606,14 +1606,19 @@ const MultiCityFlightCard = ({
                       <p className="text-[10px] font-bold text-muted-foreground">{seg.destination}</p>
                     </div>
                   </div>
-                  {/* Baggage + class (only on first row) or segment label */}
-                  <div className="hidden sm:flex flex-col items-end gap-0.5 shrink-0 w-24">
-                    <div className="flex items-center gap-1.5 text-[10px]">
-                      {seg.handBaggage && <span className="flex items-center gap-0.5 text-accent"><Luggage className="w-3 h-3" /> {seg.handBaggage}</span>}
-                      {seg.baggage && <span className="flex items-center gap-0.5 text-accent"><Luggage className="w-3 h-3" /> {seg.baggage}</span>}
+                  {/* Baggage + seats + class */}
+                  <div className="hidden sm:flex flex-col items-end gap-1 shrink-0 w-28">
+                    <div className="flex items-center flex-wrap gap-1.5 text-[10px] justify-end">
+                      {seg.handBaggage && <span className="flex items-center gap-0.5 text-accent font-medium"><Package className="w-3 h-3" /> {seg.handBaggage}</span>}
+                      {seg.baggage && <span className="flex items-center gap-0.5 text-accent font-medium"><Luggage className="w-3 h-3" /> {seg.baggage}</span>}
                     </div>
-                    {(flight.bookingClass || flight.fareDetails?.[0]?.bookingClass) && (
-                      <span className="text-[10px] text-muted-foreground">Class: {flight.bookingClass || flight.fareDetails?.[0]?.bookingClass}</span>
+                    {seg.availableSeats != null && seg.availableSeats <= 9 && (
+                      <span className={`text-[10px] font-bold ${seg.availableSeats <= 4 ? "text-destructive" : "text-orange-500"}`}>
+                        <Users className="w-3 h-3 inline mr-0.5" />{seg.availableSeats} Seat{seg.availableSeats !== 1 ? "s" : ""} Left
+                      </span>
+                    )}
+                    {(seg.cabinClass || seg.bookingClass || flight.fareDetails?.[0]?.bookingClass) && (
+                      <span className="text-[10px] text-muted-foreground">{seg.cabinClass || ''}{seg.bookingClass || flight.fareDetails?.[0]?.bookingClass ? ` - ${seg.bookingClass || flight.fareDetails?.[0]?.bookingClass}` : ''}</span>
                     )}
                   </div>
                 </div>
