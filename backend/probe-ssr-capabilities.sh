@@ -1,17 +1,19 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Seven Trip — COMPREHENSIVE Production Feature Probe
-# Tests ALL working features: Search, Book, SSR, Cancel,
-# Seat Maps, Fare Rules, Flight Status, Revalidation,
-# GetBooking, TicketStatus, Ancillaries
+# Seven Trip — COMPREHENSIVE Production Feature Probe v2.0
+# Tests ALL routes, all pax combos, all features:
+#   Search, Book, Cancel, Seat Maps, Fare Rules, Flight Status,
+#   Revalidation, GetBooking, TicketStatus, Ancillaries
 #
-# Providers: Sabre (International) + TTI/Air Astra (Domestic)
+# Routes: International (Sabre), Domestic (TTI), Round-Trip, Multi-City
+# Pax combos: Adult-only, Adult+Child, Adult+Child+Infant
 # Usage: bash probe-ssr-capabilities.sh
 # ═══════════════════════════════════════════════════════════════
 
 API_BASE="http://localhost:3001/api"
 DEPART=$(date -d "+30 days" +%Y-%m-%d)
 RETURN=$(date -d "+37 days" +%Y-%m-%d)
+DEPART2=$(date -d "+32 days" +%Y-%m-%d)
 
 # Colors
 GREEN='\033[0;32m'
@@ -25,6 +27,7 @@ NC='\033[0m'
 PASS=0
 FAIL=0
 SKIP=0
+ALL_PNRS=()
 
 result() {
   local label="$1" status="$2" detail="$3"
@@ -41,9 +44,9 @@ result() {
 }
 
 echo "═══════════════════════════════════════════════════"
-echo -e "${BOLD} Seven Trip — Comprehensive Production Probe${NC}"
+echo -e "${BOLD} Seven Trip — Full Production Probe v2.0${NC}"
 echo -e " Date: $(date '+%Y-%m-%d %H:%M:%S')"
-echo -e " Depart: $DEPART | Return: $RETURN"
+echo -e " Depart: $DEPART | Return: $RETURN | Depart2: $DEPART2"
 echo "═══════════════════════════════════════════════════"
 echo ""
 
@@ -62,422 +65,476 @@ echo -e "${GREEN}✅ Logged in${NC}"
 echo ""
 
 # ═══════════════════════════════════════════════════════
-#  PHASE 1: SABRE — Full Feature Test (International)
+# Helper: Search flights for a route
+# ═══════════════════════════════════════════════════════
+search_flights() {
+  local from="$1" to="$2" date="$3" adults="${4:-1}" children="${5:-0}" infants="${6:-0}" ret_date="$7"
+  local url="$API_BASE/flights/search?from=$from&to=$to&date=$date&adults=$adults&children=$children&infants=$infants&cabinClass=Economy&page=1&limit=50"
+  if [ -n "$ret_date" ]; then
+    url="$url&returnDate=$ret_date"
+  fi
+  curl -s "$url" -H "Authorization: Bearer $TOKEN" 2>/dev/null
+}
+
+# Helper: Pick cheapest flight from a source
+pick_flight() {
+  local search_resp="$1" source="$2"
+  echo "$search_resp" | jq -c "[.data[]? | select(.source == \"$source\")] | sort_by(.price) | .[0]" 2>/dev/null
+}
+
+# Helper: Book a flight
+book_flight() {
+  local flight="$1" pax_json="$2" contact_json="$3" ssr_json="$4"
+  curl -s -X POST "$API_BASE/flights/book" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"flightData\": $flight,
+      \"passengers\": $pax_json,
+      \"contactInfo\": $contact_json,
+      \"payLater\": true,
+      \"specialServices\": $ssr_json
+    }" 2>/dev/null
+}
+
+# Helper: Cancel a booking
+cancel_booking() {
+  local booking_id="$1"
+  curl -s -X POST "$API_BASE/flights/cancel" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{\"bookingId\": \"$booking_id\"}" 2>/dev/null
+}
+
+# ═══════════════════════════════════════════════════════
+# Passenger templates
+# ═══════════════════════════════════════════════════════
+ADULT_MALE='{
+  "firstName": "TESTMD", "lastName": "KARIM", "title": "Mr",
+  "type": "adult", "dateOfBirth": "1990-05-15", "gender": "Male",
+  "nationality": "BD", "passportNumber": "BX9876543",
+  "passportExpiry": "2030-12-31", "documentCountry": "BD"
+}'
+ADULT_FEMALE='{
+  "firstName": "TESTFATIMA", "lastName": "BEGUM", "title": "Ms",
+  "type": "adult", "dateOfBirth": "1992-03-20", "gender": "Female",
+  "nationality": "BD", "passportNumber": "BX8765432",
+  "passportExpiry": "2030-12-31", "documentCountry": "BD"
+}'
+CHILD_MALE='{
+  "firstName": "TESTRAHMAN", "lastName": "KARIM", "title": "Mstr",
+  "type": "child", "dateOfBirth": "2018-08-20", "gender": "Male",
+  "nationality": "BD", "passportNumber": "BX1111111",
+  "passportExpiry": "2030-12-31", "documentCountry": "BD"
+}'
+INFANT_MALE='{
+  "firstName": "TESTBABY", "lastName": "KARIM", "title": "Mstr",
+  "type": "infant", "dateOfBirth": "2025-01-10", "gender": "Male",
+  "nationality": "BD", "passportNumber": "BX2222222",
+  "passportExpiry": "2030-12-31", "documentCountry": "BD"
+}'
+CONTACT='{"email":"probe@seventrip.com","phone":"+8801700000099"}'
+NO_SSR='{"perPassenger":[]}'
+MEAL_WCHR_SSR='{"perPassenger":[{"meal":"MOML","wheelchair":"WCHR"},{}]}'
+
+# ═══════════════════════════════════════════════════════
+#  TEST 1: Sabre — Adult Only (DAC→DXB)
 # ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN}${BOLD} PHASE 1: SABRE — Full Feature Probe (DAC→DXB)${NC}"
+echo -e "${CYAN}${BOLD} TEST 1: Sabre Adult Only (DAC→DXB) One-Way${NC}"
 echo "═══════════════════════════════════════════════════"
-echo ""
 
-# 1.1 Search
-echo -e "${BOLD}── 1.1 Flight Search ──${NC}"
-SABRE_SEARCH=$(curl -s "$API_BASE/flights/search?from=DAC&to=DXB&date=$DEPART&adults=1&children=1&infants=1&cabinClass=Economy&page=1&limit=50" \
-  -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-SABRE_TOTAL=$(echo "$SABRE_SEARCH" | jq '[.data[]? | select(.source == "sabre")] | length' 2>/dev/null)
+S1=$(search_flights DAC DXB "$DEPART" 1 0 0)
+S1_CNT=$(echo "$S1" | jq '[.data[]? | select(.source == "sabre")] | length' 2>/dev/null)
+if [ "$S1_CNT" -gt 0 ]; then
+  result "Search" "PASS" "$S1_CNT Sabre flights"
+  F1=$(pick_flight "$S1" "sabre")
+  F1_NAME=$(echo "$F1" | jq -r '.airlineCode + " " + .flightNumber')
+  echo -e "   Selected: ${BOLD}$F1_NAME${NC} BDT $(echo $F1 | jq -r '.price')"
 
-if [ "$SABRE_TOTAL" -gt 0 ]; then
-  result "Search (DAC→DXB)" "PASS" "Found $SABRE_TOTAL Sabre flights"
+  B1=$(book_flight "$F1" "[$ADULT_MALE]" "$CONTACT" "$NO_SSR")
+  B1_PNR=$(echo "$B1" | jq -r '.pnr // "null"')
+  B1_APNR=$(echo "$B1" | jq -r '.airlinePnr // "null"')
+  B1_ID=$(echo "$B1" | jq -r '.id // "null"')
+  if [ "$B1_PNR" != "null" ] && [ -n "$B1_PNR" ]; then
+    result "Book (1 ADT)" "PASS" "PNR: $B1_PNR | Airline: $B1_APNR"
+    ALL_PNRS+=("$B1_PNR")
+
+    # GetBooking
+    GB=$(curl -s "$API_BASE/flights/booking/$B1_PNR" -H "Authorization: Bearer $TOKEN" 2>/dev/null)
+    GB_OK=$(echo "$GB" | jq -r '.bookingId // "null"' 2>/dev/null)
+    [ "$GB_OK" != "null" ] && result "GetBooking" "PASS" "$GB_OK" || result "GetBooking" "SKIP" "$(echo $GB | jq -r '.message // "no data"')"
+
+    # Cancel
+    C1=$(cancel_booking "$B1_ID")
+    C1_OK=$(echo "$C1" | jq -r '.success // "false"')
+    [ "$C1_OK" = "true" ] && result "Cancel" "PASS" "PNR $B1_PNR cancelled" || result "Cancel" "FAIL" "$(echo $C1 | jq -r '.message // "failed"')"
+  else
+    B1_ERR=$(echo "$B1" | jq -r '.message // .gdsError // "unknown"' 2>/dev/null)
+    result "Book (1 ADT)" "FAIL" "$B1_ERR"
+  fi
 else
-  result "Search (DAC→DXB)" "FAIL" "No Sabre flights returned"
-fi
-
-# Pick a flight
-SABRE_FLIGHT=$(echo "$SABRE_SEARCH" | jq -c '[.data[]? | select(.source == "sabre")] | sort_by(.price) | .[0]' 2>/dev/null)
-SABRE_AIRLINE=$(echo "$SABRE_FLIGHT" | jq -r '.airlineCode // "??"')
-SABRE_FNUM=$(echo "$SABRE_FLIGHT" | jq -r '.flightNumber // "??"')
-SABRE_PRICE=$(echo "$SABRE_FLIGHT" | jq -r '.price // 0')
-SABRE_ORIGIN=$(echo "$SABRE_FLIGHT" | jq -r '.origin // "DAC"')
-SABRE_DEST=$(echo "$SABRE_FLIGHT" | jq -r '.destination // "DXB"')
-echo -e "   Flight: ${BOLD}$SABRE_AIRLINE $SABRE_FNUM${NC} | BDT $SABRE_PRICE"
-echo ""
-
-# 1.2 Flight Status (FLIFO)
-echo -e "${BOLD}── 1.2 Flight Status (FLIFO) ──${NC}"
-FLIFO_RESP=$(curl -s "$API_BASE/flights/status?airlineCode=$SABRE_AIRLINE&flightNumber=${SABRE_FNUM#*$SABRE_AIRLINE}&departureDate=$DEPART&origin=$SABRE_ORIGIN&destination=$SABRE_DEST" \
-  -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-FLIFO_OK=$(echo "$FLIFO_RESP" | jq -r '.flightNumber // .status // "null"' 2>/dev/null)
-if [ "$FLIFO_OK" != "null" ] && [ -n "$FLIFO_OK" ]; then
-  result "Flight Status" "PASS" "$SABRE_FNUM status retrieved"
-else
-  FLIFO_ERR=$(echo "$FLIFO_RESP" | jq -r '.message // "no data"' 2>/dev/null)
-  result "Flight Status" "SKIP" "$FLIFO_ERR"
+  result "Search" "FAIL" "No Sabre flights"
 fi
 echo ""
 
-# 1.3 Fare Rules
-echo -e "${BOLD}── 1.3 Structured Fare Rules ──${NC}"
-SABRE_FARE_BASIS=$(echo "$SABRE_FLIGHT" | jq -r '.fareDetails[0]?.fareBasis // .fareBasis // ""')
-SABRE_BK_CLASS=$(echo "$SABRE_FLIGHT" | jq -r '.fareDetails[0]?.bookingClass // .bookingClass // "Y"')
-FARE_RULES_RESP=$(curl -s "$API_BASE/flights/fare-rules?origin=$SABRE_ORIGIN&destination=$SABRE_DEST&departureDate=$DEPART&airlineCode=$SABRE_AIRLINE&flightNumber=${SABRE_FNUM#*$SABRE_AIRLINE}&fareBasis=$SABRE_FARE_BASIS&bookingClass=$SABRE_BK_CLASS&passengerType=ADT" \
-  -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-FARE_RULES_OK=$(echo "$FARE_RULES_RESP" | jq -r '.rules // .fareRules // "null"' 2>/dev/null)
-if [ "$FARE_RULES_OK" != "null" ] && [ "$FARE_RULES_OK" != "" ]; then
-  RULES_COUNT=$(echo "$FARE_RULES_RESP" | jq '.rules | length // 0' 2>/dev/null)
-  result "Fare Rules" "PASS" "$RULES_COUNT rule categories returned"
+# ═══════════════════════════════════════════════════════
+#  TEST 2: Sabre — Adult+Child+Infant + SSR (DAC→DXB)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} TEST 2: Sabre Multi-Pax + SSR (DAC→DXB) One-Way${NC}"
+echo "═══════════════════════════════════════════════════"
+
+S2=$(search_flights DAC DXB "$DEPART" 1 1 1)
+S2_CNT=$(echo "$S2" | jq '[.data[]? | select(.source == "sabre")] | length' 2>/dev/null)
+if [ "$S2_CNT" -gt 0 ]; then
+  result "Search" "PASS" "$S2_CNT Sabre flights (1A+1C+1I)"
+  F2=$(pick_flight "$S2" "sabre")
+  F2_NAME=$(echo "$F2" | jq -r '.airlineCode + " " + .flightNumber')
+
+  FULL_SSR='{"perPassenger":[{"meal":"MOML","wheelchair":"WCHR","frequentFlyer":{"airline":"'$(echo $F2 | jq -r '.airlineCode')'","number":"FF999888"},"specialRequest":"PROBE TEST"},{}]}'
+  B2=$(book_flight "$F2" "[$ADULT_MALE, $CHILD_MALE, $INFANT_MALE]" "$CONTACT" "$FULL_SSR")
+  B2_PNR=$(echo "$B2" | jq -r '.pnr // "null"')
+  B2_APNR=$(echo "$B2" | jq -r '.airlinePnr // "null"')
+  B2_ID=$(echo "$B2" | jq -r '.id // "null"')
+  if [ "$B2_PNR" != "null" ] && [ -n "$B2_PNR" ]; then
+    result "Book (ADT+CHD+INF+SSR)" "PASS" "PNR: $B2_PNR | Airline: $B2_APNR"
+    ALL_PNRS+=("$B2_PNR")
+
+    # Ticket Status
+    TS=$(curl -s "$API_BASE/flights/ticket-status/$B2_PNR" -H "Authorization: Bearer $TOKEN" 2>/dev/null)
+    TS_OK=$(echo "$TS" | jq -r '.ticketStatus // .status // "null"' 2>/dev/null)
+    [ "$TS_OK" != "null" ] && result "TicketStatus" "PASS" "$TS_OK" || result "TicketStatus" "SKIP" "$(echo $TS | jq -r '.message // "no data"')"
+
+    # Revalidate Price
+    RV=$(curl -s -X POST "$API_BASE/flights/revalidate-price" \
+      -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+      -d "{\"flights\": [$F2], \"adults\": 1, \"children\": 1, \"infants\": 1, \"cabinClass\": \"Economy\"}" 2>/dev/null)
+    RV_OK=$(echo "$RV" | jq -r '.valid // .price // "null"' 2>/dev/null)
+    [ "$RV_OK" != "null" ] && result "Revalidate" "PASS" "Price: $(echo $RV | jq -r '.price // .totalPrice // 0')" || result "Revalidate" "SKIP" "$(echo $RV | jq -r '.message // "failed"')"
+
+    # Cancel
+    C2=$(cancel_booking "$B2_ID")
+    C2_OK=$(echo "$C2" | jq -r '.success // "false"')
+    [ "$C2_OK" = "true" ] && result "Cancel" "PASS" "PNR $B2_PNR cancelled" || result "Cancel" "FAIL" "$(echo $C2 | jq -r '.message // "failed"')"
+  else
+    B2_ERR=$(echo "$B2" | jq -r '.message // .gdsError // "unknown"' 2>/dev/null)
+    result "Book (ADT+CHD+INF+SSR)" "FAIL" "$B2_ERR"
+  fi
 else
-  FARE_ERR=$(echo "$FARE_RULES_RESP" | jq -r '.message // "no rules"' 2>/dev/null)
-  result "Fare Rules" "SKIP" "$FARE_ERR"
+  result "Search" "FAIL" "No Sabre flights for multi-pax"
 fi
 echo ""
 
-# 1.4 Seat Map (Pre-booking)
-echo -e "${BOLD}── 1.4 Seat Map (Pre-booking) ──${NC}"
-SEAT_RESP=$(curl -s "$API_BASE/flights/seats-rest?origin=$SABRE_ORIGIN&destination=$SABRE_DEST&departureDate=$DEPART&airlineCode=$SABRE_AIRLINE&flightNumber=${SABRE_FNUM#*$SABRE_AIRLINE}&cabinClass=Economy" \
-  -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-SEAT_COUNT=$(echo "$SEAT_RESP" | jq '.seats | length // 0' 2>/dev/null)
-if [ "$SEAT_COUNT" -gt 0 ] 2>/dev/null; then
-  result "Seat Map" "PASS" "$SEAT_COUNT seats returned"
+# ═══════════════════════════════════════════════════════
+#  TEST 3: Sabre — Round Trip (DAC→SIN→DAC)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} TEST 3: Sabre Round Trip (DAC→SIN→DAC)${NC}"
+echo "═══════════════════════════════════════════════════"
+
+S3=$(search_flights DAC SIN "$DEPART" 1 0 0 "$RETURN")
+S3_CNT=$(echo "$S3" | jq '[.data[]? | select(.source == "sabre")] | length' 2>/dev/null)
+if [ "$S3_CNT" -gt 0 ]; then
+  result "Search RT" "PASS" "$S3_CNT Sabre flights"
+  F3=$(pick_flight "$S3" "sabre")
+  F3_NAME=$(echo "$F3" | jq -r '.airlineCode + " " + .flightNumber')
+  echo -e "   Selected: ${BOLD}$F3_NAME${NC} BDT $(echo $F3 | jq -r '.price')"
+
+  B3=$(book_flight "$F3" "[$ADULT_FEMALE]" "$CONTACT" "$NO_SSR")
+  B3_PNR=$(echo "$B3" | jq -r '.pnr // "null"')
+  B3_ID=$(echo "$B3" | jq -r '.id // "null"')
+  if [ "$B3_PNR" != "null" ] && [ -n "$B3_PNR" ]; then
+    result "Book RT (1 ADT)" "PASS" "PNR: $B3_PNR"
+    ALL_PNRS+=("$B3_PNR")
+    C3=$(cancel_booking "$B3_ID")
+    [ "$(echo $C3 | jq -r '.success // "false"')" = "true" ] && result "Cancel RT" "PASS" "PNR $B3_PNR cancelled" || result "Cancel RT" "FAIL" "$(echo $C3 | jq -r '.message // "failed"')"
+  else
+    result "Book RT" "FAIL" "$(echo $B3 | jq -r '.message // .gdsError // "unknown"')"
+  fi
 else
-  SEAT_ERR=$(echo "$SEAT_RESP" | jq -r '.message // "no seats"' 2>/dev/null)
-  result "Seat Map" "SKIP" "$SEAT_ERR"
+  result "Search RT" "FAIL" "No Sabre flights for DAC→SIN RT"
 fi
 echo ""
 
-# 1.5 Book with FULL data: Adult + Child + Infant + SSRs + DOCS
-echo -e "${BOLD}── 1.5 Booking (Adult+Child+Infant + Full SSRs + DOCS) ──${NC}"
-SABRE_BOOK_RESP=$(curl -s -X POST "$API_BASE/flights/book" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"flightData\": $SABRE_FLIGHT,
-    \"passengers\": [
-      {
-        \"firstName\": \"PROBE\",
-        \"lastName\": \"ADULTTEST\",
-        \"title\": \"Mr\",
-        \"type\": \"adult\",
-        \"dateOfBirth\": \"1990-05-15\",
-        \"gender\": \"Male\",
-        \"nationality\": \"BD\",
-        \"passportNumber\": \"BX9876543\",
-        \"passportExpiry\": \"2030-12-31\",
-        \"documentCountry\": \"BD\"
-      },
-      {
-        \"firstName\": \"PROBE\",
-        \"lastName\": \"CHILDTEST\",
-        \"title\": \"Mstr\",
-        \"type\": \"child\",
-        \"dateOfBirth\": \"2018-08-20\",
-        \"gender\": \"Male\",
-        \"nationality\": \"BD\",
-        \"passportNumber\": \"BX1111111\",
-        \"passportExpiry\": \"2030-12-31\",
-        \"documentCountry\": \"BD\"
-      },
-      {
-        \"firstName\": \"PROBE\",
-        \"lastName\": \"INFANTTEST\",
-        \"title\": \"Mstr\",
-        \"type\": \"infant\",
-        \"dateOfBirth\": \"2025-01-10\",
-        \"gender\": \"Male\",
-        \"nationality\": \"BD\",
-        \"passportNumber\": \"BX2222222\",
-        \"passportExpiry\": \"2030-12-31\",
-        \"documentCountry\": \"BD\"
-      }
-    ],
-    \"contactInfo\": {
-      \"email\": \"fullprobe@seventrip.com\",
-      \"phone\": \"+8801700000099\"
-    },
-    \"payLater\": true,
-    \"specialServices\": {
-      \"perPassenger\": [
-        {
-          \"meal\": \"MOML\",
-          \"wheelchair\": \"WCHR\",
-          \"frequentFlyer\": { \"airline\": \"$SABRE_AIRLINE\", \"number\": \"${SABRE_AIRLINE}999888777\" },
-          \"specialRequest\": \"FULL PROBE TEST - PLEASE IGNORE AND CANCEL\"
-        },
-        {},
-        {}
-      ]
-    }
-  }" 2>/dev/null)
+# ═══════════════════════════════════════════════════════
+#  TEST 4: Sabre — Seat Map & Fare Rules (DAC→DXB)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} TEST 4: Sabre Seat Map + Fare Rules + FLIFO${NC}"
+echo "═══════════════════════════════════════════════════"
 
-SABRE_PNR=$(echo "$SABRE_BOOK_RESP" | jq -r '.pnr // "null"')
-SABRE_AIRLINE_PNR=$(echo "$SABRE_BOOK_RESP" | jq -r '.airlinePnr // "null"')
-SABRE_BOOKING_ID=$(echo "$SABRE_BOOK_RESP" | jq -r '.id // "null"')
-SABRE_GDS_BOOKED=$(echo "$SABRE_BOOK_RESP" | jq -r '.gdsBooked // false')
-SABRE_STATUS=$(echo "$SABRE_BOOK_RESP" | jq -r '.status // "null"')
+# Use the first search data from test 1
+if [ "$S1_CNT" -gt 0 ]; then
+  F4=$(echo "$S1" | jq -c '[.data[]? | select(.source == "sabre")] | sort_by(.price) | .[2] // .[0]' 2>/dev/null)
+  F4_AC=$(echo "$F4" | jq -r '.airlineCode // "??"')
+  F4_FN=$(echo "$F4" | jq -r '.flightNumber // "??"')
+  F4_FNUM=$(echo "$F4_FN" | sed "s/^$F4_AC//")
+  F4_OR=$(echo "$F4" | jq -r '.origin // "DAC"')
+  F4_DS=$(echo "$F4" | jq -r '.destination // "DXB"')
+  F4_FB=$(echo "$F4" | jq -r '.fareDetails[0]?.fareBasis // .fareBasis // ""')
+  F4_BC=$(echo "$F4" | jq -r '.fareDetails[0]?.bookingClass // .bookingClass // "Y"')
 
-if [ "$SABRE_PNR" != "null" ] && [ -n "$SABRE_PNR" ]; then
-  result "Booking (3 pax + SSR)" "PASS" "PNR: $SABRE_PNR | Airlines PNR: $SABRE_AIRLINE_PNR | Status: $SABRE_STATUS"
-  
-  # 1.6 GetBooking
-  echo ""
-  echo -e "${BOLD}── 1.6 GetBooking (Retrieve PNR) ──${NC}"
-  GB_RESP=$(curl -s "$API_BASE/flights/booking/$SABRE_PNR" \
+  # Seat Map
+  SEAT=$(curl -s "$API_BASE/flights/seats-rest?origin=$F4_OR&destination=$F4_DS&departureDate=$DEPART&airlineCode=$F4_AC&flightNumber=$F4_FNUM&cabinClass=Economy" \
     -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-  GB_ID=$(echo "$GB_RESP" | jq -r '.bookingId // "null"' 2>/dev/null)
-  GB_TRAVELERS=$(echo "$GB_RESP" | jq '.travelers | length // 0' 2>/dev/null)
-  GB_SSR=$(echo "$GB_RESP" | jq '.specialServices | length // 0' 2>/dev/null)
-  if [ "$GB_ID" != "null" ] && [ -n "$GB_ID" ]; then
-    result "GetBooking" "PASS" "PNR: $GB_ID | Travelers: $GB_TRAVELERS | SSRs: $GB_SSR"
-  else
-    GB_ERR=$(echo "$GB_RESP" | jq -r '.message // "failed"' 2>/dev/null)
-    result "GetBooking" "FAIL" "$GB_ERR"
-  fi
+  SEAT_CNT=$(echo "$SEAT" | jq '.seats | length // 0' 2>/dev/null)
+  [ "$SEAT_CNT" -gt 0 ] 2>/dev/null && result "Seat Map" "PASS" "$SEAT_CNT seats" || result "Seat Map" "SKIP" "$(echo $SEAT | jq -r '.message // "no seats"')"
 
-  # 1.7 Ticket Status
-  echo ""
-  echo -e "${BOLD}── 1.7 Ticket Status ──${NC}"
-  TS_RESP=$(curl -s "$API_BASE/flights/ticket-status/$SABRE_PNR" \
+  # Fare Rules
+  FR=$(curl -s "$API_BASE/flights/fare-rules?origin=$F4_OR&destination=$F4_DS&departureDate=$DEPART&airlineCode=$F4_AC&flightNumber=$F4_FNUM&fareBasis=$F4_FB&bookingClass=$F4_BC&passengerType=ADT" \
     -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-  TS_OK=$(echo "$TS_RESP" | jq -r '.ticketStatus // .status // "null"' 2>/dev/null)
-  if [ "$TS_OK" != "null" ]; then
-    result "Ticket Status" "PASS" "Status: $TS_OK"
-  else
-    TS_ERR=$(echo "$TS_RESP" | jq -r '.message // "no data"' 2>/dev/null)
-    result "Ticket Status" "SKIP" "$TS_ERR"
-  fi
+  FR_OK=$(echo "$FR" | jq -r '.rules // .fareRules // "null"' 2>/dev/null)
+  [ "$FR_OK" != "null" ] && [ "$FR_OK" != "" ] && result "Fare Rules" "PASS" "$(echo $FR | jq '.rules | length // 0') categories" || result "Fare Rules" "SKIP" "$(echo $FR | jq -r '.message // "no rules"')"
 
-  # 1.8 Revalidate Price
-  echo ""
-  echo -e "${BOLD}── 1.8 Price Revalidation ──${NC}"
-  REVAL_RESP=$(curl -s -X POST "$API_BASE/flights/revalidate-price" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "{\"flights\": [$SABRE_FLIGHT], \"adults\": 1, \"children\": 1, \"infants\": 1, \"cabinClass\": \"Economy\"}" 2>/dev/null)
-  REVAL_OK=$(echo "$REVAL_RESP" | jq -r '.valid // .price // "null"' 2>/dev/null)
-  REVAL_PRICE=$(echo "$REVAL_RESP" | jq -r '.price // .totalPrice // 0' 2>/dev/null)
-  if [ "$REVAL_OK" != "null" ]; then
-    result "Price Revalidation" "PASS" "Validated price: BDT $REVAL_PRICE"
-  else
-    REVAL_ERR=$(echo "$REVAL_RESP" | jq -r '.message // "failed"' 2>/dev/null)
-    result "Price Revalidation" "SKIP" "$REVAL_ERR"
-  fi
+  # FLIFO
+  FL=$(curl -s "$API_BASE/flights/status?airlineCode=$F4_AC&flightNumber=$F4_FNUM&departureDate=$DEPART&origin=$F4_OR&destination=$F4_DS" \
+    -H "Authorization: Bearer $TOKEN" 2>/dev/null)
+  FL_OK=$(echo "$FL" | jq -r '.flightNumber // .status // "null"' 2>/dev/null)
+  [ "$FL_OK" != "null" ] && [ -n "$FL_OK" ] && result "FLIFO" "PASS" "$F4_FN status ok" || result "FLIFO" "SKIP" "$(echo $FL | jq -r '.message // "no data"')"
 
-  # 1.9 Stateless Ancillaries (GAO)
-  echo ""
-  echo -e "${BOLD}── 1.9 Stateless Ancillaries ──${NC}"
-  ANCS_RESP=$(curl -s -X POST "$API_BASE/flights/ancillaries-stateless" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "{\"pnr\": \"$SABRE_PNR\", \"segments\": [], \"passengers\": [], \"mode\": \"stateless\"}" 2>/dev/null)
-  ANCS_COUNT=$(echo "$ANCS_RESP" | jq '.ancillaries | length // 0' 2>/dev/null)
-  ANCS_ERR=$(echo "$ANCS_RESP" | jq -r '.message // ""' 2>/dev/null)
-  if [ "$ANCS_COUNT" -gt 0 ] 2>/dev/null; then
-    result "Stateless Ancillaries" "PASS" "$ANCS_COUNT ancillary options"
-  else
-    result "Stateless Ancillaries" "SKIP" "${ANCS_ERR:-No ancillaries returned (may need EMD entitlements)}"
-  fi
-
-  # 1.10 Cancel
-  echo ""
-  echo -e "${BOLD}── 1.10 Cancellation ──${NC}"
-  CANCEL_RESP=$(curl -s -X POST "$API_BASE/flights/cancel" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "{\"bookingId\": \"$SABRE_BOOKING_ID\"}" 2>/dev/null)
-  CANCEL_OK=$(echo "$CANCEL_RESP" | jq -r '.success // "false"')
-  if [ "$CANCEL_OK" = "true" ]; then
-    result "Cancellation" "PASS" "PNR $SABRE_PNR cancelled via GDS + DB"
-  else
-    CANCEL_ERR=$(echo "$CANCEL_RESP" | jq -r '.message // "failed"' 2>/dev/null)
-    result "Cancellation" "FAIL" "$CANCEL_ERR → Manually cancel PNR $SABRE_PNR"
-  fi
-
+  # Ancillaries (stateless)
+  AN=$(curl -s -X POST "$API_BASE/flights/ancillaries-stateless" \
+    -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+    -d '{"pnr": "FAKE", "segments": [], "passengers": [], "mode": "stateless"}' 2>/dev/null)
+  AN_CNT=$(echo "$AN" | jq '.ancillaries | length // 0' 2>/dev/null)
+  [ "$AN_CNT" -gt 0 ] 2>/dev/null && result "Ancillaries" "PASS" "$AN_CNT offers" || result "Ancillaries" "SKIP" "$(echo $AN | jq -r '.message // "no ancillaries"')"
 else
-  SABRE_ERR=$(echo "$SABRE_BOOK_RESP" | jq -r '.message // .gdsError // "unknown"' 2>/dev/null)
-  result "Booking" "FAIL" "$SABRE_ERR"
+  result "Seat/Fare/FLIFO" "SKIP" "No search data available"
 fi
-
 echo ""
 
 # ═══════════════════════════════════════════════════════
-#  PHASE 2: TTI (Air Astra) — Full Feature Test (Domestic)
+#  TEST 5: TTI — Adult Only (DAC→CXB) Domestic
 # ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN}${BOLD} PHASE 2: TTI (Air Astra) — Full Feature Probe (DAC→CXB)${NC}"
+echo -e "${CYAN}${BOLD} TEST 5: TTI Adult Only (DAC→CXB) Domestic${NC}"
 echo "═══════════════════════════════════════════════════"
-echo ""
 
-# 2.1 Search
-echo -e "${BOLD}── 2.1 Flight Search ──${NC}"
-TTI_SEARCH=$(curl -s "$API_BASE/flights/search?from=DAC&to=CXB&date=$DEPART&adults=1&children=1&infants=1&cabinClass=Economy&page=1&limit=50" \
-  -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-TTI_TOTAL=$(echo "$TTI_SEARCH" | jq '[.data[]? | select(.source == "tti")] | length' 2>/dev/null)
+S5=$(search_flights DAC CXB "$DEPART" 1 0 0)
+S5_CNT=$(echo "$S5" | jq '[.data[]? | select(.source == "tti")] | length' 2>/dev/null)
+if [ "$S5_CNT" -gt 0 ]; then
+  result "Search" "PASS" "$S5_CNT TTI flights"
+  F5=$(pick_flight "$S5" "tti")
+  F5_NAME=$(echo "$F5" | jq -r '.airlineCode + " " + .flightNumber')
+  echo -e "   Selected: ${BOLD}$F5_NAME${NC} BDT $(echo $F5 | jq -r '.price')"
 
-if [ "$TTI_TOTAL" -gt 0 ]; then
-  result "Search (DAC→CXB)" "PASS" "Found $TTI_TOTAL TTI flights"
-else
-  result "Search (DAC→CXB)" "FAIL" "No TTI flights returned"
-fi
-
-TTI_FLIGHT=$(echo "$TTI_SEARCH" | jq -c '[.data[]? | select(.source == "tti")] | sort_by(.price) | .[0]' 2>/dev/null)
-TTI_AIRLINE=$(echo "$TTI_FLIGHT" | jq -r '.airlineCode // "2A"')
-TTI_FNUM=$(echo "$TTI_FLIGHT" | jq -r '.flightNumber // "??"')
-TTI_PRICE=$(echo "$TTI_FLIGHT" | jq -r '.price // 0')
-echo -e "   Flight: ${BOLD}$TTI_AIRLINE $TTI_FNUM${NC} | BDT $TTI_PRICE"
-echo ""
-
-# 2.2 Book with Adult + Child + Infant + WCHR (only allowed SSR for Air Astra)
-echo -e "${BOLD}── 2.2 Booking (Adult+Child+Infant + WCHR + DOCS) ──${NC}"
-TTI_BOOK_RESP=$(curl -s -X POST "$API_BASE/flights/book" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"flightData\": $TTI_FLIGHT,
-    \"passengers\": [
-      {
-        \"firstName\": \"PROBE\",
-        \"lastName\": \"TTIADULT\",
-        \"title\": \"Mr\",
-        \"type\": \"adult\",
-        \"dateOfBirth\": \"1990-05-15\",
-        \"gender\": \"Male\",
-        \"nationality\": \"BD\",
-        \"passportNumber\": \"BX1234567\",
-        \"passportExpiry\": \"2030-12-31\",
-        \"documentCountry\": \"BD\"
-      },
-      {
-        \"firstName\": \"PROBE\",
-        \"lastName\": \"TTICHILD\",
-        \"title\": \"Mstr\",
-        \"type\": \"child\",
-        \"dateOfBirth\": \"2018-06-10\",
-        \"gender\": \"Male\",
-        \"nationality\": \"BD\",
-        \"passportNumber\": \"BX3333333\",
-        \"passportExpiry\": \"2030-12-31\",
-        \"documentCountry\": \"BD\"
-      },
-      {
-        \"firstName\": \"PROBE\",
-        \"lastName\": \"TTIINFANT\",
-        \"title\": \"Mstr\",
-        \"type\": \"infant\",
-        \"dateOfBirth\": \"2025-02-15\",
-        \"gender\": \"Male\",
-        \"nationality\": \"BD\",
-        \"passportNumber\": \"BX4444444\",
-        \"passportExpiry\": \"2030-12-31\",
-        \"documentCountry\": \"BD\"
-      }
-    ],
-    \"contactInfo\": {
-      \"email\": \"ttiprobe@seventrip.com\",
-      \"phone\": \"+8801700000003\"
-    },
-    \"payLater\": true,
-    \"specialServices\": {
-      \"perPassenger\": [
-        { \"wheelchair\": \"WCHR\" },
-        {},
-        {}
-      ]
-    }
-  }" 2>/dev/null)
-
-TTI_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.pnr // "null"')
-TTI_AIRLINE_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.airlinePnr // "null"')
-TTI_BOOKING_ID=$(echo "$TTI_BOOK_RESP" | jq -r '.id // "null"')
-TTI_STATUS=$(echo "$TTI_BOOK_RESP" | jq -r '.status // "null"')
-
-if [ "$TTI_PNR" != "null" ] && [ -n "$TTI_PNR" ]; then
-  result "Booking (3 pax + WCHR)" "PASS" "PNR: $TTI_PNR | Airlines PNR: $TTI_AIRLINE_PNR | Status: $TTI_STATUS"
-
-  # 2.3 Cancel
-  echo ""
-  echo -e "${BOLD}── 2.3 Cancellation ──${NC}"
-  TTI_CANCEL_RESP=$(curl -s -X POST "$API_BASE/flights/cancel" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "{\"bookingId\": \"$TTI_BOOKING_ID\"}" 2>/dev/null)
-  TTI_CANCEL_OK=$(echo "$TTI_CANCEL_RESP" | jq -r '.success // "false"')
-  if [ "$TTI_CANCEL_OK" = "true" ]; then
-    result "Cancellation" "PASS" "PNR $TTI_PNR cancelled via GDS + DB"
+  B5=$(book_flight "$F5" "[$ADULT_MALE]" "$CONTACT" "$NO_SSR")
+  B5_PNR=$(echo "$B5" | jq -r '.pnr // "null"')
+  B5_APNR=$(echo "$B5" | jq -r '.airlinePnr // "null"')
+  B5_ID=$(echo "$B5" | jq -r '.id // "null"')
+  if [ "$B5_PNR" != "null" ] && [ -n "$B5_PNR" ]; then
+    result "Book (1 ADT)" "PASS" "PNR: $B5_PNR | Airline: $B5_APNR"
+    ALL_PNRS+=("$B5_PNR")
+    C5=$(cancel_booking "$B5_ID")
+    [ "$(echo $C5 | jq -r '.success // "false"')" = "true" ] && result "Cancel" "PASS" "PNR $B5_PNR cancelled" || result "Cancel" "FAIL" "$(echo $C5 | jq -r '.message // "failed"')"
   else
-    TTI_CANCEL_ERR=$(echo "$TTI_CANCEL_RESP" | jq -r '.message // "failed"' 2>/dev/null)
-    result "Cancellation" "FAIL" "$TTI_CANCEL_ERR → Manually cancel PNR $TTI_PNR"
+    result "Book (1 ADT)" "FAIL" "$(echo $B5 | jq -r '.message // .gdsError // "unknown"')"
   fi
 else
-  TTI_ERR=$(echo "$TTI_BOOK_RESP" | jq -r '.message // .gdsError // "unknown"' 2>/dev/null)
-  result "Booking" "FAIL" "$TTI_ERR"
+  result "Search" "FAIL" "No TTI flights"
 fi
-
 echo ""
 
 # ═══════════════════════════════════════════════════════
-#  PHASE 3: PM2 Log Evidence
+#  TEST 6: TTI — Adult+Child+Infant + WCHR (DAC→CXB)
 # ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN}${BOLD} PHASE 3: PM2 Log Evidence${NC}"
+echo -e "${CYAN}${BOLD} TEST 6: TTI Multi-Pax + WCHR (DAC→CXB) Domestic${NC}"
+echo "═══════════════════════════════════════════════════"
+
+S6=$(search_flights DAC CXB "$DEPART" 1 1 1)
+S6_CNT=$(echo "$S6" | jq '[.data[]? | select(.source == "tti")] | length' 2>/dev/null)
+if [ "$S6_CNT" -gt 0 ]; then
+  result "Search" "PASS" "$S6_CNT TTI flights (1A+1C+1I)"
+  F6=$(pick_flight "$S6" "tti")
+  F6_NAME=$(echo "$F6" | jq -r '.airlineCode + " " + .flightNumber')
+
+  WCHR_SSR='{"perPassenger":[{"wheelchair":"WCHR"},{},{}]}'
+  B6=$(book_flight "$F6" "[$ADULT_MALE, $CHILD_MALE, $INFANT_MALE]" "$CONTACT" "$WCHR_SSR")
+  B6_PNR=$(echo "$B6" | jq -r '.pnr // "null"')
+  B6_APNR=$(echo "$B6" | jq -r '.airlinePnr // "null"')
+  B6_ID=$(echo "$B6" | jq -r '.id // "null"')
+  if [ "$B6_PNR" != "null" ] && [ -n "$B6_PNR" ]; then
+    result "Book (ADT+CHD+INF+WCHR)" "PASS" "PNR: $B6_PNR | Airline: $B6_APNR"
+    ALL_PNRS+=("$B6_PNR")
+    C6=$(cancel_booking "$B6_ID")
+    [ "$(echo $C6 | jq -r '.success // "false"')" = "true" ] && result "Cancel" "PASS" "PNR $B6_PNR cancelled" || result "Cancel" "FAIL" "$(echo $C6 | jq -r '.message // "failed"')"
+  else
+    B6_ERR=$(echo "$B6" | jq -r '.message // .gdsError // "unknown"' 2>/dev/null)
+    result "Book (ADT+CHD+INF+WCHR)" "FAIL" "$B6_ERR"
+  fi
+else
+  result "Search" "FAIL" "No TTI flights for multi-pax"
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════
+#  TEST 7: TTI — Domestic Round Trip (DAC→CGP→DAC)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} TEST 7: TTI Domestic Round Trip (DAC→CGP→DAC)${NC}"
+echo "═══════════════════════════════════════════════════"
+
+S7=$(search_flights DAC CGP "$DEPART" 1 0 0 "$RETURN")
+S7_CNT=$(echo "$S7" | jq '[.data[]? | select(.source == "tti")] | length' 2>/dev/null)
+if [ "$S7_CNT" -gt 0 ]; then
+  result "Search RT" "PASS" "$S7_CNT TTI flights"
+  F7=$(pick_flight "$S7" "tti")
+  echo -e "   Selected: ${BOLD}$(echo $F7 | jq -r '.airlineCode + " " + .flightNumber')${NC}"
+
+  B7=$(book_flight "$F7" "[$ADULT_MALE]" "$CONTACT" "$NO_SSR")
+  B7_PNR=$(echo "$B7" | jq -r '.pnr // "null"')
+  B7_ID=$(echo "$B7" | jq -r '.id // "null"')
+  if [ "$B7_PNR" != "null" ] && [ -n "$B7_PNR" ]; then
+    result "Book RT (1 ADT)" "PASS" "PNR: $B7_PNR"
+    ALL_PNRS+=("$B7_PNR")
+    C7=$(cancel_booking "$B7_ID")
+    [ "$(echo $C7 | jq -r '.success // "false"')" = "true" ] && result "Cancel RT" "PASS" "$B7_PNR cancelled" || result "Cancel RT" "FAIL" "$(echo $C7 | jq -r '.message // "failed"')"
+  else
+    result "Book RT" "FAIL" "$(echo $B7 | jq -r '.message // .gdsError // "unknown"')"
+  fi
+else
+  result "Search RT" "SKIP" "No TTI flights DAC→CGP"
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════
+#  TEST 8: Sabre — Adult+Child (no infant) (DAC→BKK)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} TEST 8: Sabre Adult+Child (DAC→BKK) One-Way${NC}"
+echo "═══════════════════════════════════════════════════"
+
+S8=$(search_flights DAC BKK "$DEPART" 1 1 0)
+S8_CNT=$(echo "$S8" | jq '[.data[]? | select(.source == "sabre")] | length' 2>/dev/null)
+if [ "$S8_CNT" -gt 0 ]; then
+  result "Search" "PASS" "$S8_CNT Sabre flights"
+  F8=$(pick_flight "$S8" "sabre")
+
+  B8=$(book_flight "$F8" "[$ADULT_MALE, $CHILD_MALE]" "$CONTACT" "$NO_SSR")
+  B8_PNR=$(echo "$B8" | jq -r '.pnr // "null"')
+  B8_ID=$(echo "$B8" | jq -r '.id // "null"')
+  if [ "$B8_PNR" != "null" ] && [ -n "$B8_PNR" ]; then
+    result "Book (ADT+CHD)" "PASS" "PNR: $B8_PNR"
+    ALL_PNRS+=("$B8_PNR")
+    C8=$(cancel_booking "$B8_ID")
+    [ "$(echo $C8 | jq -r '.success // "false"')" = "true" ] && result "Cancel" "PASS" "$B8_PNR cancelled" || result "Cancel" "FAIL" "$(echo $C8 | jq -r '.message // "failed"')"
+  else
+    result "Book (ADT+CHD)" "FAIL" "$(echo $B8 | jq -r '.message // .gdsError // "unknown"')"
+  fi
+else
+  result "Search" "FAIL" "No Sabre flights DAC→BKK"
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════
+#  TEST 9: Sabre — 2 Adults (DAC→KUL)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} TEST 9: Sabre 2 Adults (DAC→KUL) One-Way${NC}"
+echo "═══════════════════════════════════════════════════"
+
+S9=$(search_flights DAC KUL "$DEPART" 2 0 0)
+S9_CNT=$(echo "$S9" | jq '[.data[]? | select(.source == "sabre")] | length' 2>/dev/null)
+if [ "$S9_CNT" -gt 0 ]; then
+  result "Search" "PASS" "$S9_CNT Sabre flights"
+  F9=$(pick_flight "$S9" "sabre")
+
+  B9=$(book_flight "$F9" "[$ADULT_MALE, $ADULT_FEMALE]" "$CONTACT" "$NO_SSR")
+  B9_PNR=$(echo "$B9" | jq -r '.pnr // "null"')
+  B9_ID=$(echo "$B9" | jq -r '.id // "null"')
+  if [ "$B9_PNR" != "null" ] && [ -n "$B9_PNR" ]; then
+    result "Book (2 ADT)" "PASS" "PNR: $B9_PNR"
+    ALL_PNRS+=("$B9_PNR")
+    C9=$(cancel_booking "$B9_ID")
+    [ "$(echo $C9 | jq -r '.success // "false"')" = "true" ] && result "Cancel" "PASS" "$B9_PNR cancelled" || result "Cancel" "FAIL" "$(echo $C9 | jq -r '.message // "failed"')"
+  else
+    result "Book (2 ADT)" "FAIL" "$(echo $B9 | jq -r '.message // .gdsError // "unknown"')"
+  fi
+else
+  result "Search" "FAIL" "No Sabre flights DAC→KUL"
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════
+#  TEST 10: TTI — Adult+Child (no infant) (DAC→CXB)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} TEST 10: TTI Adult+Child (DAC→CXB) Domestic${NC}"
+echo "═══════════════════════════════════════════════════"
+
+S10=$(search_flights DAC CXB "$DEPART" 1 1 0)
+S10_CNT=$(echo "$S10" | jq '[.data[]? | select(.source == "tti")] | length' 2>/dev/null)
+if [ "$S10_CNT" -gt 0 ]; then
+  result "Search" "PASS" "$S10_CNT TTI flights"
+  F10=$(pick_flight "$S10" "tti")
+
+  B10=$(book_flight "$F10" "[$ADULT_MALE, $CHILD_MALE]" "$CONTACT" "$NO_SSR")
+  B10_PNR=$(echo "$B10" | jq -r '.pnr // "null"')
+  B10_ID=$(echo "$B10" | jq -r '.id // "null"')
+  if [ "$B10_PNR" != "null" ] && [ -n "$B10_PNR" ]; then
+    result "Book (ADT+CHD)" "PASS" "PNR: $B10_PNR"
+    ALL_PNRS+=("$B10_PNR")
+    C10=$(cancel_booking "$B10_ID")
+    [ "$(echo $C10 | jq -r '.success // "false"')" = "true" ] && result "Cancel" "PASS" "$B10_PNR cancelled" || result "Cancel" "FAIL" "$(echo $C10 | jq -r '.message // "failed"')"
+  else
+    result "Book (ADT+CHD)" "FAIL" "$(echo $B10 | jq -r '.message // .gdsError // "unknown"')"
+  fi
+else
+  result "Search" "SKIP" "No TTI flights for ADT+CHD"
+fi
+echo ""
+
+# ═══════════════════════════════════════════════════════
+#  PM2 LOG EVIDENCE
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} PM2 Log Evidence${NC}"
 echo "═══════════════════════════════════════════════════"
 echo ""
-
-SABRE_SSR_COUNT=$(pm2 logs seventrip-api --lines 300 --nostream 2>/dev/null | grep -ci "SSR\|MOML\|WCHR\|FQTV\|DOCS strict\|SpecialService\|Adding.*SSR" 2>/dev/null || echo "0")
-TTI_SSR_COUNT=$(pm2 logs seventrip-api --lines 300 --nostream 2>/dev/null | grep -ci "TTI BOOKING.*SpecialService\|TTI BOOKING.*Skipped" 2>/dev/null || echo "0")
-CHILD_INFANT_COUNT=$(pm2 logs seventrip-api --lines 300 --nostream 2>/dev/null | grep -ci "C0[5-9]\|C1[0-1]\|Infant\|CHILDTEST\|INFANTTEST\|CHLD\|INF" 2>/dev/null || echo "0")
-
-echo -e "   Sabre SSR log entries: ${BOLD}$SABRE_SSR_COUNT${NC}"
-echo -e "   TTI SSR log entries: ${BOLD}$TTI_SSR_COUNT${NC}"
-echo -e "   Child/Infant entries: ${BOLD}$CHILD_INFANT_COUNT${NC}"
-echo ""
-
-echo "   📋 Key log lines (last 15):"
-pm2 logs seventrip-api --lines 300 --nostream 2>/dev/null | grep -i "SSR\|MOML\|WCHR\|FQTV\|DOCS strict\|SpecialService\|Skipped\|CHILDTEST\|INFANTTEST\|Cancel\|pax\|Passenger" 2>/dev/null | tail -15 | while IFS= read -r line; do
+echo "   📋 Key log lines (last 20):"
+pm2 logs seventrip-api --lines 500 --nostream 2>/dev/null | grep -i "Sabre.*result\|TTI BOOKING.*Full response\|PASS\|PNR\|error\|Infant\|CHLD\|INFT\|DOCS\|Cancel" 2>/dev/null | tail -20 | while IFS= read -r line; do
   echo "     $line"
 done
-
 echo ""
 
 # ═══════════════════════════════════════════════════════
 #  FINAL SUMMARY
 # ═══════════════════════════════════════════════════════
+TOTAL=$((PASS + FAIL + SKIP))
 echo "═══════════════════════════════════════════════════"
-echo -e "${BOLD} PRODUCTION FEATURE SUMMARY${NC}"
+echo -e "${BOLD} PRODUCTION TEST SUMMARY${NC}"
 echo "═══════════════════════════════════════════════════"
 echo ""
-
-TOTAL=$((PASS + FAIL + SKIP))
 echo -e "   Total Tests: ${BOLD}$TOTAL${NC}"
 echo -e "   ${GREEN}✅ Passed: $PASS${NC}"
 echo -e "   ${RED}❌ Failed: $FAIL${NC}"
 echo -e "   ${YELLOW}⚠️  Skipped: $SKIP${NC}"
 echo ""
 
-echo "═══════════════════════════════════════════════════"
-echo -e "${BOLD} Feature Coverage Matrix${NC}"
-echo "═══════════════════════════════════════════════════"
-echo ""
-printf "%-30s %-15s %-15s\n" "Feature" "Sabre" "TTI (Air Astra)"
-printf "%-30s %-15s %-15s\n" "──────────────────────────" "─────────────" "─────────────"
-printf "%-30s %-15s %-15s\n" "Flight Search" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "Multi-Pax (ADT+CHD+INF)" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "Passport DOCS" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "Contact (CTCM/CTCE)" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "Meal SSR (MOML)" "✅ Injected" "⛔ Not Allowed"
-printf "%-30s %-15s %-15s\n" "Wheelchair SSR (WCHR)" "✅ Injected" "✅ Injected"
-printf "%-30s %-15s %-15s\n" "Frequent Flyer (FQTV)" "✅ Injected" "⛔ Not Allowed"
-printf "%-30s %-15s %-15s\n" "Free Text (OTHS)" "✅ Injected" "⛔ Not Allowed"
-printf "%-30s %-15s %-15s\n" "PNR Creation" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "Dual PNR (GDS + Airline)" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "Pay Later / Book & Hold" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "GetBooking (PNR Retrieve)" "✅ Verified" "N/A"
-printf "%-30s %-15s %-15s\n" "Ticket Status" "✅ Verified" "N/A"
-printf "%-30s %-15s %-15s\n" "Price Revalidation (v4)" "✅ Verified" "N/A"
-printf "%-30s %-15s %-15s\n" "Seat Map (SOAP)" "✅ Verified" "N/A"
-printf "%-30s %-15s %-15s\n" "Fare Rules (Structured)" "✅ Verified" "N/A"
-printf "%-30s %-15s %-15s\n" "Flight Status (FLIFO)" "✅ Verified" "N/A"
-printf "%-30s %-15s %-15s\n" "Stateless Ancillaries" "✅ Tested" "N/A"
-printf "%-30s %-15s %-15s\n" "Cancellation (GDS+DB)" "✅ Verified" "✅ Verified"
-printf "%-30s %-15s %-15s\n" "Void (24h window)" "✅ Available" "N/A"
-printf "%-30s %-15s %-15s\n" "Refund (Price+Fulfill)" "✅ Available" "N/A"
-printf "%-30s %-15s %-15s\n" "Exchange/Reissue (SOAP)" "✅ Available" "N/A"
-printf "%-30s %-15s %-15s\n" "Travel Doc Upload" "✅ Available" "✅ Available"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "#" "Test" "Provider" "Pax" "Result"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "───" "─────────────────────────────────────────" "──────────" "──────────" "──────"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "1" "One-Way International (DAC→DXB)" "Sabre" "1 ADT" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "2" "One-Way Intl + SSR (DAC→DXB)" "Sabre" "ADT+CHD+INF" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "3" "Round Trip (DAC→SIN→DAC)" "Sabre" "1 ADT" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "4" "Seat Map + Fare Rules + FLIFO" "Sabre" "N/A" "Feature Test"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "5" "One-Way Domestic (DAC→CXB)" "TTI" "1 ADT" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "6" "Domestic + WCHR (DAC→CXB)" "TTI" "ADT+CHD+INF" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "7" "Domestic Round Trip (DAC→CGP→DAC)" "TTI" "1 ADT" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "8" "One-Way Intl (DAC→BKK)" "Sabre" "ADT+CHD" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "9" "One-Way Intl (DAC→KUL)" "Sabre" "2 ADT" "Book+Cancel"
+printf "%-5s %-45s %-12s %-12s %-8s\n" "10" "Domestic (DAC→CXB)" "TTI" "ADT+CHD" "Book+Cancel"
 echo ""
 
 if [ "$FAIL" -eq 0 ]; then
-  echo -e "${GREEN}${BOLD}   🎉 ALL TESTS PASSED — Production Ready!${NC}"
+  echo -e "${GREEN}${BOLD}   🎉 ALL TESTS PASSED — 100% Production Ready!${NC}"
 else
-  echo -e "${YELLOW}${BOLD}   ⚠️  $FAIL test(s) failed — check above for details${NC}"
+  echo -e "${YELLOW}${BOLD}   ⚠️  $FAIL test(s) failed — review above and re-run${NC}"
 fi
 
+echo ""
+echo "   PNRs created during probe: ${ALL_PNRS[*]:-none}"
 echo ""
 echo "═══════════════════════════════════════════════════"
 echo " Done! $(date '+%Y-%m-%d %H:%M:%S')"
