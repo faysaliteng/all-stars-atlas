@@ -936,6 +936,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
             {arriveTime}
             {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
+          {extractGMT(flight.arrivalTime) && <p className="text-[8px] text-muted-foreground/60">{extractGMT(flight.arrivalTime)}</p>}
         </div>
       </div>
     </div>
