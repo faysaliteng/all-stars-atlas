@@ -2979,9 +2979,15 @@ const FlightResults = () => {
     const withPayable = relevantFlights.map((f: any) => ({ ...f, _payable: flightPayable(f) }));
     const cheapestFlight = [...withPayable].sort((a, b) => a._payable - b._payable)[0];
     const fastestFlight = [...withPayable].sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity))[0];
+    const minP = Math.min(...withPayable.map(f => f._payable));
+    const maxP = Math.max(...withPayable.map(f => f._payable));
+    const minD = Math.min(...withPayable.map(f => f.durationMinutes || Infinity));
+    const maxD = Math.max(...withPayable.map(f => f.durationMinutes || 0));
+    const priceSpread = maxP - minP || 1;
+    const durSpread = maxD - minD || 1;
     const bestFlight = [...withPayable].sort((a, b) => {
-      const sa = a._payable * 0.5 + (a.durationMinutes || 0) * 30 + (a.stops || 0) * 3000;
-      const sb = b._payable * 0.5 + (b.durationMinutes || 0) * 30 + (b.stops || 0) * 3000;
+      const sa = ((a._payable - minP) / priceSpread) * 0.4 + (((a.durationMinutes || 0) - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
+      const sb = ((b._payable - minP) / priceSpread) * 0.4 + (((b.durationMinutes || 0) - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
       return sa - sb;
     })[0];
     return {
