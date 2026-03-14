@@ -2037,7 +2037,7 @@ const FlightCard = ({
               </div>
 
               {/* Duration bar */}
-              <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[60px] sm:min-w-[100px]">
+              <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[50px] sm:min-w-[80px]">
                 {stops > 0 && legs.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
