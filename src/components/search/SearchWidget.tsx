@@ -737,7 +737,7 @@ const SearchWidget = () => {
                 </div>
 
                 <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Departure</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Departure</div>
                   <Popover open={openDatePopover === `mc-${index}`} onOpenChange={(o) => setOpenDatePopover(o ? `mc-${index}` : null)}>
                     <PopoverTrigger className="w-full text-left">
                       <DateDisplay date={segment.date} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
