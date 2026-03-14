@@ -63,6 +63,7 @@
 | Mar 11, 2026 | 8 | OCR v5-v7, multi-city, cabin class, document validation, performance |
 | Mar 12, 2026 | 12 | Sabre SOAP, branded fares, dedup, rewards, animated timeline, dark mode |
 | Mar 13, 2026 | 5 | TTI cancel fix, Sabre NamePrefix fix, SOAP retry, DOCS strict mode, airline PNR from CreatePNR |
+| Mar 14, 2026 | 1 | **v4.0.0**: All 26 Sabre GDS sections: void, refund, exchange, fare rules, FLIFO, stateless ancillaries, EMD, FF update |
 
 **Peak development:** Mar 12 with 12 releases in one day.
 
