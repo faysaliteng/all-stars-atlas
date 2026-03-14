@@ -595,12 +595,12 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
     // Generate from flight data
     return [buildOption({
       bookingClass: primary.bookingClass || primary.cabinClass?.charAt(0) || "",
-      handBaggage: primary.handBaggage || "7KG",
+      handBaggage: primary.handBaggage || null,
       baggage: primary.baggage,
-      mealIncluded: primary.mealIncluded,
-      seatSelection: false,
-      rebookingAllowed: true,
-      cancellationAllowed: primary.refundable ?? false,
+      mealIncluded: primary.mealIncluded ?? null,
+      seatSelection: primary.seatSelection ?? null,
+      rebookingAllowed: typeof primary.rebookingAllowed === 'boolean' ? primary.rebookingAllowed : null,
+      cancellationAllowed: typeof primary.refundable === 'boolean' ? primary.refundable : null,
     }, 0, true)];
   }, [flights]);
 
