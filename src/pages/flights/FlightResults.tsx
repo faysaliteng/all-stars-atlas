@@ -2044,11 +2044,18 @@ const FlightCard = ({
 
           {/* Flight times + baggage info */}
           <div className="flex-1 p-2.5 sm:p-3 min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Route label header */}
+            <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-2 text-[10px] sm:text-xs font-bold shadow-sm bg-accent/15 text-accent border border-accent/30">
+              <Plane className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>DEPARTURE: {fromCode} → {toCode}</span>
+              <span className="flight-date text-[10px] ml-0.5">• {departDateStr}</span>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Departure */}
               <div className="text-center shrink-0">
-                <p className="text-xs sm:text-sm font-black tracking-tight flight-time">{departTime}</p>
-                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{departDateStr}</p>
+                <p className="text-xs sm:text-sm font-bold text-foreground">{fromCode}</p>
+                <p className="text-sm sm:text-base font-black tracking-tight flight-time">{departTime}</p>
+                {(() => { const g = formatGMT(flight.departureTime); return g ? <p className="text-[9px] sm:text-[10px] text-muted-foreground">{g}</p> : null; })()}
               </div>
 
               {/* Duration bar */}
@@ -2099,11 +2106,12 @@ const FlightCard = ({
 
               {/* Arrival */}
               <div className="text-center shrink-0">
-                <p className="text-xs sm:text-sm font-black tracking-tight flight-time">
+                <p className="text-xs sm:text-sm font-bold text-foreground">{toCode}</p>
+                <p className="text-sm sm:text-base font-black tracking-tight flight-time">
                   {arriveTime}
-                  {nextDay && <sup className="text-[7px] sm:text-[8px] text-destructive font-bold ml-0.5">+1 days</sup>}
+                  {nextDay && <sup className="text-[8px] text-destructive font-bold ml-0.5">+1</sup>}
                 </p>
-                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{arriveDateStr}</p>
+                {(() => { const g = formatGMT(flight.arrivalTime); return g ? <p className="text-[9px] sm:text-[10px] text-muted-foreground">{g}</p> : null; })()}
               </div>
             </div>
 
