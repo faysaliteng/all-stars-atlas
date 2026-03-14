@@ -1884,11 +1884,14 @@ async function revalidatePrice({ flights, adults = 1, children = 0, infants = 0,
     const cabinMap = { 'Economy': 'Y', 'Premium Economy': 'S', 'Business': 'C', 'First': 'F' };
     const cabinCode = cabinMap[cabinClass] || 'Y';
 
-    const originDestinations = (flights || []).map(seg => ({
+    const originDestinations = (flights || []).map((seg, idx) => ({
+      RPH: String(idx + 1),
       DepartureDateTime: seg.departureTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
-      ArrivalDateTime: seg.arrivalTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
       OriginLocation: { LocationCode: seg.origin },
       DestinationLocation: { LocationCode: seg.destination },
+      TPA_Extensions: {
+        SegmentType: { Code: 'O' },
+      },
       FlightSegment: [{
         DepartureDateTime: seg.departureTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
         ArrivalDateTime: seg.arrivalTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
