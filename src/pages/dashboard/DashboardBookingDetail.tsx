@@ -355,6 +355,13 @@ const DashboardBookingDetail = () => {
           {/* Itinerary Tab */}
           {activeTab === "itinerary" && (
             <div className="space-y-4">
+              {booking.isRoundTrip && (
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/15 text-accent border border-accent/30 text-sm font-bold shadow-sm">
+                  <Plane className="w-4 h-4" />
+                  <span>Outbound: {booking.origin} → {booking.destination}</span>
+                  <span className="flight-date text-xs ml-1">· {fmtDate(booking.departureTime)}</span>
+                </div>
+              )}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="border border-border rounded-xl overflow-hidden">
                   <div className="bg-accent px-4 py-2"><p className="text-xs font-bold text-accent-foreground uppercase">Departure</p></div>
