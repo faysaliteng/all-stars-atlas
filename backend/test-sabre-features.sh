@@ -399,11 +399,11 @@ fi
 # ══════════════════════════════════════════════
 echo -e "${CYAN}━━━ 22. Exchange / Reissue ━━━${NC}"
 
-# Test that the endpoint exists (validation error expected — requires real PNR+ticket)
+# Test that the endpoint exists and validates properly (requires real PNR+ticket for actual exchange)
 EX_RESULT=$(curl -s -X POST "$API_BASE/flights/exchange" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"pnr":"TESTPNR","originalTicketNumber":"0001234567890","newSegments":[{"origin":"DAC","destination":"DXB","departureTime":"'${TEST_DATE}'T14:30:00","airlineCode":"EK","flightNumber":"585","bookingClass":"Y"}]}')
+  -d '{"pnr":"TESTPNR","originalTicketNumber":"0001234567890","newSegments":[{"origin":"DAC","destination":"DXB","departureTime":"'${TEST_DATE}'T14:30:00","arrivalTime":"'${TEST_DATE}'T18:45:00","airlineCode":"EK","flightNumber":"585","bookingClass":"Y"}]}')
 EX_METHOD=$(echo "$EX_RESULT" | jq -r '.method // .error // .message // empty')
 if [ -n "$EX_METHOD" ]; then
   log_pass "22. Exchange endpoint exists (method=$EX_METHOD)"
