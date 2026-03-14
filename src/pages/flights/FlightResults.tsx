@@ -1517,7 +1517,10 @@ const MultiCityFlightCard = ({
   const cardNavigate = useNavigate();
   const [cardSearchParams] = useSearchParams();
   const segments = flight.segments || [];
-  const price = flight.price ?? 0;
+  const grossPrice = flight.price ?? 0;
+  const price = flight.isCombined
+    ? (flight.segments || []).reduce((s: number, seg: any) => s + flightPayable(seg), 0) || flightPayable(flight)
+    : flightPayable(flight);
   const refundable = flight.refundable ?? false;
   const fareType = flight.fareType || (refundable ? "Refundable" : "Non-Refundable");
 
