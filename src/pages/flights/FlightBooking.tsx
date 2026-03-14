@@ -61,8 +61,9 @@ function getAirlineLogo(code?: string): string | null {
   if (!code) return null;
   return `https://images.kiwi.com/airlines/64/${code}.png`;
 }
-function fmtTime(dt?: string) { if (!dt) return "—"; try { const d = new Date(dt); return isNaN(d.getTime()) ? dt : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return dt; } }
-function fmtDate(dt?: string) { if (!dt) return "—"; try { const d = new Date(dt); return isNaN(d.getTime()) ? dt : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); } catch { return dt; } }
+function stripTZ(dt: string): string { return dt.replace(/([+-]\d{2}:\d{2}|Z)$/, ''); }
+function fmtTime(dt?: string) { if (!dt) return "—"; try { const d = new Date(stripTZ(dt)); return isNaN(d.getTime()) ? dt : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return dt; } }
+function fmtDate(dt?: string) { if (!dt) return "—"; try { const d = new Date(stripTZ(dt)); return isNaN(d.getTime()) ? dt : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); } catch { return dt; } }
 
 /* ─── No hardcoded defaults — extras only from real API data ─── */
 
