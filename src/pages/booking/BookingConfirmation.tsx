@@ -240,10 +240,13 @@ const BookingConfirmation = () => {
                   <Plane className="w-5 h-5 text-amber-600 rotate-180" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-600">Return</Badge>
-                    <p className="text-sm font-bold">{booking.returnFlight.origin} → {booking.returnFlight.destination}</p>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold">
+                        <Plane className="w-3 h-3 rotate-180" />
+                        <span>Return</span>
+                      </div>
+                      <p className="text-sm font-bold">{booking.returnFlight.origin} → {booking.returnFlight.destination}</p>
+                    </div>
                   <p className="text-xs text-muted-foreground">
                     {booking.returnFlight.departureTime ? new Date(booking.returnFlight.departureTime).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ""}
                     {booking.returnFlight.flightNumber ? ` · ${booking.returnFlight.flightNumber}` : ""}
