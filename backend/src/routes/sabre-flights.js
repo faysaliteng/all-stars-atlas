@@ -269,8 +269,13 @@ async function searchFlights(params) {
           IntelliSellTransaction: {
             RequestType: { Name: '200ITINS' },
           },
+          BrandedOneWayItineraries: {
+            Enabled: true,
+            ParticipantLevel: 'AllPartners',
+          },
         },
       TravelerInfoSummary: {
+        SeatsRequested: [parseInt(adults) + parseInt(children)],
         AirTravelerAvail: [{
           PassengerTypeQuantity: passengers,
         }],
@@ -528,11 +533,21 @@ function normalizeGroupedResponse(response, params) {
       if (bdId !== undefined) baggageLookup[bdId] = bd;
     }
 
+    // Build fareComponent lookup: ref → descriptor (for bookingCode, seatsAvailable, cabin)
+    const fareComponentLookup = {};
+    for (const fcd of fareComponentDescs) {
+      const fcdId = fcd.id ?? fcd.Id ?? fcd.ID;
+      if (fcdId !== undefined) fareComponentLookup[fcdId] = fcd;
+    }
+
     // Debug: log baggage descriptors once
     if (baggageAllowanceDescs.length > 0) {
       console.log(`[Sabre] baggageAllowanceDescs (${baggageAllowanceDescs.length}):`, JSON.stringify(baggageAllowanceDescs.slice(0, 5)));
     } else {
       console.log(`[Sabre] WARNING: No baggageAllowanceDescs in grouped response`);
+    }
+    if (fareComponentDescs.length > 0) {
+      console.log(`[Sabre] fareComponentDescs (${fareComponentDescs.length}):`, JSON.stringify(fareComponentDescs.slice(0, 3)));
     }
 
     for (const group of itinGroups) {
@@ -625,6 +640,31 @@ function normalizeGroupedResponse(response, params) {
           console.log(`[Sabre] Resolved baggage: checked=${checkedBaggageGlobal}, hand=${handBaggageGlobal}, total infos=${allBaggageInfos.length}`);
         }
 
+        // Helper: resolve fareComponent segment data (inline or via fareComponentDescs ref)
+        function resolveFareComponentSegments(fareComponents) {
+          const resolvedSegments = [];
+          for (const fc of fareComponents) {
+            const fcRef = fc.ref ?? fc.id;
+            const fcDesc = (fcRef !== undefined && fareComponentLookup[fcRef]) ? fareComponentLookup[fcRef] : fc;
+            const segments = fcDesc.segments || fc.segments || [];
+            for (const seg of segments) {
+              resolvedSegments.push({
+                bookingCode: seg.bookingCode || seg.BookingCode || '',
+                seatsAvailable: seg.seatsAvailable ?? seg.SeatsAvailable ?? seg.seatsRemaining ?? null,
+                cabin: seg.cabin?.cabin || seg.cabin?.Cabin || seg.cabinCode || '',
+                fareBasisCode: seg.segment?.fareBasisCode || seg.fareBasisCode || fc.fareBasisCode || fcDesc.fareBasisCode || '',
+              });
+            }
+            // Also extract brand info from resolved descriptor
+            if (!resolvedSegments.brandName) {
+              const brand = fcDesc.brand || fcDesc.brandFeatures || fc.brand || fc.brandFeatures || {};
+              resolvedSegments.brandName = brand.brandName || brand.name || '';
+              resolvedSegments.brandCode = brand.brandCode || brand.code || '';
+            }
+          }
+          return resolvedSegments;
+        }
+
         // Extract fare details from pricingInformation for fare options (branded fares)
         const fareDetailsArr = pricingInfo.map((pi, piIdx) => {
           const piFare = pi.fare || {};
@@ -632,20 +672,25 @@ function normalizeGroupedResponse(response, params) {
           const piPassengers = piFare.passengerInfoList || [];
           const piFareComponents = piPassengers[0]?.passengerInfo?.fareComponents || [];
           
-          // Extract brand name from fareComponentDescs reference
-          let brandName = '';
-          let brandCode = '';
-          for (const fc of piFareComponents) {
-            const brand = fc.brand || fc.brandFeatures || {};
-            brandName = brand.brandName || brand.name || brandName;
-            brandCode = brand.brandCode || brand.code || brandCode;
-            // Also check fareComponentDescs lookup by ref
-            const fcRef = fc.ref ?? fc.id;
-            if (!brandName && fcRef !== undefined) {
-              const fcDesc = fareComponentDescs.find(d => d.id === fcRef);
-              if (fcDesc) {
-                brandName = fcDesc.brandName || fcDesc.brand?.brandName || fcDesc.brand?.name || '';
-                brandCode = fcDesc.brandCode || fcDesc.brand?.brandCode || '';
+          // Resolve segments from fareComponentDescs
+          const resolvedSegs = resolveFareComponentSegments(piFareComponents);
+          const firstSeg = resolvedSegs[0] || {};
+          
+          // Extract brand name
+          let brandName = resolvedSegs.brandName || '';
+          let brandCode = resolvedSegs.brandCode || '';
+          if (!brandName) {
+            for (const fc of piFareComponents) {
+              const brand = fc.brand || fc.brandFeatures || {};
+              brandName = brand.brandName || brand.name || brandName;
+              brandCode = brand.brandCode || brand.code || brandCode;
+              const fcRef = fc.ref ?? fc.id;
+              if (!brandName && fcRef !== undefined) {
+                const fcDesc = fareComponentDescs.find(d => d.id === fcRef);
+                if (fcDesc) {
+                  brandName = fcDesc.brandName || fcDesc.brand?.brandName || fcDesc.brand?.name || '';
+                  brandCode = fcDesc.brandCode || fcDesc.brand?.brandCode || '';
+                }
               }
             }
           }
@@ -693,11 +738,20 @@ function normalizeGroupedResponse(response, params) {
             }
           }
 
+          // Extract seats for this fare option
+          let piMinSeats = Infinity;
+          for (const rs of resolvedSegs) {
+            if (rs.seatsAvailable !== null && rs.seatsAvailable !== undefined) {
+              const s = parseInt(rs.seatsAvailable);
+              if (!isNaN(s) && s < piMinSeats) piMinSeats = s;
+            }
+          }
+
           return {
-            fareBasis: piFareComponents[0]?.segments?.[0]?.fareBasisCode || '',
-            bookingClass: piFareComponents[0]?.segments?.[0]?.bookingCode || '',
-            cabinClass: piFareComponents[0]?.segments?.[0]?.cabin?.cabin || '',
-            availableSeats: piFareComponents[0]?.segments?.[0]?.seatsAvailable ?? null,
+            fareBasis: firstSeg.fareBasisCode || '',
+            bookingClass: firstSeg.bookingCode || '',
+            cabinClass: firstSeg.cabin || '',
+            availableSeats: piMinSeats === Infinity ? null : piMinSeats,
             price: parseFloat(piTotal.totalPrice || 0),
             baseFare: parseFloat(piTotal.baseFareAmount || 0),
             taxes: parseFloat(piTotal.totalTaxAmount || 0),
@@ -800,11 +854,13 @@ function normalizeGroupedResponse(response, params) {
           let minSeats = Infinity;
           let bookingClass = '';
           const fareComponents = passengerInfoList[0]?.passengerInfo?.fareComponents || [];
-          for (const fc of fareComponents) {
-            for (const seg of (fc.segments || [])) {
-              if (seg.seatsAvailable !== undefined && seg.seatsAvailable < minSeats) minSeats = seg.seatsAvailable;
-              if (seg.bookingCode) bookingClass = seg.bookingCode;
+          const mcResolvedSegs = resolveFareComponentSegments(fareComponents);
+          for (const rs of mcResolvedSegs) {
+            if (rs.seatsAvailable !== null && rs.seatsAvailable !== undefined) {
+              const s = parseInt(rs.seatsAvailable);
+              if (!isNaN(s) && s < minSeats) minSeats = s;
             }
+            if (rs.bookingCode) bookingClass = rs.bookingCode;
           }
 
           const isRefundable = fare.passengerInfoList?.[0]?.passengerInfo?.nonRefundable === false;
@@ -905,14 +961,13 @@ function normalizeGroupedResponse(response, params) {
             let minSeats = Infinity;
             let bookingClass = '';
             const fareComponents = passengerInfoList[0]?.passengerInfo?.fareComponents || [];
-            for (const fc of fareComponents) {
-              const segments = fc.segments || [];
-              for (const seg of segments) {
-                if (seg.seatsAvailable !== undefined && seg.seatsAvailable < minSeats) {
-                  minSeats = seg.seatsAvailable;
-                }
-                if (seg.bookingCode) bookingClass = seg.bookingCode;
+            const owResolvedSegs = resolveFareComponentSegments(fareComponents);
+            for (const rs of owResolvedSegs) {
+              if (rs.seatsAvailable !== null && rs.seatsAvailable !== undefined) {
+                const s = parseInt(rs.seatsAvailable);
+                if (!isNaN(s) && s < minSeats) minSeats = s;
               }
+              if (rs.bookingCode) bookingClass = rs.bookingCode;
             }
 
             // Determine refundable status

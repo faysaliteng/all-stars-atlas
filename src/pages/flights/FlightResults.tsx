@@ -878,12 +878,14 @@ const RoundTripFlightCard = ({
               <Luggage className="w-3.5 h-3.5" /> {outbound.baggage}
             </span>
           )}
-          {(outbound.availableSeats ?? null) !== null && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-              <Users className="w-3.5 h-3.5" /> {outbound.availableSeats} Seat{outbound.availableSeats !== 1 ? "s" : ""}
+          {(outbound.availableSeats ?? null) !== null && outbound.availableSeats <= 9 && (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 dark:text-orange-400">
+              <Users className="w-3.5 h-3.5" /> {outbound.availableSeats} Seat{outbound.availableSeats !== 1 ? "s" : ""} Left
             </span>
           )}
-          <span className="text-xs text-muted-foreground font-medium">Class: {outbound.bookingClass || outbound.cabinClass?.charAt(0) || "Y"}</span>
+          {(outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass) && (
+            <span className="text-xs text-muted-foreground font-medium">Class: {outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass}</span>
+          )}
         </div>
 
         {/* Info bar */}
@@ -993,7 +995,7 @@ const RoundTripFlightCard = ({
                           const legs = leg.legs || [];
                           const legLogo = getAirlineLogo(leg.airlineCode);
                           const cabin = leg.cabinClass || "Economy";
-                          const bkClass = leg.bookingClass || "";
+                          const bkClass = leg.bookingClass || leg.fareDetails?.[0]?.bookingClass || "";
                           const cabDisp = bkClass ? `${cabin} - ${bkClass}` : cabin;
                           const seats = leg.availableSeats ?? null;
                           const ac = leg.aircraft || legs[0]?.aircraft || "";
@@ -1277,7 +1279,7 @@ const MultiCityExpandedDetails = ({ flight, segments }: { flight: any; segments:
               const segLegs = seg.legs || [];
               const logo = getAirlineLogo(seg.airlineCode);
               const cabin = seg.cabinClass || flight.cabinClass || "Economy";
-              const bkClass = seg.bookingClass || flight.bookingClass || "";
+              const bkClass = seg.bookingClass || flight.bookingClass || flight.fareDetails?.[0]?.bookingClass || "";
               const cabDisp = bkClass ? `${cabin} - ${bkClass}` : cabin;
               const seats = seg.availableSeats ?? flight.availableSeats ?? null;
               const ac = seg.aircraft || "";
@@ -1561,7 +1563,9 @@ const MultiCityFlightCard = ({
                       {seg.handBaggage && <span className="flex items-center gap-0.5 text-accent"><Luggage className="w-3 h-3" /> {seg.handBaggage}</span>}
                       {seg.baggage && <span className="flex items-center gap-0.5 text-accent"><Luggage className="w-3 h-3" /> {seg.baggage}</span>}
                     </div>
-                    <span className="text-[10px] text-muted-foreground">Class: {flight.bookingClass || "E"}</span>
+                    {(flight.bookingClass || flight.fareDetails?.[0]?.bookingClass) && (
+                      <span className="text-[10px] text-muted-foreground">Class: {flight.bookingClass || flight.fareDetails?.[0]?.bookingClass}</span>
+                    )}
                   </div>
                 </div>
               );
