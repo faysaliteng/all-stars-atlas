@@ -721,8 +721,8 @@ function normalizeGroupedResponse(response, params) {
           // Extract per-pax baggage for this fare option
           let piBaggage = checkedBaggageGlobal;
           let piHandBaggage = handBaggageGlobal;
-          let mealIncluded = false;
-          let seatSelection = false;
+          let mealIncluded = null; // null = unknown from BFM; 'available' = can be added via SSR
+          let seatSelection = null; // null = unknown; 'available' = can be selected via seat map
           let isNonRefundable = true;
 
           for (const paxInfo of piPassengers) {
