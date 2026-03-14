@@ -74,9 +74,9 @@ All core booking lifecycle features are production-verified:
 - **Ancillaries**: SSR-based (VGML/WCHR/XBAG/RQST) via UpdatePNR
 - **PNR Management**: Deep PNR extraction, airline PNR scan (DC* pattern), DOCS strict mode
 
-### ⚠️ Section 17: Get Ancillaries — PARTIAL
+### ✅ Section 17: Get Ancillaries — DONE (v4.0.0)
 
-**VPS Test:** ✅ 17a (BFM pre-booking) | ⏭️ 17b (SOAP GAO — no PNR) | ⏭️ 17c (Stateless REST — NOT IMPLEMENTED)
+**What we have:**
 
 **What we have:**
 - SOAP `GetAncillaryOffersRQ v3.0.0` (stateful, requires PNR + session)
