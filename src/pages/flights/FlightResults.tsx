@@ -927,13 +927,16 @@ const RoundTripFlightCard = ({
           </div>
         </div>
 
-        {/* Baggage + Seats + Class info row — BDFare style */}
+        {/* Baggage + Seats + Class info row — BDFare style (matches one-way FlightCard) */}
         <div className="flex items-center flex-wrap gap-3 px-3 sm:px-5 py-2 border-t border-border/30">
-          {outbound.handBaggage && (
-            <span className="flex items-center gap-1.5 text-xs text-accent font-medium">
-              <Package className="w-3.5 h-3.5" /> {outbound.handBaggage}
-            </span>
-          )}
+          {(() => {
+            const hb = outbound.handBaggage || "7KG";
+            return hb ? (
+              <span className="flex items-center gap-1.5 text-xs text-accent font-medium">
+                <Package className="w-3.5 h-3.5" /> {hb}
+              </span>
+            ) : null;
+          })()}
           {outbound.baggage && (
             <span className="flex items-center gap-1.5 text-xs text-accent font-medium">
               <Luggage className="w-3.5 h-3.5" /> {outbound.baggage}
@@ -941,15 +944,42 @@ const RoundTripFlightCard = ({
           )}
           {(() => {
             const seats = getDisplayAvailableSeats(outbound);
-            return seats !== null && seats <= 9 ? (
-              <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 dark:text-orange-400">
+            return seats !== null ? (
+              <span className={`flex items-center gap-1.5 text-xs font-bold ${seats <= 4 ? "text-destructive" : seats <= 9 ? "text-orange-500" : "text-muted-foreground"}`}>
                 <Users className="w-3.5 h-3.5" /> {seats} Seat{seats !== 1 ? "s" : ""} Left
               </span>
             ) : null;
           })()}
-          {getDisplayBookingClass(outbound) && (
-            <span className="text-xs text-muted-foreground font-medium">Class: {getDisplayBookingClass(outbound)}</span>
-          )}
+          {(() => {
+            const cabin = outbound.cabinClass || "";
+            const bClass = getDisplayBookingClass(outbound);
+            const cabinDisplay = cabin && bClass ? `${cabin} - ${bClass}` : cabin || bClass || "";
+            return cabinDisplay ? <span className="text-xs text-muted-foreground font-medium">{cabinDisplay}</span> : null;
+          })()}
+          {/* Fare feature badges — same as one-way */}
+          {(() => {
+            const best = getBestFareDetail(outbound);
+            if (!best) return null;
+            return (
+              <div className="flex items-center gap-2 ml-auto">
+                {best.refundable && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">Refundable</Badge>
+                )}
+                {best.mealIncluded && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">🍽 Meal</Badge>
+                )}
+                {best.seatSelection && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">💺 Seat</Badge>
+                )}
+                {best.cancellationAllowed && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Cancellable</Badge>
+                )}
+                {best.rebookingAllowed && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Rebookable</Badge>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Info bar */}
