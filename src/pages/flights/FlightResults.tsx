@@ -2194,15 +2194,12 @@ const FlightCard = ({
 
                         return (
                           <div key={i} className="space-y-4">
-                            {/* Route header: DAC ✈ CXB | 14 Apr, Tue | Non-Stop */}
-                            <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base font-semibold text-foreground border-b border-border/50 pb-3">
-                              <span className="font-bold">{legOrigin}</span>
-                              <Plane className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-bold">{legDest}</span>
-                              <span className="text-muted-foreground font-normal">|</span>
-                              <span className="flight-date text-sm">{legDepartDate}</span>
-                              <span className="text-muted-foreground font-normal">|</span>
-                              <span className="font-semibold text-sm">{legStopsLabel}</span>
+                            {/* Route header — button-style card */}
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-sm bg-accent/15 text-accent border border-accent/30">
+                              <Plane className="w-4 h-4" />
+                              <span className="font-bold">{legOrigin} → {legDest}</span>
+                              <span className="flight-date text-sm ml-1">· {legDepartDate}</span>
+                              <span className="opacity-70">· {legStopsLabel}</span>
                             </div>
 
                             {/* Airline detail line: logo | AirAstra | 2A 445 | AT7 | Economy - S | 5 Seats Left */}
