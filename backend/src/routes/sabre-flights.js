@@ -270,12 +270,10 @@ async function searchFlights(params) {
 
   // Bargain Finder Max request body — proven working payload for PCC J4YL
   // Strategy: try a smart profile first, then progressively relaxed fallbacks so search never silently dies.
-  const isRoundTrip = !isMultiCity && ISO_DATE_RE.test(returnDateValue);
   const buildBfmRequestBody = ({
     numTrips = 250,
     enableDiversity = true,
     additionalNonStops = 20,
-    enableMultiTicket = false,
     includeBrandedFareIndicators = true,
   } = {}) => {
     const travelTpaExtensions = {
@@ -295,10 +293,6 @@ async function searchFlights(params) {
         },
         ...(typeof additionalNonStops === 'number' ? { AdditionalNonStopsPercentage: additionalNonStops } : {}),
       };
-    }
-
-    if (isRoundTrip && enableMultiTicket) {
-      travelTpaExtensions.MultiTicket = { DisplayPolicy: 'SOW' };
     }
 
     const travelerInfoSummary = {
@@ -341,58 +335,13 @@ async function searchFlights(params) {
       },
     };
   };
-
-  const decodeCompressedResponse = (raw) => {
-    if (!raw?.compressedResponse || typeof raw.compressedResponse !== 'string') return raw;
-    try {
-      const buf = Buffer.from(raw.compressedResponse, 'base64');
-      const decompressed = zlib.gunzipSync(buf);
-      console.log('[Sabre] Decompressed response successfully');
-      return JSON.parse(decompressed.toString('utf8'));
-    } catch (decompErr) {
-      console.error('[Sabre] Failed to decompress compressedResponse:', decompErr.message);
-      return raw;
-    }
-  };
-
-  const getResponseStats = (raw) => {
-    const rs = raw?.OTA_AirLowFareSearchRS || raw?.groupedItineraryResponse || raw;
-    const itinCount = rs?.PricedItineraries?.PricedItinerary?.length
-      || rs?.itineraryGroups?.[0]?.itineraries?.length
-      || 0;
-    const messages = Array.isArray(rs?.messages) ? rs.messages : [];
-    const hasNoAvailability = messages.some((m) => {
-      const code = String(m?.code || '').toUpperCase();
-      const text = String(m?.text || m?.value || '').toUpperCase();
-      return code === 'NAV' || text.includes('NO AVAILABILITY');
-    });
-    return { itinCount, hasNoAvailability };
-  };
-
-  try {
-    const logRoute = isMultiCity
-      ? preparedSegments.map((s) => `${s.from}→${s.to}`).join(', ')
-      : `${originCode} → ${destinationCode}`;
-    console.log(`[Sabre] Searching ${logRoute}...`);
-
-    const normalizeParams = {
-      ...params,
-      isMultiCity,
-      segments: isMultiCity ? preparedSegments : undefined,
-      origin: originCode,
-      destination: destinationCode,
-      departDate: departDateValue,
-      returnDate: ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
-      segmentCount: isMultiCity ? preparedSegments.length : (ISO_DATE_RE.test(returnDateValue) ? 2 : 1),
-    };
-
+...
     const requestProfiles = [
       {
         name: 'smart_diverse',
         numTrips: 250,
         enableDiversity: true,
         additionalNonStops: 20,
-        enableMultiTicket: isRoundTrip,
         includeBrandedFareIndicators: true,
       },
       {
@@ -400,7 +349,6 @@ async function searchFlights(params) {
         numTrips: 220,
         enableDiversity: true,
         additionalNonStops: null,
-        enableMultiTicket: false,
         includeBrandedFareIndicators: true,
       },
       {
@@ -408,7 +356,6 @@ async function searchFlights(params) {
         numTrips: 180,
         enableDiversity: false,
         additionalNonStops: null,
-        enableMultiTicket: false,
         includeBrandedFareIndicators: false,
       },
     ];
