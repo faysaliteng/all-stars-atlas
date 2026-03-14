@@ -49,14 +49,17 @@ After deploying backend changes, validate all booking modes:
 cd ~/projects/all-stars-atlas && git pull origin main && pm2 restart seventrip-api && sleep 5 && bash backend/test-bookings.sh
 ```
 
-Check detailed logs after test:
+## ✈️ Run 10-Test SSR Probe (Quick Validation)
+
+Fast validation of Sabre + TTI booking across all passenger types:
+
 ```bash
-pm2 logs seventrip-api --lines 300 | grep -E '\[Sabre\]|\[Booking\]' | head -200
+cd ~/projects/all-stars-atlas && git pull origin main && cd backend && pm2 restart seventrip-api && sleep 5 && bash probe-ssr-capabilities.sh
 ```
 
-Verify Sabre environment:
+Check detailed logs after test:
 ```bash
-pm2 logs seventrip-api --lines 50 | grep 'Config loaded'
+pm2 logs seventrip-api --lines 300 | grep -E '\[Sabre\]|\[Booking\]|\[TTI\]' | head -200
 ```
 
 ---
