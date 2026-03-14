@@ -785,6 +785,8 @@ function normalizeGroupedResponse(response, params) {
             baseFare: parseFloat(piTotal.baseFareAmount || 0),
             taxes: parseFloat(piTotal.totalTaxAmount || 0),
             currency: piTotal.currency || 'BDT',
+            priceScope: 'itinerary',
+            isTotalPrice: true,
             baggage: piBaggage,
             handBaggage: piHandBaggage,
             refundable: !isNonRefundable,
