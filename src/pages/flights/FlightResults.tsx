@@ -2047,6 +2047,21 @@ const FlightCard = ({
                   Direct
                 </span>
               )}
+              {/* Sabre GDS capability badges */}
+              {(() => {
+                const isSabre = String(source).toLowerCase().includes('sabre') || !!flight._sabreSource || !!flight._sabreSeqNumber;
+                if (!isSabre) return null;
+                return (
+                  <>
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+                      💺 Seat Map
+                    </span>
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+                      🍽 Meals
+                    </span>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
