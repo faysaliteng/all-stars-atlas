@@ -310,7 +310,7 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
           {logo && <img src={logo} alt={flight.airline} className="w-8 h-8 sm:w-10 sm:h-10 object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
           <div className="flex-1 flex items-center gap-2 sm:gap-4 min-w-0">
             <div className="text-center shrink-0">
-              <p className="text-lg sm:text-xl font-black">{fmtTime(flight.departureTime)}</p>
+              <p className="text-lg sm:text-xl font-black flight-time">{fmtTime(flight.departureTime)}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">{flight.origin}</p>
             </div>
             <div className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
@@ -319,7 +319,7 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
               <p className="text-[10px] text-accent font-semibold">{flight.stops === 0 ? "Non-stop" : `${flight.stops} Stop`}</p>
             </div>
             <div className="text-center shrink-0">
-              <p className="text-lg sm:text-xl font-black">{fmtTime(flight.arrivalTime)}</p>
+              <p className="text-lg sm:text-xl font-black flight-time">{fmtTime(flight.arrivalTime)}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">{flight.destination}</p>
             </div>
           </div>
