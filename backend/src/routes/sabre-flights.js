@@ -282,7 +282,7 @@ async function searchFlights(params) {
       OriginDestinationInformation: originDest,
       TravelPreferences: {
         TPA_Extensions: {
-          NumTrips: { Number: 200 },
+          NumTrips: { Number: 250 },
           DataSources: {
             NDC: 'Enable',
             ATPCO: 'Enable',
@@ -290,8 +290,8 @@ async function searchFlights(params) {
           },
           DiversityParameters: {
             Weightings: {
-              PriceWeight: 8,
-              TravelTimeWeight: 2,
+              PriceWeight: 10,
+              TravelTimeWeight: 0,
             },
           },
         },
