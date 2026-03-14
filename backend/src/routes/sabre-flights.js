@@ -1339,17 +1339,24 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
     // NumberInParty = total passengers including infants (per verified Sabre payload)
     const totalPaxCount = passengers.length;
 
+    // Resolve booking class from parent flight data as fallback for legs that lack it
+    const parentBookingClass = flightData?.bookingClass 
+      || flightData?.fareDetails?.[0]?.bookingClass 
+      || '';
+
     segs.forEach((seg) => {
       const departureDateTime = toSabreDateTime(seg.departureTime);
       const arrivalDateTime = toSabreDateTime(seg.arrivalTime);
       const numericFlightNumber = String(seg.flightNumber || '').replace(/\D/g, '');
+      const rbd = seg.bookingClass || parentBookingClass || 'Y';
+      console.log(`[Sabre] Segment ${seg.origin || '?'}→${seg.destination || '?'} RBD: ${rbd} (seg: ${seg.bookingClass || 'none'}, parent: ${parentBookingClass || 'none'})`);
 
       paxSegments.push({
         DepartureDateTime: departureDateTime,
         ArrivalDateTime: arrivalDateTime,
         FlightNumber: numericFlightNumber,
         NumberInParty: String(Math.max(totalPaxCount, 1)),
-        ResBookDesigCode: seg.bookingClass || 'Y',
+        ResBookDesigCode: rbd,
         Status: 'NN',
         OriginLocation: { LocationCode: seg.origin || flightData.origin },
         DestinationLocation: { LocationCode: seg.destination || flightData.destination },
