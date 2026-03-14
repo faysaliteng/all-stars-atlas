@@ -3004,12 +3004,35 @@ const FlightResults = () => {
                 <p className="text-xs font-bold text-muted-foreground mb-2">
                   {isRoundTrip ? "Select Departure Date" : "Select Date"}
                 </p>
-                <Calendar mode="single" selected={editDepart} onSelect={(d) => { setEditDepart(d || undefined); if (!isRoundTrip) { setEditDepart(d || undefined); } }}
+                <Calendar mode="single" selected={editDepart} onSelect={(d) => {
+                  setEditDepart(d || undefined);
+                  if (!isRoundTrip && d) {
+                    // One-way: auto-close and search immediately
+                    setShowDateEdit(false);
+                    setTimeout(() => {
+                      const p = new URLSearchParams(searchParams);
+                      p.set("date", format(d, "yyyy-MM-dd"));
+                      navigate(`/flights?${p.toString()}`);
+                    }, 100);
+                  }
+                }}
                   disabled={(date) => date < new Date(new Date().toDateString())} />
                 {isRoundTrip && (
                   <>
                     <p className="text-xs font-bold text-muted-foreground mb-2 mt-3">Return Date</p>
-                    <Calendar mode="single" selected={editReturn} onSelect={(d) => setEditReturn(d || undefined)}
+                    <Calendar mode="single" selected={editReturn} onSelect={(d) => {
+                      setEditReturn(d || undefined);
+                      if (d && editDepart) {
+                        // Round-trip: auto-close and search when both dates selected
+                        setShowDateEdit(false);
+                        setTimeout(() => {
+                          const p = new URLSearchParams(searchParams);
+                          p.set("date", format(editDepart, "yyyy-MM-dd"));
+                          p.set("returnDate", format(d, "yyyy-MM-dd"));
+                          navigate(`/flights?${p.toString()}`);
+                        }, 100);
+                      }
+                    }}
                       disabled={(date) => date < (editDepart || new Date())} />
                   </>
                 )}
