@@ -3406,6 +3406,13 @@ const FlightResults = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* Results Outdated Modal */}
+      <AnimatePresence>
+        {resultsExpired && (
+          <ResultsOutdatedModal onNewSearch={applySearchEdit} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
