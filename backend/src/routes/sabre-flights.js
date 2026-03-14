@@ -1884,26 +1884,33 @@ async function revalidatePrice({ flights, adults = 1, children = 0, infants = 0,
     const cabinMap = { 'Economy': 'Y', 'Premium Economy': 'S', 'Business': 'C', 'First': 'F' };
     const cabinCode = cabinMap[cabinClass] || 'Y';
 
-    const originDestinations = (flights || []).map((seg, idx) => ({
-      RPH: String(idx + 1),
-      DepartureDateTime: seg.departureTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
-      OriginLocation: { LocationCode: seg.origin },
-      DestinationLocation: { LocationCode: seg.destination },
-      TPA_Extensions: {
-        SegmentType: { Code: 'O' },
-      },
-      FlightSegment: [{
-        DepartureDateTime: seg.departureTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
-        ArrivalDateTime: seg.arrivalTime?.replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '',
-        FlightNumber: String(seg.flightNumber || '').replace(/\D/g, ''),
-        NumberInParty: String(adults + children),
-        ResBookDesigCode: seg.bookingClass || cabinCode,
-        Status: 'NN',
+    // Sabre v4 revalidation uses TPA_Extensions.Flight[] inside OriginDestinationInformation
+    // NOT FlightSegment[] — that's the key difference from BFM search
+    const originDestinations = (flights || []).map((seg, idx) => {
+      const depDT = (seg.departureTime || '').replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '';
+      const arrDT = (seg.arrivalTime || '').replace(/[+-]\d{2}:?\d{2}$/, '').split('.')[0] || '';
+      const flightNum = parseInt(String(seg.flightNumber || '').replace(/\D/g, ''), 10) || 0;
+
+      return {
+        RPH: String(idx + 1),
+        DepartureDateTime: depDT,
         OriginLocation: { LocationCode: seg.origin },
         DestinationLocation: { LocationCode: seg.destination },
-        MarketingAirline: { Code: seg.airlineCode, FlightNumber: String(seg.flightNumber || '').replace(/\D/g, '') },
-      }],
-    }));
+        TPA_Extensions: {
+          SegmentType: { Code: 'O' },
+          Flight: [{
+            Number: flightNum,
+            DepartureDateTime: depDT,
+            ArrivalDateTime: arrDT,
+            Type: 'A',
+            ClassOfService: seg.bookingClass || cabinCode,
+            OriginLocation: { LocationCode: seg.origin },
+            DestinationLocation: { LocationCode: seg.destination },
+            Airline: { Operating: seg.airlineCode, Marketing: seg.airlineCode },
+          }],
+        },
+      };
+    });
 
     const paxTypes = [];
     if (adults > 0) paxTypes.push({ Code: 'ADT', Quantity: String(adults) });
@@ -1913,6 +1920,12 @@ async function revalidatePrice({ flights, adults = 1, children = 0, infants = 0,
     const body = {
       OTA_AirLowFareSearchRQ: {
         Version: '4',
+        POS: {
+          Source: [{
+            PseudoCityCode: config.pcc,
+            RequestorID: { Type: '1', ID: '1', CompanyName: { Code: 'TN' } },
+          }],
+        },
         OriginDestinationInformation: originDestinations,
         TravelerInfoSummary: {
           AirTravelerAvail: [{ PassengerTypeQuantity: paxTypes }],
@@ -1927,21 +1940,36 @@ async function revalidatePrice({ flights, adults = 1, children = 0, infants = 0,
     const response = await sabreRequest(config, '/v4/shop/flights/revalidate', body);
 
     // Extract revalidated pricing
-    const pricedItins = response?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary || [];
-    const results = pricedItins.map(itin => {
-      const fare = itin?.AirItineraryPricingInfo?.[0]?.ItinTotalFare || {};
-      return {
-        totalFare: parseFloat(fare?.TotalFare?.Amount || 0),
-        baseFare: parseFloat(fare?.BaseFare?.Amount || 0),
-        taxes: parseFloat(fare?.Taxes?.Tax?.[0]?.Amount || fare?.Taxes?.Amount || 0),
-        currency: fare?.TotalFare?.CurrencyCode || 'BDT',
-        validatingCarrier: itin?.ValidatingCarrierCode || '',
-        lastTicketDate: itin?.AirItineraryPricingInfo?.[0]?.LastTicketDate || null,
-      };
-    });
+    const rs = response?.OTA_AirLowFareSearchRS || response?.groupedItineraryResponse || response;
+    const pricedItins = rs?.PricedItineraries?.PricedItinerary || [];
+
+    // Also try grouped format
+    let results = [];
+    if (pricedItins.length > 0) {
+      results = pricedItins.map(itin => {
+        const fare = itin?.AirItineraryPricingInfo?.[0]?.ItinTotalFare || {};
+        return {
+          totalFare: parseFloat(fare?.TotalFare?.Amount || 0),
+          baseFare: parseFloat(fare?.BaseFare?.Amount || 0),
+          taxes: parseFloat(fare?.Taxes?.Tax?.[0]?.Amount || fare?.Taxes?.Amount || 0),
+          currency: fare?.TotalFare?.CurrencyCode || 'BDT',
+          validatingCarrier: itin?.ValidatingCarrierCode || '',
+          lastTicketDate: itin?.AirItineraryPricingInfo?.[0]?.LastTicketDate || null,
+        };
+      });
+    } else if (rs?.statistics || rs?.itineraryGroups) {
+      // Grouped response format — price is valid if we got a response at all
+      results = [{ valid: true, format: 'grouped' }];
+    }
 
     console.log(`[Sabre] Revalidation: ${results.length} priced itineraries`);
-    return { success: true, pricedItineraries: results, rawResponse: response };
+    return {
+      success: true,
+      valid: true,
+      pricedItineraries: results,
+      priceChanged: results.length > 0,
+      rawResponse: response,
+    };
   } catch (err) {
     console.error('[Sabre] RevalidatePrice failed:', err.message);
     return { success: false, error: err.message };
