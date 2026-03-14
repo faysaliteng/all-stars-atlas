@@ -2542,15 +2542,15 @@ const FlightResults = () => {
   // Airline stats for the top bar — count from round-trip pairs for correct display
   const airlineStats = useMemo(() => {
     if (isRoundTrip && hasDirections) {
-      // Count from actual pairs so airline bar matches displayed results
       const map: Record<string, { code: string; name: string; cheapest: number; count: number }> = {};
       for (const p of roundTripPairs) {
         const code = p.outbound.airlineCode || '';
         const name = p.outbound.airline || code;
         if (!code) continue;
-        if (!map[code]) map[code] = { code, name, cheapest: p.totalPrice, count: 0 };
+        const payable = flightPayable(p.outbound) + flightPayable(p.returnFlight);
+        if (!map[code]) map[code] = { code, name, cheapest: payable, count: 0 };
         map[code].count++;
-        if (p.totalPrice < map[code].cheapest) map[code].cheapest = p.totalPrice;
+        if (payable < map[code].cheapest) map[code].cheapest = payable;
       }
       return Object.values(map).sort((a, b) => a.cheapest - b.cheapest);
     }
@@ -2560,9 +2560,10 @@ const FlightResults = () => {
       const code = f.airlineCode || '';
       const name = f.airline || code;
       if (!code) continue;
-      if (!map[code]) map[code] = { code, name, cheapest: f.price || Infinity, count: 0 };
+      const payable = flightPayable(f);
+      if (!map[code]) map[code] = { code, name, cheapest: payable, count: 0 };
       map[code].count++;
-      if ((f.price || Infinity) < map[code].cheapest) map[code].cheapest = f.price;
+      if (payable < map[code].cheapest) map[code].cheapest = payable;
     }
     return Object.values(map).sort((a, b) => a.cheapest - b.cheapest);
   }, [flights, roundTripPairs, isRoundTrip, hasDirections, isMultiCity, allMultiCityFlights]);
