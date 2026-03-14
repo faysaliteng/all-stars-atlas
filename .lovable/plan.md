@@ -130,7 +130,8 @@ These files MUST be kept in sync with every code change.
 Frontend: React 18 + TypeScript + Vite (Nginx static)
 Backend:  Node.js + Express (PM2)
 Database: MySQL 8 / MariaDB 10.6+
-GDS:      TTI/ZENITH (Air Astra) + BDFare (multi-provider parallel search)
+GDS:      TTI/ZENITH (Air Astra) + BDFare (multi-provider parallel search) + Sabre (26/26 features)
+Config:   API keys in DB system_settings (not .env)
 Config:   API keys in DB system_settings (not .env)
 ```
 
