@@ -268,89 +268,123 @@ async function searchFlights(params) {
     }
   }
 
-  // Bargain Finder Max request body — matches BDFare/TicketLagBe parameters
-  // Key params: MaxStopsQuantity=2 (up to 2 connections), NumTrips=250, all data sources enabled
-  const requestBody = {
-    OTA_AirLowFareSearchRQ: {
-      Version: '5',
-      POS: {
-        Source: [{
-          PseudoCityCode: config.pcc || 'F9CE',
-          RequestorID: { Type: '1', ID: '1', CompanyName: { Code: 'TN' } },
-        }],
-      },
-      OriginDestinationInformation: originDest,
-      TravelPreferences: {
-        MaxStopsQuantity: 2, // BDFare uses unlimited, TicketLagBe uses connection:2 — allow up to 2 stops
-        TPA_Extensions: {
-          NumTrips: { Number: 250 },
-          DataSources: {
-            NDC: 'Enable',
-            ATPCO: 'Enable',
-            LCC: 'Enable',
-          },
-          DiversityParameters: {
-            Weightings: {
-              PriceWeight: 6,
-              TravelTimeWeight: 4,
-            },
-          },
-          LongConnectTime: { Enable: true },
-          ExemptAllTaxes: { Value: false },
-          ExemptAllTaxesAndFees: { Value: false },
-          FlexibleFares: {
-            FareParameters: [
-              { Cabin: { Type: sabreCabin }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
-              { Cabin: { Type: sabreCabin }, PublicFare: { Ind: true }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
-              { Cabin: { Type: sabreCabin }, PrivateFare: { Ind: true }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
-            ],
-          },
-        },
-        CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
-      },
+  // Bargain Finder Max request body — primary (rich) + relaxed fallback profile
+  const buildBfmRequestBody = ({ relaxed = false } = {}) => {
+    const travelPreferences = {
       TPA_Extensions: {
-        IntelliSellTransaction: {
-          RequestType: { Name: '250ITINS' },
+        NumTrips: { Number: relaxed ? 200 : 250 },
+        DataSources: {
+          NDC: 'Enable',
+          ATPCO: 'Enable',
+          LCC: 'Enable',
+        },
+        DiversityParameters: {
+          Weightings: {
+            PriceWeight: relaxed ? 8 : 6,
+            TravelTimeWeight: relaxed ? 2 : 4,
+          },
         },
       },
-      TravelerInfoSummary: {
-        SeatsRequested: [parseInt(adults) + parseInt(children)],
-        AirTravelerAvail: [{
-          PassengerTypeQuantity: passengers,
-        }],
-      },
-    },
-  };
+      CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
+    };
 
-  try {
-    const logRoute = isMultiCity
-      ? preparedSegments.map(s => `${s.from}→${s.to}`).join(', ')
-      : `${originCode} → ${destinationCode}`;
-    console.log(`[Sabre] Searching ${logRoute}...`);
-    let raw = await sabreRequest(config, '/v5/offers/shop', requestBody);
-
-    // Handle compressed response from Sabre (base64-encoded gzip)
-    if (raw?.compressedResponse && typeof raw.compressedResponse === 'string') {
-      try {
-        const buf = Buffer.from(raw.compressedResponse, 'base64');
-        const decompressed = zlib.gunzipSync(buf);
-        raw = JSON.parse(decompressed.toString('utf8'));
-        console.log(`[Sabre] Decompressed response successfully`);
-      } catch (decompErr) {
-        console.error(`[Sabre] Failed to decompress compressedResponse:`, decompErr.message);
-      }
+    if (!relaxed) {
+      travelPreferences.MaxStopsQuantity = 2;
+      travelPreferences.TPA_Extensions.LongConnectTime = { Enable: true };
+      travelPreferences.TPA_Extensions.ExemptAllTaxes = { Value: false };
+      travelPreferences.TPA_Extensions.ExemptAllTaxesAndFees = { Value: false };
+      travelPreferences.TPA_Extensions.FlexibleFares = {
+        FareParameters: [
+          { Cabin: { Type: sabreCabin }, PassengerTypeQuantity: passengers.map((p) => ({ ...p })) },
+          { Cabin: { Type: sabreCabin }, PublicFare: { Ind: true }, PassengerTypeQuantity: passengers.map((p) => ({ ...p })) },
+          { Cabin: { Type: sabreCabin }, PrivateFare: { Ind: true }, PassengerTypeQuantity: passengers.map((p) => ({ ...p })) },
+        ],
+      };
     }
 
-    const topKeys = raw ? Object.keys(raw) : [];
-    console.log(`[Sabre] BFM response keys: ${JSON.stringify(topKeys)}`);
+    return {
+      OTA_AirLowFareSearchRQ: {
+        Version: '5',
+        POS: {
+          Source: [{
+            PseudoCityCode: config.pcc || 'F9CE',
+            RequestorID: { Type: '1', ID: '1', CompanyName: { Code: 'TN' } },
+          }],
+        },
+        OriginDestinationInformation: originDest,
+        TravelPreferences: travelPreferences,
+        TPA_Extensions: {
+          IntelliSellTransaction: {
+            RequestType: { Name: `${relaxed ? 200 : 250}ITINS` },
+          },
+        },
+        TravelerInfoSummary: {
+          SeatsRequested: [parseInt(adults) + parseInt(children)],
+          AirTravelerAvail: [{
+            PassengerTypeQuantity: passengers,
+          }],
+        },
+      },
+    };
+  };
+
+  const decodeCompressedResponse = (raw) => {
+    if (!raw?.compressedResponse || typeof raw.compressedResponse !== 'string') return raw;
+    try {
+      const buf = Buffer.from(raw.compressedResponse, 'base64');
+      const decompressed = zlib.gunzipSync(buf);
+      console.log('[Sabre] Decompressed response successfully');
+      return JSON.parse(decompressed.toString('utf8'));
+    } catch (decompErr) {
+      console.error('[Sabre] Failed to decompress compressedResponse:', decompErr.message);
+      return raw;
+    }
+  };
+
+  const getResponseStats = (raw) => {
     const rs = raw?.OTA_AirLowFareSearchRS || raw?.groupedItineraryResponse || raw;
     const itinCount = rs?.PricedItineraries?.PricedItinerary?.length
       || rs?.itineraryGroups?.[0]?.itineraries?.length
       || 0;
-    console.log(`[Sabre] BFM itinerary count: ${itinCount}, hasStatistics: ${!!rs?.statistics}`);
+    const messages = Array.isArray(rs?.messages) ? rs.messages : [];
+    const hasNoAvailability = messages.some((m) => {
+      const code = String(m?.code || '').toUpperCase();
+      const text = String(m?.text || m?.value || '').toUpperCase();
+      return code === 'NAV' || text.includes('NO AVAILABILITY');
+    });
+    return { rs, itinCount, hasNoAvailability };
+  };
+
+  try {
+    const logRoute = isMultiCity
+      ? preparedSegments.map((s) => `${s.from}→${s.to}`).join(', ')
+      : `${originCode} → ${destinationCode}`;
+    console.log(`[Sabre] Searching ${logRoute}...`);
+
+    let raw = decodeCompressedResponse(await sabreRequest(config, '/v5/offers/shop', buildBfmRequestBody()));
+    let { itinCount, hasNoAvailability } = getResponseStats(raw);
+
+    console.log(`[Sabre] BFM response keys: ${JSON.stringify(raw ? Object.keys(raw) : [])}`);
+    console.log(`[Sabre] BFM itinerary count: ${itinCount}, hasStatistics: ${!!(raw?.OTA_AirLowFareSearchRS || raw?.groupedItineraryResponse || raw)?.statistics}`);
+
     if (itinCount === 0) {
       console.log(`[Sabre] BFM raw (truncated): ${JSON.stringify(raw).slice(0, 2000)}`);
     }
+
+    // Fallback: retry once with a relaxed payload when Sabre returns explicit No Availability.
+    if (!isMultiCity && itinCount === 0 && hasNoAvailability) {
+      console.warn('[Sabre] Primary BFM returned NAV — retrying with relaxed payload');
+      const relaxedRaw = decodeCompressedResponse(await sabreRequest(config, '/v5/offers/shop', buildBfmRequestBody({ relaxed: true })));
+      const relaxedStats = getResponseStats(relaxedRaw);
+      console.log(`[Sabre] Relaxed BFM itinerary count: ${relaxedStats.itinCount}, hasStatistics: ${!!relaxedStats.rs?.statistics}`);
+      if (relaxedStats.itinCount > 0) {
+        raw = relaxedRaw;
+        itinCount = relaxedStats.itinCount;
+      } else {
+        console.log(`[Sabre] Relaxed BFM raw (truncated): ${JSON.stringify(relaxedRaw).slice(0, 2000)}`);
+      }
+    }
+
     const results = normalizeSabreResponse(raw, {
       ...params,
       isMultiCity,
