@@ -1637,6 +1637,9 @@ const MultiCityFlightCard = ({
             </div>
             <div className="text-right">
               <p className="text-xl sm:text-2xl font-black text-accent">BDT {price.toLocaleString()}</p>
+              {grossPrice > price && (
+                <p className="text-xs font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
+              )}
               <p className="text-[10px] text-muted-foreground">Price for {parseInt(cardSearchParams.get("adults") || "1")} traveller{parseInt(cardSearchParams.get("adults") || "1") > 1 ? "s" : ""}</p>
             </div>
           </div>
