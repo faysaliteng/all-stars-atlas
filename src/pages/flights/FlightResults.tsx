@@ -700,8 +700,18 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
 
                       if (ft.key === "handBaggage" || ft.key === "checkedBaggage" || ft.key === "meal") {
                         display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">Not included</span>;
+                      } else if (ft.key === "fareBasis") {
+                        display = val ? <span className="text-[10px] font-mono font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">—</span>;
                       } else if (ft.key === "bookingClass") {
                         display = <span className="text-xs font-semibold text-foreground">{String(val || "—")}</span>;
+                      } else if (ft.key === "availableSeats") {
+                        display = val !== null && val !== undefined 
+                          ? <span className={`text-xs font-bold ${Number(val) <= 4 ? "text-destructive" : Number(val) <= 9 ? "text-orange-500" : "text-foreground"}`}>{String(val)} Seats</span>
+                          : <span className="text-xs text-muted-foreground">—</span>;
+                      } else if (ft.key === "refundable") {
+                        display = val
+                          ? <span className="text-xs font-medium text-accent">Refundable</span>
+                          : <span className="text-xs font-medium text-destructive">Non-Refundable</span>;
                       } else if (typeof val === "boolean") {
                         display = val
                           ? <span className="text-xs font-medium text-accent">Available</span>
