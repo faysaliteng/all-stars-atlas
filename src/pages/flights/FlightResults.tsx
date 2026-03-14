@@ -2336,19 +2336,6 @@ const FlightResults = () => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Inline editing state
-  const [editFrom, setEditFrom] = useState("");
-  const [editTo, setEditTo] = useState("");
-  const [editDepart, setEditDepart] = useState<Date | undefined>();
-  const [editReturn, setEditReturn] = useState<Date | undefined>();
-  const [editAdults, setEditAdults] = useState(1);
-  const [editChildren, setEditChildren] = useState(0);
-  const [editInfants, setEditInfants] = useState(0);
-  const [editCabin, setEditCabin] = useState("");
-  const [showRouteEdit, setShowRouteEdit] = useState(false);
-  const [showDateEdit, setShowDateEdit] = useState(false);
-  const [showPaxEdit, setShowPaxEdit] = useState(false);
-  const [airportSearch, setAirportSearch] = useState("");
-  const [editingField, setEditingField] = useState<"from" | "to" | null>(null);
 
   // Multi-city state
   const tripType = searchParams.get("tripType") || "";
@@ -2376,55 +2363,20 @@ const FlightResults = () => {
   const hasRequiredParams = isMultiCity ? multiCitySegments.length >= 2 : (!!fromCode && !!toCode && !!departDate);
   const isRoundTrip = !!returnDate && !isMultiCity;
 
-  // Initialize inline edit state from URL params
-  useEffect(() => {
-    setEditFrom(fromCode); setEditTo(toCode);
-    setEditDepart(departDate ? new Date(departDate) : undefined);
-    setEditReturn(returnDate ? new Date(returnDate) : undefined);
-    setEditAdults(parseInt(adults)); setEditChildren(parseInt(children)); setEditInfants(parseInt(infants));
-    setEditCabin(cabinClass);
-  }, [fromCode, toCode, departDate, returnDate, adults, children, infants, cabinClass]);
+  // SearchWidget initial values from URL
+  const searchWidgetInitial = useMemo(() => ({
+    from: fromCode,
+    to: toCode,
+    depart: departDate,
+    returnDate: returnDate || undefined,
+    adults: parseInt(adults),
+    children: parseInt(children),
+    infants: parseInt(infants),
+    cabin: cabinClass,
+    tripType: isMultiCity ? "multicity" : isRoundTrip ? "roundtrip" : "oneway",
+    segments: multiCitySegments,
+  }), [fromCode, toCode, departDate, returnDate, adults, children, infants, cabinClass, isMultiCity, isRoundTrip, multiCitySegments]);
 
-  // Navigate with new params helper
-  const applySearchEdit = useCallback(() => {
-    const p = new URLSearchParams();
-    if (editFrom) p.set("from", editFrom);
-    if (editTo) p.set("to", editTo);
-    if (editDepart) p.set("depart", format(editDepart, "yyyy-MM-dd"));
-    if (editReturn) p.set("return", format(editReturn, "yyyy-MM-dd"));
-    p.set("adults", String(editAdults));
-    if (editChildren > 0) p.set("children", String(editChildren));
-    if (editInfants > 0) p.set("infants", String(editInfants));
-    if (editCabin) p.set("cabin", editCabin);
-    if (isMultiCity) p.set("tripType", "multicity");
-    navigate(`/flights?${p.toString()}`);
-    setShowRouteEdit(false); setShowDateEdit(false); setShowPaxEdit(false);
-  }, [editFrom, editTo, editDepart, editReturn, editAdults, editChildren, editInfants, editCabin, isMultiCity, navigate]);
-
-  // Prev / Next day navigation
-  const shiftDate = useCallback((days: number) => {
-    const p = new URLSearchParams(searchParams.toString());
-    if (departDate) {
-      const d = new Date(departDate);
-      d.setDate(d.getDate() + days);
-      if (d >= new Date(new Date().toDateString())) {
-        p.set("depart", format(d, "yyyy-MM-dd"));
-      }
-    }
-    if (returnDate && days > 0) {
-      const r = new Date(returnDate);
-      r.setDate(r.getDate() + days);
-      p.set("return", format(r, "yyyy-MM-dd"));
-    }
-    navigate(`/flights?${p.toString()}`);
-  }, [departDate, returnDate, searchParams, navigate]);
-
-  // Filtered airports for inline search
-  const filteredAirports = useMemo(() => {
-    if (!airportSearch) return AIRPORTS.slice(0, 10);
-    const q = airportSearch.toLowerCase();
-    return AIRPORTS.filter(a => a.code.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)).slice(0, 8);
-  }, [airportSearch]);
 
   const carrierCode = searchParams.get("carrier") || "";
   // Search params — works for all modes: one-way, round-trip, AND multi-city
