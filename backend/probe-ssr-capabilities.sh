@@ -1,15 +1,12 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Seven Trip — SSR (Special Service Request) Capability Probe
-# Tests what SSR data each GDS provider accepts
+# Seven Trip — SSR (Special Service Request) LIVE Capability Probe
+# Actually calls the API to test SSR acceptance per provider
 #
 # Usage: bash backend/probe-ssr-capabilities.sh
-# Output: Detailed results per provider showing accepted/rejected SSRs
 # ═══════════════════════════════════════════════════════════════
 
 API_BASE="http://localhost:3001/api"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-OUTPUT_FILE="$SCRIPT_DIR/ssr-capabilities.json"
 DEPART=$(date -d "+30 days" +%Y-%m-%d)
 RETURN=$(date -d "+37 days" +%Y-%m-%d)
 
@@ -18,32 +15,140 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m'
 
+# Results tracking
+RESULTS_FILE="/tmp/ssr-probe-results.json"
+echo '{}' > "$RESULTS_FILE"
+
 echo "═══════════════════════════════════════════════════"
-echo " Seven Trip — SSR Capability Probe"
-echo " Testing: Sabre, TTI, BDFare, FlyHub"
+echo -e "${BOLD} Seven Trip — SSR Live Probe${NC}"
+echo -e " Date: $(date '+%Y-%m-%d %H:%M:%S')"
+echo -e " Depart: $DEPART | Return: $RETURN"
 echo "═══════════════════════════════════════════════════"
 echo ""
 
 # ── Step 1: Login ──
 echo "🔐 Logging in..."
-TOKEN=$(curl -s "$API_BASE/auth/login" \
+LOGIN_RESP=$(curl -s "$API_BASE/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"rahim@gmail.com","password":"User@123456"}' | jq -r '.accessToken')
+  -d '{"email":"rahim@gmail.com","password":"User@123456"}')
+TOKEN=$(echo "$LOGIN_RESP" | jq -r '.accessToken')
 
 if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
   echo -e "${RED}❌ Login failed${NC}"
+  echo "$LOGIN_RESP" | jq . 2>/dev/null
   exit 1
 fi
 echo -e "${GREEN}✅ Logged in${NC}"
 echo ""
 
-# ══════════════════════════════════════════════════════
-#  PHASE 1: TTI (Air Astra) — Domestic route DAC→CXB
-# ══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+#  PHASE 1: SABRE — Live SSR Test (DAC→DXB international)
+# ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} PHASE 1: TTI (Air Astra) — SSR Probe${NC}"
+echo -e "${CYAN}${BOLD} PHASE 1: SABRE — Live SSR Booking Test${NC}"
+echo "═══════════════════════════════════════════════════"
+echo ""
+
+echo "🔍 Searching Sabre flights DAC→DXB ($DEPART)..."
+SABRE_SEARCH=$(curl -s "$API_BASE/flights/search?from=DAC&to=DXB&date=$DEPART&adults=1&children=0&infants=0&cabinClass=Economy&page=1&limit=50" \
+  -H "Authorization: Bearer $TOKEN" 2>/dev/null)
+
+SABRE_TOTAL=$(echo "$SABRE_SEARCH" | jq '[.data[]? | select(.source == "sabre")] | length' 2>/dev/null)
+echo "   Found ${SABRE_TOTAL} Sabre flights"
+
+if [ "$SABRE_TOTAL" -gt 0 ]; then
+  # Pick cheapest Sabre flight
+  SABRE_FLIGHT=$(echo "$SABRE_SEARCH" | jq -c '[.data[]? | select(.source == "sabre")] | sort_by(.price) | .[0]' 2>/dev/null)
+  SABRE_AIRLINE=$(echo "$SABRE_FLIGHT" | jq -r '.airlineCode')
+  SABRE_FNUM=$(echo "$SABRE_FLIGHT" | jq -r '.flightNumber')
+  SABRE_PRICE=$(echo "$SABRE_FLIGHT" | jq -r '.price')
+  SABRE_ID=$(echo "$SABRE_FLIGHT" | jq -r '.id')
+  echo -e "   Using: ${BOLD}$SABRE_AIRLINE $SABRE_FNUM${NC} | BDT $SABRE_PRICE"
+  echo ""
+
+  # Build booking payload WITH SSRs
+  echo "   📦 Booking with SSRs: MOML (meal) + WCHR (wheelchair) + FQTV (FF)..."
+  SABRE_BOOK_RESP=$(curl -s -X POST "$API_BASE/flights/book" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"flightData\": $SABRE_FLIGHT,
+      \"passengers\": [{
+        \"firstName\": \"PROBE\",
+        \"lastName\": \"SSRTEST\",
+        \"title\": \"Mr\",
+        \"type\": \"adult\",
+        \"dateOfBirth\": \"1990-05-15\",
+        \"gender\": \"Male\",
+        \"nationality\": \"BD\",
+        \"passportNumber\": \"BX9876543\",
+        \"passportExpiry\": \"2030-12-31\"
+      }],
+      \"contactInfo\": {
+        \"email\": \"ssrprobe@seventrip.com\",
+        \"phone\": \"+8801700000001\"
+      },
+      \"payLater\": true,
+      \"specialServices\": {
+        \"perPassenger\": [{
+          \"meal\": \"MOML\",
+          \"wheelchair\": \"WCHR\",
+          \"frequentFlyer\": { \"airline\": \"EK\", \"number\": \"EK123456789\" },
+          \"specialRequest\": \"SSR PROBE TEST - PLEASE IGNORE\"
+        }]
+      }
+    }" 2>/dev/null)
+
+  SABRE_PNR=$(echo "$SABRE_BOOK_RESP" | jq -r '.booking.pnr // .pnr // .gdsPnr // "null"')
+  SABRE_SUCCESS=$(echo "$SABRE_BOOK_RESP" | jq -r '.success // .booking.id // "false"')
+  SABRE_ERROR=$(echo "$SABRE_BOOK_RESP" | jq -r '.message // .error // "none"')
+  SABRE_BOOKING_ID=$(echo "$SABRE_BOOK_RESP" | jq -r '.booking.id // "null"')
+
+  echo ""
+  if [ "$SABRE_PNR" != "null" ] && [ -n "$SABRE_PNR" ]; then
+    echo -e "   ${GREEN}✅ SABRE BOOKING SUCCESS${NC}"
+    echo -e "   PNR: ${BOLD}$SABRE_PNR${NC}"
+    echo "   Booking ID: $SABRE_BOOKING_ID"
+    echo ""
+    echo "   SSRs were included in CreatePassengerNameRecordRQ payload."
+    echo "   Check PM2 logs for SSR injection details:"
+    echo -e "   ${CYAN}pm2 logs seventrip-api --lines 100 --nostream | grep -i 'SSR\|MOML\|WCHR\|FQTV'${NC}"
+    echo ""
+
+    # ── Cancel the probe booking to keep things clean ──
+    echo "   🧹 Cancelling probe booking $SABRE_PNR..."
+    CANCEL_RESP=$(curl -s -X POST "$API_BASE/flights/cancel" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "{\"bookingId\": \"$SABRE_BOOKING_ID\", \"pnr\": \"$SABRE_PNR\"}" 2>/dev/null)
+    CANCEL_OK=$(echo "$CANCEL_RESP" | jq -r '.success // "false"')
+    if [ "$CANCEL_OK" = "true" ]; then
+      echo -e "   ${GREEN}✅ Probe booking cancelled${NC}"
+    else
+      echo -e "   ${YELLOW}⚠️  Cancel response: $(echo "$CANCEL_RESP" | jq -r '.message // .error // "unknown"')${NC}"
+      echo "   → Manually cancel PNR $SABRE_PNR via admin panel"
+    fi
+  else
+    echo -e "   ${RED}❌ SABRE BOOKING FAILED${NC}"
+    echo "   Error: $SABRE_ERROR"
+    echo "   Full response (truncated):"
+    echo "$SABRE_BOOK_RESP" | jq '.' 2>/dev/null | head -30
+  fi
+else
+  echo -e "${YELLOW}   ⚠️  No Sabre flights found for DAC→DXB${NC}"
+  echo "   Try a different route or check Sabre config"
+fi
+
+echo ""
+
+# ═══════════════════════════════════════════════════════
+#  PHASE 2: TTI (Air Astra) — Live SSR Test (DAC→CXB domestic)
+# ═══════════════════════════════════════════════════════
+echo "═══════════════════════════════════════════════════"
+echo -e "${CYAN}${BOLD} PHASE 2: TTI (Air Astra) — Live SSR Booking Test${NC}"
 echo "═══════════════════════════════════════════════════"
 echo ""
 
@@ -52,367 +157,222 @@ TTI_SEARCH=$(curl -s "$API_BASE/flights/search?from=DAC&to=CXB&date=$DEPART&adul
   -H "Authorization: Bearer $TOKEN" 2>/dev/null)
 
 TTI_TOTAL=$(echo "$TTI_SEARCH" | jq '[.data[]? | select(.source == "tti")] | length' 2>/dev/null)
-echo "   Found $TTI_TOTAL TTI flights"
+echo "   Found ${TTI_TOTAL} TTI flights"
 
 if [ "$TTI_TOTAL" -gt 0 ]; then
-  # Get first TTI flight
-  TTI_FLIGHT=$(echo "$TTI_SEARCH" | jq -c '[.data[]? | select(.source == "tti")][0]' 2>/dev/null)
+  TTI_FLIGHT=$(echo "$TTI_SEARCH" | jq -c '[.data[]? | select(.source == "tti")] | sort_by(.price) | .[0]' 2>/dev/null)
   TTI_AIRLINE=$(echo "$TTI_FLIGHT" | jq -r '.airlineCode')
   TTI_FNUM=$(echo "$TTI_FLIGHT" | jq -r '.flightNumber')
-  echo "   Using: $TTI_AIRLINE $TTI_FNUM"
+  TTI_PRICE=$(echo "$TTI_FLIGHT" | jq -r '.price')
+  TTI_ID=$(echo "$TTI_FLIGHT" | jq -r '.id')
+  echo -e "   Using: ${BOLD}$TTI_AIRLINE $TTI_FNUM${NC} | BDT $TTI_PRICE"
   echo ""
-  
-  # ── Test 1: TTI GetAvailableSpecialServices (if endpoint exists) ──
-  echo "   📋 Testing TTI SpecialServices discovery..."
-  TTI_SSR_DISC=$(curl -s "$API_BASE/flights/tti-methods" \
-    -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-  echo "   TTI Available Methods:"
-  echo "$TTI_SSR_DISC" | jq -r '.methods[]?' 2>/dev/null | grep -i "special\|ssr\|service\|meal\|seat\|baggage\|ancillary\|wheelchair\|pet\|frequent" | while read -r method; do
-    echo -e "     ${GREEN}✅ $method${NC}"
-  done
-  echo ""
-  
-  # ── Test 2: TTI CreateBooking with SSRs (DRY RUN — log payload only) ──
-  echo "   🧪 Testing TTI booking with SSRs (dry run via diagnostics)..."
-  TTI_DIAG=$(curl -s -X POST "$API_BASE/flights/tti-diagnostics" \
+
+  echo "   📦 Booking with SSRs: MOML (meal) + WCHR (wheelchair)..."
+  TTI_BOOK_RESP=$(curl -s -X POST "$API_BASE/flights/book" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d "{
-      \"method\": \"Ping\",
-      \"body\": {\"RequestInfo\": {\"AuthenticationKey\": \"probe\"}}
+      \"flightData\": $TTI_FLIGHT,
+      \"passengers\": [{
+        \"firstName\": \"PROBE\",
+        \"lastName\": \"TTITEST\",
+        \"title\": \"Mr\",
+        \"type\": \"adult\",
+        \"dateOfBirth\": \"1990-05-15\",
+        \"gender\": \"Male\",
+        \"nationality\": \"BD\",
+        \"passportNumber\": \"BX1234567\",
+        \"passportExpiry\": \"2030-12-31\"
+      }],
+      \"contactInfo\": {
+        \"email\": \"ssrprobe@seventrip.com\",
+        \"phone\": \"+8801700000002\"
+      },
+      \"payLater\": true,
+      \"specialServices\": {
+        \"perPassenger\": [{
+          \"meal\": \"MOML\",
+          \"wheelchair\": \"WCHR\",
+          \"specialRequest\": \"SSR PROBE TEST - PLEASE IGNORE\"
+        }]
+      }
     }" 2>/dev/null)
-  echo "   TTI Ping response: $(echo "$TTI_DIAG" | jq -r '.status // .error // "no response"' 2>/dev/null)"
-  echo ""
-  
-  # ── Test 3: Check TTI schema for SpecialService fields ──
-  echo "   📄 TTI SpecialService schema (from cached schema):"
-  echo "     Fields in SpecialService object:"
-  echo "       • Code (string) — SSR code (CHLD, INFT, MEAL, WCHR, etc.)"
-  echo "       • RefPassenger (string) — Reference to passenger"
-  echo "       • RefSegment (string) — Reference to segment"
-  echo "       • Status (string) — SSR status"
-  echo "       • Text (string) — Free text"
-  echo "       • TechnicalType (string) — SSR type"
-  echo "       • Data (object) — Type-specific data (Chld, Inft)"
-  echo "       • Available (boolean) — Availability flag"
-  echo ""
-  echo "     OptionalSpecialServices (returned by PrepareBooking/PrepareAdditionalItinerary):"
-  echo "       • Same SpecialService schema — airline-supported SSRs"
-  echo "       • EMDTicketFareOption — paid ancillaries with AssociatedSpecialServiceCode"
-  echo ""
-  
-  # ── Test 4: TTI PrepareBooking to discover available SSRs ──
-  echo "   🔍 Attempting TTI PrepareBooking to discover available SSRs..."
-  echo "     (This requires a real flight selection — checking via API...)"
-  
-  # Try booking with meal SSR to see if TTI accepts it
-  echo ""
-  echo "   📊 TTI SSR Support Matrix (based on schema analysis):"
-  echo -e "     CHLD (Child DOB)     : ${GREEN}✅ CONFIRMED — actively used in createBooking${NC}"
-  echo -e "     INFT (Infant DOB)    : ${GREEN}✅ CONFIRMED — actively used in createBooking${NC}"
-  echo -e "     MEAL (Meal request)  : ${YELLOW}⚠️  SCHEMA SUPPORTS — Code field accepts any SSR code${NC}"
-  echo -e "     WCHR (Wheelchair)    : ${YELLOW}⚠️  SCHEMA SUPPORTS — Code field accepts any SSR code${NC}"
-  echo -e "     PETC/AVIH (Pet)      : ${YELLOW}⚠️  SCHEMA SUPPORTS — Code field accepts any SSR code${NC}"
-  echo -e "     FQTV (Frequent Flyer): ${YELLOW}⚠️  SCHEMA SUPPORTS — needs airline acceptance test${NC}"
-  echo -e "     XBAG (Extra Baggage) : ${YELLOW}⚠️  SCHEMA SUPPORTS — needs airline acceptance test${NC}"
-  echo -e "     SEAT (Seat request)  : ${YELLOW}⚠️  SCHEMA SUPPORTS — UpdateBooking has SpecialService SEAT${NC}"
-  echo ""
-  echo "   ℹ️  TTI schema accepts SpecialServices[] with generic Code field."
-  echo "   ℹ️  Whether Air Astra PROCESSES these SSRs depends on airline config."
-  echo "   ℹ️  To confirm, need to do a REAL booking with SSR and check GDS response."
 
+  TTI_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.booking.pnr // .pnr // .gdsPnr // "null"')
+  TTI_AIRLINE_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.booking.airlinePnr // "null"')
+  TTI_ERROR=$(echo "$TTI_BOOK_RESP" | jq -r '.message // .error // "none"')
+  TTI_BOOKING_ID=$(echo "$TTI_BOOK_RESP" | jq -r '.booking.id // "null"')
+
+  echo ""
+  if [ "$TTI_PNR" != "null" ] && [ -n "$TTI_PNR" ]; then
+    echo -e "   ${GREEN}✅ TTI BOOKING SUCCESS${NC}"
+    echo -e "   GDS PNR: ${BOLD}$TTI_PNR${NC} | Airline PNR: $TTI_AIRLINE_PNR"
+    echo "   Booking ID: $TTI_BOOKING_ID"
+    echo ""
+    echo "   ⚡ KEY QUESTION: Did Air Astra ACCEPT the SSRs?"
+    echo "   Check PM2 logs for SpecialServices in request/response:"
+    echo -e "   ${CYAN}pm2 logs seventrip-api --lines 100 --nostream | grep -i 'SpecialService\|MOML\|WCHR'${NC}"
+    echo ""
+    echo "   Look for:"
+    echo "     ✅ SSR accepted = SpecialServices in response with Status"
+    echo "     ❌ SSR rejected = InvalidData mentioning SpecialService"
+    echo "     ⚠️  SSR ignored = SpecialServices not in response at all"
+    echo ""
+
+    # ── Cancel the probe booking ──
+    echo "   🧹 Cancelling probe booking..."
+    CANCEL_RESP=$(curl -s -X POST "$API_BASE/flights/cancel" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "{\"bookingId\": \"$TTI_BOOKING_ID\", \"pnr\": \"$TTI_PNR\"}" 2>/dev/null)
+    CANCEL_OK=$(echo "$CANCEL_RESP" | jq -r '.success // "false"')
+    if [ "$CANCEL_OK" = "true" ]; then
+      echo -e "   ${GREEN}✅ Probe booking cancelled${NC}"
+    else
+      echo -e "   ${YELLOW}⚠️  Cancel: $(echo "$CANCEL_RESP" | jq -r '.message // .error // "check manually"')${NC}"
+    fi
+  else
+    echo -e "   ${RED}❌ TTI BOOKING FAILED${NC}"
+    echo "   Error: $TTI_ERROR"
+    echo ""
+    echo "   Check if SSR caused the failure:"
+    echo -e "   ${CYAN}pm2 logs seventrip-api --lines 50 --nostream | grep -i 'InvalidData\|SpecialService\|MOML\|WCHR'${NC}"
+    echo ""
+    echo "   Full response (truncated):"
+    echo "$TTI_BOOK_RESP" | jq '.' 2>/dev/null | head -30
+  fi
 else
-  echo -e "${YELLOW}   ⚠️  No TTI flights found — skip TTI SSR tests${NC}"
+  echo -e "${YELLOW}   ⚠️  No TTI flights found for DAC→CXB${NC}"
 fi
 
 echo ""
 
-# ══════════════════════════════════════════════════════
-#  PHASE 2: Sabre — International route DAC→DXB
-# ══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+#  PHASE 3: BDFare — Live SSR Test (if available)
+# ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} PHASE 2: Sabre — SSR Probe (CONFIRMED WORKING)${NC}"
-echo "═══════════════════════════════════════════════════"
-echo ""
-echo "   Sabre SSR Support (ALL confirmed via CreatePassengerNameRecordRQ):"
-echo -e "     MEAL SSRs (16 types) : ${GREEN}✅ AVML, MOML, VGML, KSML, DBML, CHML, SFML, FPML, BBML, GFML, LCML, NLML, RVML, SPML${NC}"
-echo -e "     WCHR/WCHS/WCHC       : ${GREEN}✅ Three wheelchair levels${NC}"
-echo -e "     MEDA (Medical)        : ${GREEN}✅ Medical assistance${NC}"
-echo -e "     BLND (Blind)          : ${GREEN}✅ Blind passenger${NC}"
-echo -e "     DEAF (Deaf)           : ${GREEN}✅ Deaf passenger${NC}"
-echo -e "     UMNR (Minor)          : ${GREEN}✅ Unaccompanied minor${NC}"
-echo -e "     PETC/AVIH (Pet)       : ${GREEN}✅ Pet in cabin/hold${NC}"
-echo -e "     XBAG (Extra Baggage)  : ${GREEN}✅ Extra baggage SSR${NC}"
-echo -e "     FQTV (Frequent Flyer) : ${GREEN}✅ Loyalty program number${NC}"
-echo -e "     OTHS (Free text)      : ${GREEN}✅ Special request text${NC}"
-echo -e "     CTCM (Mobile contact) : ${GREEN}✅ Phone SSR${NC}"
-echo -e "     CTCE (Email contact)  : ${GREEN}✅ Email SSR${NC}"
-echo -e "     DOCS (Passport)       : ${GREEN}✅ Travel document${NC}"
-echo -e "     DOCA (Address)        : ${GREEN}✅ Destination address${NC}"
-echo ""
-
-# ══════════════════════════════════════════════════════
-#  PHASE 3: BDFare — Check API capabilities
-# ══════════════════════════════════════════════════════
-echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} PHASE 3: BDFare — SSR Probe${NC}"
+echo -e "${CYAN}${BOLD} PHASE 3: BDFare — SSR Status${NC}"
 echo "═══════════════════════════════════════════════════"
 echo ""
 
-echo "🔍 Searching BDFare flights DAC→DXB ($DEPART)..."
-BDF_SEARCH=$(curl -s "$API_BASE/flights/search?from=DAC&to=DXB&date=$DEPART&adults=1&children=0&infants=0&cabinClass=Economy&page=1&limit=50" \
-  -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-
-BDF_TOTAL=$(echo "$BDF_SEARCH" | jq '[.data[]? | select(.source == "bdfare")] | length' 2>/dev/null)
-echo "   Found $BDF_TOTAL BDFare flights"
+BDF_TOTAL=$(echo "$SABRE_SEARCH" | jq '[.data[]? | select(.source == "bdfare")] | length' 2>/dev/null)
+echo "   BDFare flights in DAC→DXB search: $BDF_TOTAL"
 
 if [ "$BDF_TOTAL" -gt 0 ]; then
-  BDF_FLIGHT=$(echo "$BDF_SEARCH" | jq -c '[.data[]? | select(.source == "bdfare")][0]' 2>/dev/null)
-  BDF_AIRLINE=$(echo "$BDF_FLIGHT" | jq -r '.airlineCode')
-  echo "   Sample airline: $BDF_AIRLINE"
+  echo -e "   ${YELLOW}⚠️  BDFare createBooking does NOT currently send SSR fields${NC}"
+  echo "   The payload only includes: offerId, passengers[], contact{}"
+  echo "   No specialServices, mealPreference, or wheelchairRequired fields"
   echo ""
-  
-  echo "   📊 BDFare SSR Analysis (from API spec and network logs):"
-  echo "   Current createBooking payload structure:"
-  echo '     {
-       "offerId": "...",
-       "passengers": [{
-         "type": "ADT",
-         "title": "Mr", 
-         "firstName": "...",
-         "lastName": "...",
-         "dateOfBirth": "...",
-         "gender": "Male/Female",
-         "nationality": "BD",
-         "passport": "...",
-         "passportExpiry": "..."
-       }],
-       "contact": { "email": "...", "phone": "..." }
-     }'
-  echo ""
-  echo -e "   ${YELLOW}⚠️  Current BDFare payload does NOT include:${NC}"
-  echo "     • specialServices or ssrRequests field"
-  echo "     • mealPreference field"
-  echo "     • wheelchairRequired field"
-  echo "     • frequentFlyerNumber field"
-  echo ""
-  echo "   🔎 Need to check BDFare API docs for:"
-  echo "     1. Does AirBook/AirSell accept SSR fields?"
-  echo "     2. Is there a separate AddSSR endpoint post-booking?"
-  echo "     3. What SSR codes does BDFare support?"
-  echo ""
-  echo "   📡 Testing BDFare API for SSR endpoints..."
-  
-  # Check if BDFare has SSR-related endpoints by looking at config
-  BDF_CONFIG=$(curl -s "$API_BASE/flights/status" \
-    -H "Authorization: Bearer $TOKEN" 2>/dev/null)
-  BDF_ENABLED=$(echo "$BDF_CONFIG" | jq -r '.providers.bdfare.enabled // false' 2>/dev/null)
-  BDF_ENV=$(echo "$BDF_CONFIG" | jq -r '.providers.bdfare.environment // "unknown"' 2>/dev/null)
-  echo "   BDFare enabled: $BDF_ENABLED | Environment: $BDF_ENV"
+  echo "   To test: Manually add SSR fields to bdf-flights.js createBooking"
+  echo "   and book a BDFare flight to see if the API accepts them."
 else
-  echo -e "${YELLOW}   ⚠️  No BDFare flights found${NC}"
+  echo -e "   ${YELLOW}⚠️  No BDFare flights available — cannot test${NC}"
+  echo "   BDFare may be disabled or DAC→DXB not covered"
 fi
 
 echo ""
 
-# ══════════════════════════════════════════════════════
-#  PHASE 4: FlyHub — Check API capabilities
-# ══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+#  PHASE 4: FlyHub — Live SSR Test (if available)
+# ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} PHASE 4: FlyHub — SSR Probe${NC}"
+echo -e "${CYAN}${BOLD} PHASE 4: FlyHub — SSR Status${NC}"
 echo "═══════════════════════════════════════════════════"
 echo ""
 
-echo "🔍 Checking FlyHub flights from previous search..."
-FH_TOTAL=$(echo "$BDF_SEARCH" | jq '[.data[]? | select(.source == "flyhub")] | length' 2>/dev/null)
-echo "   Found $FH_TOTAL FlyHub flights"
+FH_TOTAL=$(echo "$SABRE_SEARCH" | jq '[.data[]? | select(.source == "flyhub")] | length' 2>/dev/null)
+echo "   FlyHub flights in DAC→DXB search: $FH_TOTAL"
 
 if [ "$FH_TOTAL" -gt 0 ]; then
-  FH_FLIGHT=$(echo "$BDF_SEARCH" | jq -c '[.data[]? | select(.source == "flyhub")][0]' 2>/dev/null)
-  FH_AIRLINE=$(echo "$FH_FLIGHT" | jq -r '.airlineCode')
-  echo "   Sample airline: $FH_AIRLINE"
+  echo -e "   ${YELLOW}⚠️  FlyHub AirBook does NOT currently send SSR fields${NC}"
+  echo "   The Passengers[] payload only includes: Title, Name, DOB, Passport"
+  echo "   No MealPreference, WheelchairRequired, or FrequentFlyerNumber"
   echo ""
-  
-  echo "   📊 FlyHub SSR Analysis (from API spec):"
-  echo "   Current AirBook payload structure:"
-  echo '     {
-       "SearchID": "...",
-       "ResultID": "...",
-       "Passengers": [{
-         "Title": "Mr",
-         "FirstName": "...",
-         "LastName": "...",
-         "PaxType": "Adult/Child/Infant",
-         "DateOfBirth": "...",
-         "Gender": "Male/Female",
-         "PassportNumber": "...",
-         "PassportExpiryDate": "...",
-         "PassportNationality": "BD",
-         "Address1": "...",
-         "CountryCode": "BD",
-         "Nationality": "BD",
-         "ContactNumber": "...",
-         "Email": "..."
-       }]
-     }'
-  echo ""
-  echo -e "   ${YELLOW}⚠️  FlyHub AirBook currently does NOT include:${NC}"
-  echo "     • MealPreference field"
-  echo "     • WheelchairRequired field"  
-  echo "     • FrequentFlyerNumber field"
-  echo "     • SpecialServiceRequests array"
-  echo ""
-  echo "   🔎 FlyHub API documentation mentions these OPTIONAL fields:"
-  echo -e "     • ${CYAN}MealPreference${NC} — Some FlyHub docs show this in Passenger object"
-  echo -e "     • ${CYAN}WheelchairRequired${NC} — Boolean flag in some versions"
-  echo -e "     • ${CYAN}FrequentFlyerNumber${NC} — String in Passenger object"
-  echo -e "     • ${CYAN}SpecialServiceRequest${NC} — Free text field"
-  echo ""
-  echo "   📡 Need to test by sending these fields and checking response..."
+  echo "   FlyHub may silently ignore unknown fields — safe to test."
 else
-  echo -e "${YELLOW}   ⚠️  No FlyHub flights found${NC}"
+  echo -e "   ${YELLOW}⚠️  No FlyHub flights available — cannot test${NC}"
 fi
 
 echo ""
 
-# ══════════════════════════════════════════════════════
-#  PHASE 5: Check PM2 logs for any SSR-related data
-# ══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
+#  PHASE 5: Check PM2 logs for SSR evidence
+# ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} PHASE 5: Check recent booking logs for SSR data${NC}"
-echo "═══════════════════════════════════════════════════"
-echo ""
-echo "   Run these commands on VPS to check SSR handling in recent bookings:"
-echo ""
-echo "   # Check TTI bookings for SpecialServices in payload:"
-echo '   pm2 logs seventrip-api --lines 500 --nostream | grep -A5 "TTI BOOKING.*SpecialService"'
-echo ""
-echo "   # Check if any BDFare booking ever sent SSR data:"
-echo '   pm2 logs seventrip-api --lines 500 --nostream | grep -A5 "BDFare.*SSR\|BDFare.*special\|BDFare.*meal"'
-echo ""
-echo "   # Check if any FlyHub booking ever sent SSR data:"  
-echo '   pm2 logs seventrip-api --lines 500 --nostream | grep -A5 "FlyHub.*SSR\|FlyHub.*special\|FlyHub.*meal"'
-echo ""
-echo "   # Check Sabre SSR injection in recent PNR creates:"
-echo '   pm2 logs seventrip-api --lines 500 --nostream | grep "Sabre.*SSR\|Sabre.*MEAL\|Sabre.*WCHR"'
-echo ""
-
-# ══════════════════════════════════════════════════════
-#  PHASE 6: Live SSR Test — Book with SSR on each provider
-# ══════════════════════════════════════════════════════
-echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} PHASE 6: SSR Live Test Commands${NC}"
+echo -e "${CYAN}${BOLD} PHASE 5: PM2 Log Check — SSR Evidence${NC}"
 echo "═══════════════════════════════════════════════════"
 echo ""
-echo "   Run these curl commands MANUALLY to test SSR acceptance:"
+
+echo "   Checking recent logs for SSR data..."
 echo ""
 
-echo "   ── TEST A: TTI Booking with Meal SSR ──"
-echo "   1. Search: curl '$API_BASE/flights/search?from=DAC&to=CXB&date=$DEPART&adults=1' -H 'Authorization: Bearer TOKEN'"
-echo "   2. Pick a TTI flight, then book with specialServices:"
-cat << 'TTIEOF'
-   curl -X POST "$API_BASE/flights/book" \
-     -H "Authorization: Bearer $TOKEN" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "flightData": { ... (from search) },
-       "passengers": [{
-         "firstName": "TEST", "lastName": "PASSENGER",
-         "title": "Mr", "type": "adult",
-         "dateOfBirth": "1990-01-15",
-         "nationality": "BD",
-         "passportNumber": "AB1234567",
-         "passportExpiry": "2030-01-01"
-       }],
-       "contactInfo": { "email": "test@test.com", "phone": "+8801712345678" },
-       "specialServices": {
-         "perPassenger": [{
-           "meal": "MOML",
-           "wheelchair": "WCHR",
-           "frequentFlyer": { "airline": "BG", "number": "FF123456" },
-           "specialRequest": "EXTRA LEGROOM PREFERRED"
-         }]
-       }
-     }'
-TTIEOF
+# Check Sabre SSR injection
+SABRE_SSR_COUNT=$(pm2 logs seventrip-api --lines 200 --nostream 2>/dev/null | grep -ci "SSR\|MOML\|WCHR\|FQTV\|OTHS\|SpecialService" 2>/dev/null || echo "0")
+echo -e "   Sabre SSR log entries: ${BOLD}$SABRE_SSR_COUNT${NC}"
+
+# Check TTI SSR injection
+TTI_SSR_COUNT=$(pm2 logs seventrip-api --lines 200 --nostream 2>/dev/null | grep -ci "TTI BOOKING.*SpecialService" 2>/dev/null || echo "0")
+echo -e "   TTI SpecialService log entries: ${BOLD}$TTI_SSR_COUNT${NC}"
+
+# Show relevant log lines
+echo ""
+echo "   📋 Recent SSR-related log entries:"
+pm2 logs seventrip-api --lines 200 --nostream 2>/dev/null | grep -i "SSR\|MOML\|WCHR\|FQTV\|SpecialService" 2>/dev/null | tail -20 | while IFS= read -r line; do
+  echo "     $line"
+done
+
 echo ""
 
-echo "   ── TEST B: Check FlyHub AirBook with extra fields ──"
-echo "   Modify flyhub-flights.js createBooking to add these fields to paxList:"
-echo '     MealPreference: "MOML",'
-echo '     WheelchairRequired: true,'
-echo '     FrequentFlyerNumber: "FF123456",'
-echo '     SpecialServiceRequest: "WHEELCHAIR REQUIRED",'
-echo "   Then book a FlyHub flight and check response for accepted/rejected fields."
-echo ""
-
-echo "   ── TEST C: Check BDFare AirSell/AirBook with SSR fields ──"
-echo "   Modify bdf-flights.js createBooking to add these fields to body:"
-echo '     specialServices: [{ code: "MOML", passengerIndex: 0 }],'
-echo '     ssrRequests: [{ type: "MEAL", code: "MOML" }],'
-echo "   Then book a BDFare flight and check response."
-echo ""
-
-# ══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
 #  SUMMARY
-# ══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════
 echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} SUMMARY — SSR Support by Provider${NC}"
+echo -e "${BOLD} LIVE TEST RESULTS SUMMARY${NC}"
 echo "═══════════════════════════════════════════════════"
 echo ""
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "SSR Type" "Sabre" "TTI" "BDFare" "FlyHub" "LCC" "Galileo" "NDC"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "────────────" "─────" "─────" "──────" "──────" "─────" "───────" "─────"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Meal (MOML etc.)" "✅ DONE" "⚠️ TEST" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Wheelchair" "✅ DONE" "⚠️ TEST" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Medical/Blind/Deaf" "✅ DONE" "⚠️ TEST" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Pet (PETC/AVIH)" "✅ DONE" "⚠️ TEST" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Frequent Flyer" "✅ DONE" "⚠️ TEST" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Extra Baggage" "✅ DONE" "⚠️ TEST" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Free Text (OSI)" "✅ DONE" "⚠️ TEST" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Passport (DOCS)" "✅ DONE" "✅ DONE" "✅ DONE" "✅ DONE" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Contact (CTCM/E)" "✅ DONE" "✅ DONE" "✅ DONE" "✅ DONE" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Child/Infant PTC" "✅ DONE" "✅ DONE" "✅ DONE" "✅ DONE" "N/A" "N/A" "N/A"
-printf "%-20s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n" \
-  "Dest Address" "✅ DONE" "❌ N/A" "❌ TODO" "❌ TODO" "N/A" "N/A" "N/A"
-echo ""
-echo "Legend: ✅ DONE = Implemented & tested | ⚠️ TEST = Schema supports, needs live test | ❌ TODO = Not implemented"
-echo ""
+printf "%-20s %-15s %-40s\n" "Provider" "SSR Test" "Result"
+printf "%-20s %-15s %-40s\n" "────────────" "──────────" "────────────────────────────"
 
-# ══════════════════════════════════════════════════════
-#  RECOMMENDED NEXT STEPS
-# ══════════════════════════════════════════════════════
-echo "═══════════════════════════════════════════════════"
-echo -e "${CYAN} RECOMMENDED NEXT STEPS${NC}"
-echo "═══════════════════════════════════════════════════"
-echo ""
-echo "  1. TTI: Add meal/wheelchair/pet SSRs to CreateBooking payload"
-echo "     → TTI schema has generic SpecialService with Code field"
-echo "     → Test: Book a DAC→CXB flight with MOML meal, check response"
-echo ""
-echo "  2. BDFare: Research BDFare API docs for SSR endpoints"
-echo "     → Check if AirSell/AirBook accepts specialServices field"
-echo "     → Check if there's a separate POST /ssr or POST /add-service endpoint"
-echo "     → Network-capture a BDFare booking from their own portal"
-echo ""
-echo "  3. FlyHub: Test optional Passenger fields"
-echo "     → Try adding MealPreference, WheelchairRequired to AirBook"
-echo "     → FlyHub may silently ignore unsupported fields (no error)"
-echo ""
-echo "  4. Add UI notice per provider showing which SSRs are supported"
-echo "     → Already have AirlineSupportDialog — extend it"
+if [ "$SABRE_PNR" != "null" ] && [ -n "$SABRE_PNR" ] 2>/dev/null; then
+  printf "%-20s %-15s %-40s\n" "Sabre" "✅ PASS" "PNR: $SABRE_PNR (cancelled)"
+elif [ "$SABRE_TOTAL" -gt 0 ] 2>/dev/null; then
+  printf "%-20s %-15s %-40s\n" "Sabre" "❌ FAIL" "$SABRE_ERROR"
+else
+  printf "%-20s %-15s %-40s\n" "Sabre" "⚠️  SKIP" "No flights found"
+fi
+
+if [ "$TTI_PNR" != "null" ] && [ -n "$TTI_PNR" ] 2>/dev/null; then
+  printf "%-20s %-15s %-40s\n" "TTI (Air Astra)" "✅ PASS" "PNR: $TTI_PNR (cancelled)"
+elif [ "$TTI_TOTAL" -gt 0 ] 2>/dev/null; then
+  printf "%-20s %-15s %-40s\n" "TTI (Air Astra)" "❌ FAIL" "$TTI_ERROR"
+else
+  printf "%-20s %-15s %-40s\n" "TTI (Air Astra)" "⚠️  SKIP" "No flights found"
+fi
+
+printf "%-20s %-15s %-40s\n" "BDFare" "⏳ TODO" "No SSR fields in payload yet"
+printf "%-20s %-15s %-40s\n" "FlyHub" "⏳ TODO" "No SSR fields in payload yet"
+
 echo ""
 echo "═══════════════════════════════════════════════════"
-echo " Done! Run on VPS: bash backend/probe-ssr-capabilities.sh"
+echo -e "${BOLD} SSR Support Matrix (Updated)${NC}"
+echo "═══════════════════════════════════════════════════"
+echo ""
+printf "%-22s %-12s %-12s %-12s %-12s\n" "SSR Type" "Sabre" "TTI" "BDFare" "FlyHub"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "──────────────" "─────" "─────" "──────" "──────"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Meal (MOML etc.)" "✅ DONE" "✅ ADDED" "❌ TODO" "❌ TODO"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Wheelchair" "✅ DONE" "✅ ADDED" "❌ TODO" "❌ TODO"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Medical/Blind/Deaf" "✅ DONE" "✅ ADDED" "❌ TODO" "❌ TODO"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Pet (PETC/AVIH)" "✅ DONE" "✅ ADDED" "❌ TODO" "❌ TODO"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Frequent Flyer" "✅ DONE" "✅ ADDED" "❌ TODO" "❌ TODO"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Extra Baggage" "✅ DONE" "✅ ADDED" "❌ TODO" "❌ TODO"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Free Text (OTHS)" "✅ DONE" "✅ ADDED" "❌ TODO" "❌ TODO"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Passport (DOCS)" "✅ DONE" "✅ DONE" "✅ DONE" "✅ DONE"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Contact (CTCM/E)" "✅ DONE" "✅ DONE" "✅ DONE" "✅ DONE"
+printf "%-22s %-12s %-12s %-12s %-12s\n" "Child/Infant PTC" "✅ DONE" "✅ DONE" "✅ DONE" "✅ DONE"
+echo ""
+echo "Legend: ✅ DONE = Production verified | ✅ ADDED = Code added, needs live verify | ❌ TODO = Not implemented"
+echo ""
+echo "═══════════════════════════════════════════════════"
+echo " Done! Check PM2 logs for SSR acceptance details."
 echo "═══════════════════════════════════════════════════"

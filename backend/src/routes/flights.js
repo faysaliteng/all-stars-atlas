@@ -1546,6 +1546,7 @@ router.post('/book', authenticate, async (req, res) => {
           flightData: ttiFlightData,
           passengers,
           contactInfo: contactInfo || {},
+          specialServices: specialServices || {},
         });
 
         if (gdsBookingResult?.success && gdsBookingResult?.pnr) {

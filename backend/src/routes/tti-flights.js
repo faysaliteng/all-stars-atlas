@@ -699,7 +699,7 @@ function getAirlineName(code) {
  * Create a booking in TTI/Zenith GDS
  * This sends passenger + itinerary data to TTI to create a real PNR
  */
-async function createBooking({ flightData, passengers, contactInfo }) {
+async function createBooking({ flightData, passengers, contactInfo, specialServices: ssrInput }) {
   const config = await getTTIConfig();
   if (!config) throw new Error('TTI API not configured');
 
@@ -972,8 +972,80 @@ async function createBooking({ flightData, passengers, contactInfo }) {
     }
   });
 
+  // ── Inject user-requested SSRs: meal, wheelchair, medical, pet, frequent flyer, free text ──
+  const ssrData = ssrInput || {};
+  const perPax = ssrData.perPassenger || [];
+  
+  ttiPassengers.forEach((tp, idx) => {
+    const paxSSR = perPax[idx] || {};
+    
+    // Meal SSR (MOML, AVML, VGML, etc.)
+    if (paxSSR.meal) {
+      specialServices.push({
+        Code: String(paxSSR.meal).toUpperCase(),
+        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
+        Text: `Meal request: ${paxSSR.meal}`, TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
+    
+    // Wheelchair SSR (WCHR, WCHS, WCHC)
+    if (paxSSR.wheelchair) {
+      specialServices.push({
+        Code: String(paxSSR.wheelchair).toUpperCase(),
+        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
+        Text: 'Wheelchair assistance required', TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
+    
+    // Medical (MEDA), Blind (BLND), Deaf (DEAF)
+    if (paxSSR.medical) {
+      specialServices.push({
+        Code: String(paxSSR.medical).toUpperCase(),
+        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
+        Text: paxSSR.medicalNote || 'Medical assistance required', TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
+    
+    // Pet in cabin (PETC) or hold (AVIH)
+    if (paxSSR.pet) {
+      specialServices.push({
+        Code: String(paxSSR.pet).toUpperCase(),
+        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
+        Text: paxSSR.petNote || 'Pet transport requested', TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
+    
+    // Frequent Flyer (FQTV)
+    if (paxSSR.frequentFlyer?.number) {
+      specialServices.push({
+        Code: 'FQTV',
+        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
+        Text: `${paxSSR.frequentFlyer.airline || ''} ${paxSSR.frequentFlyer.number}`.trim(),
+        TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
+    
+    // Free text special request
+    if (paxSSR.specialRequest) {
+      specialServices.push({
+        Code: 'OTHS',
+        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
+        Text: String(paxSSR.specialRequest).substring(0, 200), TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
+    
+    // Extra baggage (XBAG)
+    if (paxSSR.extraBaggage) {
+      specialServices.push({
+        Code: 'XBAG',
+        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
+        Text: `Extra baggage: ${paxSSR.extraBaggage}`, TechnicalType: null, Extensions: null, Available: null,
+      });
+    }
+  });
+
   if (specialServices.length > 0) {
-    console.log('[TTI BOOKING] SpecialServices:', JSON.stringify(specialServices.map(s => ({ Code: s.Code, RefPassenger: s.RefPassenger }))));
+    console.log('[TTI BOOKING] SpecialServices:', JSON.stringify(specialServices.map(s => ({ Code: s.Code, RefPassenger: s.RefPassenger, Text: s.Text }))));
   }
 
   const request = {
