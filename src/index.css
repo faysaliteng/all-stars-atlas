@@ -1106,21 +1106,21 @@ img, video {
 }
 
   .flight-date {
-    color: hsl(0 75% 45%);
+    color: hsl(0 75% 45%) !important;
     font-weight: 700;
   }
 
   .dark .flight-date {
-    color: hsl(0 70% 65%);
+    color: hsl(0 70% 65%) !important;
   }
 
   .flight-time {
-    color: hsl(0 75% 45%);
+    color: hsl(0 75% 45%) !important;
     font-weight: 900;
   }
 
   .dark .flight-time {
-    color: hsl(0 70% 65%);
+    color: hsl(0 70% 65%) !important;
   }
 
 @keyframes shimmer {
