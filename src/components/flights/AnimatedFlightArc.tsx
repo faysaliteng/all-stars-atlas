@@ -7,8 +7,6 @@ interface AnimatedFlightArcProps {
 export default function AnimatedFlightArc({ height = 12, direction = "departure", compact = false }: AnimatedFlightArcProps) {
   const isReturn = direction === "return";
   const h = compact ? 22 : 28;
-
-  const planePath = "M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z";
   const planeSize = compact ? 16 : 20;
 
   const departColor = "#2563eb";
@@ -54,17 +52,22 @@ export default function AnimatedFlightArc({ height = 12, direction = "departure"
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="relative">
             <div className="absolute -inset-2 rounded-full blur-md" style={{ backgroundColor: `${color}18` }} />
+            {/* Departure: plane nose points RIGHT (→) */}
+            {/* Return: plane nose points LEFT (←) */}
             <svg
               viewBox="0 0 24 24"
               fill={color}
-              style={{
-                width: planeSize,
-                height: planeSize,
-                transform: isReturn ? "scaleX(-1) rotate(-90deg)" : "rotate(90deg)",
-                filter: `drop-shadow(0 0 5px ${color}66)`,
-              }}
+              width={planeSize}
+              height={planeSize}
+              style={{ filter: `drop-shadow(0 0 5px ${color}66)` }}
             >
-              <path d={planePath} />
+              {isReturn ? (
+                /* Plane facing LEFT ← */
+                <path d="M3 8v2l8 5v5.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V15l8-5V8l-8 2.5V5l2-1.5V2l-3.5 1L9 2v1.5L11 5v5.5z" />
+              ) : (
+                /* Plane facing RIGHT → */
+                <path d="M21 8v2l-8 5v5.5c0 .83-.67 1.5-1.5 1.5S10 21.33 10 20.5V15l-8-5V8l8 2.5V5l-2-1.5V2l3.5 1L15 2v1.5L13 5v5.5z" />
+              )}
             </svg>
           </div>
         </div>
