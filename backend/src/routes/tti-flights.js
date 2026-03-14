@@ -1049,13 +1049,13 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
     console.log('[TTI BOOKING] SpecialServices:', JSON.stringify(specialServices.map(s => ({ Code: s.Code, RefPassenger: s.RefPassenger, Text: s.Text }))));
   }
 
-  const request = {
+  const buildCreateBookingRequest = (services = specialServices) => ({
     RequestInfo: { AuthenticationKey: config.key },
     Offer: offerWithRef,              // CRITICAL: Links to search session + selected itinerary
     Passengers: ttiPassengers,
     Segments: segments,
     FareInfo: fareInfo,
-    SpecialServices: specialServices.length > 0 ? specialServices : null,
+    SpecialServices: services.length > 0 ? services : null,
     ContactInfo: {
       Email: contactInfo?.email || passengers[0]?.email || '',
       Phone: contactInfo?.phone || passengers[0]?.phone || '',
@@ -1064,13 +1064,38 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       AgencyId: config.agencyId,
       AgencyName: config.agencyName,
     },
+  });
+
+  const hasPassengerSeatLinkError = (resp) => {
+    const errBlob = JSON.stringify({
+      invalid: resp?.InvalidData || null,
+      error: resp?.ResponseInfo?.Error || null,
+    });
+    return /RefPassengerWithSeat|Passenger with seat cannot be found/i.test(errBlob);
   };
+
+  const hasPassengerTypeSSR = (services = []) =>
+    services.some((svc) => ['INFT', 'CHLD'].includes(String(svc?.Code || '').toUpperCase()));
+
+  const request = buildCreateBookingRequest(specialServices);
 
   console.log('[TTI] Creating booking for', flightData.origin, '→', flightData.destination, 'flight', flightData.flightNumber);
   console.log('[TTI BOOKING] Request payload (truncated):', JSON.stringify(request).substring(0, 3000));
 
   try {
-    const response = await ttiRequest('CreateBooking', request);
+    let response = await ttiRequest('CreateBooking', request);
+
+    // Retry once without CHLD/INFT SSR when TTI rejects RefPassengerWithSeat mapping
+    if ((response.ResponseInfo?.Error || response.InvalidData) && hasPassengerSeatLinkError(response) && hasPassengerTypeSSR(specialServices)) {
+      const fallbackSpecialServices = specialServices.filter((svc) => !['INFT', 'CHLD'].includes(String(svc?.Code || '').toUpperCase()));
+      if (fallbackSpecialServices.length !== specialServices.length) {
+        const removedCount = specialServices.length - fallbackSpecialServices.length;
+        const fallbackRequest = buildCreateBookingRequest(fallbackSpecialServices);
+        console.warn(`[TTI BOOKING] Retrying CreateBooking without ${removedCount} CHLD/INFT SSR entries due RefPassengerWithSeat validation`);
+        console.log('[TTI BOOKING] Fallback payload (truncated):', JSON.stringify(fallbackRequest).substring(0, 3000));
+        response = await ttiRequest('CreateBooking', fallbackRequest);
+      }
+    }
 
     // ── COMPREHENSIVE DEBUG LOGGING ──
     console.log('[TTI BOOKING] Full response keys:', Object.keys(response));
@@ -1110,7 +1135,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
     }
     // Log ALL top-level keys to find where InvalidData lives
     console.log('[TTI BOOKING] All response top-level keys:', Object.keys(response));
-    
+
     if (response.ResponseInfo?.Error) {
       const err = response.ResponseInfo.Error;
       console.error('[TTI BOOKING] API Error:', JSON.stringify(err));
