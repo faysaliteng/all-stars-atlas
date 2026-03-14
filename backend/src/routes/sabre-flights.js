@@ -295,7 +295,7 @@ async function searchFlights(params) {
             },
           },
         },
-        CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
+        CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Only' }],
         MaxStopsQuantity: 2,
       },
       TPA_Extensions: {
