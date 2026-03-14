@@ -85,7 +85,12 @@ function getAirlineFareParams(
 
 function formatTime(datetime?: string): string {
   if (!datetime) return "--:--";
-  return formatApiTime(datetime, { withGMT: true });
+  return formatApiTime(datetime);
+}
+
+function formatGMT(datetime?: string): string {
+  if (!datetime) return "";
+  return extractApiGMT(datetime);
 }
 
 function formatDate(datetime?: string): string {
