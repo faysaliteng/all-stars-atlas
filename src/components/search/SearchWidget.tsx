@@ -84,9 +84,10 @@ interface AirportInputProps {
   onChange: (airport: typeof AIRPORTS[0]) => void;
   placeholder?: string;
   airports?: typeof AIRPORTS;
+  icon?: React.ReactNode;
 }
 
-const AirportInput = ({ label, value, onChange, placeholder, airports: airportList }: AirportInputProps) => {
+const AirportInput = ({ label, value, onChange, placeholder, airports: airportList, icon }: AirportInputProps) => {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -120,6 +121,7 @@ const AirportInput = ({ label, value, onChange, placeholder, airports: airportLi
           className="flex items-center gap-2 w-full text-left"
           onClick={() => { setFocused(true); setOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
         >
+          {icon && <span className="text-primary shrink-0">{icon}</span>}
           <span className="text-lg sm:text-xl font-black text-primary tracking-tight">{value.code}</span>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold truncate">{value.city}</div>
