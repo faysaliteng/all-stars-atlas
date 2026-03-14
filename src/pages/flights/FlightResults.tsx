@@ -659,7 +659,12 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
         cancellation: typeof f.cancellationAllowed === 'boolean' ? f.cancellationAllowed : (typeof primary.refundable === 'boolean' ? primary.refundable : null),
         miles: f.milesEarning || primary.milesEarning || null,
         grossFare: f.price || f.amount || f.total || primary.price || 0,
-        flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
+        flight: {
+          ...primary,
+          price: f.price ?? primary.price,
+          taxes: f.taxes ?? primary.taxes,
+          fareDetails: [f],
+        },
         isBestValue: i === 0,
         isSabre: isSabreSource,
       };
@@ -955,16 +960,20 @@ const RoundTripFlightCard = ({
         }];
 
     const combinedFareDetails = outboundFareDetails.map((fare: any) => {
-      // If fareDetails already has full-trip price (from grouped BFM), use it directly
-      // Otherwise sum outbound + return per-direction prices
       const farePrice = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
       const fareTaxes = fare?.taxes ?? outbound.taxes ?? 0;
-      
-      // Detect if fareDetail price is full-trip (close to totalRoundTripPrice) or per-direction
-      const isFareFullTrip = hasTotalPrice && farePrice > 0 && Math.abs(farePrice - outbound.totalRoundTripPrice) < Math.abs(farePrice - outbound.price);
-      
+
+      // Prefer explicit backend metadata; keep a heuristic fallback for older payloads
+      const isExplicitFullTrip = fare?.priceScope === 'itinerary' || fare?.isTotalPrice === true || fare?._isRoundTripTotal === true;
+      const isHeuristicFullTrip = hasTotalPrice
+        && farePrice > 0
+        && Math.abs(farePrice - (outbound.totalRoundTripPrice || 0)) <= Math.abs(farePrice - (outbound.price || 0));
+      const isFareFullTrip = isExplicitFullTrip || isHeuristicFullTrip;
+
       const combinedPrice = isFareFullTrip ? farePrice : (farePrice + (returnFlight?.price ?? 0));
-      const combinedTaxes = isFareFullTrip ? fareTaxes : (fareTaxes + (returnFlight?.taxes ?? 0));
+      const combinedTaxes = isFareFullTrip
+        ? (fareTaxes > 0 ? fareTaxes : totalTaxes)
+        : (fareTaxes + (returnFlight?.taxes ?? 0));
 
       return {
         ...fare,
@@ -2753,70 +2762,101 @@ const FlightResults = () => {
   const outboundFlights = useMemo(() => flights.filter((f: any) => f.direction !== "return"), [flights]);
   const returnFlights = useMemo(() => flights.filter((f: any) => f.direction === "return"), [flights]);
 
-  // Round-trip: pair outbound+return from the SAME Sabre BFM itinerary using _itineraryId.
-  // This ensures each card represents one real bookable itinerary with accurate total pricing.
-  // Fallback: if no _itineraryId available, pair by _sabreSeqNumber or source+index matching.
+  // Round-trip pairing: strict itinerary matching first, deterministic one-to-one fallback only.
+  // This avoids synthetic N×N combinations and keeps totals stable across refreshes.
   const roundTripPairs = useMemo(() => {
     if (!isRoundTrip || !hasDirections) return [];
+
     const pairs: { outbound: any; returnFlight: any; totalPrice: number }[] = [];
+    const usedOutbound = new Set<string>();
+    const usedReturn = new Set<string>();
 
-    // Group flights by _itineraryId for exact matching
+    const getPairTotal = (ob: any, rf: any) => ob.totalRoundTripPrice || rf.totalRoundTripPrice || ((ob.price || 0) + (rf.price || 0));
+
+    const pushPair = (ob: any, rf: any) => {
+      if (!ob || !rf || usedOutbound.has(ob.id) || usedReturn.has(rf.id)) return;
+      pairs.push({ outbound: ob, returnFlight: rf, totalPrice: getPairTotal(ob, rf) });
+      usedOutbound.add(ob.id);
+      usedReturn.add(rf.id);
+    };
+
+    const sortByDeparture = (a: any, b: any) => {
+      const at = a?.departureTime ? new Date(a.departureTime).getTime() : Number.MAX_SAFE_INTEGER;
+      const bt = b?.departureTime ? new Date(b.departureTime).getTime() : Number.MAX_SAFE_INTEGER;
+      if (at !== bt) return at - bt;
+      return (a?.price || 0) - (b?.price || 0);
+    };
+
+    // 1) Exact itinerary linking from backend (Sabre-style)
     const itineraryMap: Record<string, { outbound?: any; returnFlight?: any }> = {};
-    const unmatchedOutbound: any[] = [];
-    const unmatchedReturn: any[] = [];
-
     for (const f of outboundFlights) {
-      const itinId = f._itineraryId;
-      if (itinId) {
-        if (!itineraryMap[itinId]) itineraryMap[itinId] = {};
-        itineraryMap[itinId].outbound = f;
-      } else {
-        unmatchedOutbound.push(f);
-      }
+      if (!f._itineraryId) continue;
+      if (!itineraryMap[f._itineraryId]) itineraryMap[f._itineraryId] = {};
+      itineraryMap[f._itineraryId].outbound = f;
     }
     for (const f of returnFlights) {
-      const itinId = f._itineraryId;
-      if (itinId) {
-        if (!itineraryMap[itinId]) itineraryMap[itinId] = {};
-        itineraryMap[itinId].returnFlight = f;
-      } else {
-        unmatchedReturn.push(f);
-      }
+      if (!f._itineraryId) continue;
+      if (!itineraryMap[f._itineraryId]) itineraryMap[f._itineraryId] = {};
+      itineraryMap[f._itineraryId].returnFlight = f;
     }
-
-    // Create pairs from matched itineraries (accurate BFM pricing)
     for (const entry of Object.values(itineraryMap)) {
-      if (entry.outbound && entry.returnFlight) {
-        const total = entry.outbound.totalRoundTripPrice || ((entry.outbound.price || 0) + (entry.returnFlight.price || 0));
-        pairs.push({ outbound: entry.outbound, returnFlight: entry.returnFlight, totalPrice: total });
-      }
+      if (entry.outbound && entry.returnFlight) pushPair(entry.outbound, entry.returnFlight);
     }
 
-    // Fallback: pair unmatched flights by same airline (for non-Sabre providers)
-    if (unmatchedOutbound.length > 0 && unmatchedReturn.length > 0) {
-      for (const ob of unmatchedOutbound) {
-        // Find cheapest same-airline return
-        const sameAirlineReturn = unmatchedReturn
-          .filter(r => r.airlineCode === ob.airlineCode)
-          .sort((a: any, b: any) => (a.price || 0) - (b.price || 0))[0];
-        if (sameAirlineReturn) {
-          pairs.push({
-            outbound: ob,
-            returnFlight: sameAirlineReturn,
-            totalPrice: (ob.price || 0) + (sameAirlineReturn.price || 0),
-          });
-        }
-      }
+    // 2) Secondary strict matching by source + sequence id
+    const seqMap: Record<string, { outbound: any[]; returnFlight: any[] }> = {};
+    for (const f of outboundFlights) {
+      if (usedOutbound.has(f.id) || f._sabreSeqNumber === undefined || f._sabreSeqNumber === null) continue;
+      const key = `${f.source || 'unknown'}::${String(f._sabreSeqNumber)}`;
+      if (!seqMap[key]) seqMap[key] = { outbound: [], returnFlight: [] };
+      seqMap[key].outbound.push(f);
+    }
+    for (const f of returnFlights) {
+      if (usedReturn.has(f.id) || f._sabreSeqNumber === undefined || f._sabreSeqNumber === null) continue;
+      const key = `${f.source || 'unknown'}::${String(f._sabreSeqNumber)}`;
+      if (!seqMap[key]) seqMap[key] = { outbound: [], returnFlight: [] };
+      seqMap[key].returnFlight.push(f);
+    }
+    for (const entry of Object.values(seqMap)) {
+      if (!entry.outbound.length || !entry.returnFlight.length) continue;
+      const obs = [...entry.outbound].sort(sortByDeparture);
+      const rts = [...entry.returnFlight].sort(sortByDeparture);
+      const n = Math.min(obs.length, rts.length);
+      for (let i = 0; i < n; i++) pushPair(obs[i], rts[i]);
     }
 
-    // Deduplicate by outbound.id + returnFlight.id
+    // 3) Final deterministic fallback (no cross-product): source+airline index pairing
+    const fallbackMap: Record<string, { outbound: any[]; returnFlight: any[] }> = {};
+    for (const f of outboundFlights) {
+      if (usedOutbound.has(f.id)) continue;
+      const key = `${f.source || 'unknown'}::${f.airlineCode || ''}`;
+      if (!fallbackMap[key]) fallbackMap[key] = { outbound: [], returnFlight: [] };
+      fallbackMap[key].outbound.push(f);
+    }
+    for (const f of returnFlights) {
+      if (usedReturn.has(f.id)) continue;
+      const key = `${f.source || 'unknown'}::${f.airlineCode || ''}`;
+      if (!fallbackMap[key]) fallbackMap[key] = { outbound: [], returnFlight: [] };
+      fallbackMap[key].returnFlight.push(f);
+    }
+    for (const entry of Object.values(fallbackMap)) {
+      if (!entry.outbound.length || !entry.returnFlight.length) continue;
+      const obs = [...entry.outbound].sort(sortByDeparture);
+      const rts = [...entry.returnFlight].sort(sortByDeparture);
+      const n = Math.min(obs.length, rts.length);
+      for (let i = 0; i < n; i++) pushPair(obs[i], rts[i]);
+    }
+
+    // Deduplicate and sort by payable total
     const seen = new Set<string>();
-    return pairs.filter(p => {
-      const key = `${p.outbound.id}__${p.returnFlight.id}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).sort((a, b) => a.totalPrice - b.totalPrice);
+    return pairs
+      .filter((p) => {
+        const key = `${p.outbound.id}__${p.returnFlight.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => pairPayable(a) - pairPayable(b));
   }, [isRoundTrip, hasDirections, outboundFlights, returnFlights]);
 
   // Combine all multi-city flights for filter computation

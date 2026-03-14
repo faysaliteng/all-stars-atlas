@@ -571,7 +571,8 @@ function normalizeGroupedResponse(response, params) {
     }
     console.log(`[Sabre] Pricing stats: ${totalPricingOptions} total options, ${itinsWithMultiplePricing} itineraries with multiple fares`);
 
-    for (const group of itinGroups) {
+    for (let groupIdx = 0; groupIdx < itinGroups.length; groupIdx++) {
+      const group = itinGroups[groupIdx];
       const groupDesc = group.groupDescription || {};
       const itineraries = group.itineraries || [];
 
@@ -784,6 +785,8 @@ function normalizeGroupedResponse(response, params) {
             baseFare: parseFloat(piTotal.baseFareAmount || 0),
             taxes: parseFloat(piTotal.totalTaxAmount || 0),
             currency: piTotal.currency || 'BDT',
+            priceScope: 'itinerary',
+            isTotalPrice: true,
             baggage: piBaggage,
             handBaggage: piHandBaggage,
             refundable: !isNonRefundable,
@@ -896,7 +899,7 @@ function normalizeGroupedResponse(response, params) {
           const isRefundable = fare.passengerInfoList?.[0]?.passengerInfo?.nonRefundable === false;
 
           flights.push({
-            id: `sabre-mc-${idx}`,
+            id: `sabre-mc-${groupIdx}-${idx}`,
             source: 'sabre',
             direction: 'multicity',
             isMultiCity: true,
@@ -929,7 +932,7 @@ function normalizeGroupedResponse(response, params) {
             fareDetails: fareDetailsArr,
             timeLimit: fare.lastTicketDate || null,
             validatingAirline: fare.validatingCarrierCode || firstSeg.airlineCode,
-            _sabreSeqNumber: idx,
+            _sabreSeqNumber: `${groupIdx}-${idx}`,
           });
         } else {
           // ── ONE-WAY / ROUND-TRIP: per-leg emission (original logic) ──
@@ -1029,11 +1032,11 @@ function normalizeGroupedResponse(response, params) {
             }
 
             flights.push({
-              id: `sabre-g-${group.groupDescription?.legDescriptions?.[0]?.departureDate || idx}-${legIdx}-${idx}`,
+              id: `sabre-g-${groupIdx}-${idx}-${legIdx}`,
               source: 'sabre',
               direction,
               isRoundTrip: itinLegs.length > 1,
-              _itineraryId: `sabre-g-itin-${group.groupDescription?.legDescriptions?.[0]?.departureDate || 'x'}-${idx}`,
+              _itineraryId: `sabre-g-itin-${groupIdx}-${idx}`,
               airline: getAirlineName(firstLeg.airlineCode),
               airlineCode: firstLeg.airlineCode,
               airlineLogo: null,
@@ -1064,7 +1067,7 @@ function normalizeGroupedResponse(response, params) {
               cancellationPolicy,
               dateChangePolicy,
               validatingAirline: fare.validatingCarrierCode || firstLeg.airlineCode,
-              _sabreSeqNumber: idx,
+              _sabreSeqNumber: `${groupIdx}-${idx}`,
             });
           }
         }
