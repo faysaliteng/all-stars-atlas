@@ -2158,23 +2158,22 @@ const FlightCard = ({
           </div>
 
           {/* Price section */}
-          <div className="flex flex-col items-end gap-1 p-4 sm:p-5 sm:w-56 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-44 lg:w-48 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+            <div className="flex items-center gap-1.5">
               {grossPrice === cheapest && price > 0 && (
-                <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
+                <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
               )}
-              {/* Reward Points Badge */}
               {price > 0 && (
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[9px] font-bold flex items-center gap-1">
-                  <span className="text-sm">🪙</span> +{calcRewardPoints(price).toLocaleString()}
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[8px] font-bold flex items-center gap-0.5 px-1.5 py-0">
+                  <span className="text-xs">🪙</span> +{calcRewardPoints(price).toLocaleString()}
                 </Badge>
               )}
             </div>
-            <p className="text-xl sm:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
+            <p className="text-base sm:text-lg lg:text-xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
             {discount > 0 && (
-              <p className="text-xs font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
             )}
-            <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
+            <p className="text-[9px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover open={showPriceBreakdown} onOpenChange={setShowPriceBreakdown}>
               <PopoverTrigger asChild>
                 <button className="text-[11px] text-accent font-semibold flex items-center gap-1 hover:underline mt-0.5">
