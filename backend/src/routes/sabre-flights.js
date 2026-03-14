@@ -1310,11 +1310,8 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       return raw.replace('Z', '').split('.')[0].replace(/[+-]\d{2}:?\d{2}$/, '');
     };
 
-    // Count non-infant passengers for NumberInParty (infants are lap, no seat)
-    const nonInfantCount = passengers.filter(p => {
-      const t = (p.type || p.passengerType || 'adult').toLowerCase();
-      return t !== 'infant' && t !== 'inf';
-    }).length;
+    // NumberInParty = total passengers including infants (per verified Sabre payload)
+    const totalPaxCount = passengers.length;
 
     segs.forEach((seg) => {
       const departureDateTime = toSabreDateTime(seg.departureTime);
