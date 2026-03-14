@@ -288,7 +288,7 @@ Express, mysql2, bcryptjs, jsonwebtoken, multer, uuid, cors, helmet, morgan, exp
 | [README.md](./README.md) | This file — project overview |
 | [CHANGELOG.md](./CHANGELOG.md) | Complete version history (v1.0–v4.0.0, 45+ releases) |
 | [ANALYTICS.md](./ANALYTICS.md) | Development analytics, timeline, codebase statistics |
-| [BUG_TRACKER.md](./BUG_TRACKER.md) | 37+ bugs with root cause analysis and recurring patterns |
+| [BUG_TRACKER.md](./BUG_TRACKER.md) | 44+ bugs with root cause analysis and recurring patterns |
 | [GDS_INTEGRATION_HISTORY.md](./GDS_INTEGRATION_HISTORY.md) | GDS provider integration timeline, issues, resolutions |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture (frontend, backend, GDS, design system) |
 | [SECURITY.md](./SECURITY.md) | Security measures, JWT flow, API keys, SSL, firewalls |
