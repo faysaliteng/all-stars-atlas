@@ -2029,7 +2029,7 @@ const FlightCard = ({
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Departure */}
               <div className="text-center shrink-0">
-                <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
+                <p className="text-xs sm:text-sm font-black tracking-tight flight-time">{departTime}</p>
                 <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{departDateStr}</p>
               </div>
 
