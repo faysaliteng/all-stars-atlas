@@ -838,7 +838,7 @@ function calcRewardPoints(price: number): number {
 function calcPayableFromGross(grossPrice: number, taxes: number, discountPct = 6.30, aitVatPct = 0.3): number {
   const baseFare = Math.max(0, Math.round(grossPrice - taxes));
   const discount = Math.round(baseFare * discountPct / 100);
-  const aitVat = Math.round((baseFare - discount) * aitVatPct / 100);
+  const aitVat = Math.round(baseFare * aitVatPct / 100);
   return baseFare - discount + taxes + aitVat;
 }
 
