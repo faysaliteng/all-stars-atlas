@@ -926,13 +926,21 @@ const RoundTripFlightCard = ({
   const [activeTab, setActiveTab] = useState("itinerary");
   const [showFareOptions, setShowFareOptions] = useState(false);
   const logo = getAirlineLogo(outbound.airlineCode);
-  const grossTotalPrice = (outbound.price || 0) + (returnFlight.price || 0);
-  const totalPrice = flightPayable(outbound) + flightPayable(returnFlight);
+  const grossTotalPrice = outbound.totalRoundTripPrice || ((outbound.price || 0) + (returnFlight.price || 0));
+  const totalPrice = outbound.totalRoundTripPrice
+    ? calcPayableFromGross(outbound.totalRoundTripPrice, (outbound.taxes || 0) + (returnFlight.taxes || 0), outbound.fareRules?.discount ?? 6.30, outbound.fareRules?.aitVat ?? 0.3)
+    : flightPayable(outbound) + flightPayable(returnFlight);
   const refundable = outbound.refundable ?? false;
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
 
   const roundTripFarePanelFlights = useMemo(() => {
+    // fareDetails from the outbound flight may contain FULL itinerary prices (from BFM)
+    // Use totalRoundTripPrice when available to avoid double-counting
+    const hasTotalPrice = !!outbound.totalRoundTripPrice;
+    const totalGross = outbound.totalRoundTripPrice || ((outbound.price || 0) + (returnFlight.price || 0));
+    const totalTaxes = (outbound.taxes || 0) + (returnFlight.taxes || 0);
+
     const outboundFareDetails = Array.isArray(outbound?.fareDetails) && outbound.fareDetails.length > 0
       ? outbound.fareDetails
       : [{
@@ -947,17 +955,23 @@ const RoundTripFlightCard = ({
         }];
 
     const combinedFareDetails = outboundFareDetails.map((fare: any) => {
-      const outboundGross = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
-      const outboundTaxes = fare?.taxes ?? outbound.taxes ?? 0;
-      const returnGross = returnFlight?.price ?? 0;
-      const returnTaxes = returnFlight?.taxes ?? 0;
+      // If fareDetails already has full-trip price (from grouped BFM), use it directly
+      // Otherwise sum outbound + return per-direction prices
+      const farePrice = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
+      const fareTaxes = fare?.taxes ?? outbound.taxes ?? 0;
+      
+      // Detect if fareDetail price is full-trip (close to totalRoundTripPrice) or per-direction
+      const isFareFullTrip = hasTotalPrice && farePrice > 0 && Math.abs(farePrice - outbound.totalRoundTripPrice) < Math.abs(farePrice - outbound.price);
+      
+      const combinedPrice = isFareFullTrip ? farePrice : (farePrice + (returnFlight?.price ?? 0));
+      const combinedTaxes = isFareFullTrip ? fareTaxes : (fareTaxes + (returnFlight?.taxes ?? 0));
 
       return {
         ...fare,
-        price: outboundGross + returnGross,
-        taxes: outboundTaxes + returnTaxes,
-        _outboundGrossPrice: outboundGross,
-        _outboundTaxes: outboundTaxes,
+        price: combinedPrice,
+        taxes: combinedTaxes,
+        _outboundGrossPrice: outbound.price || 0,
+        _outboundTaxes: outbound.taxes || 0,
         _outboundFareDetail: fare,
         _isRoundTripCombinedFare: true,
       };
@@ -965,8 +979,8 @@ const RoundTripFlightCard = ({
 
     return [{
       ...outbound,
-      price: (outbound?.price || 0) + (returnFlight?.price || 0),
-      taxes: (outbound?.taxes || 0) + (returnFlight?.taxes || 0),
+      price: totalGross,
+      taxes: totalTaxes,
       baggage: outbound?.baggage || returnFlight?.baggage,
       handBaggage: outbound?.handBaggage || returnFlight?.handBaggage,
       fareDetails: combinedFareDetails,
@@ -1861,6 +1875,15 @@ const MultiCityFlightCard = ({
 };
 
 
+/* ─── Round-trip pair payable — uses totalRoundTripPrice when available for accurate BFM pricing ─── */
+function pairPayable(p: { outbound: any; returnFlight: any }): number {
+  if (p.outbound.totalRoundTripPrice) {
+    const totalTaxes = (p.outbound.taxes || 0) + (p.returnFlight.taxes || 0);
+    return calcPayableFromGross(p.outbound.totalRoundTripPrice, totalTaxes, p.outbound.fareRules?.discount ?? 6.30, p.outbound.fareRules?.aitVat ?? 0.3);
+  }
+  return flightPayable(p.outbound) + flightPayable(p.returnFlight);
+}
+
 const FlightCard = ({
   flight, cheapest, isExpanded, onToggleExpand,
   selectionMode = false, isSelected = false, onSelect,
@@ -2730,57 +2753,58 @@ const FlightResults = () => {
   const outboundFlights = useMemo(() => flights.filter((f: any) => f.direction !== "return"), [flights]);
   const returnFlights = useMemo(() => flights.filter((f: any) => f.direction === "return"), [flights]);
 
-  // Round-trip: pair outbound+return — all valid combinations
-  // Sabre grouped format has independent indices per direction, so idx matching is unreliable.
-  // Instead: pair same-airline first, then cross-airline with cheapest counterpart.
+  // Round-trip: pair outbound+return from the SAME Sabre BFM itinerary using _itineraryId.
+  // This ensures each card represents one real bookable itinerary with accurate total pricing.
+  // Fallback: if no _itineraryId available, pair by _sabreSeqNumber or source+index matching.
   const roundTripPairs = useMemo(() => {
     if (!isRoundTrip || !hasDirections) return [];
     const pairs: { outbound: any; returnFlight: any; totalPrice: number }[] = [];
 
-    // Group outbound and return by airline
-    const outboundByAirline: Record<string, any[]> = {};
-    const returnByAirline: Record<string, any[]> = {};
+    // Group flights by _itineraryId for exact matching
+    const itineraryMap: Record<string, { outbound?: any; returnFlight?: any }> = {};
+    const unmatchedOutbound: any[] = [];
+    const unmatchedReturn: any[] = [];
+
     for (const f of outboundFlights) {
-      const code = f.airlineCode || 'XX';
-      if (!outboundByAirline[code]) outboundByAirline[code] = [];
-      outboundByAirline[code].push(f);
+      const itinId = f._itineraryId;
+      if (itinId) {
+        if (!itineraryMap[itinId]) itineraryMap[itinId] = {};
+        itineraryMap[itinId].outbound = f;
+      } else {
+        unmatchedOutbound.push(f);
+      }
     }
     for (const f of returnFlights) {
-      const code = f.airlineCode || 'XX';
-      if (!returnByAirline[code]) returnByAirline[code] = [];
-      returnByAirline[code].push(f);
+      const itinId = f._itineraryId;
+      if (itinId) {
+        if (!itineraryMap[itinId]) itineraryMap[itinId] = {};
+        itineraryMap[itinId].returnFlight = f;
+      } else {
+        unmatchedReturn.push(f);
+      }
     }
 
-    const allAirlines = new Set([...Object.keys(outboundByAirline), ...Object.keys(returnByAirline)]);
+    // Create pairs from matched itineraries (accurate BFM pricing)
+    for (const entry of Object.values(itineraryMap)) {
+      if (entry.outbound && entry.returnFlight) {
+        const total = entry.outbound.totalRoundTripPrice || ((entry.outbound.price || 0) + (entry.returnFlight.price || 0));
+        pairs.push({ outbound: entry.outbound, returnFlight: entry.returnFlight, totalPrice: total });
+      }
+    }
 
-    for (const airline of allAirlines) {
-      const obs = outboundByAirline[airline] || [];
-      const rets = returnByAirline[airline] || [];
-
-      if (obs.length > 0 && rets.length > 0) {
-        // Same-airline: pair each outbound with each return
-        for (const ob of obs) {
-          for (const ret of rets) {
-            // Use totalRoundTripPrice if both came from same itinerary, else sum
-            const total = ob.totalRoundTripPrice || ((ob.price || 0) + (ret.price || 0));
-            pairs.push({ outbound: ob, returnFlight: ret, totalPrice: total });
-          }
-        }
-      } else if (obs.length > 0) {
-        // Outbound-only airline: pair with cheapest return overall
-        const cheapestReturn = [...returnFlights].sort((a: any, b: any) => (a.price || 0) - (b.price || 0))[0];
-        if (cheapestReturn) {
-          for (const ob of obs) {
-            pairs.push({ outbound: ob, returnFlight: cheapestReturn, totalPrice: (ob.price || 0) + (cheapestReturn.price || 0) });
-          }
-        }
-      } else if (rets.length > 0) {
-        // Return-only airline: pair with cheapest outbound
-        const cheapestOutbound = [...outboundFlights].sort((a: any, b: any) => (a.price || 0) - (b.price || 0))[0];
-        if (cheapestOutbound) {
-          for (const ret of rets) {
-            pairs.push({ outbound: cheapestOutbound, returnFlight: ret, totalPrice: (cheapestOutbound.price || 0) + (ret.price || 0) });
-          }
+    // Fallback: pair unmatched flights by same airline (for non-Sabre providers)
+    if (unmatchedOutbound.length > 0 && unmatchedReturn.length > 0) {
+      for (const ob of unmatchedOutbound) {
+        // Find cheapest same-airline return
+        const sameAirlineReturn = unmatchedReturn
+          .filter(r => r.airlineCode === ob.airlineCode)
+          .sort((a: any, b: any) => (a.price || 0) - (b.price || 0))[0];
+        if (sameAirlineReturn) {
+          pairs.push({
+            outbound: ob,
+            returnFlight: sameAirlineReturn,
+            totalPrice: (ob.price || 0) + (sameAirlineReturn.price || 0),
+          });
         }
       }
     }
@@ -2792,7 +2816,7 @@ const FlightResults = () => {
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    });
+    }).sort((a, b) => a.totalPrice - b.totalPrice);
   }, [isRoundTrip, hasDirections, outboundFlights, returnFlights]);
 
   // Combine all multi-city flights for filter computation
@@ -2806,13 +2830,13 @@ const FlightResults = () => {
   // For round-trip mode, compute price bounds from pair totalPrices; for one-way from individual prices
   const maxPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.max(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
+      return Math.max(...roundTripPairs.map(p => pairPayable(p)));
     }
     return allFlightsForFilters.length > 0 ? Math.max(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 200000;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
   const minPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.min(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
+      return Math.min(...roundTripPairs.map(p => pairPayable(p)));
     }
     return allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 0;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
@@ -2863,7 +2887,7 @@ const FlightResults = () => {
         const code = p.outbound.airlineCode || '';
         const name = p.outbound.airline || code;
         if (!code) continue;
-        const payable = flightPayable(p.outbound) + flightPayable(p.returnFlight);
+        const payable = pairPayable(p);
         if (!map[code]) map[code] = { code, name, cheapest: payable, count: 0 };
         map[code].count++;
         if (payable < map[code].cheapest) map[code].cheapest = payable;
@@ -2887,7 +2911,7 @@ const FlightResults = () => {
   // Quick sort summaries — Cheapest, Fastest, Best from real data (payable prices)
   const quickSortSummary = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: flightPayable(p.outbound) + flightPayable(p.returnFlight) }));
+      const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: pairPayable(p) }));
       const cheapestPair = [...withPayable].sort((a, b) => a.payableTotal - b.payableTotal)[0];
       const fastestPair = [...withPayable].sort((a, b) => 
         ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - 

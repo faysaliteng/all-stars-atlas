@@ -474,6 +474,7 @@ function normalizeSabreResponse(raw, params) {
           source: 'sabre',
           direction,
           isRoundTrip: odOptions.length > 1,
+          _itineraryId: `sabre-itin-${idx}`,
           airline: getAirlineName(firstLeg.airlineCode),
           airlineCode: firstLeg.airlineCode,
           airlineLogo: null,
@@ -496,7 +497,7 @@ function normalizeSabreResponse(raw, params) {
           currency,
           refundable: isRefundable,
           baggage: checkedBaggage || null,
-          handBaggage: null, // No hardcoded fallback — only real API data
+          handBaggage: null,
           aircraft: firstLeg.aircraft,
           legs,
           fareDetails: fareInfos.map(fi => ({
@@ -1032,6 +1033,7 @@ function normalizeGroupedResponse(response, params) {
               source: 'sabre',
               direction,
               isRoundTrip: itinLegs.length > 1,
+              _itineraryId: `sabre-g-itin-${group.groupDescription?.legDescriptions?.[0]?.departureDate || 'x'}-${idx}`,
               airline: getAirlineName(firstLeg.airlineCode),
               airlineCode: firstLeg.airlineCode,
               airlineLogo: null,
