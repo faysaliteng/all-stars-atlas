@@ -1827,6 +1827,67 @@ const FlightBooking = () => {
       <PassportScanner open={passportScanOpen} onOpenChange={setPassportScanOpen} onConfirm={handlePassportScan} />
       <SearchPassengerModal open={searchPaxOpen} onOpenChange={setSearchPaxOpen} onSelect={handleSelectExistingPax} />
       <ShareItineraryModal open={shareOpen} onOpenChange={setShareOpen} bookingRef={bookingResult?.bookingRef} itinerarySummary={outboundFlight ? `${outboundFlight.origin} → ${outboundFlight.destination}, ${outboundFlight.airline}` : ""} />
+
+      {/* Session Expired Modal Overlay */}
+      <AnimatePresence>
+        {sessionExpired && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="bg-card border border-border rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center"
+            >
+              {/* Animated search illustration */}
+              <div className="mb-6 space-y-3">
+                <div className="bg-muted/50 rounded-xl p-4 inline-block">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
+                    <div className="w-3 h-3 rounded-full bg-primary/30" />
+                    <div className="flex-1" />
+                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                      <Search className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                  </div>
+                  <div className="space-y-2.5">
+                    {[
+                      { color: "bg-primary/20", barColor: "bg-primary/40", barWidth: "w-2/3" },
+                      { color: "bg-accent/20", barColor: "bg-accent/50", barWidth: "w-3/4" },
+                      { color: "bg-warning/20", barColor: "bg-warning/40", barWidth: "w-1/2" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-2.5">
+                        <div className={`w-6 h-6 rounded-md ${item.color}`} />
+                        <div className="flex-1 space-y-1">
+                          <div className={`h-2.5 rounded ${item.barColor} ${item.barWidth}`} />
+                          <div className="h-1.5 rounded bg-muted-foreground/10 w-full" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-xl font-black text-foreground mb-2">Your Session has Expired</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                To see the latest availability and prices, please start a new search.
+              </p>
+
+              <Button
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-xl px-8 h-12 text-base"
+                onClick={handleNewSearch}
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Start a new Search
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
