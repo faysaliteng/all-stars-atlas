@@ -30,6 +30,7 @@ import PassportScanner from "@/components/PassportScanner";
 import SearchPassengerModal from "@/components/SearchPassengerModal";
 import ShareItineraryModal from "@/components/ShareItineraryModal";
 import SeatMap from "@/components/flights/SeatMap";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ─── Bangladesh domestic airports ───
 const BD_AIRPORTS = ["DAC", "CXB", "CGP", "ZYL", "JSR", "RJH", "SPD", "BZL", "IRD", "TKR"];
