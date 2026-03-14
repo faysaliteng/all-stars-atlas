@@ -3165,7 +3165,7 @@ const FlightResults = () => {
       }
       return true;
     });
-    if (sortBy === "cheapest") filtered.sort((a, b) => a.totalPrice - b.totalPrice);
+    if (sortBy === "cheapest") filtered.sort((a, b) => pairPayable(a) - pairPayable(b));
     else if (sortBy === "best") {
       // Best = weighted balance of price, duration, and stops (like BDFare)
       // Normalize price and duration to comparable scales, then weight
