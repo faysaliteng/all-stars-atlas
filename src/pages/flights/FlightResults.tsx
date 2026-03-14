@@ -2951,7 +2951,22 @@ const FlightResults = () => {
                     return (
                       <button key={t.key} onClick={() => {
                         if (t.key === "multicity") {
-                          navigate("/");
+                          // Navigate to flights page with multi-city mode pre-selected via URL params
+                          const p = new URLSearchParams();
+                          p.set("tripType", "multicity");
+                          // Seed first segment from current route
+                          if (fromCode && toCode && departDate) {
+                            const segments = [
+                              { from: fromCode, to: toCode, date: departDate },
+                              { from: toCode, to: "", date: "" },
+                            ];
+                            p.set("segments", JSON.stringify(segments));
+                          }
+                          p.set("adults", adults);
+                          if (parseInt(children) > 0) p.set("children", children);
+                          if (parseInt(infants) > 0) p.set("infants", infants);
+                          if (cabinClass) p.set("cabin", cabinClass);
+                          navigate(`/flights?${p.toString()}`);
                           return;
                         }
                         const p = new URLSearchParams(searchParams);
