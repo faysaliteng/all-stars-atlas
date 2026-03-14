@@ -1658,20 +1658,20 @@ const FlightBooking = () => {
                         ) : (
                           <>
                             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent border border-accent/20 text-xs font-bold">
-                                <Plane className="w-3.5 h-3.5" />
+                              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/15 text-accent border border-accent/30 text-xs font-bold shadow-sm">
+                                <Plane className="w-4 h-4" />
                                 <span>Outbound: {outboundFlight?.origin} → {outboundFlight?.destination}</span>
-                                <span className="text-[10px] opacity-70 font-semibold">· {fmtDate(outboundFlight?.departureTime)}</span>
+                                <span className="flight-date text-xs ml-1">· {fmtDate(outboundFlight?.departureTime)}</span>
                               </div>
                               <span className="text-xs">{fmtTime(outboundFlight?.departureTime)} – {fmtTime(outboundFlight?.arrivalTime)}</span>
                               <span className="text-xs text-muted-foreground sm:ml-auto">{outboundFlight?.airline} {outboundFlight?.flightNumber}</span>
                             </div>
                             {isRoundTrip && returnFlight && (
                               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
-                                  <Plane className="w-3.5 h-3.5 rotate-180" />
+                                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30 text-xs font-bold shadow-sm">
+                                  <Plane className="w-4 h-4 rotate-180" />
                                   <span>Return: {returnFlight.origin} → {returnFlight.destination}</span>
-                                  <span className="text-[10px] opacity-70 font-semibold">· {fmtDate(returnFlight.departureTime)}</span>
+                                  <span className="flight-date text-xs ml-1">· {fmtDate(returnFlight.departureTime)}</span>
                                 </div>
                                 <span className="text-xs">{fmtTime(returnFlight.departureTime)} – {fmtTime(returnFlight.arrivalTime)}</span>
                                 <span className="text-xs text-muted-foreground sm:ml-auto">{returnFlight.airline} {returnFlight.flightNumber}</span>

@@ -214,14 +214,15 @@ const BookingConfirmation = () => {
                  <Plane className="w-5 h-5 text-primary" />}
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {isRoundTrip && (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 text-accent border border-accent/20 text-[10px] font-bold">
-                      <Plane className="w-3 h-3" />
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/15 text-accent border border-accent/30 text-[11px] font-bold shadow-sm">
+                      <Plane className="w-3.5 h-3.5" />
                       <span>Outbound</span>
                     </div>
                   )}
                   <p className="text-sm font-bold">{isRoundTrip ? `${booking.outbound?.origin || route.split(/[→⇄]/)[0]?.trim()} → ${booking.outbound?.destination || route.split(/[→⇄]/)[1]?.trim()}` : route}</p>
+                  {date && <span className="flight-date text-xs">· {date}</span>}
                 </div>
                 <p className="text-xs text-muted-foreground">{date}{flightNo !== "—" ? ` · ${flightNo}` : ""}{cabin !== "Economy" || serviceType === "Flight" ? ` · ${cabin}` : ""}</p>
               </div>
@@ -240,9 +241,9 @@ const BookingConfirmation = () => {
                   <Plane className="w-5 h-5 text-amber-600 rotate-180" />
                 </div>
                 <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold">
-                        <Plane className="w-3 h-3 rotate-180" />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30 text-[11px] font-bold shadow-sm">
+                        <Plane className="w-3.5 h-3.5 rotate-180" />
                         <span>Return</span>
                       </div>
                       <p className="text-sm font-bold">{booking.returnFlight.origin} → {booking.returnFlight.destination}</p>
