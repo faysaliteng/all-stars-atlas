@@ -504,6 +504,44 @@ const DashboardBookingDetail = () => {
             </div>
           )}
 
+          {/* Manage Booking Tab */}
+          {activeTab === "manage" && (
+            <div className="space-y-4">
+              <div className="border border-border rounded-xl p-4">
+                <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Flight Status</p>
+                <FlightStatusBadge
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                  date={(booking.departureTime || "").substring(0, 10)}
+                />
+              </div>
+              <div className="border border-border rounded-xl p-4">
+                <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Fare Rules & Conditions</p>
+                <FareRulesModal
+                  origin={booking.origin}
+                  destination={booking.destination}
+                  departureDate={(booking.departureTime || "").substring(0, 10)}
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                  trigger={
+                    <Button variant="outline" size="sm" className="text-xs gap-1">
+                      <FileText className="w-3.5 h-3.5" /> View Fare Rules
+                    </Button>
+                  }
+                />
+              </div>
+              <Separator />
+              <div className="border border-border rounded-xl p-4">
+                <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Booking Actions</p>
+                <BookingActions
+                  booking={booking}
+                  isAdmin={false}
+                  onActionComplete={() => refetch()}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <Separator />
           <div className="flex flex-wrap gap-3">
@@ -518,11 +556,6 @@ const DashboardBookingDetail = () => {
             {booking.pnr !== "—" && booking.type === "flight" && (
               <Button variant="outline" onClick={() => navigate(`/dashboard/bookings/${booking.rawId}/extras`)}>
                 <Package className="w-4 h-4 mr-1.5" /> Buy Extras
-              </Button>
-            )}
-            {(booking.status === "confirmed" || booking.status === "ticketed") && (
-              <Button variant="outline" onClick={() => toast({ title: "Request Submitted", description: "Reissue request submitted." })}>
-                <RotateCcw className="w-4 h-4 mr-1.5" /> Request Reissue
               </Button>
             )}
             {/* Cancel Booking — available for on_hold, confirmed, ticketed */}
