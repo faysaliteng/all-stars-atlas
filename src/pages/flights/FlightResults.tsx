@@ -1062,7 +1062,7 @@ const RoundTripFlightCard = ({
             const hb = outbound.handBaggage || "7KG";
             return hb ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                <Package className="w-3.5 h-3.5" /> {hb}
+                <Briefcase className="w-3.5 h-3.5" /> {hb}
               </span>
             ) : null;
           })()}
