@@ -2570,7 +2570,45 @@ const FlightResults = () => {
     try { return JSON.parse(segmentsParam); } catch { return []; }
   }, [isMultiCity, segmentsParam]);
 
-  const [multiCityResults, setMultiCityResults] = useState<Record<number, any[]>>({});
+  // Editable multi-city segments for inline editing
+  const [editMcSegments, setEditMcSegments] = useState<{ from: string; to: string; date: string }[]>([]);
+  useEffect(() => {
+    if (multiCitySegments.length > 0) setEditMcSegments(JSON.parse(JSON.stringify(multiCitySegments)));
+  }, [multiCitySegments]);
+
+  const updateMcSegment = (idx: number, field: "from" | "to" | "date", value: string) => {
+    setEditMcSegments(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: value };
+      // Auto-chain: when setting "to" on segment i, set "from" on segment i+1
+      if (field === "to" && idx < next.length - 1) {
+        next[idx + 1] = { ...next[idx + 1], from: value };
+      }
+      return next;
+    });
+  };
+  const addMcSegment = () => {
+    if (editMcSegments.length >= 5) return;
+    const lastTo = editMcSegments[editMcSegments.length - 1]?.to || "";
+    setEditMcSegments(prev => [...prev, { from: lastTo, to: "", date: "" }]);
+  };
+  const removeMcSegment = (idx: number) => {
+    if (editMcSegments.length <= 2) return;
+    setEditMcSegments(prev => prev.filter((_, i) => i !== idx));
+  };
+  const applyMcSearch = () => {
+    const valid = editMcSegments.filter(s => s.from && s.to && s.date);
+    if (valid.length < 2) return;
+    const p = new URLSearchParams({
+      tripType: "multicity",
+      adults: String(editAdults), children: String(editChildren > 0 ? editChildren : 0), infants: String(editInfants > 0 ? editInfants : 0),
+      cabin: editCabin || cabinClass || "economy",
+      segments: JSON.stringify(valid),
+    });
+    navigate(`/flights?${p.toString()}`);
+    setShowMultiCityEdit(false);
+  };
+
   const [multiCityLoading, setMultiCityLoading] = useState(false);
   const [multiCityError, setMultiCityError] = useState<string | null>(null);
   const [selectedMultiCityFlights, setSelectedMultiCityFlights] = useState<Record<number, any>>({});
