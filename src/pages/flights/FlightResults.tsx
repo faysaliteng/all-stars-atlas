@@ -812,6 +812,9 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
   const nextDay = isNextDay(flight.departureTime, flight.arrivalTime);
   const fromCode = flight.origin || "";
   const toCode = flight.destination || "";
+  const isReturn = label === "Return";
+  const legs = flight.legs || [];
+  const stopCodes = flight.stopCodes || [];
 
   return (
     <div className="flex-1 min-w-0">
@@ -828,7 +831,39 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
 
         {/* Duration bar */}
         <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[40px]">
-          <AnimatedFlightArc compact direction="departure" />
+          {stops > 0 && legs.length > 1 ? (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full cursor-pointer">
+                    <AnimatedFlightArc compact direction={isReturn ? "return" : "departure"} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs p-3 space-y-2">
+                  <p className="font-semibold text-xs mb-1.5">Layover Details</p>
+                  {legs.map((leg: any, li: number) => {
+                    if (li === 0) return null;
+                    const prevLeg = legs[li - 1];
+                    const prevArr = prevLeg?.arrivalTime ? new Date(prevLeg.arrivalTime).getTime() : 0;
+                    const curDep = leg?.departureTime ? new Date(leg.departureTime).getTime() : 0;
+                    const layoverMins = prevArr && curDep ? Math.round((curDep - prevArr) / 60000) : 0;
+                    const layoverStr = layoverMins > 0 ? fmtDurationMins(layoverMins) : "";
+                    const stopCity = prevLeg?.destination || stopCodes[li - 1] || "";
+                    const stopName = stopCity ? getAirportCity(stopCity) : "";
+                    return (
+                      <div key={li} className="flex items-center gap-2 text-xs">
+                        <div className="w-2 h-2 rounded-full bg-warning shrink-0" />
+                        <span className="font-medium">{stopCity}{stopName && stopName !== stopCity ? ` (${stopName})` : ""}</span>
+                        {layoverStr && <span className="text-muted-foreground">— {layoverStr} layover</span>}
+                      </div>
+                    );
+                  })}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <AnimatedFlightArc compact direction={isReturn ? "return" : "departure"} />
+          )}
           <p className="text-[9px] sm:text-[10px] text-muted-foreground">{duration}</p>
           <p className={`text-[9px] sm:text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
         </div>
