@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-14 (v4.1.1 — 100% Production Probe Verified: 10/10 Tests Passed)
+> Last updated: 2026-03-14 (v4.1.2 — Sabre syntax crash hotfix)
 
 ---
 
