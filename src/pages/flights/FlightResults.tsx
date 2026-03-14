@@ -1826,7 +1826,7 @@ const FlightCard = ({
             </div>
             <p className="text-xl sm:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
             {discount > 0 && (
-              <p className="text-[10px] text-muted-foreground line-through">BDT {grossPrice.toLocaleString()}</p>
+              <p className="text-xs font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
             )}
             <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover open={showPriceBreakdown} onOpenChange={setShowPriceBreakdown}>
