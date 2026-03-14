@@ -1280,7 +1280,7 @@ const RoundTripFlightCard = ({
             const obBaggage = outbound.baggage || null;
             const retBaggage = returnFlight.baggage || null;
 
-            // Build fare rows — derive baseFare as (price - taxes) to ensure BDT consistency
+            // Build fare rows from real API per-pax pricing
             const obPrice = outbound.price ?? 0;
             const obTax = outbound.taxes ?? 0;
             const obBase = Math.max(0, Math.round(obPrice - obTax));
@@ -1289,30 +1289,16 @@ const RoundTripFlightCard = ({
             const retBase = Math.max(0, Math.round(retPrice - retTax));
             const combinedBase = obBase + retBase;
             const combinedTax = obTax + retTax;
-            const combinedPrice = totalPrice;
 
             const DISCOUNT_PCT = outbound.fareRules?.discount ?? 6.30;
             const AIT_VAT_PCT = outbound.fareRules?.aitVat ?? 0.3;
 
-            const fareRows: { paxType: string; baseFare: number; tax: number; other: number; discount: number; aitVat: number; count: number; amount: number }[] = [];
-            if (paxAdults > 0) {
-              const disc = Math.round(combinedBase * DISCOUNT_PCT / 100);
-              const aitVat = Math.round((combinedBase - disc) * AIT_VAT_PCT / 100);
-              fareRows.push({ paxType: "Adult", baseFare: combinedBase, tax: combinedTax, other: 0, discount: disc, aitVat, count: paxAdults, amount: (combinedBase - disc + combinedTax + aitVat) * paxAdults });
-            }
-            if (paxChildren > 0) {
-              const childBase = Math.round(combinedBase * 0.75);
-              const disc = Math.round(childBase * DISCOUNT_PCT / 100);
-              const aitVat = Math.round((childBase - disc) * AIT_VAT_PCT / 100);
-              fareRows.push({ paxType: "Child", baseFare: childBase, tax: combinedTax, other: 0, discount: disc, aitVat, count: paxChildren, amount: (childBase - disc + combinedTax + aitVat) * paxChildren });
-            }
-            if (paxInfants > 0) {
-              const infantBase = Math.round(combinedBase * 0.1);
-              const infantTax = Math.round(combinedTax * 0.5);
-              const disc = Math.round(infantBase * DISCOUNT_PCT / 100);
-              const aitVat = Math.round((infantBase - disc) * AIT_VAT_PCT / 100);
-              fareRows.push({ paxType: "Infant", baseFare: infantBase, tax: infantTax, other: 0, discount: disc, aitVat, count: paxInfants, amount: (infantBase - disc + infantTax + aitVat) * paxInfants });
-            }
+            const fareRows = buildFareRows(
+              outbound.paxPricing, combinedBase, combinedTax,
+              paxAdults, paxChildren, paxInfants,
+              DISCOUNT_PCT, AIT_VAT_PCT,
+              returnFlight.paxPricing
+            );
             const totalPayable = fareRows.reduce((s, r) => s + r.amount, 0);
 
             return (
