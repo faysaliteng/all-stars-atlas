@@ -1913,9 +1913,9 @@ async function revalidatePrice({ flights, adults = 1, children = 0, infants = 0,
     });
 
     const paxTypes = [];
-    if (adults > 0) paxTypes.push({ Code: 'ADT', Quantity: String(adults) });
-    if (children > 0) paxTypes.push({ Code: 'CNN', Quantity: String(children) });
-    if (infants > 0) paxTypes.push({ Code: 'INF', Quantity: String(infants) });
+    if (adults > 0) paxTypes.push({ Code: 'ADT', Quantity: parseInt(adults, 10) });
+    if (children > 0) paxTypes.push({ Code: 'CNN', Quantity: parseInt(children, 10) });
+    if (infants > 0) paxTypes.push({ Code: 'INF', Quantity: parseInt(infants, 10) });
 
     const body = {
       OTA_AirLowFareSearchRQ: {
