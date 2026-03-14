@@ -971,10 +971,11 @@ router.get('/search', async (req, res) => {
     for (const f of flights) {
       const legsKey = (f.legs || []).map(l => `${l.flightNumber || ''}@${l.departureTime || ''}`).join('|');
       const stopKey = (f.stopCodes || []).join(',');
-      const baseKey = `${f.flightNumber}-${f.departureTime}-${f.arrivalTime || ''}-${f.destination}-${f.stops ?? 0}-${stopKey}-${f.direction || ''}-${legsKey}`;
-      const key = (baseKey === '---------' || !f.flightNumber)
-        ? `unkeyed-${f.id || `${f.source || 'src'}-${Math.random().toString(36).slice(2, 10)}`}`
-        : baseKey;
+      const baseKey = `${f.source || ''}-${f.airlineCode || ''}-${f._itineraryId || ''}-${f.flightNumber || ''}-${f.origin || ''}-${f.destination || ''}-${f.departureTime || ''}-${f.arrivalTime || ''}-${f.stops ?? 0}-${stopKey}-${f.direction || ''}-${legsKey}`;
+      const hasCoreSchedule = Boolean(f.flightNumber || legsKey) && Boolean(f.departureTime || f.arrivalTime);
+      const key = hasCoreSchedule
+        ? baseKey
+        : `unkeyed-${f.id || `${f.source || 'src'}-${Math.random().toString(36).slice(2, 10)}`}`;
 
       if (!itineraryMap.has(key)) {
         const clone = { ...f, fareDetails: [] };
