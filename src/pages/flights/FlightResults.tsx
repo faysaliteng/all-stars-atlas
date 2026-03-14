@@ -896,9 +896,10 @@ function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
 }
 
 /* ─── Shortcut: payable from a flight object ─── */
+/* Shows the raw API price directly — no agency discount/markup adjustments */
 function flightPayable(f: any): number {
   const apiFare = getApiFareTotals(f);
-  return calcPayableFromGross(apiFare.grossPrice, apiFare.taxes, f?.fareRules?.discount ?? 6.30, f?.fareRules?.aitVat ?? 0.3);
+  return apiFare.grossPrice;
 }
 
 /* ─── Build fare rows from real API per-pax pricing (no fabricated multipliers) ─── */
