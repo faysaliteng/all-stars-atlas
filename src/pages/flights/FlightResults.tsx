@@ -2836,7 +2836,7 @@ const FlightResults = () => {
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
   const minPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.min(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
+      return Math.min(...roundTripPairs.map(p => pairPayable(p)));
     }
     return allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 0;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
