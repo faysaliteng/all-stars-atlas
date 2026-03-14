@@ -28,6 +28,7 @@ import { AIRPORTS } from "@/lib/airports";
 import { api } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { format } from "date-fns";
+import { formatApiDate, formatApiShortDate, formatApiTime, getApiLocalHour, isApiNextDay } from "@/lib/flight-time";
 
 /* ─── Airline logo — dynamic CDN, no hardcoded map ─── */
 function getAirlineLogo(code?: string): string | null {
@@ -82,45 +83,23 @@ function getAirlineFareParams(
   return { discountPct: markupSettings.discount, aitVatPct: markupSettings.aitVat };
 }
 
-/**
- * Strip timezone offset from ISO datetime so Date() treats it as local airport time.
- * Sabre returns e.g. "2026-03-31T13:55:00+04:00" — we want to display 13:55 regardless
- * of the user's browser timezone.
- */
-function stripTZ(datetime: string): string {
-  // Remove trailing timezone offset (+HH:MM, -HH:MM, Z)
-  return datetime.replace(/([+-]\d{2}:\d{2}|Z)$/, '');
-}
-
-/** Extract GMT offset string from ISO datetime, e.g. "+04:00" → "GMT+4" */
-function extractGMT(datetime?: string): string {
-  if (!datetime) return "";
-  const m = datetime.match(/([+-])(\d{2}):(\d{2})$/);
-  if (!m) return "";
-  const sign = m[1];
-  const hours = parseInt(m[2], 10);
-  const mins = parseInt(m[3], 10);
-  return mins > 0 ? `GMT${sign}${hours}:${m[3]}` : `GMT${sign}${hours}`;
-}
-
 function formatTime(datetime?: string): string {
   if (!datetime) return "--:--";
-  try { const d = new Date(stripTZ(datetime)); return isNaN(d.getTime()) ? datetime : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return datetime; }
+  return formatApiTime(datetime, { withGMT: true });
 }
 
 function formatDate(datetime?: string): string {
   if (!datetime) return "";
-  try { const d = new Date(stripTZ(datetime)); return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "2-digit" }); } catch { return ""; }
+  return formatApiDate(datetime, { year: "2-digit" });
 }
 
 function formatShortDate(datetime?: string): string {
   if (!datetime) return "";
-  try { const d = new Date(stripTZ(datetime)); return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", weekday: "short" }); } catch { return ""; }
+  return formatApiShortDate(datetime);
 }
 
 function isNextDay(depart?: string, arrive?: string): boolean {
-  if (!depart || !arrive) return false;
-  return new Date(stripTZ(arrive)).getDate() !== new Date(stripTZ(depart)).getDate();
+  return isApiNextDay(depart, arrive);
 }
 
 function getBestFareDetail(flight: any) {
@@ -278,8 +257,8 @@ const FilterPanel = ({
     const nonStop = flights.filter((f: any) => (f.stops ?? 0) === 0);
     const oneStop = flights.filter((f: any) => (f.stops ?? 0) === 1);
     const multiStop = flights.filter((f: any) => (f.stops ?? 0) > 1);
-    const earlyMorning = flights.filter((f: any) => { if (!f.departureTime) return false; return new Date(f.departureTime).getHours() < 6; });
-    const lateDep = flights.filter((f: any) => { if (!f.departureTime) return false; return new Date(f.departureTime).getHours() >= 18; });
+    const earlyMorning = flights.filter((f: any) => { const h = getApiLocalHour(f.departureTime); return h !== null && h < 6; });
+    const lateDep = flights.filter((f: any) => { const h = getApiLocalHour(f.departureTime); return h !== null && h >= 18; });
     const refundable = flights.filter((f: any) => f.refundable === true);
     if (nonStop.length > 0) stats.push({ key: 'nonstop', label: 'Non Stop', count: nonStop.length, cheapest: cheapestOf(nonStop) });
     if (oneStop.length > 0) stats.push({ key: '1stop', label: '1 Stop', count: oneStop.length, cheapest: cheapestOf(oneStop) });
@@ -310,8 +289,8 @@ const FilterPanel = ({
     ];
     const depart: any[] = [], arrive: any[] = [];
     for (const slot of slots) {
-      const df = flights.filter((f: any) => { if (!f.departureTime) return false; const h = new Date(f.departureTime).getHours(); return h >= slot.minH && h < slot.maxH; });
-      const af = flights.filter((f: any) => { if (!f.arrivalTime) return false; const h = new Date(f.arrivalTime).getHours(); return h >= slot.minH && h < slot.maxH; });
+      const df = flights.filter((f: any) => { const h = getApiLocalHour(f.departureTime); return h !== null && h >= slot.minH && h < slot.maxH; });
+      const af = flights.filter((f: any) => { const h = getApiLocalHour(f.arrivalTime); return h !== null && h >= slot.minH && h < slot.maxH; });
       if (df.length > 0) depart.push({ ...slot, count: df.length, cheapest: Math.min(...df.map((f: any) => f.price || Infinity)) });
       if (af.length > 0) arrive.push({ ...slot, count: af.length, cheapest: Math.min(...af.map((f: any) => f.price || Infinity)) });
     }
@@ -887,7 +866,6 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         <div className="text-center shrink-0">
           <p className="text-[10px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
           <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
-          {extractGMT(flight.departureTime) && <p className="text-[8px] text-muted-foreground/60">{extractGMT(flight.departureTime)}</p>}
         </div>
 
         {/* Duration bar */}
@@ -936,7 +914,6 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
             {arriveTime}
             {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
-          {extractGMT(flight.arrivalTime) && <p className="text-[8px] text-muted-foreground/60">{extractGMT(flight.arrivalTime)}</p>}
         </div>
       </div>
     </div>

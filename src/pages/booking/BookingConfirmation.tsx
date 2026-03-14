@@ -6,6 +6,7 @@ import { CheckCircle2, Download, Plane, ArrowRight, Printer, Mail, Home, Car, Bu
 import { Link, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { generateTicketPDF } from "@/lib/pdf-generator";
+import { formatApiTime } from "@/lib/flight-time";
 
 const BookingConfirmation = () => {
   const { toast } = useToast();
@@ -256,9 +257,9 @@ const BookingConfirmation = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold">
-                    {booking.returnFlight.departureTime ? new Date(booking.returnFlight.departureTime.replace(/([+-]\d{2}:\d{2}|Z)$/, '')).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }) : "—"}
+                    {booking.returnFlight.departureTime ? formatApiTime(booking.returnFlight.departureTime, { withGMT: true }) : "—"}
                     {" - "}
-                    {booking.returnFlight.arrivalTime ? new Date(booking.returnFlight.arrivalTime.replace(/([+-]\d{2}:\d{2}|Z)$/, '')).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }) : "—"}
+                    {booking.returnFlight.arrivalTime ? formatApiTime(booking.returnFlight.arrivalTime, { withGMT: true }) : "—"}
                   </p>
                   <p className="text-xs text-muted-foreground">{booking.returnFlight.stops === 0 ? "Non-stop" : `${booking.returnFlight.stops} Stop`}</p>
                 </div>

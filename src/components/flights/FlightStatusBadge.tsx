@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plane, Clock, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
+import { formatApiTime } from "@/lib/flight-time";
 
 interface FlightStatusProps {
   airlineCode: string;
@@ -45,9 +46,7 @@ const statusConfig: Record<string, { icon: typeof Plane; color: string; label: s
 
 function fmtDT(dt?: string | null) {
   if (!dt) return "—";
-  try {
-    return new Date(dt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-  } catch { return dt; }
+  return formatApiTime(dt, { withGMT: true });
 }
 
 const FlightStatusBadge = ({ airlineCode, flightNumber, date, compact = false }: FlightStatusProps) => {

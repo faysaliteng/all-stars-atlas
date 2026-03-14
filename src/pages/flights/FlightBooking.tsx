@@ -28,6 +28,7 @@ import { api } from "@/lib/api";
 import type { BookingFormField } from "@/lib/cms-defaults";
 import PassportScanner from "@/components/PassportScanner";
 import SearchPassengerModal from "@/components/SearchPassengerModal";
+import { formatApiDate, formatApiTime } from "@/lib/flight-time";
 import ShareItineraryModal from "@/components/ShareItineraryModal";
 import SeatMap from "@/components/flights/SeatMap";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,9 +52,11 @@ function resolveDeadlineInfo(flight: any): { deadline: Date; label: string } | n
   if (isNaN(tl.getTime()) || tl <= new Date()) return null;
   const now = new Date();
   const hoursLeft = Math.max(1, Math.floor((tl.getTime() - now.getTime()) / (1000 * 60 * 60)));
+  const deadlineDateLabel = formatApiDate(flight.timeLimit, { year: "numeric" });
+  const deadlineTimeLabel = formatApiTime(flight.timeLimit, { withGMT: true });
   const label = hoursLeft > 24
-    ? `Pay within ${Math.ceil(hoursLeft / 24)} days (by ${tl.toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })})`
-    : `Pay within ${hoursLeft} hours (by ${tl.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })})`;
+    ? `Pay within ${Math.ceil(hoursLeft / 24)} days (by ${deadlineDateLabel} ${deadlineTimeLabel})`
+    : `Pay within ${hoursLeft} hours (by ${deadlineTimeLabel})`;
   return { deadline: tl, label };
 }
 
@@ -61,9 +64,8 @@ function getAirlineLogo(code?: string): string | null {
   if (!code) return null;
   return `https://images.kiwi.com/airlines/64/${code}.png`;
 }
-function stripTZ(dt: string): string { return dt.replace(/([+-]\d{2}:\d{2}|Z)$/, ''); }
-function fmtTime(dt?: string) { if (!dt) return "—"; try { const d = new Date(stripTZ(dt)); return isNaN(d.getTime()) ? dt : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return dt; } }
-function fmtDate(dt?: string) { if (!dt) return "—"; try { const d = new Date(stripTZ(dt)); return isNaN(d.getTime()) ? dt : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); } catch { return dt; } }
+function fmtTime(dt?: string) { return dt ? formatApiTime(dt, { withGMT: true }) : "—"; }
+function fmtDate(dt?: string) { return dt ? formatApiDate(dt, { year: "numeric" }) : "—"; }
 
 /* ─── No hardcoded defaults — extras only from real API data ─── */
 
