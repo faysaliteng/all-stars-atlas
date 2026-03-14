@@ -268,65 +268,48 @@ async function searchFlights(params) {
     }
   }
 
-  // Bargain Finder Max request body — primary (rich) + relaxed fallback profile
-  const buildBfmRequestBody = ({ relaxed = false } = {}) => {
-    const travelPreferences = {
-      TPA_Extensions: {
-        NumTrips: { Number: relaxed ? 200 : 250 },
-        DataSources: {
-          NDC: 'Enable',
-          ATPCO: 'Enable',
-          LCC: 'Enable',
-        },
-        DiversityParameters: {
-          Weightings: {
-            PriceWeight: relaxed ? 8 : 6,
-            TravelTimeWeight: relaxed ? 2 : 4,
-          },
-        },
+  // Bargain Finder Max request body — proven working payload for PCC J4YL
+  // FlexibleFares/MaxStopsQuantity/LongConnectTime cause NAV on this PCC — keep it simple
+  const buildBfmRequestBody = () => ({
+    OTA_AirLowFareSearchRQ: {
+      Version: '5',
+      POS: {
+        Source: [{
+          PseudoCityCode: config.pcc || 'F9CE',
+          RequestorID: { Type: '1', ID: '1', CompanyName: { Code: 'TN' } },
+        }],
       },
-      CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
-    };
-
-    if (!relaxed) {
-      travelPreferences.MaxStopsQuantity = 2;
-      travelPreferences.TPA_Extensions.LongConnectTime = { Enable: true };
-      travelPreferences.TPA_Extensions.ExemptAllTaxes = { Value: false };
-      travelPreferences.TPA_Extensions.ExemptAllTaxesAndFees = { Value: false };
-      travelPreferences.TPA_Extensions.FlexibleFares = {
-        FareParameters: [
-          { Cabin: { Type: sabreCabin }, PassengerTypeQuantity: passengers.map((p) => ({ ...p })) },
-          { Cabin: { Type: sabreCabin }, PublicFare: { Ind: true }, PassengerTypeQuantity: passengers.map((p) => ({ ...p })) },
-          { Cabin: { Type: sabreCabin }, PrivateFare: { Ind: true }, PassengerTypeQuantity: passengers.map((p) => ({ ...p })) },
-        ],
-      };
-    }
-
-    return {
-      OTA_AirLowFareSearchRQ: {
-        Version: '5',
-        POS: {
-          Source: [{
-            PseudoCityCode: config.pcc || 'F9CE',
-            RequestorID: { Type: '1', ID: '1', CompanyName: { Code: 'TN' } },
-          }],
-        },
-        OriginDestinationInformation: originDest,
-        TravelPreferences: travelPreferences,
+      OriginDestinationInformation: originDest,
+      TravelPreferences: {
         TPA_Extensions: {
-          IntelliSellTransaction: {
-            RequestType: { Name: `${relaxed ? 200 : 250}ITINS` },
+          NumTrips: { Number: 200 },
+          DataSources: {
+            NDC: 'Enable',
+            ATPCO: 'Enable',
+            LCC: 'Enable',
+          },
+          DiversityParameters: {
+            Weightings: {
+              PriceWeight: 8,
+              TravelTimeWeight: 2,
+            },
           },
         },
-        TravelerInfoSummary: {
-          SeatsRequested: [parseInt(adults) + parseInt(children)],
-          AirTravelerAvail: [{
-            PassengerTypeQuantity: passengers,
-          }],
+        CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
+      },
+      TPA_Extensions: {
+        IntelliSellTransaction: {
+          RequestType: { Name: '200ITINS' },
         },
       },
-    };
-  };
+      TravelerInfoSummary: {
+        SeatsRequested: [parseInt(adults) + parseInt(children)],
+        AirTravelerAvail: [{
+          PassengerTypeQuantity: passengers,
+        }],
+      },
+    },
+  });
 
   const decodeCompressedResponse = (raw) => {
     if (!raw?.compressedResponse || typeof raw.compressedResponse !== 'string') return raw;
