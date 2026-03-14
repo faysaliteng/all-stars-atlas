@@ -903,6 +903,49 @@ const RoundTripFlightCard = ({
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
 
+  const roundTripFarePanelFlights = useMemo(() => {
+    const outboundFareDetails = Array.isArray(outbound?.fareDetails) && outbound.fareDetails.length > 0
+      ? outbound.fareDetails
+      : [{
+          brandName: "Round Trip Package",
+          bookingClass: outbound.bookingClass,
+          cabinClass: outbound.cabinClass,
+          handBaggage: outbound.handBaggage,
+          baggage: outbound.baggage,
+          refundable: outbound.refundable,
+          price: outbound.price || 0,
+          taxes: outbound.taxes || 0,
+        }];
+
+    const combinedFareDetails = outboundFareDetails.map((fare: any) => {
+      const outboundGross = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
+      const outboundTaxes = fare?.taxes ?? outbound.taxes ?? 0;
+      const returnGross = returnFlight?.price ?? 0;
+      const returnTaxes = returnFlight?.taxes ?? 0;
+
+      return {
+        ...fare,
+        price: outboundGross + returnGross,
+        taxes: outboundTaxes + returnTaxes,
+        _outboundGrossPrice: outboundGross,
+        _outboundTaxes: outboundTaxes,
+        _outboundFareDetail: fare,
+        _isRoundTripCombinedFare: true,
+      };
+    });
+
+    return [{
+      ...outbound,
+      price: (outbound?.price || 0) + (returnFlight?.price || 0),
+      taxes: (outbound?.taxes || 0) + (returnFlight?.taxes || 0),
+      baggage: outbound?.baggage || returnFlight?.baggage,
+      handBaggage: outbound?.handBaggage || returnFlight?.handBaggage,
+      fareDetails: combinedFareDetails,
+      _baseOutboundFlight: outbound,
+      _baseReturnFlight: returnFlight,
+    }];
+  }, [outbound, returnFlight]);
+
   return (
     <Card className={`overflow-hidden transition-all border ${isExpanded ? "border-accent/30 shadow-md" : "border-border hover:shadow-md"}`}>
       <CardContent className="p-0">
