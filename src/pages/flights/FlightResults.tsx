@@ -971,58 +971,62 @@ const RoundTripFlightCard = ({
         </div>
 
         {/* Baggage + Seats + Class info row — BDFare style (matches one-way FlightCard) */}
-        <div className="flex items-center flex-wrap gap-3 px-3 sm:px-5 py-2 border-t border-border/30">
+        <div className="flex items-center flex-wrap gap-2 px-3 sm:px-5 py-2 border-t border-border/30">
           {(() => {
             const hb = outbound.handBaggage || "7KG";
             return hb ? (
-              <span className="flex items-center gap-1.5 text-xs text-accent font-medium">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
                 <Package className="w-3.5 h-3.5" /> {hb}
               </span>
             ) : null;
           })()}
           {outbound.baggage && (
-            <span className="flex items-center gap-1.5 text-xs text-accent font-medium">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
               <Luggage className="w-3.5 h-3.5" /> {outbound.baggage}
             </span>
           )}
           {(() => {
             const seats = getDisplayAvailableSeats(outbound);
             return seats !== null ? (
-              <span className={`flex items-center gap-1.5 text-xs font-bold ${seats <= 4 ? "text-destructive" : seats <= 9 ? "text-orange-500" : "text-muted-foreground"}`}>
-                <Users className="w-3.5 h-3.5" /> {seats} Seat{seats !== 1 ? "s" : ""} Left
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+                seats <= 4
+                  ? "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
+                  : seats <= 9
+                    ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200/60 dark:border-orange-800/40 text-orange-600 dark:text-orange-400"
+                    : "bg-accent/5 border-accent/20 text-accent"
+              }`}>
+                <Armchair className="w-3.5 h-3.5" /> {seats} Seats Left
               </span>
             ) : null;
           })()}
           {(() => {
             const cabin = outbound.cabinClass || "";
             const bClass = getDisplayBookingClass(outbound);
-            const cabinDisplay = cabin && bClass ? `${cabin} - ${bClass}` : cabin || bClass || "";
-            return cabinDisplay ? <span className="text-xs text-muted-foreground font-medium">{cabinDisplay}</span> : null;
+            const cabinDisplay = cabin && bClass ? `${cabin}-${bClass} Class` : cabin || bClass || "";
+            return cabinDisplay ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-[11px] font-semibold text-muted-foreground">
+                <Plane className="w-3.5 h-3.5" /> {cabinDisplay}
+              </span>
+            ) : null;
           })()}
-          {/* Fare feature badges — same as one-way */}
           {(() => {
             const best = getBestFareDetail(outbound);
-            if (!best) return null;
+            const isRefundable = best?.refundable ?? outbound.refundable ?? false;
             return (
-              <div className="flex items-center gap-2 ml-auto">
-                {best.refundable && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">Refundable</Badge>
-                )}
-                {best.mealIncluded && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">🍽 Meal</Badge>
-                )}
-                {best.seatSelection && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">💺 Seat</Badge>
-                )}
-                {best.cancellationAllowed && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Cancellable</Badge>
-                )}
-                {best.rebookingAllowed && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Rebookable</Badge>
-                )}
-              </div>
+              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+                isRefundable
+                  ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
+                  : "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
+              }`}>
+                {isRefundable ? "Refundable" : "Non-Refundable"}
+              </span>
             );
           })()}
+          {(outbound.stops ?? 0) === 0 && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+              Direct
+            </span>
+          )}
         </div>
 
         {/* Info bar */}
