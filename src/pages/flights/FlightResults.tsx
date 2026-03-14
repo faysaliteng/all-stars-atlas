@@ -847,6 +847,86 @@ function flightPayable(f: any): number {
   return calcPayableFromGross(f.price || 0, f.taxes || 0, f.fareRules?.discount ?? 6.30, f.fareRules?.aitVat ?? 0.3);
 }
 
+/* ─── Build fare rows from real API per-pax pricing (no fabricated multipliers) ─── */
+function buildFareRows(
+  paxPricing: any[] | undefined,
+  baseFare: number, taxes: number,
+  paxAdults: number, paxChildren: number, paxInfants: number,
+  discountPct: number, aitVatPct: number,
+  /** For round-trip combined view, pass outbound + return paxPricing arrays */
+  paxPricing2?: any[]
+): { paxType: string; baseFare: number; tax: number; other: number; discount: number; aitVat: number; count: number; amount: number }[] {
+  const fareRows: { paxType: string; baseFare: number; tax: number; other: number; discount: number; aitVat: number; count: number; amount: number }[] = [];
+
+  // Merge two paxPricing arrays (outbound + return) by summing per-type
+  const mergedPax = mergePaxPricingArrays(paxPricing, paxPricing2);
+
+  if (mergedPax && mergedPax.length > 0) {
+    // Use real API per-pax-type pricing
+    for (const pp of mergedPax) {
+      const ppBase = pp.baseFare || 0;
+      const ppTax = pp.taxes || 0;
+      const disc = Math.round(ppBase * discountPct / 100);
+      const aitVat = Math.round((ppBase - disc) * aitVatPct / 100);
+      const count = pp.count || 1;
+      fareRows.push({
+        paxType: pp.label || pp.type || 'Adult',
+        baseFare: ppBase,
+        tax: ppTax,
+        other: 0,
+        discount: disc,
+        aitVat,
+        count,
+        amount: (ppBase - disc + ppTax + aitVat) * count,
+      });
+    }
+  } else {
+    // Fallback: only adult pricing available from API (no per-pax breakdown)
+    if (paxAdults > 0) {
+      const disc = Math.round(baseFare * discountPct / 100);
+      const aitVat = Math.round((baseFare - disc) * aitVatPct / 100);
+      fareRows.push({ paxType: "Adult", baseFare, tax: taxes, other: 0, discount: disc, aitVat, count: paxAdults, amount: (baseFare - disc + taxes + aitVat) * paxAdults });
+    }
+    if (paxChildren > 0) {
+      const childBase = Math.round(baseFare * 0.75);
+      const disc = Math.round(childBase * discountPct / 100);
+      const aitVat = Math.round((childBase - disc) * aitVatPct / 100);
+      fareRows.push({ paxType: "Child", baseFare: childBase, tax: taxes, other: 0, discount: disc, aitVat, count: paxChildren, amount: (childBase - disc + taxes + aitVat) * paxChildren });
+    }
+    if (paxInfants > 0) {
+      const infantBase = Math.round(baseFare * 0.1);
+      const infantTax = Math.round(taxes * 0.5);
+      const disc = Math.round(infantBase * discountPct / 100);
+      const aitVat = Math.round((infantBase - disc) * aitVatPct / 100);
+      fareRows.push({ paxType: "Infant", baseFare: infantBase, tax: infantTax, other: 0, discount: disc, aitVat, count: paxInfants, amount: (infantBase - disc + infantTax + aitVat) * paxInfants });
+    }
+  }
+  return fareRows;
+}
+
+/* ─── Merge two paxPricing arrays (outbound + return) by summing per type ─── */
+function mergePaxPricingArrays(arr1?: any[], arr2?: any[]): any[] | null {
+  if (!arr1 || arr1.length === 0) return arr2 && arr2.length > 0 ? arr2 : null;
+  if (!arr2 || arr2.length === 0) return arr1;
+  // Sum by type
+  const map: Record<string, any> = {};
+  for (const pp of arr1) {
+    const key = pp.type || pp.label || 'ADT';
+    map[key] = { ...pp, baseFare: pp.baseFare || 0, taxes: pp.taxes || 0, total: pp.total || 0 };
+  }
+  for (const pp of arr2) {
+    const key = pp.type || pp.label || 'ADT';
+    if (map[key]) {
+      map[key].baseFare += pp.baseFare || 0;
+      map[key].taxes += pp.taxes || 0;
+      map[key].total += pp.total || 0;
+    } else {
+      map[key] = { ...pp, baseFare: pp.baseFare || 0, taxes: pp.taxes || 0, total: pp.total || 0 };
+    }
+  }
+  return Object.values(map);
+}
+
 /* ─── Leg Mini — compact leg display for grouped cards ─── */
 const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; labelColor: string }) => {
   const logo = getAirlineLogo(flight.airlineCode);
