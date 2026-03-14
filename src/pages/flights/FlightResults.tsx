@@ -1213,9 +1213,6 @@ const RoundTripFlightCard = ({
             {outbound.airlineCode?.toUpperCase() !== "BG" && (
               <span className="text-emerald-800 dark:text-emerald-300 font-bold text-[11px] sm:text-xs hidden sm:inline">Book &amp; Hold</span>
             )}
-            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[9px] font-bold text-accent">
-              Single Booking · One PNR
-            </span>
           </div>
           <div className="shrink-0">
             <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs"
