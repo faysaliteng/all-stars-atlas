@@ -1,7 +1,7 @@
 # Seven Trip — API Changelog
 
 > All backend API changes, new endpoints, breaking changes, and schema updates per version.
-> Last updated: 2026-03-14 (v4.0.0)
+> Last updated: 2026-03-14 (v4.1.0)
 
 ---
 
