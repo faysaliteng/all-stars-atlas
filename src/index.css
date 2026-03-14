@@ -9,14 +9,17 @@
   100% { background-position: 200px 0; }
 }
 
-@keyframes chevron-scroll-right {
-  0% { transform: translateX(-30px); }
-  100% { transform: translateX(0px); }
+/* Flight arc arrow animations */
+.flight-arrows-depart, .flight-arrows-depart-2,
+.flight-arrows-return, .flight-arrows-return-2 {
+  animation: flight-arrow-pulse 2.5s ease-in-out infinite;
 }
-
-@keyframes chevron-scroll-left {
-  0% { transform: translateX(0px); }
-  100% { transform: translateX(-30px); }
+.flight-arrows-depart-2, .flight-arrows-return-2 {
+  animation-delay: 1.25s;
+}
+@keyframes flight-arrow-pulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.8; }
 }
 
 @keyframes shake {
