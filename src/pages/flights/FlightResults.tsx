@@ -1794,7 +1794,7 @@ const FlightCard = ({
               {/* Departure */}
               <div className="text-center shrink-0">
                 <p className="text-lg sm:text-2xl font-black tracking-tight">{departTime}</p>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{departDateStr}</p>
+                <p className="text-[10px] sm:text-[11px] flight-date mt-0.5">{departDateStr}</p>
               </div>
 
               {/* Duration bar */}
