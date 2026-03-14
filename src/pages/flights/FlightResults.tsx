@@ -151,14 +151,22 @@ function calcDistanceKm(from: string, to: string): number | null {
   return Math.round(2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-/* ─── Session Timer Component ─── */
-const SessionTimer = ({ startTime }: { startTime: number }) => {
+/* ─── Session Timer Component — with expiry callback ─── */
+const SessionTimer = ({ startTime, onExpired }: { startTime: number; onExpired?: () => void }) => {
   const [elapsed, setElapsed] = useState(0);
+  const expiredRef = useRef(false);
   useEffect(() => {
-    const interval = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
+    const interval = setInterval(() => {
+      const now = Math.floor((Date.now() - startTime) / 1000);
+      setElapsed(now);
+      if (now >= 20 * 60 && !expiredRef.current) {
+        expiredRef.current = true;
+        onExpired?.();
+      }
+    }, 1000);
     return () => clearInterval(interval);
-  }, [startTime]);
-  const remaining = Math.max(0, 20 * 60 - elapsed); // 20 min session
+  }, [startTime, onExpired]);
+  const remaining = Math.max(0, 20 * 60 - elapsed);
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
   const isLow = remaining < 120;
@@ -171,6 +179,60 @@ const SessionTimer = ({ startTime }: { startTime: number }) => {
     </div>
   );
 };
+
+/* ─── Results Outdated Modal ─── */
+const ResultsOutdatedModal = ({ onNewSearch }: { onNewSearch: () => void }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+  >
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", duration: 0.4 }}
+      className="bg-card border border-border rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center"
+    >
+      <div className="mb-6 space-y-3">
+        <div className="bg-muted/50 rounded-xl p-4 inline-block">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
+            <div className="w-3 h-3 rounded-full bg-primary/30" />
+            <div className="flex-1" />
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <Search className="w-4 h-4 text-primary-foreground" />
+            </div>
+          </div>
+          <div className="space-y-2.5">
+            {[
+              { color: "bg-primary/20", barColor: "bg-primary/40", barWidth: "w-2/3" },
+              { color: "bg-accent/20", barColor: "bg-accent/50", barWidth: "w-3/4" },
+              { color: "bg-warning/20", barColor: "bg-warning/40", barWidth: "w-1/2" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2.5">
+                <div className={`w-6 h-6 rounded-md ${item.color}`} />
+                <div className="flex-1 space-y-1">
+                  <div className={`h-2.5 rounded ${item.barColor} ${item.barWidth}`} />
+                  <div className="h-1.5 rounded bg-muted-foreground/10 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <h3 className="text-xl font-black text-foreground mb-2">Your Results are Outdated</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        To see the latest availability and prices, please refresh results.
+      </p>
+      <button
+        className="text-sm font-bold text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+        onClick={onNewSearch}
+      >
+        Start a new Search
+      </button>
+    </motion.div>
+  </motion.div>
+);
 
 /* ─── Filter panel — BDFare-grade advanced filters ─── */
 const FilterPanel = ({
