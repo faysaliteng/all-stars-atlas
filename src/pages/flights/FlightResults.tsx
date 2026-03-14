@@ -3052,7 +3052,7 @@ const FlightResults = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-3" align="start">
+              <PopoverContent className="w-auto p-3 z-[60]" align="start">
                 <p className="text-xs font-bold text-muted-foreground mb-2">{isRoundTrip ? "Departure Date" : "Select Date"}</p>
                 <Calendar mode="single" selected={editDepart} onSelect={(d) => {
                   setEditDepart(d || undefined);
