@@ -789,12 +789,12 @@ const SearchWidget = () => {
 
             <div className="flex md:hidden items-center justify-center py-1">
               <button onClick={swapAirports} className="w-9 h-9 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm">
-                <ArrowLeftRight className="w-4 h-4 rotate-90" />
+                <Repeat2 className="w-4 h-4 rotate-90" />
               </button>
             </div>
             <div className="hidden md:flex items-center justify-center -mx-4 z-10">
               <button onClick={swapAirports} className="w-10 h-10 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-md hover:shadow-lg hover:scale-110">
-                <ArrowLeftRight className="w-4 h-4" />
+                <Repeat2 className="w-4 h-4" />
               </button>
             </div>
 
