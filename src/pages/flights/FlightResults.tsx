@@ -151,14 +151,22 @@ function calcDistanceKm(from: string, to: string): number | null {
   return Math.round(2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-/* ─── Session Timer Component ─── */
-const SessionTimer = ({ startTime }: { startTime: number }) => {
+/* ─── Session Timer Component — with expiry callback ─── */
+const SessionTimer = ({ startTime, onExpired }: { startTime: number; onExpired?: () => void }) => {
   const [elapsed, setElapsed] = useState(0);
+  const expiredRef = useRef(false);
   useEffect(() => {
-    const interval = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
+    const interval = setInterval(() => {
+      const now = Math.floor((Date.now() - startTime) / 1000);
+      setElapsed(now);
+      if (now >= 20 * 60 && !expiredRef.current) {
+        expiredRef.current = true;
+        onExpired?.();
+      }
+    }, 1000);
     return () => clearInterval(interval);
-  }, [startTime]);
-  const remaining = Math.max(0, 20 * 60 - elapsed); // 20 min session
+  }, [startTime, onExpired]);
+  const remaining = Math.max(0, 20 * 60 - elapsed);
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
   const isLow = remaining < 120;
@@ -171,6 +179,60 @@ const SessionTimer = ({ startTime }: { startTime: number }) => {
     </div>
   );
 };
+
+/* ─── Results Outdated Modal ─── */
+const ResultsOutdatedModal = ({ onNewSearch }: { onNewSearch: () => void }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+  >
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", duration: 0.4 }}
+      className="bg-card border border-border rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center"
+    >
+      <div className="mb-6 space-y-3">
+        <div className="bg-muted/50 rounded-xl p-4 inline-block">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
+            <div className="w-3 h-3 rounded-full bg-primary/30" />
+            <div className="flex-1" />
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <Search className="w-4 h-4 text-primary-foreground" />
+            </div>
+          </div>
+          <div className="space-y-2.5">
+            {[
+              { color: "bg-primary/20", barColor: "bg-primary/40", barWidth: "w-2/3" },
+              { color: "bg-accent/20", barColor: "bg-accent/50", barWidth: "w-3/4" },
+              { color: "bg-warning/20", barColor: "bg-warning/40", barWidth: "w-1/2" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2.5">
+                <div className={`w-6 h-6 rounded-md ${item.color}`} />
+                <div className="flex-1 space-y-1">
+                  <div className={`h-2.5 rounded ${item.barColor} ${item.barWidth}`} />
+                  <div className="h-1.5 rounded bg-muted-foreground/10 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <h3 className="text-xl font-black text-foreground mb-2">Your Results are Outdated</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        To see the latest availability and prices, please refresh results.
+      </p>
+      <button
+        className="text-sm font-bold text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+        onClick={onNewSearch}
+      >
+        Start a new Search
+      </button>
+    </motion.div>
+  </motion.div>
+);
 
 /* ─── Filter panel — BDFare-grade advanced filters ─── */
 const FilterPanel = ({
@@ -2296,6 +2358,7 @@ const FlightResults = () => {
   const [selectedOutbound, setSelectedOutbound] = useState<any>(null);
   const [selectedReturn, setSelectedReturn] = useState<any>(null);
   const [searchStartTime] = useState(Date.now());
+  const [resultsExpired, setResultsExpired] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Inline editing state
@@ -2878,11 +2941,37 @@ const FlightResults = () => {
               </Popover>
             )}
             {isMultiCity && (
-              <div className="bg-muted border border-border rounded-lg px-4 py-2.5 flex items-center gap-2 shrink-0">
-                <span className="text-sm font-medium text-foreground">
-                  {multiCitySegments.map(s => s.from).join(" → ")} → {multiCitySegments[multiCitySegments.length - 1]?.to || "—"}
-                </span>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2.5 flex items-center gap-2 shrink-0 transition-colors">
+                    <span className="text-sm font-bold text-foreground">
+                      {multiCitySegments.map(s => s.from).join(" → ")} → {multiCitySegments[multiCitySegments.length - 1]?.to || "—"}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-96 p-4" align="start">
+                  <p className="text-xs font-bold text-muted-foreground mb-3">Multi-City Segments</p>
+                  <div className="space-y-2.5">
+                    {multiCitySegments.map((seg, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2.5 border border-border/50">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">Trip {i + 1}</span>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="text-sm font-bold text-foreground">{seg.from}</span>
+                          <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-sm font-bold text-foreground">{seg.to}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {seg.date ? (() => { try { return format(new Date(seg.date), "dd MMM, EEE"); } catch { return seg.date; } })() : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button size="sm" className="w-full mt-3 bg-accent text-accent-foreground" onClick={() => navigate("/")}>
+                    <Search className="w-3.5 h-3.5 mr-1.5" /> New Multi-City Search
+                  </Button>
+                </PopoverContent>
+              </Popover>
             )}
 
             {/* Prev Day button */}
@@ -2988,7 +3077,7 @@ const FlightResults = () => {
 
             {/* Session Timer */}
             <div className="ml-auto flex items-center gap-2 shrink-0">
-              <SessionTimer startTime={searchStartTime} />
+              <SessionTimer startTime={searchStartTime} onExpired={() => setResultsExpired(true)} />
               <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-6 h-10" onClick={applySearchEdit}>
                 <Search className="w-4 h-4 mr-1.5" /> Modify
               </Button>
@@ -3341,6 +3430,13 @@ const FlightResults = () => {
               <Button className="w-full mt-6 bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => setShowFilters(false)}>Apply Filters</Button>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Results Outdated Modal */}
+      <AnimatePresence>
+        {resultsExpired && (
+          <ResultsOutdatedModal onNewSearch={applySearchEdit} />
         )}
       </AnimatePresence>
     </div>
