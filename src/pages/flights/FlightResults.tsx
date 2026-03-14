@@ -673,21 +673,23 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
                       let display: React.ReactNode;
 
                       if (ft.key === "handBaggage" || ft.key === "checkedBaggage") {
-                        display = val ? <span className="text-xs font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">Not included</span>;
+                        display = val ? <span className="text-xs font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "meal") {
-                        display = val ? <span className="text-xs font-medium text-foreground">Free meals available</span> : <span className="text-xs text-muted-foreground">Not included</span>;
+                        display = val === true ? <span className="text-xs font-medium text-foreground">Included</span> : val === false ? <span className="text-xs text-muted-foreground">Not included</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "bookingClass") {
                         display = <span className="text-xs font-bold text-foreground">{String(val || "—")}</span>;
                       } else if (ft.key === "seatSelection") {
-                        display = val
+                        display = val === true
                           ? <span className="text-xs font-medium text-accent">Available</span>
-                          : <X className="w-4 h-4 text-destructive/60 mx-auto" />;
+                          : val === false ? <X className="w-4 h-4 text-destructive/60 mx-auto" />
+                          : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "rebooking" || ft.key === "cancellation") {
-                        display = val
+                        display = val === true
                           ? <span className="text-xs font-medium text-orange-500">Penalties Apply</span>
-                          : <X className="w-4 h-4 text-destructive/60 mx-auto" />;
+                          : val === false ? <X className="w-4 h-4 text-destructive/60 mx-auto" />
+                          : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "miles") {
-                        display = <span className="text-xs font-medium text-foreground">Earn 50% Frequent Flyer Mileage.</span>;
+                        display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else {
                         display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">—</span>;
                       }
