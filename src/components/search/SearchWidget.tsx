@@ -732,7 +732,7 @@ const SearchWidget = () => {
                 </div>
 
                 <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
-                  <AirportInput label={`To (Flight ${index + 1})`} value={segment.to} onChange={(a) => updateSegment(index, 'to', a)} placeholder="Where to?" airports={getMultiCityToAirports(segment.from)} />
+                  <AirportInput label={`To (Flight ${index + 1})`} value={segment.to} onChange={(a) => updateSegment(index, 'to', a)} placeholder="Where to?" airports={getMultiCityToAirports(segment.from)} icon={<PlaneLanding className="w-5 h-5" />} />
                 </div>
 
                 <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
