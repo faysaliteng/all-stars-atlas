@@ -2503,10 +2503,17 @@ function sortFlights(flights: any[], sortBy: string) {
       return da - db;
     });
     case "fastest": return sorted.sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity));
-    case "best": default:
+    case "best": default: {
+      // Best = normalized weighted balance: 40% price, 45% duration, 15% stops (BDFare-style)
+      const minP = Math.min(...sorted.map(f => f.price || Infinity));
+      const maxP = Math.max(...sorted.map(f => f.price || 0));
+      const minD = Math.min(...sorted.map(f => f.durationMinutes || Infinity));
+      const maxD = Math.max(...sorted.map(f => f.durationMinutes || 0));
+      const priceSpread = maxP - minP || 1;
+      const durSpread = maxD - minD || 1;
       return sorted.sort((a, b) => {
-        const scoreA = (a.price || 0) * 0.5 + (a.durationMinutes || 0) * 30 + (a.stops || 0) * 3000;
-        const scoreB = (b.price || 0) * 0.5 + (b.durationMinutes || 0) * 30 + (b.stops || 0) * 3000;
+        const scoreA = ((a.price - minP) / priceSpread) * 0.4 + (((a.durationMinutes || 0) - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
+        const scoreB = ((b.price - minP) / priceSpread) * 0.4 + (((b.durationMinutes || 0) - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
         return scoreA - scoreB;
       });
   }
