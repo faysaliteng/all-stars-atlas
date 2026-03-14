@@ -961,7 +961,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         </div>
 
         {/* Duration bar */}
-        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[40px]">
+        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[36px]">
           {stops > 0 && legs.length > 1 ? (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
@@ -995,8 +995,8 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
           ) : (
             <AnimatedFlightArc compact direction={isReturn ? "return" : "departure"} />
           )}
-          <p className="text-[9px] sm:text-[10px] text-muted-foreground">{duration}</p>
-          <p className={`text-[9px] sm:text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">{duration}</p>
+          <p className={`text-[8px] sm:text-[9px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
         </div>
 
         {/* Destination */}
