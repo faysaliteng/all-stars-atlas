@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Plane, ArrowLeft, Copy, Download, CreditCard, Timer, Luggage, Shield,
   Users, Package, RotateCcw, XCircle, ArrowRight, AlertTriangle, Ban,
+  FileText,
 } from "lucide-react";
 import { generateTicketPDF } from "@/lib/pdf-generator";
 import { AIRPORTS } from "@/lib/airports";
@@ -17,6 +18,9 @@ import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
 import TravelDocVerificationModal from "@/components/TravelDocVerificationModal";
+import BookingActions from "@/components/flights/BookingActions";
+import FlightStatusBadge from "@/components/flights/FlightStatusBadge";
+import FareRulesModal from "@/components/flights/FareRulesModal";
 
 const statusLabelMap: Record<string, string> = {
   on_hold: "Reserved", confirmed: "Confirmed", pending: "Pending", in_progress: "In Progress",
@@ -334,14 +338,15 @@ const DashboardBookingDetail = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-border">
+          <div className="flex border-b border-border overflow-x-auto">
             {[
               { key: "itinerary", label: "Itinerary Information" },
               { key: "fare", label: "Fare Breakdown" },
               { key: "passengers", label: "Passengers" },
+              { key: "manage", label: "Manage Booking" },
             ].map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-colors ${
+                className={`px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
                   activeTab === tab.key ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}>{tab.label}</button>
             ))}
@@ -418,6 +423,20 @@ const DashboardBookingDetail = () => {
                 <span>Cabin: {booking.cabinClass}</span>
                 {booking.refundable && <span className="flex items-center gap-1 text-accent"><Shield className="w-3.5 h-3.5" /> Refundable</span>}
                 <span>{booking.stops === 0 ? "Non-stop" : `${booking.stops} stop(s)`}</span>
+                <Separator orientation="vertical" className="h-4" />
+                <FlightStatusBadge
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                  date={(booking.departureTime || "").substring(0, 10)}
+                  compact
+                />
+                <FareRulesModal
+                  origin={booking.origin}
+                  destination={booking.destination}
+                  departureDate={(booking.departureTime || "").substring(0, 10)}
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                />
               </div>
 
               {booking.isRoundTrip && booking.returnFlight && (
@@ -485,6 +504,44 @@ const DashboardBookingDetail = () => {
             </div>
           )}
 
+          {/* Manage Booking Tab */}
+          {activeTab === "manage" && (
+            <div className="space-y-4">
+              <div className="border border-border rounded-xl p-4">
+                <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Flight Status</p>
+                <FlightStatusBadge
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                  date={(booking.departureTime || "").substring(0, 10)}
+                />
+              </div>
+              <div className="border border-border rounded-xl p-4">
+                <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Fare Rules & Conditions</p>
+                <FareRulesModal
+                  origin={booking.origin}
+                  destination={booking.destination}
+                  departureDate={(booking.departureTime || "").substring(0, 10)}
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                  trigger={
+                    <Button variant="outline" size="sm" className="text-xs gap-1">
+                      <FileText className="w-3.5 h-3.5" /> View Fare Rules
+                    </Button>
+                  }
+                />
+              </div>
+              <Separator />
+              <div className="border border-border rounded-xl p-4">
+                <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Booking Actions</p>
+                <BookingActions
+                  booking={booking}
+                  isAdmin={false}
+                  onActionComplete={() => refetch()}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <Separator />
           <div className="flex flex-wrap gap-3">
@@ -499,11 +556,6 @@ const DashboardBookingDetail = () => {
             {booking.pnr !== "—" && booking.type === "flight" && (
               <Button variant="outline" onClick={() => navigate(`/dashboard/bookings/${booking.rawId}/extras`)}>
                 <Package className="w-4 h-4 mr-1.5" /> Buy Extras
-              </Button>
-            )}
-            {(booking.status === "confirmed" || booking.status === "ticketed") && (
-              <Button variant="outline" onClick={() => toast({ title: "Request Submitted", description: "Reissue request submitted." })}>
-                <RotateCcw className="w-4 h-4 mr-1.5" /> Request Reissue
               </Button>
             )}
             {/* Cancel Booking — available for on_hold, confirmed, ticketed */}

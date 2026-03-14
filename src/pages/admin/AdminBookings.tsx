@@ -14,8 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search, MoreHorizontal, Eye, Edit2, Download, CheckCircle2, Clock, XCircle, Ticket, Loader2,
   Plane, User, Phone, Mail, CreditCard, FileText, AlertTriangle, Save, CalendarDays, MapPin, Shield,
-  Send, Ban, Link2, Archive, Trash2, RotateCcw, Upload, ExternalLink,
+  Send, Ban, Link2, Archive, Trash2, RotateCcw, Upload, ExternalLink, DollarSign, ArrowLeftRight,
 } from "lucide-react";
+import BookingActions from "@/components/flights/BookingActions";
+import FlightStatusBadge from "@/components/flights/FlightStatusBadge";
+import FareRulesModal from "@/components/flights/FareRulesModal";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminBookings } from "@/hooks/useApiData";
 import { api } from "@/lib/api";
@@ -909,6 +912,46 @@ const AdminBookings = () => {
                     <Send className="w-4 h-4 mr-1" /> Send Pay Link
                   </Button>
                 </div>
+
+                {/* v4.0.0: Void / Refund / Exchange via Sabre */}
+                {viewBooking.pnr && viewBooking.pnr !== "—" && (
+                  <div className="mt-3 border border-border rounded-lg p-3 space-y-3">
+                    <p className="text-xs font-bold uppercase text-muted-foreground">GDS Actions (Sabre v4.0.0)</p>
+                    <div className="flex flex-wrap gap-2">
+                      <FlightStatusBadge
+                        airlineCode={viewBooking.details?.outbound?.airlineCode || viewBooking.details?.airlineCode || ""}
+                        flightNumber={viewBooking.details?.outbound?.flightNumber || viewBooking.details?.flightNumber || ""}
+                        date={(viewBooking.details?.outbound?.departureTime || viewBooking.details?.departureTime || "").substring(0, 10)}
+                        compact
+                      />
+                      <FareRulesModal
+                        origin={viewBooking.details?.outbound?.origin || viewBooking.details?.origin || ""}
+                        destination={viewBooking.details?.outbound?.destination || viewBooking.details?.destination || ""}
+                        departureDate={(viewBooking.details?.outbound?.departureTime || viewBooking.details?.departureTime || "").substring(0, 10)}
+                        airlineCode={viewBooking.details?.outbound?.airlineCode || viewBooking.details?.airlineCode || ""}
+                        flightNumber={viewBooking.details?.outbound?.flightNumber || viewBooking.details?.flightNumber || ""}
+                      />
+                    </div>
+                    <BookingActions
+                      booking={{
+                        rawId: viewBooking.rawId,
+                        id: viewBooking.id,
+                        pnr: viewBooking.pnr,
+                        status: viewBooking.status,
+                        airlineCode: viewBooking.details?.outbound?.airlineCode || viewBooking.details?.airlineCode || "",
+                        flightNumber: viewBooking.details?.outbound?.flightNumber || viewBooking.details?.flightNumber || "",
+                        origin: viewBooking.details?.outbound?.origin || viewBooking.details?.origin || "",
+                        destination: viewBooking.details?.outbound?.destination || viewBooking.details?.destination || "",
+                        departureTime: viewBooking.details?.outbound?.departureTime || viewBooking.details?.departureTime || "",
+                        ticketNo: viewBooking.ticketNo,
+                        refundable: viewBooking.details?.outbound?.refundable ?? viewBooking.details?.refundable,
+                        passengers: safeParsePax(viewBooking.passengerInfo || viewBooking.passengers || []),
+                      }}
+                      isAdmin={true}
+                      onActionComplete={() => { refetch(); setViewBooking(null); }}
+                    />
+                  </div>
+                )}
 
                 <Separator />
 
