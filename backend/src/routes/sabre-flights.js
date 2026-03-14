@@ -657,6 +657,110 @@ function normalizeGroupedResponse(response, params) {
       if (fcdId !== undefined) fareComponentLookup[fcdId] = fcd;
     }
 
+    const toNumber = (value) => {
+      if (value === null || value === undefined || value === '') return NaN;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : NaN;
+    };
+
+    const firstPositiveNumber = (...values) => {
+      for (const v of values) {
+        const n = toNumber(v);
+        if (Number.isFinite(n) && n > 0) return n;
+      }
+      return 0;
+    };
+
+    const sumPassengerTotals = (passengerInfoList = []) => {
+      let total = 0;
+      let baseFare = 0;
+      let taxes = 0;
+      let currency = '';
+
+      for (const pax of (Array.isArray(passengerInfoList) ? passengerInfoList : [])) {
+        const pInfo = pax?.passengerInfo || {};
+        const cc = pInfo.currencyConversion || {};
+        const ptf = pInfo.passengerTotalFare || {};
+        const qty = Math.max(1, parseInt(pInfo.passengerNumber || 1, 10) || 1);
+
+        const paxTotal = firstPositiveNumber(
+          cc.totalPrice,
+          ptf.totalPrice,
+          cc.equivalentAmount,
+          ptf.equivalentAmount,
+          cc.equivalentPrice,
+          ptf.equivalentPrice,
+        );
+        const paxBase = firstPositiveNumber(
+          cc.baseFareAmount,
+          ptf.baseFareAmount,
+          cc.baseFare,
+          ptf.baseFare,
+          cc.equivalentBaseFareAmount,
+          ptf.equivalentBaseFareAmount,
+        );
+        const paxTax = firstPositiveNumber(
+          cc.totalTaxAmount,
+          ptf.totalTaxAmount,
+          cc.taxAmount,
+          ptf.taxAmount,
+        );
+
+        if (!currency) {
+          currency = cc.currency || ptf.currency || '';
+        }
+
+        total += paxTotal * qty;
+        baseFare += paxBase * qty;
+        taxes += paxTax * qty;
+      }
+
+      return { total, baseFare, taxes, currency };
+    };
+
+    const extractFareTotals = (fare = {}) => {
+      const totalFare = fare?.totalFare || {};
+      const paxTotals = sumPassengerTotals(fare?.passengerInfoList || []);
+
+      let total = firstPositiveNumber(
+        totalFare.totalPrice,
+        totalFare.totalFareAmount,
+        totalFare.totalAmount,
+        totalFare.equivalentAmount,
+        totalFare.equivalentPrice,
+        paxTotals.total,
+      );
+
+      let baseFare = firstPositiveNumber(
+        totalFare.baseFareAmount,
+        totalFare.baseFare,
+        totalFare.baseAmount,
+        totalFare.equivalentBaseFareAmount,
+        paxTotals.baseFare,
+      );
+
+      let taxes = firstPositiveNumber(
+        totalFare.totalTaxAmount,
+        totalFare.taxAmount,
+        totalFare.taxes,
+        paxTotals.taxes,
+      );
+
+      if (total <= 0 && baseFare > 0 && taxes > 0) {
+        total = baseFare + taxes;
+      }
+      if (baseFare <= 0 && total > 0 && taxes > 0 && total >= taxes) {
+        baseFare = total - taxes;
+      }
+      if (taxes <= 0 && total > 0 && baseFare > 0 && total >= baseFare) {
+        taxes = total - baseFare;
+      }
+
+      const currency = totalFare.currency || paxTotals.currency || 'BDT';
+
+      return { total, baseFare, taxes, currency };
+    };
+
     // Debug: log baggage descriptors once
     if (baggageAllowanceDescs.length > 0) {
       console.log(`[Sabre] baggageAllowanceDescs (${baggageAllowanceDescs.length}):`, JSON.stringify(baggageAllowanceDescs.slice(0, 5)));
