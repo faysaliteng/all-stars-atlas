@@ -110,7 +110,7 @@
 │   ├── robots.txt            # Crawler rules
 │   └── favicon.png           # App icon
 ├── BACKEND_API_SPEC.md       # 100+ API endpoint spec
-├── CHANGELOG.md              # Version history (v1.0–v4.0.0)
+├── CHANGELOG.md              # Version history (v1.0–v4.1.1, 50+ releases)
 ├── Deployment.md             # VPS deployment guide
 └── developer_documentation.md # Dev handbook
 ```
