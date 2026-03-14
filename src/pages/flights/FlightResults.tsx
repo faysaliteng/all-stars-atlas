@@ -102,6 +102,29 @@ function isNextDay(depart?: string, arrive?: string): boolean {
   return new Date(arrive).getDate() !== new Date(depart).getDate();
 }
 
+function getBestFareDetail(flight: any) {
+  const fareDetails = Array.isArray(flight?.fareDetails) ? flight.fareDetails : [];
+  if (fareDetails.length === 0) return null;
+  return [...fareDetails].sort((a, b) => (a?.price || 0) - (b?.price || 0))[0] || null;
+}
+
+function getDisplayBookingClass(flight: any): string {
+  const best = getBestFareDetail(flight);
+  return best?.bookingClass || flight?.bookingClass || "";
+}
+
+function getDisplayAvailableSeats(flight: any): number | null {
+  const fareDetails = Array.isArray(flight?.fareDetails) ? flight.fareDetails : [];
+  const fareSeats = fareDetails
+    .map((d: any) => d?.availableSeats)
+    .filter((v: any) => v !== null && v !== undefined)
+    .map((v: any) => Number(v))
+    .filter((v: number) => !Number.isNaN(v));
+  if (fareSeats.length > 0) return Math.min(...fareSeats);
+  const top = flight?.availableSeats;
+  return top !== null && top !== undefined ? Number(top) : null;
+}
+
 /* ─── Airport coordinates for distance calculation ─── */
 const AIRPORT_COORDS: Record<string, [number, number]> = {
   DAC:[23.8433,90.3978],CXB:[21.4522,91.9639],CGP:[22.2496,91.8133],ZYL:[24.9632,91.8668],
