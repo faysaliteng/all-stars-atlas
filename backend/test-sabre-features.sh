@@ -95,9 +95,36 @@ TOTAL=$(echo "$SEARCH_RESULT" | jq -r '.total // 0')
 SABRE_COUNT=$(echo "$SEARCH_RESULT" | jq -r '.sources.sabre // 0')
 if [ "$TOTAL" -gt 0 ] && [ "$SABRE_COUNT" -gt 0 ]; then
   log_pass "2a. One-way search DAC→DXB ($TOTAL results, $SABRE_COUNT from Sabre)"
-else
-  log_fail "2a. One-way search DAC→DXB" "total=$TOTAL, sabre=$SABRE_COUNT"
-fi
+  
+  # 2a-detail: Check bookingClass, availableSeats, fareDetails on a sample flight
+  SAMPLE_FLIGHT=$(echo "$SEARCH_RESULT" | jq -c '[.data[] | select(.source == "sabre")][0] // empty')
+  if [ -n "$SAMPLE_FLIGHT" ] && [ "$SAMPLE_FLIGHT" != "null" ]; then
+    SAMPLE_FN=$(echo "$SAMPLE_FLIGHT" | jq -r '.flightNumber // "?"')
+    SAMPLE_BC=$(echo "$SAMPLE_FLIGHT" | jq -r '.bookingClass // "null"')
+    SAMPLE_SEATS=$(echo "$SAMPLE_FLIGHT" | jq -r '.availableSeats // "null"')
+    SAMPLE_FD_COUNT=$(echo "$SAMPLE_FLIGHT" | jq -r '.fareDetails | length // 0')
+    SAMPLE_FD_BC=$(echo "$SAMPLE_FLIGHT" | jq -r '.fareDetails[0].bookingClass // "null"')
+    SAMPLE_FD_SEATS=$(echo "$SAMPLE_FLIGHT" | jq -r '.fareDetails[0].availableSeats // "null"')
+    echo -e "  ${BLUE}[detail] $SAMPLE_FN: bookingClass=$SAMPLE_BC, seats=$SAMPLE_SEATS, fareDetails=$SAMPLE_FD_COUNT options${NC}"
+    echo -e "  ${BLUE}[detail] fareDetails[0]: class=$SAMPLE_FD_BC, seats=$SAMPLE_FD_SEATS${NC}"
+    if [ "$SAMPLE_BC" != "null" ] && [ "$SAMPLE_BC" != "" ]; then
+      log_pass "2a-i. Booking class extracted ($SAMPLE_BC)"
+    else
+      log_fail "2a-i. Booking class extraction" "bookingClass=null on $SAMPLE_FN"
+    fi
+    if [ "$SAMPLE_SEATS" != "null" ]; then
+      log_pass "2a-ii. Seats available extracted ($SAMPLE_SEATS seats)"
+    else
+      log_fail "2a-ii. Seats available extraction" "availableSeats=null on $SAMPLE_FN"
+    fi
+    if [ "$SAMPLE_FD_COUNT" -gt 1 ] 2>/dev/null; then
+      log_pass "2a-iii. Multiple fare options ($SAMPLE_FD_COUNT prices)"
+    elif [ "$SAMPLE_FD_COUNT" -eq 1 ] 2>/dev/null; then
+      log_pass "2a-iii. Fare details present (1 option — airline may not offer multiple brands)"
+    else
+      log_fail "2a-iii. Fare details extraction" "fareDetails empty on $SAMPLE_FN"
+    fi
+  fi
 
 # 2b. Round-trip search
 RT_RESULT=$(curl -s "$API_BASE/flights/search?origin=DAC&destination=DXB&departDate=${TEST_DATE}&returnDate=$(date -d "+10 days" +%Y-%m-%d 2>/dev/null || echo "2026-05-07")&adults=1")

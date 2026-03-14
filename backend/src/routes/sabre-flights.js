@@ -639,13 +639,23 @@ function normalizeGroupedResponse(response, params) {
           for (const fc of fareComponents) {
             const fcRef = fc.ref ?? fc.id;
             const fcDesc = (fcRef !== undefined && fareComponentLookup[fcRef]) ? fareComponentLookup[fcRef] : fc;
-            const segments = fcDesc.segments || fc.segments || [];
-            for (const seg of segments) {
+            // IMPORTANT: fc.segments (inline) has bookingCode/seatsAvailable per-itinerary;
+            // fcDesc.segments (from fareComponentDescs) only has surcharges/fare info.
+            // Use inline segments first, fall back to descriptor segments for fare basis.
+            const inlineSegments = fc.segments || [];
+            const descSegments = fcDesc.segments || [];
+            const segCount = Math.max(inlineSegments.length, descSegments.length);
+            for (let si = 0; si < segCount; si++) {
+              const inlineSeg = inlineSegments[si] || {};
+              const descSeg = descSegments[si] || {};
+              // Inline segment may nest data under .segment sub-object
+              const inlineInner = inlineSeg.segment || inlineSeg;
+              const descInner = descSeg.segment || descSeg;
               resolvedSegments.push({
-                bookingCode: seg.bookingCode || seg.BookingCode || '',
-                seatsAvailable: seg.seatsAvailable ?? seg.SeatsAvailable ?? seg.seatsRemaining ?? null,
-                cabin: seg.cabin?.cabin || seg.cabin?.Cabin || seg.cabinCode || '',
-                fareBasisCode: seg.segment?.fareBasisCode || seg.fareBasisCode || fc.fareBasisCode || fcDesc.fareBasisCode || '',
+                bookingCode: inlineInner.bookingCode || inlineInner.BookingCode || descInner.bookingCode || '',
+                seatsAvailable: inlineInner.seatsAvailable ?? inlineInner.SeatsAvailable ?? inlineInner.seatsRemaining ?? descInner.seatsAvailable ?? null,
+                cabin: inlineInner.cabin?.cabin || inlineInner.cabin?.Cabin || inlineInner.cabinCode || descInner.cabin?.cabin || fcDesc.cabinCode || '',
+                fareBasisCode: inlineInner.fareBasisCode || descInner.fareBasisCode || fc.fareBasisCode || fcDesc.fareBasisCode || '',
               });
             }
             // Also extract brand info from resolved descriptor
