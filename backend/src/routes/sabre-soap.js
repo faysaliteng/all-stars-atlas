@@ -900,15 +900,28 @@ async function exchangeBooking(params) {
     priceIncreaseTolerance = 10, priceDecreaseTolerance = 10,
   } = params;
 
-  // Build new flight segments XML
-  const segmentsXml = newSegments.map(seg => `
-        <FlightSegment DepartureDateTime="${seg.departureTime || ''}" ArrivalDateTime="${seg.arrivalTime || ''}"
+  // Build new flight segments XML — ensure datetimes are never empty
+  const toSoapDT = (val) => {
+    if (!val) return '';
+    const raw = String(val).trim();
+    const m = raw.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/);
+    if (m) return `${m[1]}T${m[2]}:00`;
+    return raw.replace('Z', '').split('.')[0].replace(/[+-]\d{2}:?\d{2}$/, '');
+  };
+
+  const segmentsXml = newSegments.map(seg => {
+    const depDT = toSoapDT(seg.departureTime);
+    const arrDT = toSoapDT(seg.arrivalTime) || depDT; // fallback to departure if arrival missing
+    if (!depDT) return ''; // skip segments with no datetime
+    return `
+        <FlightSegment DepartureDateTime="${depDT}" ArrivalDateTime="${arrDT}"
           FlightNumber="${String(seg.flightNumber || '').replace(/\D/g, '')}" NumberInParty="${seg.partySize || 1}"
           ResBookDesigCode="${seg.bookingClass || 'Y'}" Status="NN">
           <DestinationLocation LocationCode="${seg.destination || ''}"/>
           <MarketingAirline Code="${seg.airlineCode || ''}" FlightNumber="${String(seg.flightNumber || '').replace(/\D/g, '')}"/>
           <OriginLocation LocationCode="${seg.origin || ''}"/>
-        </FlightSegment>`).join('');
+        </FlightSegment>`;
+  }).filter(Boolean).join('');
 
   const cancelXml = cancelSegments.map(n => `<Segment Number="${n}"/>`).join('');
 
