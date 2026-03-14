@@ -1083,14 +1083,43 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
   try {
     let response = await ttiRequest('CreateBooking', request);
 
-    // Retry once without CHLD/INFT SSR when TTI rejects RefPassengerWithSeat mapping
-    if ((response.ResponseInfo?.Error || response.InvalidData) && hasPassengerSeatLinkError(response) && hasPassengerTypeSSR(specialServices)) {
-      const fallbackSpecialServices = specialServices.filter((svc) => !['INFT', 'CHLD'].includes(String(svc?.Code || '').toUpperCase()));
-      if (fallbackSpecialServices.length !== specialServices.length) {
-        const removedCount = specialServices.length - fallbackSpecialServices.length;
-        const fallbackRequest = buildCreateBookingRequest(fallbackSpecialServices);
-        console.warn(`[TTI BOOKING] Retrying CreateBooking without ${removedCount} CHLD/INFT SSR entries due RefPassengerWithSeat validation`);
-        console.log('[TTI BOOKING] Fallback payload (truncated):', JSON.stringify(fallbackRequest).substring(0, 3000));
+    // Retry strategy for CHLD/INFT SSR failures:
+    // Attempt 1 failed → try with RefPassengerWithSeat=null for INFT
+    // If that fails → try without CHLD/INFT SSRs entirely (last resort)
+    const hasError = response.ResponseInfo?.Error || response.InvalidData?.SpecialServices?.length > 0;
+    if (hasError && hasPassengerTypeSSR(specialServices)) {
+      const errorBlob = JSON.stringify(response.InvalidData || response.ResponseInfo?.Error || '');
+      const isRefError = /RefPassengerWithSeat|Passenger with seat cannot be found/i.test(errorBlob);
+      const isDobError = /DateOfBirth.*mandatory|mandatory.*DateOfBirth/i.test(errorBlob);
+
+      if (isRefError) {
+        // Fallback A: nullify RefPassengerWithSeat in INFT SSRs
+        const nullRefServices = specialServices.map(svc => {
+          if (svc.Code === 'INFT' && svc.Data?.Inft) {
+            return { ...svc, Data: { ...svc.Data, Inft: { ...svc.Data.Inft, RefPassengerWithSeat: null } } };
+          }
+          return svc;
+        });
+        console.warn('[TTI BOOKING] Retry A: INFT with RefPassengerWithSeat=null');
+        const retryRequest = buildCreateBookingRequest(nullRefServices);
+        console.log('[TTI BOOKING] Retry A payload (truncated):', JSON.stringify(retryRequest).substring(0, 3000));
+        response = await ttiRequest('CreateBooking', retryRequest);
+
+        // If still failing, try removing CHLD/INFT SSRs entirely
+        const retryHasError = response.ResponseInfo?.Error || response.InvalidData?.SpecialServices?.length > 0;
+        if (retryHasError) {
+          const fallbackServices = specialServices.filter(svc => !['INFT', 'CHLD'].includes(String(svc?.Code || '').toUpperCase()));
+          console.warn(`[TTI BOOKING] Retry B: Removing all CHLD/INFT SSRs (${specialServices.length - fallbackServices.length} removed)`);
+          const fallbackRequest = buildCreateBookingRequest(fallbackServices);
+          console.log('[TTI BOOKING] Retry B payload (truncated):', JSON.stringify(fallbackRequest).substring(0, 3000));
+          response = await ttiRequest('CreateBooking', fallbackRequest);
+        }
+      } else if (isDobError) {
+        // TTI auto-generated CHLD/INFT without DOB — this shouldn't happen with our Data payloads
+        // Remove CHLD/INFT SSRs and let passengers' DOB in their own records handle it
+        const fallbackServices = specialServices.filter(svc => !['INFT', 'CHLD'].includes(String(svc?.Code || '').toUpperCase()));
+        console.warn(`[TTI BOOKING] Retry (DOB error): Removing CHLD/INFT SSRs`);
+        const fallbackRequest = buildCreateBookingRequest(fallbackServices);
         response = await ttiRequest('CreateBooking', fallbackRequest);
       }
     }
