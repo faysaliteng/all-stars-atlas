@@ -847,9 +847,58 @@ function calcPayableFromGross(grossPrice: number, taxes: number, discountPct = 6
   return baseFare - discount + taxes + aitVat;
 }
 
+/* ─── API-first fare extraction (prevents zero-price leakage) ─── */
+function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
+  const toNum = (v: any) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const directGross = toNum(f?.price || f?.amount || f?.total);
+  const directTaxes = toNum(f?.taxes || f?.taxAmount || f?.totalTaxAmount);
+
+  let grossPrice = directGross > 0 ? directGross : 0;
+  let taxes = directTaxes > 0 ? directTaxes : 0;
+
+  if (grossPrice <= 0 && Array.isArray(f?.fareDetails) && f.fareDetails.length > 0) {
+    const priced = f.fareDetails
+      .map((d: any) => ({ price: toNum(d?.price || d?.amount || d?.total), taxes: toNum(d?.taxes || d?.totalTaxAmount || d?.taxAmount) }))
+      .filter((d: any) => d.price > 0)
+      .sort((a: any, b: any) => a.price - b.price);
+
+    if (priced.length > 0) {
+      grossPrice = priced[0].price;
+      if (taxes <= 0 && priced[0].taxes > 0) taxes = priced[0].taxes;
+    }
+  }
+
+  if ((grossPrice <= 0 || taxes <= 0) && Array.isArray(f?.paxPricing) && f.paxPricing.length > 0) {
+    const paxGross = f.paxPricing.reduce((sum: number, p: any) => {
+      const count = Math.max(1, Number(p?.count) || 1);
+      const total = toNum(p?.total || 0);
+      return sum + (total * count);
+    }, 0);
+    const paxTaxes = f.paxPricing.reduce((sum: number, p: any) => {
+      const count = Math.max(1, Number(p?.count) || 1);
+      const tax = toNum(p?.taxes || 0);
+      return sum + (tax * count);
+    }, 0);
+
+    if (grossPrice <= 0 && paxGross > 0) grossPrice = paxGross;
+    if (taxes <= 0 && paxTaxes > 0) taxes = paxTaxes;
+  }
+
+  if (grossPrice > 0 && taxes > grossPrice) {
+    taxes = Math.max(0, grossPrice);
+  }
+
+  return { grossPrice, taxes };
+}
+
 /* ─── Shortcut: payable from a flight object ─── */
 function flightPayable(f: any): number {
-  return calcPayableFromGross(f.price || 0, f.taxes || 0, f.fareRules?.discount ?? 6.30, f.fareRules?.aitVat ?? 0.3);
+  const apiFare = getApiFareTotals(f);
+  return calcPayableFromGross(apiFare.grossPrice, apiFare.taxes, f?.fareRules?.discount ?? 6.30, f?.fareRules?.aitVat ?? 0.3);
 }
 
 /* ─── Build fare rows from real API per-pax pricing (no fabricated multipliers) ─── */
