@@ -101,6 +101,8 @@ img, video {
     --popover-foreground: 210 20% 96%;
     --primary: 217 91% 58%;
     --primary-foreground: 0 0% 100%;
+    --flight-departure: 217 91% 58%;
+    --flight-return: 263 84% 68%;
     --secondary: 24 100% 55%;
     --secondary-foreground: 0 0% 100%;
     --muted: 222 16% 22%;
