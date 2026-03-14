@@ -1116,8 +1116,8 @@ const RoundTripFlightCard = ({
             <LegMini flight={returnFlight} label="Return" labelColor="text-foreground" />
           </div>
 
-          {/* Price */}
-          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-36 lg:w-40 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+          {/* Price + Airline info */}
+          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-40 lg:w-48 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-1.5">
               {totalPrice === cheapest && totalPrice > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
@@ -1127,6 +1127,16 @@ const RoundTripFlightCard = ({
                   <span className="text-xs">🪙</span> +{calcRewardPoints(totalPrice).toLocaleString()}
                 </Badge>
               )}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              {logo ? (
+                <img src={logo} alt={outbound.airline} className="w-6 h-6 object-contain hidden sm:block"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              ) : null}
+              <div className="hidden sm:block text-right min-w-0">
+                <p className="text-[10px] font-bold leading-tight truncate max-w-[70px]">{outbound.airline}</p>
+                <p className="text-[8px] text-muted-foreground truncate">{flightNo}</p>
+              </div>
             </div>
             <p className="text-base sm:text-lg lg:text-xl font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
             {grossTotalPrice > totalPrice && (
