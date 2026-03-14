@@ -1782,7 +1782,7 @@ const MultiCityFlightCard = ({
                       )}
                     </div>
                     <div className="text-center shrink-0">
-                      <p className="text-lg sm:text-xl font-black leading-tight">{formatTime(seg.arrivalTime)}</p>
+                      <p className="text-lg sm:text-xl font-black leading-tight flight-time">{formatTime(seg.arrivalTime)}</p>
                       <p className="text-[10px] flight-date">{formatShortDate(seg.arrivalTime)}</p>
                       <p className="text-[10px] font-bold text-muted-foreground">{seg.destination}</p>
                     </div>
