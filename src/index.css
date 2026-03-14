@@ -11,12 +11,12 @@
 
 /* Flight arc arrow scroll animations */
 @keyframes arrow-scroll-right {
-  0% { transform: translateX(-36px); }
-  100% { transform: translateX(0px); }
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
 }
 @keyframes arrow-scroll-left {
-  0% { transform: translateX(0px); }
-  100% { transform: translateX(-36px); }
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
 @keyframes shake {
@@ -55,6 +55,8 @@ img, video {
 
     --primary: 217 91% 50%;
     --primary-foreground: 0 0% 100%;
+    --flight-departure: 217 91% 50%;
+    --flight-return: 263 83% 58%;
 
     --secondary: 24 100% 50%;
     --secondary-foreground: 0 0% 100%;
@@ -99,6 +101,8 @@ img, video {
     --popover-foreground: 210 20% 96%;
     --primary: 217 91% 58%;
     --primary-foreground: 0 0% 100%;
+    --flight-departure: 217 91% 58%;
+    --flight-return: 263 84% 68%;
     --secondary: 24 100% 55%;
     --secondary-foreground: 0 0% 100%;
     --muted: 222 16% 22%;
