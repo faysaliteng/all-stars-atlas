@@ -1746,20 +1746,23 @@ const FlightBooking = () => {
                   )}
                   {isMultiCity ? (
                     <>
-                      {multiCityFlights.map((mcf: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-xs"><span className="text-muted-foreground">Flight {idx + 1}{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{((mcf?.price || 0) * totalPaxCount).toLocaleString()}</span></div>
-                      ))}
+                      {multiCityFlights.map((mcf: any, idx: number) => {
+                        const mc = calcFlightPayable(mcf);
+                        return <div key={idx} className="flex justify-between text-xs"><span className="text-muted-foreground">Flight {idx + 1}{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(mc.payable * totalPaxCount).toLocaleString()}</span></div>;
+                      })}
                       <Separator />
                     </>
                   ) : isRoundTrip ? (
                     <>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Outbound{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(outboundPrice * totalPaxCount).toLocaleString()}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Return{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(returnPrice * totalPaxCount).toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Outbound{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(outboundCalc.payable * totalPaxCount).toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Return{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(returnCalc.payable * totalPaxCount).toLocaleString()}</span></div>
                       <Separator />
                     </>
                   ) : null}
                   <div className="flex justify-between"><span className="text-muted-foreground">Base Fare{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{baseFare.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Tax{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">{taxes > 0 ? `৳${taxes.toLocaleString()}` : "Included"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Discount ({DISCOUNT_PCT}%)</span><span className="font-semibold text-accent">-৳{totalDiscount.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">AIT VAT ({AIT_VAT_PCT}%)</span><span className="font-semibold">৳{totalAitVat.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Service Charge</span><span className="font-semibold">{serviceCharge > 0 ? `৳${serviceCharge}` : "Free"}</span></div>
                 </div>
 
