@@ -1690,6 +1690,7 @@ const FlightCard = ({
 
   const stopsLabel = stops === 0 ? "Non-Stop" : `${stops} Stop${stops > 1 ? "s" : ""}`;
   const cabinDisplay = bookingClass ? `${cabin} - ${bookingClass}` : cabin;
+  const fareDetailsCount = Array.isArray(flight.fareDetails) ? flight.fareDetails.length : 0;
   const distanceKm = calcDistanceKm(fromCode, toCode);
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
 
@@ -1792,10 +1793,10 @@ const FlightCard = ({
               )}
               {availableSeats !== null && (
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                  <Users className="w-3.5 h-3.5" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""}
+                  <Users className="w-3.5 h-3.5" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""} Left
                 </span>
               )}
-              {bookingClass && <span className="text-xs text-muted-foreground font-medium">Class: {bookingClass}</span>}
+              <span className="text-xs text-muted-foreground font-medium">{cabinDisplay}</span>
             </div>
           </div>
 
@@ -1860,7 +1861,7 @@ const FlightCard = ({
             ) : (
               <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground"
                 onClick={() => setShowFareOptions(!showFareOptions)}>
-                View Prices {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+                View Prices {fareDetailsCount > 1 && <Badge className="ml-1.5 bg-accent-foreground/20 text-accent-foreground border-0 text-[10px] px-1.5 py-0">{fareDetailsCount}</Badge>} {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
               </Button>
             )}
           </div>

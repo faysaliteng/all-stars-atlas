@@ -237,7 +237,8 @@ async function searchFlights(params) {
     }
   }
 
-  // Bargain Finder Max request body
+  // Bargain Finder Max request body — request multiple fare options per itinerary
+  // FlexibleFares with multiple FareParameters enables Sabre to return branded/multi-class fares
   const requestBody = {
     OTA_AirLowFareSearchRQ: {
       Version: '5',
@@ -262,14 +263,21 @@ async function searchFlights(params) {
               TravelTimeWeight: 2,
             },
           },
+          FlexibleFares: {
+            FareParameters: [
+              { Cabin: { Type: sabreCabin }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
+              { Cabin: { Type: sabreCabin }, PublicFare: { Ind: true }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
+              { Cabin: { Type: sabreCabin }, PrivateFare: { Ind: true }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
+            ],
+          },
         },
         CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
       },
-        TPA_Extensions: {
-          IntelliSellTransaction: {
-            RequestType: { Name: '200ITINS' },
-          },
+      TPA_Extensions: {
+        IntelliSellTransaction: {
+          RequestType: { Name: '200ITINS' },
         },
+      },
       TravelerInfoSummary: {
         SeatsRequested: [parseInt(adults) + parseInt(children)],
         AirTravelerAvail: [{
@@ -545,6 +553,18 @@ function normalizeGroupedResponse(response, params) {
     if (fareComponentDescs.length > 0) {
       console.log(`[Sabre] fareComponentDescs (${fareComponentDescs.length}):`, JSON.stringify(fareComponentDescs.slice(0, 3)));
     }
+
+    // Log multi-pricing stats
+    let totalPricingOptions = 0;
+    let itinsWithMultiplePricing = 0;
+    for (const g of itinGroups) {
+      for (const it of (g.itineraries || [])) {
+        const piCount = (it.pricingInformation || []).length;
+        totalPricingOptions += piCount;
+        if (piCount > 1) itinsWithMultiplePricing++;
+      }
+    }
+    console.log(`[Sabre] Pricing stats: ${totalPricingOptions} total options, ${itinsWithMultiplePricing} itineraries with multiple fares`);
 
     for (const group of itinGroups) {
       const groupDesc = group.groupDescription || {};
