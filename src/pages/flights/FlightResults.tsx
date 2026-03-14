@@ -932,9 +932,7 @@ const RoundTripFlightCard = ({
   const [showFareOptions, setShowFareOptions] = useState(false);
   const logo = getAirlineLogo(outbound.airlineCode);
   const grossTotalPrice = outbound.totalRoundTripPrice || ((outbound.price || 0) + (returnFlight.price || 0));
-  const totalPrice = outbound.totalRoundTripPrice
-    ? calcPayableFromGross(outbound.totalRoundTripPrice, (outbound.taxes || 0) + (returnFlight.taxes || 0), outbound.fareRules?.discount ?? 6.30, outbound.fareRules?.aitVat ?? 0.3)
-    : flightPayable(outbound) + flightPayable(returnFlight);
+  const totalPrice = flightPayable(outbound) + flightPayable(returnFlight);
   const refundable = outbound.refundable ?? false;
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
