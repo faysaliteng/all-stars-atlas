@@ -329,78 +329,11 @@ All core booking lifecycle features are production-verified:
 
 ---
 
-### ❌ Section 22: Exchange / Reissue — NOT IMPLEMENTED
+### ✅ Section 22: Exchange / Reissue — DONE (v4.0.0)
 
-**VPS Test:** ⏭️ SKIP — needs SOAP `ExchangeBookingRQ v1.1.0`
-
-**Official verified sample request:**
-```xml
-<ExchangeBookingRQ xmlns="http://services.sabre.com/sp/exchange/booking/v1_1" version="1.1.0">
-  <Itinerary id="PVSCGX">
-    <SegmentPricing>
-      <SegmentSelect number="1"/>
-    </SegmentPricing>
-  </Itinerary>
-  <Cancel>
-    <Segment Number="2"/>
-  </Cancel>
-  <AirBook>
-    <HaltOnStatus Code="HL"/>
-    <HaltOnStatus Code="KK"/>
-    <HaltOnStatus Code="LL"/>
-    <HaltOnStatus Code="NN"/>
-    <HaltOnStatus Code="NO"/>
-    <HaltOnStatus Code="UC"/>
-    <HaltOnStatus Code="US"/>
-    <OriginDestinationInformation>
-      <FlightSegment DepartureDateTime="2023-02-14T08:00:00" ArrivalDateTime="2023-02-14T11:02:00"
-        FlightNumber="1164" NumberInParty="1" ResBookDesigCode="G" Status="NN">
-        <DestinationLocation LocationCode="PHX"/>
-        <MarketingAirline Code="AA" FlightNumber="1164"/>
-        <OriginLocation LocationCode="SFO"/>
-      </FlightSegment>
-      <FlightSegment DepartureDateTime="2023-02-14T12:03:00" ArrivalDateTime="2023-02-14T12:48:00"
-        FlightNumber="1573" NumberInParty="1" ResBookDesigCode="G" Status="NN">
-        <DestinationLocation LocationCode="TUS"/>
-        <MarketingAirline Code="AA" FlightNumber="1573"/>
-        <OriginLocation LocationCode="PHX"/>
-      </FlightSegment>
-    </OriginDestinationInformation>
-  </AirBook>
-  <AutomatedExchanges>
-    <ExchangeComparison OriginalTicketNumber="0017862629606">
-      <PriceRequestInformation>
-        <OptionalQualifiers>
-          <PricingQualifiers>
-            <NameSelect NameNumber="1.1"/>
-          </PricingQualifiers>
-        </OptionalQualifiers>
-      </PriceRequestInformation>
-    </ExchangeComparison>
-    <PriceComparison amountSpecified="-793.50">
-      <AcceptablePriceIncrease haltOnNonAcceptablePrice="false">
-        <Percent>1</Percent>
-      </AcceptablePriceIncrease>
-      <AcceptablePriceDecrease haltOnNonAcceptablePrice="false">
-        <Percent>1</Percent>
-      </AcceptablePriceDecrease>
-    </PriceComparison>
-  </AutomatedExchanges>
-  <PostProcessing returnPQRInfo="true">
-    <EndTransaction>
-      <Source ReceivedFrom="SEVEN TRIP EXCHANGE"/>
-    </EndTransaction>
-  </PostProcessing>
-</ExchangeBookingRQ>
-```
-[Source: Sabre ExchangeBookingRQ](https://developer.sabre.com/soap-api/exchange-booking-soap)
-
-**Impact:** HIGH — Essential for date-change feature.
-
-**Implementation plan:**
-1. Add SOAP call in `sabre-soap.js` → `exchangeBooking(params)`
-2. Add route `POST /api/flights/exchange`
-3. Frontend: "Change Flight" button on booking detail page
+**Implementation:** `sabre-soap.js` → `exchangeBooking()`
+**Route:** `POST /api/flights/exchange`
+**Features:** SOAP `ExchangeBookingRQ v1.1.0` with cancel segments, new flight booking, automated price comparison, tolerance thresholds
 
 ---
 
