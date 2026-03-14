@@ -2105,14 +2105,14 @@ const FlightCard = ({
                 </span>
               )}
               {availableSeats !== null && (
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
                   availableSeats <= 4
                     ? "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
                     : availableSeats <= 9
                       ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200/60 dark:border-orange-800/40 text-orange-600 dark:text-orange-400"
                       : "bg-accent/5 border-accent/20 text-accent"
                 }`}>
-                  <Armchair className="w-3.5 h-3.5" /> {availableSeats} Seats Left
+                  <Armchair className="w-3 h-3" /> {availableSeats} Seats Left
                 </span>
               )}
               {cabinDisplay && (
