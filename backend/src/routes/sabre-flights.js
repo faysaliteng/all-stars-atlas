@@ -2845,74 +2845,102 @@ async function getAncillariesStateless({ pnr, segments, passengers, mode = 'payl
   console.log(`[Sabre] Stateless ancillaries — mode: ${mode}, PNR: ${pnr || 'N/A'}, segments: ${segments?.length || 0}`);
 
   try {
-    const body = {
-      clientContext: {
-        pseudoCityCode: config.pcc,
-        stationNumber: '31000104',
-        accountingCity: config.pcc,
-      },
-    };
+    // Try v2 first, fallback to v1
+    const versions = [
+      { version: 'v2', endpoint: '/v2/offers/getAncillaries' },
+      { version: 'v1', endpoint: '/v1/offers/getAncillaries' },
+    ];
 
-    if (mode === 'pnr' && pnr) {
-      body.pnrLocator = pnr;
-    } else {
-      // Payload mode
-      body.segments = (segments || []).map((seg, idx) => ({
-        id: `SEG-${idx + 1}`,
-        departureDateTime: seg.departureTime || seg.departureDateTime || '',
-        arrivalDateTime: seg.arrivalTime || seg.arrivalDateTime || '',
-        departureAirportCode: seg.origin || seg.departureAirportCode || '',
-        arrivalAirportCode: seg.destination || seg.arrivalAirportCode || '',
-        operatingAirlineCode: seg.operatingAirline || seg.airlineCode || '',
-        bookingAirlineCode: seg.airlineCode || seg.bookingAirlineCode || '',
-        isElectronicTicket: true,
-        bookingFlightNumber: String(seg.flightNumber || '').replace(/\D/g, ''),
-        bookingClassCode: seg.bookingClass || 'Y',
-        operatingFlightNumber: String(seg.flightNumber || '').replace(/\D/g, ''),
-        operatingBookingClassCode: seg.bookingClass || 'Y',
-        sequence: idx + 1,
-      }));
-      body.passengers = (passengers || []).map((pax, idx) => ({
-        id: `PAX-${idx + 1}`,
-        nameNumber: `0${idx + 1}.01`,
-        givenName: `${(pax.firstName || pax.givenName || 'TEST').toUpperCase()} ${(pax.title || 'MR').toUpperCase()}`,
-        surname: (pax.lastName || pax.surname || 'SABRE').toUpperCase(),
-        typeCode: pax.type || pax.typeCode || 'ADT',
-      }));
-    }
+    let lastError = null;
+    for (const { version, endpoint } of versions) {
+      try {
+        const body = {};
 
-    const response = await sabreRequest(config, '/v1/offers/getAncillaries', body, 'POST', 30000);
-    console.log(`[Sabre] Stateless ancillaries result:`, JSON.stringify(response).substring(0, 1500));
+        if (mode === 'pnr' && pnr) {
+          body.requestType = 'pnrLocator';
+          body.request = { pnrLocator: pnr };
+        } else {
+          // Payload mode — use ancillaries wrapper for v2, flat for v1
+          const segmentData = (segments || []).map((seg, idx) => ({
+            id: `SEG-${idx + 1}`,
+            departureDateTime: seg.departureTime || seg.departureDateTime || '',
+            arrivalDateTime: seg.arrivalTime || seg.arrivalDateTime || '',
+            departureDate: (seg.departureTime || seg.departureDateTime || '').substring(0, 10),
+            departureAirportCode: seg.origin || seg.departureAirportCode || '',
+            arrivalAirportCode: seg.destination || seg.arrivalAirportCode || '',
+            operatingAirlineCode: seg.operatingAirline || seg.airlineCode || '',
+            bookingAirlineCode: seg.airlineCode || seg.bookingAirlineCode || '',
+            isElectronicTicket: true,
+            bookingFlightNumber: String(seg.flightNumber || '').replace(/\D/g, ''),
+            bookingClassCode: seg.bookingClass || 'Y',
+            operatingFlightNumber: String(seg.flightNumber || '').replace(/\D/g, ''),
+            operatingBookingClassCode: seg.bookingClass || 'Y',
+            sequence: idx + 1,
+          }));
 
-    // Parse ancillary offers from response
-    const offers = response?.ancillaryOffers || response?.offers || [];
-    const ancillaries = [];
+          const passengerData = (passengers || []).map((pax, idx) => ({
+            id: `PAX-${idx + 1}`,
+            passengerId: `Passenger${idx + 1}`,
+            nameNumber: `0${idx + 1}.01`,
+            givenName: `${(pax.firstName || pax.givenName || 'TEST').toUpperCase()} ${(pax.title || 'MR').toUpperCase()}`,
+            surname: (pax.lastName || pax.surname || 'SABRE').toUpperCase(),
+            typeCode: pax.type || pax.typeCode || 'ADT',
+          }));
 
-    for (const offer of offers) {
-      const items = offer.items || [];
-      for (const item of items) {
-        ancillaries.push({
-          offerId: offer.id || null,
-          itemId: item.id || null,
-          groupCode: item.ancillary?.groupCode || item.groupCode || '',
-          subCode: item.ancillary?.subCode || item.subCode || '',
-          commercialName: item.ancillary?.commercialName || item.commercialName || '',
-          airlineCode: item.ancillary?.airlineCode || item.airlineCode || '',
-          price: item.price?.amount || item.totalAmount || 0,
-          currency: item.price?.currencyCode || item.currency || 'BDT',
-          segmentIds: item.segmentReferenceIds || [],
-          passengerIds: item.passengerReferenceIds || [],
-        });
+          if (version === 'v2') {
+            body.ancillaries = { segments: segmentData, passengers: passengerData };
+          } else {
+            body.clientContext = {
+              pseudoCityCode: config.pcc,
+              stationNumber: '31000104',
+              accountingCity: config.pcc,
+            };
+            body.segments = segmentData;
+            body.passengers = passengerData;
+          }
+        }
+
+        console.log(`[Sabre] Trying ${endpoint}...`);
+        const response = await sabreRequest(config, endpoint, body, 'POST', 30000);
+        console.log(`[Sabre] Stateless ancillaries ${version} result:`, JSON.stringify(response).substring(0, 1500));
+
+        // Parse ancillary offers from response
+        const offers = response?.ancillaryOffers || response?.offers || [];
+        const ancillaries = [];
+
+        for (const offer of offers) {
+          const items = offer.items || [];
+          for (const item of items) {
+            ancillaries.push({
+              offerId: offer.id || null,
+              itemId: item.id || null,
+              groupCode: item.ancillary?.groupCode || item.groupCode || '',
+              subCode: item.ancillary?.subCode || item.subCode || '',
+              commercialName: item.ancillary?.commercialName || item.commercialName || '',
+              airlineCode: item.ancillary?.airlineCode || item.airlineCode || '',
+              price: item.price?.amount || item.totalAmount || 0,
+              currency: item.price?.currencyCode || item.currency || 'BDT',
+              segmentIds: item.segmentReferenceIds || [],
+              passengerIds: item.passengerReferenceIds || [],
+            });
+          }
+        }
+
+        return {
+          success: true,
+          method: `stateless-ancillaries-${version}`,
+          ancillaries,
+          totalOffers: ancillaries.length,
+          rawResponse: response,
+        };
+      } catch (verErr) {
+        console.log(`[Sabre] Stateless ancillaries ${version} failed: ${verErr.message?.substring(0, 300)}`);
+        lastError = verErr;
       }
     }
 
-    return {
-      success: true,
-      method: 'stateless-ancillaries',
-      ancillaries,
-      totalOffers: ancillaries.length,
-      rawResponse: response,
-    };
+    // If all versions fail, return graceful failure (some PCCs don't have this entitlement)
+    throw lastError || new Error('All stateless ancillary API versions failed');
   } catch (err) {
     console.error(`[Sabre] Stateless ancillaries failed:`, err.message);
     return { success: false, error: err.message, method: 'stateless-ancillaries' };
