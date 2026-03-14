@@ -2953,9 +2953,19 @@ const FlightResults = () => {
         ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - 
         ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0))
       )[0];
+      const minP = Math.min(...withPayable.map(p => p.payableTotal));
+      const maxP = Math.max(...withPayable.map(p => p.payableTotal));
+      const minD = Math.min(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
+      const maxD = Math.max(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
+      const priceSpread = maxP - minP || 1;
+      const durSpread = maxD - minD || 1;
       const bestPair = [...withPayable].sort((a, b) => {
-        const sa = a.payableTotal * 0.5 + ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) * 30;
-        const sb = b.payableTotal * 0.5 + ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)) * 30;
+        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
+        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
+        const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
+        const sa = ((a.payableTotal - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
+        const sb = ((b.payableTotal - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
         return sa - sb;
       })[0];
       return {
