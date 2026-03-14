@@ -2459,6 +2459,13 @@ const FlightResults = () => {
   }, [fromCode, toCode, departDate, returnDate, adults, children, infants, cabinClass]);
 
   const applySearchEdit = useCallback(() => {
+    // Validate scope — same rules as homepage SearchWidget
+    const fromAp = AIRPORTS.find(a => a.code === editFrom);
+    const toAp = AIRPORTS.find(a => a.code === editTo);
+    if (editFrom === editTo) return;
+    if (editScope === "domestic" && (fromAp?.country !== "BD" || toAp?.country !== "BD")) return;
+    if (editScope === "international" && fromAp?.country === "BD" && toAp?.country === "BD") return;
+
     const p = new URLSearchParams();
     if (editFrom) p.set("from", editFrom);
     if (editTo) p.set("to", editTo);
@@ -2472,7 +2479,7 @@ const FlightResults = () => {
     if (isMultiCity) p.set("tripType", "multicity");
     navigate(`/flights?${p.toString()}`);
     setShowRouteEdit(false); setShowDateEdit(false); setShowPaxEdit(false); setShowModifyPanel(false);
-  }, [editFrom, editTo, editDepart, editReturn, editAdults, editChildren, editInfants, editCabin, editPreferredCarrier, isMultiCity, navigate]);
+  }, [editFrom, editTo, editDepart, editReturn, editAdults, editChildren, editInfants, editCabin, editPreferredCarrier, isMultiCity, editScope, navigate]);
 
   const shiftDate = useCallback((days: number) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -2489,11 +2496,24 @@ const FlightResults = () => {
     navigate(`/flights?${p.toString()}`);
   }, [departDate, returnDate, searchParams, navigate]);
 
+  // Scope-aware airport filtering — same logic as homepage SearchWidget
+  const domesticAirports = useMemo(() => AIRPORTS.filter(a => a.country === "BD"), []);
   const filteredAirports = useMemo(() => {
-    if (!airportSearch) return AIRPORTS.slice(0, 10);
+    // Apply scope filter: domestic = BD only; international: for "from" show all, for "to" show non-BD if from is BD
+    let pool = AIRPORTS;
+    if (editScope === "domestic") {
+      pool = domesticAirports;
+    } else if (editingField === "to") {
+      // International: if from is BD, only show non-BD destinations
+      const fromAp = AIRPORTS.find(a => a.code === editFrom);
+      if (fromAp?.country === "BD") {
+        pool = AIRPORTS.filter(a => a.country !== "BD");
+      }
+    }
+    if (!airportSearch) return pool.slice(0, 10);
     const q = airportSearch.toLowerCase();
-    return AIRPORTS.filter(a => a.code.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)).slice(0, 8);
-  }, [airportSearch]);
+    return pool.filter(a => a.code.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [airportSearch, editScope, editingField, editFrom, domesticAirports]);
 
 
   const carrierCode = searchParams.get("carrier") || "";
@@ -2938,7 +2958,22 @@ const FlightResults = () => {
                     return (
                       <button key={t.key} onClick={() => {
                         if (t.key === "multicity") {
-                          navigate("/");
+                          // Navigate to flights page with multi-city mode pre-selected via URL params
+                          const p = new URLSearchParams();
+                          p.set("tripType", "multicity");
+                          // Seed first segment from current route
+                          if (fromCode && toCode && departDate) {
+                            const segments = [
+                              { from: fromCode, to: toCode, date: departDate },
+                              { from: toCode, to: "", date: "" },
+                            ];
+                            p.set("segments", JSON.stringify(segments));
+                          }
+                          p.set("adults", adults);
+                          if (parseInt(children) > 0) p.set("children", children);
+                          if (parseInt(infants) > 0) p.set("infants", infants);
+                          if (cabinClass) p.set("cabin", cabinClass);
+                          navigate(`/flights?${p.toString()}`);
                           return;
                         }
                         const p = new URLSearchParams(searchParams);
@@ -2979,9 +3014,23 @@ const FlightResults = () => {
                 <PopoverContent className="w-80 p-3 z-[60]" align="start">
                   <p className="text-xs font-bold text-muted-foreground mb-2">Edit Route</p>
                   {/* Scope toggle */}
-                  <div className="flex gap-1.5 mb-3">
+                   <div className="flex gap-1.5 mb-3">
                     {(["domestic", "international"] as const).map(s => (
-                      <button key={s} onClick={() => setEditScope(s)}
+                      <button key={s} onClick={() => {
+                        setEditScope(s);
+                        // Auto-reset airports that violate the new scope — same as homepage
+                        if (s === "domestic") {
+                          const fromAp = AIRPORTS.find(a => a.code === editFrom);
+                          const toAp = AIRPORTS.find(a => a.code === editTo);
+                          if (fromAp?.country !== "BD") setEditFrom(domesticAirports[0]?.code || "DAC");
+                          if (toAp?.country !== "BD") setEditTo(domesticAirports[1]?.code || "CXB");
+                        } else {
+                          // International: if both are BD, reset destination
+                          const fromAp = AIRPORTS.find(a => a.code === editFrom);
+                          const toAp = AIRPORTS.find(a => a.code === editTo);
+                          if (fromAp?.country === "BD" && toAp?.country === "BD") setEditTo("");
+                        }
+                      }}
                         className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${editScope === s ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:border-primary/40"}`}>
                         {s === "domestic" ? "Domestic" : "International"}
                       </button>
