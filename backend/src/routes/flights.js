@@ -250,8 +250,173 @@ router.post('/purchase-ancillary', authenticate, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════
+// SECTION 24: Void Flight Tickets
+// ═══════════════════════════════════════════════════════════════
+router.post('/void', authenticate, async (req, res) => {
+  try {
+    const { pnr, tickets } = req.body;
+    if (!pnr && (!tickets || !tickets.length)) {
+      return res.status(400).json({ message: 'PNR or ticket numbers required' });
+    }
+    const result = await sabreVoid({ pnr, tickets });
+    res.json(result);
+  } catch (err) {
+    console.error('[Void] Error:', err.message);
+    res.status(500).json({ message: 'Void failed', error: err.message });
+  }
+});
 
-router.get('/tti-diagnostic', async (req, res) => {
+// ═══════════════════════════════════════════════════════════════
+// SECTION 23: Refund (2-step: price → fulfill)
+// ═══════════════════════════════════════════════════════════════
+router.post('/refund/price', authenticate, async (req, res) => {
+  try {
+    const { pnr, passengers, refundDocuments, qualifiers } = req.body;
+    if (!pnr || !refundDocuments?.length) {
+      return res.status(400).json({ message: 'PNR and refundDocuments required' });
+    }
+    const result = await sabreRefundPrice({ pnr, passengers, refundDocuments, qualifiers });
+    res.json(result);
+  } catch (err) {
+    console.error('[RefundPrice] Error:', err.message);
+    res.status(500).json({ message: 'Refund pricing failed', error: err.message });
+  }
+});
+
+router.post('/refund/fulfill', authenticate, async (req, res) => {
+  try {
+    const { pnr, passengers, formsOfRefund, refundDocuments, cancelItinerary } = req.body;
+    if (!pnr || !refundDocuments?.length) {
+      return res.status(400).json({ message: 'PNR and refundDocuments required' });
+    }
+    const result = await sabreRefundFulfill({ pnr, passengers, formsOfRefund, refundDocuments, cancelItinerary });
+    res.json(result);
+  } catch (err) {
+    console.error('[RefundFulfill] Error:', err.message);
+    res.status(500).json({ message: 'Refund fulfill failed', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 22: Exchange / Reissue
+// ═══════════════════════════════════════════════════════════════
+router.post('/exchange', authenticate, async (req, res) => {
+  try {
+    const { pnr, originalTicketNumber, cancelSegments, newSegments, nameNumber, priceIncreaseTolerance, priceDecreaseTolerance } = req.body;
+    if (!pnr || !originalTicketNumber || !newSegments?.length) {
+      return res.status(400).json({ message: 'PNR, originalTicketNumber, and newSegments required' });
+    }
+    const { exchangeBooking } = require('./sabre-soap');
+    const result = await exchangeBooking({ pnr, originalTicketNumber, cancelSegments, newSegments, nameNumber, priceIncreaseTolerance, priceDecreaseTolerance });
+    res.json(result);
+  } catch (err) {
+    console.error('[Exchange] Error:', err.message);
+    res.status(500).json({ message: 'Exchange failed', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 20: Structured Fare Rules
+// ═══════════════════════════════════════════════════════════════
+router.get('/fare-rules', async (req, res) => {
+  try {
+    const { origin, destination, departureDate, arrivalDate, airlineCode, flightNumber, fareBasis, bookingClass, passengerType } = req.query;
+    if (!origin || !destination || !departureDate || !airlineCode || !flightNumber) {
+      return res.status(400).json({ message: 'Required: origin, destination, departureDate, airlineCode, flightNumber' });
+    }
+    const { getStructuredFareRules } = require('./sabre-soap');
+    const result = await getStructuredFareRules({ origin, destination, departureDate, arrivalDate, airlineCode, flightNumber, fareBasis, bookingClass, passengerType });
+    res.json(result);
+  } catch (err) {
+    console.error('[FareRules] Error:', err.message);
+    res.status(500).json({ message: 'Fare rules failed', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 25: Flight Status (FLIFO)
+// ═══════════════════════════════════════════════════════════════
+router.get('/status', async (req, res) => {
+  try {
+    const { airlineCode, flightNumber, date, departureDate, origin, destination } = req.query;
+    if ((!airlineCode || !flightNumber) && (!origin || !destination)) {
+      return res.status(400).json({ message: 'Required: (airlineCode + flightNumber) or (origin + destination), plus date' });
+    }
+    const result = await sabreFlightStatus({ airlineCode, flightNumber, departureDate: departureDate || date, origin, destination });
+    res.json(result);
+  } catch (err) {
+    console.error('[FlightStatus] Error:', err.message);
+    res.status(500).json({ message: 'Flight status failed', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 17 (complete): Stateless Ancillaries
+// ═══════════════════════════════════════════════════════════════
+router.post('/ancillaries-stateless', authenticate, async (req, res) => {
+  try {
+    const { pnr, segments, passengers, mode } = req.body;
+    if (!pnr && (!segments || !segments.length)) {
+      return res.status(400).json({ message: 'PNR or segments required' });
+    }
+    const result = await sabreGetAncillaries({ pnr, segments, passengers, mode });
+    res.json(result);
+  } catch (err) {
+    console.error('[AncillariesStateless] Error:', err.message);
+    res.status(500).json({ message: 'Stateless ancillaries failed', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 18 (complete): Add Ancillary Stateless + EMD
+// ═══════════════════════════════════════════════════════════════
+router.post('/add-ancillary-stateless', authenticate, async (req, res) => {
+  try {
+    const { pnr, segments, passengers, offers, ancillaries } = req.body;
+    if (!pnr || !offers?.length) {
+      return res.status(400).json({ message: 'PNR and offers required' });
+    }
+    const result = await sabreAddAncillary({ pnr, segments, passengers, offers, ancillaries });
+    res.json(result);
+  } catch (err) {
+    console.error('[AddAncillaryStateless] Error:', err.message);
+    res.status(500).json({ message: 'Add ancillary failed', error: err.message });
+  }
+});
+
+router.post('/fulfill-tickets', authenticate, async (req, res) => {
+  try {
+    const { pnr, fulfillments, formsOfPayment, acceptPriceChanges } = req.body;
+    if (!pnr) {
+      return res.status(400).json({ message: 'PNR required' });
+    }
+    const result = await sabreFulfillTickets({ pnr, fulfillments, formsOfPayment, acceptPriceChanges });
+    res.json(result);
+  } catch (err) {
+    console.error('[FulfillTickets] Error:', err.message);
+    res.status(500).json({ message: 'Fulfill tickets failed', error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 26 (complete): Post-booking Frequent Flyer Update
+// ═══════════════════════════════════════════════════════════════
+router.post('/update-frequent-flyer', authenticate, async (req, res) => {
+  try {
+    const { pnr, loyaltyUpdates } = req.body;
+    if (!pnr || !loyaltyUpdates?.length) {
+      return res.status(400).json({ message: 'PNR and loyaltyUpdates required' });
+    }
+    const result = await sabreUpdateFF({ pnr, loyaltyUpdates });
+    res.json(result);
+  } catch (err) {
+    console.error('[UpdateFF] Error:', err.message);
+    res.status(500).json({ message: 'FF update failed', error: err.message });
+  }
+});
+
+
   try {
     const { getTTIConfig, ttiRequest } = require('./tti-flights');
     const dns = require('dns').promises;
