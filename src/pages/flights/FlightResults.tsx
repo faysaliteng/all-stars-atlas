@@ -905,7 +905,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         {/* Destination */}
         <div className="text-center shrink-0">
           <p className="text-[10px] sm:text-[10px] font-medium text-muted-foreground">{toCode}</p>
-          <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight">
+          <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">
             {arriveTime}
             {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
