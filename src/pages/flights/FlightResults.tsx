@@ -257,8 +257,8 @@ const FilterPanel = ({
     const nonStop = flights.filter((f: any) => (f.stops ?? 0) === 0);
     const oneStop = flights.filter((f: any) => (f.stops ?? 0) === 1);
     const multiStop = flights.filter((f: any) => (f.stops ?? 0) > 1);
-    const earlyMorning = flights.filter((f: any) => { if (!f.departureTime) return false; return new Date(f.departureTime).getHours() < 6; });
-    const lateDep = flights.filter((f: any) => { if (!f.departureTime) return false; return new Date(f.departureTime).getHours() >= 18; });
+    const earlyMorning = flights.filter((f: any) => { const h = getApiLocalHour(f.departureTime); return h !== null && h < 6; });
+    const lateDep = flights.filter((f: any) => { const h = getApiLocalHour(f.departureTime); return h !== null && h >= 18; });
     const refundable = flights.filter((f: any) => f.refundable === true);
     if (nonStop.length > 0) stats.push({ key: 'nonstop', label: 'Non Stop', count: nonStop.length, cheapest: cheapestOf(nonStop) });
     if (oneStop.length > 0) stats.push({ key: '1stop', label: '1 Stop', count: oneStop.length, cheapest: cheapestOf(oneStop) });
