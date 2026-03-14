@@ -46,9 +46,7 @@ const statusConfig: Record<string, { icon: typeof Plane; color: string; label: s
 
 function fmtDT(dt?: string | null) {
   if (!dt) return "—";
-  try {
-    return new Date(dt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-  } catch { return dt; }
+  return formatApiTime(dt, { withGMT: true });
 }
 
 const FlightStatusBadge = ({ airlineCode, flightNumber, date, compact = false }: FlightStatusProps) => {
