@@ -3051,7 +3051,7 @@ const FlightResults = () => {
 
             {/* Session Timer */}
             <div className="ml-auto flex items-center gap-2 shrink-0">
-              <SessionTimer startTime={searchStartTime} />
+              <SessionTimer startTime={searchStartTime} onExpired={() => setResultsExpired(true)} />
               <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-6 h-10" onClick={applySearchEdit}>
                 <Search className="w-4 h-4 mr-1.5" /> Modify
               </Button>
