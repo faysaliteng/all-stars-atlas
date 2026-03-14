@@ -832,7 +832,7 @@ const SearchWidget = () => {
 
             <div className={`${tripType === "roundtrip" ? "md:col-span-2" : "md:col-span-4"} flex items-center justify-center p-3`}>
               <Button onClick={handleFlightSearch} className="w-full h-12 md:h-full md:min-h-[56px] rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-base font-extrabold shadow-xl shadow-secondary/25 hover:shadow-secondary/40 transition-all active:scale-[0.98]">
-                <Search className="w-5 h-5 mr-2" /> Search
+                <SendHorizontal className="w-5 h-5 mr-2" /> SEARCH
               </Button>
             </div>
           </div>
