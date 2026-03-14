@@ -2,6 +2,31 @@
 
 All notable changes to this project are documented in this file.
 
+## [4.0.0] — 2026-03-14 — Full Sabre GDS Coverage: All 26 Features Implemented
+
+### Added — 10 New API Endpoints
+- **Section 24: Void Tickets** — `POST /flights/void` → Sabre `POST /v1/trip/orders/voidFlightTickets` (by PNR or ticket numbers)
+- **Section 23: Refund Pricing** — `POST /flights/refund/price` → Sabre `POST /v1/offers/refund/price` (get refund quote)
+- **Section 23: Refund Fulfill** — `POST /flights/refund/fulfill` → Sabre `POST /v1/offers/refund/fulfill` (execute refund)
+- **Section 22: Exchange/Reissue** — `POST /flights/exchange` → Sabre SOAP `ExchangeBookingRQ v1.1.0` (date change without cancel+rebook)
+- **Section 20: Structured Fare Rules** — `GET /flights/fare-rules` → Sabre SOAP `StructureFareRulesRQ v3.0.1` (penalty/rules parsing)
+- **Section 25: Flight Status (FLIFO)** — `GET /flights/status` → Sabre `GET /products/air/flight/status`
+- **Section 17: Stateless Ancillaries** — `POST /flights/ancillaries-stateless` → Sabre `POST /v1/offers/getAncillaries` (payload/PNR modes)
+- **Section 18: Add Ancillary Stateless** — `POST /flights/add-ancillary-stateless` → Sabre `POST /v1/offers/addAncillaries`
+- **Section 18: EMD/Fulfill Tickets** — `POST /flights/fulfill-tickets` → Sabre `POST /v1/trip/orders/fulfillOrder`
+- **Section 26: Post-booking FF Update** — `POST /flights/update-frequent-flyer` → Sabre UpdatePNR v2.4.0 with FQTV SSR
+
+### Added — Backend Functions
+- `sabre-flights.js`: `voidTickets()`, `refundPrice()`, `refundFulfill()`, `getFlightStatus()`, `getAncillariesStateless()`, `addAncillaryStateless()`, `fulfillTickets()`, `updateFrequentFlyer()`
+- `sabre-soap.js`: `getStructuredFareRules()`, `exchangeBooking()`
+
+### Result
+- **All 26 Sabre GDS sections fully implemented** — 100% feature coverage
+- Total API endpoints: 100+
+- Total backend route files: 25
+
+---
+
 ## [3.9.9.9] — 2026-03-13 — Sabre Cancel Hardening: SOAP Session Management + Host TA Recovery
 
 ### Fixed
