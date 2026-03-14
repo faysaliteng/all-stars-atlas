@@ -569,23 +569,23 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
       // Sort by price ascending
       const sorted = [...fd].sort((a: any, b: any) => (a.price || a.amount || 0) - (b.price || b.amount || 0));
       return sorted.map((f: any, i: number) => {
-        // Use brand name if available, otherwise generate label
         const label = f.brandName 
           ? f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
           : f.label || `Fare Option ${i + 1}`;
         return {
           id: `option-${i}`,
           label,
+          fareBasis: f.fareBasis || "",
+          bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
+          availableSeats: f.availableSeats ?? primary.availableSeats ?? null,
           handBaggage: f.handBaggage || primary.handBaggage || null,
           checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
           meal: f.mealIncluded ? "Included" : null,
           seatSelection: f.seatSelection ?? false,
           rebooking: f.rebookingAllowed !== false,
           cancellation: f.cancellationAllowed !== false,
-          miles: f.milesAccrual ?? false,
-          bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
-          grossFare: f.price || f.amount || f.total || primary.price || 0,
           refundable: f.refundable ?? primary.refundable ?? false,
+          grossFare: f.price || f.amount || f.total || primary.price || 0,
           flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
           isBestValue: i === 0,
         };
