@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import {
-  Plane, Building2, FileText, Palmtree, Stethoscope, Car,
-  Smartphone, PhoneCall, Receipt, ArrowLeftRight, Search, Users,
-  MapPin, ChevronDown, Wifi, Globe, Zap, CreditCard
+  PlaneTakeoff, PlaneLanding, Building2, FileText, Palmtree, Stethoscope, Car,
+  Smartphone, PhoneCall, Receipt, Repeat2, Search, Users,
+  MapPin, ChevronDown, Wifi, Globe, Zap, CreditCard,
+  CalendarDays, Armchair, SendHorizontal, CirclePlus, UserRound, Plane,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
