@@ -865,6 +865,7 @@ function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
   const directGross = pickPositive(
     f?.price,
     f?.totalPrice,
+    f?.totalRoundTripPrice,
     f?.grossPrice,
     f?.amount,
     f?.total,
