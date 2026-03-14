@@ -1,0 +1,1521 @@
+{
+  "log": {
+    "version": "1.2",
+    "creator": {
+      "name": "WebInspector",
+      "version": "537.36"
+    },
+    "pages": [
+      {
+        "startedDateTime": "2026-03-14T20:11:47.145Z",
+        "id": "page_1",
+        "title": "https://seven-trip.com/flights?from=DAC&to=WAW&depart=2026-03-27&return=2026-03-30&adults=1&cabin=economy",
+        "pageTimings": {
+          "onContentLoad": 960.3450000286102,
+          "onLoad": 1241.5980000514537
+        }
+      }
+    ],
+    "entries": [
+      {
+        "_connectionId": "2183677",
+        "_initiator": {
+          "type": "script",
+          "stack": {
+            "callFrames": [
+              {
+                "functionName": "",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 96508
+              },
+              {
+                "functionName": "Uc",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 96496
+              },
+              {
+                "functionName": "",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 96593
+              }
+            ]
+          }
+        },
+        "_priority": "Low",
+        "_resourceType": "fetch",
+        "cache": {},
+        "connection": "443",
+        "pageref": "page_1",
+        "request": {
+          "method": "GET",
+          "url": "https://seven-trip.com/api/health",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-GB,en;q=0.9"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Host",
+              "value": "seven-trip.com"
+            },
+            {
+              "name": "Referer",
+              "value": "https://seven-trip.com/flights?from=DAC&to=WAW&depart=2026-03-27&return=2026-03-30&adults=1&cabin=economy"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "empty"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "cors"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "same-origin"
+            },
+            {
+              "name": "Sec-GPC",
+              "value": "1"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "sec-ch-ua",
+              "value": "\"Not:A-Brand\";v=\"99\", \"Brave\";v=\"145\", \"Chromium\";v=\"145\""
+            },
+            {
+              "name": "sec-ch-ua-mobile",
+              "value": "?0"
+            },
+            {
+              "name": "sec-ch-ua-platform",
+              "value": "\"Windows\""
+            }
+          ],
+          "queryString": [],
+          "cookies": [],
+          "headersSize": 610,
+          "bodySize": 0
+        },
+        "response": {
+          "status": 200,
+          "statusText": "OK",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Access-Control-Allow-Credentials",
+              "value": "true"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Length",
+              "value": "54"
+            },
+            {
+              "name": "Content-Security-Policy",
+              "value": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "name": "Date",
+              "value": "Sat, 14 Mar 2026 20:11:54 GMT"
+            },
+            {
+              "name": "ETag",
+              "value": "W/\"36-zi4AnBETTwu0wNL5sQzc6r1XuY8\""
+            },
+            {
+              "name": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "name": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "name": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "name": "Strict-Transport-Security",
+              "value": "max-age=15552000; includeSubDomains"
+            },
+            {
+              "name": "Vary",
+              "value": "Origin"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "name": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "1; mode=block"
+            }
+          ],
+          "cookies": [],
+          "content": {
+            "size": 54,
+            "mimeType": "application/json",
+            "compression": 0,
+            "text": "{\"status\":\"ok\",\"timestamp\":\"2026-03-14T20:11:54.659Z\"}"
+          },
+          "redirectURL": "",
+          "headersSize": 989,
+          "bodySize": 54,
+          "_transferSize": 1043,
+          "_error": null,
+          "_fetchedViaServiceWorker": false
+        },
+        "serverIPAddress": "187.77.137.249",
+        "startedDateTime": "2026-03-14T20:11:48.103Z",
+        "time": 209.57100007217377,
+        "timings": {
+          "blocked": 3.0170000632777807,
+          "dns": -1,
+          "ssl": -1,
+          "connect": -1,
+          "send": 0.13200000000000012,
+          "wait": 205.8989999846369,
+          "receive": 0.5230000242590904,
+          "_blocked_queueing": 1.369000063277781,
+          "_workerStart": -1,
+          "_workerReady": -1,
+          "_workerFetchStart": -1,
+          "_workerRespondWithSettled": -1
+        }
+      },
+      {
+        "_connectionId": "2183677",
+        "_initiator": {
+          "type": "script",
+          "stack": {
+            "callFrames": [
+              {
+                "functionName": "",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 96508
+              },
+              {
+                "functionName": "Uc",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 96496
+              },
+              {
+                "functionName": "",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 96593
+              }
+            ]
+          }
+        },
+        "_priority": "Low",
+        "_resourceType": "fetch",
+        "cache": {},
+        "connection": "443",
+        "pageref": "page_1",
+        "request": {
+          "method": "GET",
+          "url": "https://seven-trip.com/api/cms/pages/home",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-GB,en;q=0.9"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Host",
+              "value": "seven-trip.com"
+            },
+            {
+              "name": "Referer",
+              "value": "https://seven-trip.com/flights?from=DAC&to=WAW&depart=2026-03-27&return=2026-03-30&adults=1&cabin=economy"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "empty"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "cors"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "same-origin"
+            },
+            {
+              "name": "Sec-GPC",
+              "value": "1"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "sec-ch-ua",
+              "value": "\"Not:A-Brand\";v=\"99\", \"Brave\";v=\"145\", \"Chromium\";v=\"145\""
+            },
+            {
+              "name": "sec-ch-ua-mobile",
+              "value": "?0"
+            },
+            {
+              "name": "sec-ch-ua-platform",
+              "value": "\"Windows\""
+            }
+          ],
+          "queryString": [],
+          "cookies": [],
+          "headersSize": 618,
+          "bodySize": 0
+        },
+        "response": {
+          "status": 404,
+          "statusText": "Not Found",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Access-Control-Allow-Credentials",
+              "value": "true"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Length",
+              "value": "41"
+            },
+            {
+              "name": "Content-Security-Policy",
+              "value": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "name": "Date",
+              "value": "Sat, 14 Mar 2026 20:11:54 GMT"
+            },
+            {
+              "name": "ETag",
+              "value": "W/\"29-Vz2s1JfMIg4h6QIJhCdO4k1fbyk\""
+            },
+            {
+              "name": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "name": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "name": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "name": "Strict-Transport-Security",
+              "value": "max-age=15552000; includeSubDomains"
+            },
+            {
+              "name": "Vary",
+              "value": "Origin"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "name": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "1; mode=block"
+            }
+          ],
+          "cookies": [],
+          "content": {
+            "size": 41,
+            "mimeType": "application/json",
+            "compression": 0,
+            "text": "{\"message\":\"Page not found\",\"status\":404}"
+          },
+          "redirectURL": "",
+          "headersSize": 996,
+          "bodySize": 41,
+          "_transferSize": 1037,
+          "_error": null,
+          "_fetchedViaServiceWorker": false
+        },
+        "serverIPAddress": "187.77.137.249",
+        "startedDateTime": "2026-03-14T20:11:48.103Z",
+        "time": 421.4379999320954,
+        "timings": {
+          "blocked": 209.4219999690801,
+          "dns": -1,
+          "ssl": -1,
+          "connect": -1,
+          "send": 0.09499999999999886,
+          "wait": 209.2889999451041,
+          "receive": 2.6320000179111958,
+          "_blocked_queueing": 1.7999999690800905,
+          "_workerStart": -1,
+          "_workerReady": -1,
+          "_workerFetchStart": -1,
+          "_workerRespondWithSettled": -1
+        }
+      },
+      {
+        "_connectionId": "2183677",
+        "_initiator": {
+          "type": "script",
+          "stack": {
+            "callFrames": [
+              {
+                "functionName": "request",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 41327
+              },
+              {
+                "functionName": "get",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 42023
+              },
+              {
+                "functionName": "queryFn",
+                "scriptId": "27727",
+                "url": "https://seven-trip.com/assets/useCmsContent-Dp3yQrSi.js",
+                "lineNumber": 3,
+                "columnNumber": 26520
+              },
+              {
+                "functionName": "n",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 23679
+              },
+              {
+                "functionName": "_",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 19050
+              },
+              {
+                "functionName": "start",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 19509
+              },
+              {
+                "functionName": "fetch",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 25058
+              },
+              {
+                "functionName": "H",
+                "scriptId": "27725",
+                "url": "https://seven-trip.com/assets/useQuery-B1DOrqGm.js",
+                "lineNumber": 0,
+                "columnNumber": 6422
+              },
+              {
+                "functionName": "onSubscribe",
+                "scriptId": "27725",
+                "url": "https://seven-trip.com/assets/useQuery-B1DOrqGm.js",
+                "lineNumber": 0,
+                "columnNumber": 1269
+              },
+              {
+                "functionName": "subscribe",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 13361
+              },
+              {
+                "functionName": "",
+                "scriptId": "27725",
+                "url": "https://seven-trip.com/assets/useQuery-B1DOrqGm.js",
+                "lineNumber": 0,
+                "columnNumber": 9635
+              },
+              {
+                "functionName": "js",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 29,
+                "columnNumber": 19601
+              },
+              {
+                "functionName": "wl",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 24176
+              },
+              {
+                "functionName": "en",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 42075
+              },
+              {
+                "functionName": "la",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 36407
+              },
+              {
+                "functionName": "gt",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 29,
+                "columnNumber": 3257
+              },
+              {
+                "functionName": "Xd",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 40983
+              },
+              {
+                "functionName": "Ct",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 39989
+              },
+              {
+                "functionName": "mc",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 35519
+              },
+              {
+                "functionName": "E",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 16,
+                "columnNumber": 1561
+              },
+              {
+                "functionName": "mn",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 16,
+                "columnNumber": 1929
+              }
+            ],
+            "parentId": {
+              "id": "11618",
+              "debuggerId": "-1233931084635939435.-984385466295965387"
+            }
+          }
+        },
+        "_priority": "High",
+        "_resourceType": "fetch",
+        "cache": {},
+        "connection": "443",
+        "pageref": "page_1",
+        "request": {
+          "method": "GET",
+          "url": "https://seven-trip.com/api/cms/pages/flights",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-GB,en;q=0.9"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Host",
+              "value": "seven-trip.com"
+            },
+            {
+              "name": "Referer",
+              "value": "https://seven-trip.com/flights?from=DAC&to=WAW&depart=2026-03-27&return=2026-03-30&adults=1&cabin=economy"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "empty"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "cors"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "same-origin"
+            },
+            {
+              "name": "Sec-GPC",
+              "value": "1"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "sec-ch-ua",
+              "value": "\"Not:A-Brand\";v=\"99\", \"Brave\";v=\"145\", \"Chromium\";v=\"145\""
+            },
+            {
+              "name": "sec-ch-ua-mobile",
+              "value": "?0"
+            },
+            {
+              "name": "sec-ch-ua-platform",
+              "value": "\"Windows\""
+            }
+          ],
+          "queryString": [],
+          "cookies": [],
+          "headersSize": 653,
+          "bodySize": 0
+        },
+        "response": {
+          "status": 404,
+          "statusText": "Not Found",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Access-Control-Allow-Credentials",
+              "value": "true"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Length",
+              "value": "41"
+            },
+            {
+              "name": "Content-Security-Policy",
+              "value": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "name": "Date",
+              "value": "Sat, 14 Mar 2026 20:11:55 GMT"
+            },
+            {
+              "name": "ETag",
+              "value": "W/\"29-Vz2s1JfMIg4h6QIJhCdO4k1fbyk\""
+            },
+            {
+              "name": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "name": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "name": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "name": "Strict-Transport-Security",
+              "value": "max-age=15552000; includeSubDomains"
+            },
+            {
+              "name": "Vary",
+              "value": "Origin"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "name": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "1; mode=block"
+            }
+          ],
+          "cookies": [],
+          "content": {
+            "size": 41,
+            "mimeType": "application/json",
+            "compression": 0,
+            "text": "{\"message\":\"Page not found\",\"status\":404}"
+          },
+          "redirectURL": "",
+          "headersSize": 996,
+          "bodySize": 41,
+          "_transferSize": 1037,
+          "_error": null,
+          "_fetchedViaServiceWorker": false
+        },
+        "serverIPAddress": "187.77.137.249",
+        "startedDateTime": "2026-03-14T20:11:48.365Z",
+        "time": 367.3170000547543,
+        "timings": {
+          "blocked": 159.62600000739099,
+          "dns": -1,
+          "ssl": -1,
+          "connect": -1,
+          "send": 0.17300000000000182,
+          "wait": 207.07000001211463,
+          "receive": 0.4480000352486968,
+          "_blocked_queueing": 2.386000007390976,
+          "_workerStart": -1,
+          "_workerReady": -1,
+          "_workerFetchStart": -1,
+          "_workerRespondWithSettled": -1
+        }
+      },
+      {
+        "_connectionId": "2183705",
+        "_initiator": {
+          "type": "script",
+          "stack": {
+            "callFrames": [
+              {
+                "functionName": "request",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 41327
+              },
+              {
+                "functionName": "get",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 42023
+              },
+              {
+                "functionName": "",
+                "scriptId": "27717",
+                "url": "https://seven-trip.com/assets/FlightResults-BzoiKZAL.js",
+                "lineNumber": 10,
+                "columnNumber": 96209
+              },
+              {
+                "functionName": "wl",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 24176
+              },
+              {
+                "functionName": "en",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 42075
+              },
+              {
+                "functionName": "la",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 36407
+              },
+              {
+                "functionName": "gt",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 29,
+                "columnNumber": 3257
+              },
+              {
+                "functionName": "Xd",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 40983
+              },
+              {
+                "functionName": "Ct",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 39989
+              },
+              {
+                "functionName": "mc",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 35519
+              },
+              {
+                "functionName": "E",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 16,
+                "columnNumber": 1561
+              },
+              {
+                "functionName": "mn",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 16,
+                "columnNumber": 1929
+              }
+            ],
+            "parentId": {
+              "id": "11618",
+              "debuggerId": "-1233931084635939435.-984385466295965387"
+            }
+          }
+        },
+        "_priority": "High",
+        "_resourceType": "fetch",
+        "cache": {},
+        "connection": "443",
+        "pageref": "page_1",
+        "request": {
+          "method": "GET",
+          "url": "https://seven-trip.com/api/admin/settings",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-GB,en;q=0.9"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Host",
+              "value": "seven-trip.com"
+            },
+            {
+              "name": "Referer",
+              "value": "https://seven-trip.com/flights?from=DAC&to=WAW&depart=2026-03-27&return=2026-03-30&adults=1&cabin=economy"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "empty"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "cors"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "same-origin"
+            },
+            {
+              "name": "Sec-GPC",
+              "value": "1"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "sec-ch-ua",
+              "value": "\"Not:A-Brand\";v=\"99\", \"Brave\";v=\"145\", \"Chromium\";v=\"145\""
+            },
+            {
+              "name": "sec-ch-ua-mobile",
+              "value": "?0"
+            },
+            {
+              "name": "sec-ch-ua-platform",
+              "value": "\"Windows\""
+            }
+          ],
+          "queryString": [],
+          "cookies": [],
+          "headersSize": 650,
+          "bodySize": 0
+        },
+        "response": {
+          "status": 401,
+          "statusText": "Unauthorized",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Access-Control-Allow-Credentials",
+              "value": "true"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Length",
+              "value": "50"
+            },
+            {
+              "name": "Content-Security-Policy",
+              "value": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "name": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "name": "Date",
+              "value": "Sat, 14 Mar 2026 20:11:55 GMT"
+            },
+            {
+              "name": "ETag",
+              "value": "W/\"32-iSh+TulE0mQnB8Qe34cqSctgb/g\""
+            },
+            {
+              "name": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "name": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "name": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "name": "Strict-Transport-Security",
+              "value": "max-age=15552000; includeSubDomains"
+            },
+            {
+              "name": "Vary",
+              "value": "Origin"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "name": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "1; mode=block"
+            }
+          ],
+          "cookies": [],
+          "content": {
+            "size": 50,
+            "mimeType": "application/json",
+            "compression": 0,
+            "text": "{\"message\":\"Authentication required\",\"status\":401}"
+          },
+          "redirectURL": "",
+          "headersSize": 999,
+          "bodySize": 50,
+          "_transferSize": 1049,
+          "_error": null,
+          "_fetchedViaServiceWorker": false
+        },
+        "serverIPAddress": "187.77.137.249",
+        "startedDateTime": "2026-03-14T20:11:48.366Z",
+        "time": 338.1799999624491,
+        "timings": {
+          "blocked": 2.086999942548573,
+          "dns": 0,
+          "ssl": 130.167,
+          "connect": 130.176,
+          "send": 0.2120000000000175,
+          "wait": 204.3890000109449,
+          "receive": 1.3160000089555979,
+          "_blocked_queueing": 2.086999942548573,
+          "_workerStart": -1,
+          "_workerReady": -1,
+          "_workerFetchStart": -1,
+          "_workerRespondWithSettled": -1
+        }
+      },
+      {
+        "_connectionId": "2183705",
+        "_initiator": {
+          "type": "script",
+          "stack": {
+            "callFrames": [
+              {
+                "functionName": "request",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 41327
+              },
+              {
+                "functionName": "get",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 42023
+              },
+              {
+                "functionName": "queryFn",
+                "scriptId": "27724",
+                "url": "https://seven-trip.com/assets/useApiData-Dayr9e99.js",
+                "lineNumber": 0,
+                "columnNumber": 1728
+              },
+              {
+                "functionName": "n",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 23679
+              },
+              {
+                "functionName": "_",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 19050
+              },
+              {
+                "functionName": "start",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 19509
+              },
+              {
+                "functionName": "fetch",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 25058
+              },
+              {
+                "functionName": "H",
+                "scriptId": "27725",
+                "url": "https://seven-trip.com/assets/useQuery-B1DOrqGm.js",
+                "lineNumber": 0,
+                "columnNumber": 6422
+              },
+              {
+                "functionName": "onSubscribe",
+                "scriptId": "27725",
+                "url": "https://seven-trip.com/assets/useQuery-B1DOrqGm.js",
+                "lineNumber": 0,
+                "columnNumber": 1269
+              },
+              {
+                "functionName": "subscribe",
+                "scriptId": "27710",
+                "url": "https://seven-trip.com/assets/index-D89oCkeO.js",
+                "lineNumber": 192,
+                "columnNumber": 13361
+              },
+              {
+                "functionName": "",
+                "scriptId": "27725",
+                "url": "https://seven-trip.com/assets/useQuery-B1DOrqGm.js",
+                "lineNumber": 0,
+                "columnNumber": 9635
+              },
+              {
+                "functionName": "js",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 29,
+                "columnNumber": 19601
+              },
+              {
+                "functionName": "wl",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 24176
+              },
+              {
+                "functionName": "en",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 42075
+              },
+              {
+                "functionName": "la",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 36407
+              },
+              {
+                "functionName": "gt",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 29,
+                "columnNumber": 3257
+              },
+              {
+                "functionName": "Xd",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 40983
+              },
+              {
+                "functionName": "Ct",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 39989
+              },
+              {
+                "functionName": "mc",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 31,
+                "columnNumber": 35519
+              },
+              {
+                "functionName": "E",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 16,
+                "columnNumber": 1561
+              },
+              {
+                "functionName": "mn",
+                "scriptId": "27711",
+                "url": "https://seven-trip.com/assets/vendor-NZNeLg5m.js",
+                "lineNumber": 16,
+                "columnNumber": 1929
+              }
+            ],
+            "parentId": {
+              "id": "11618",
+              "debuggerId": "-1233931084635939435.-984385466295965387"
+            }
+          }
+        },
+        "_priority": "High",
+        "_resourceType": "fetch",
+        "cache": {},
+        "connection": "443",
+        "pageref": "page_1",
+        "request": {
+          "method": "GET",
+          "url": "https://seven-trip.com/api/flights/search?adults=1&cabinClass=economy&from=DAC&to=WAW&date=2026-03-27&return=2026-03-30",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-GB,en;q=0.9"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Host",
+              "value": "seven-trip.com"
+            },
+            {
+              "name": "If-None-Match",
+              "value": "W/\"1135b-vv6cVoTF58rreU8YBzHSXo3LotM\""
+            },
+            {
+              "name": "Referer",
+              "value": "https://seven-trip.com/flights?from=DAC&to=WAW&depart=2026-03-27&return=2026-03-30&adults=1&cabin=economy"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "empty"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "cors"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "same-origin"
+            },
+            {
+              "name": "Sec-GPC",
+              "value": "1"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "sec-ch-ua",
+              "value": "\"Not:A-Brand\";v=\"99\", \"Brave\";v=\"145\", \"Chromium\";v=\"145\""
+            },
+            {
+              "name": "sec-ch-ua-mobile",
+              "value": "?0"
+            },
+            {
+              "name": "sec-ch-ua-platform",
+              "value": "\"Windows\""
+            }
+          ],
+          "queryString": [
+            {
+              "name": "adults",
+              "value": "1"
+            },
+            {
+              "name": "cabinClass",
+              "value": "economy"
+            },
+            {
+              "name": "from",
+              "value": "DAC"
+            },
+            {
+              "name": "to",
+              "value": "WAW"
+            },
+            {
+              "name": "date",
+              "value": "2026-03-27"
+            },
+            {
+              "name": "return",
+              "value": "2026-03-30"
+            }
+          ],
+          "cookies": [],
+          "headersSize": 782,
+          "bodySize": 0
+        },
+        "response": {
+          "status": 304,
+          "statusText": "Not Modified",
+          "httpVersion": "HTTP/1.1",
+          "headers": [
+            {
+              "name": "Access-Control-Allow-Credentials",
+              "value": "true"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Content-Security-Policy",
+              "value": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+            },
+            {
+              "name": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "name": "Date",
+              "value": "Sat, 14 Mar 2026 20:11:59 GMT"
+            },
+            {
+              "name": "ETag",
+              "value": "W/\"1135b-vv6cVoTF58rreU8YBzHSXo3LotM\""
+            },
+            {
+              "name": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "name": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "name": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "name": "Strict-Transport-Security",
+              "value": "max-age=15552000; includeSubDomains"
+            },
+            {
+              "name": "Vary",
+              "value": "Origin"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "name": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "name": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "name": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "name": "X-XSS-Protection",
+              "value": "1; mode=block"
+            }
+          ],
+          "cookies": [],
+          "content": {
+            "size": 70491,
+            "mimeType": "application/json",
+            "text": "{\"data\":[{\"id\":\"sabre-g-0-1-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-1\",\"airline\":\"flydubai\",\"airlineCode\":\"FZ\",\"airlineLogo\":null,\"flightNumber\":\"FZ502\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T08:05:00+06:00\",\"arrivalTime\":\"2026-03-27T19:10:00+01:00\",\"duration\":\"16h 5m\",\"durationMinutes\":965,\"stops\":1,\"stopCodes\":[\"DXB\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"I\",\"availableSeats\":7,\"price\":131600,\"baseFare\":971,\"taxes\":12509,\"totalRoundTripPrice\":263199,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"DXB\",\"departureTime\":\"2026-03-27T08:05:00+06:00\",\"arrivalTime\":\"2026-03-27T11:55:00+04:00\",\"durationMinutes\":350,\"duration\":\"5h 50m\",\"flightNumber\":\"FZ502\",\"airlineCode\":\"FZ\",\"operatingAirline\":\"FZ\",\"aircraft\":\"7M8\",\"originTerminal\":\"1\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"DXB\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T14:00:00+04:00\",\"arrivalTime\":\"2026-03-27T19:10:00+01:00\",\"durationMinutes\":490,\"duration\":\"8h 10m\",\"flightNumber\":\"FZ1839\",\"airlineCode\":\"FZ\",\"operatingAirline\":\"FZ\",\"aircraft\":\"7M8\",\"originTerminal\":\"3\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"IRL7BD1\",\"bookingClass\":\"I\",\"cabinClass\":\"Y\",\"availableSeats\":7,\"price\":131600,\"baseFare\":971,\"taxes\":12509,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":971,\"taxes\":12509,\"total\":13480,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"FZ\",\"_sabreSeqNumber\":\"0-1\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-1-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-1\",\"airline\":\"flydubai\",\"airlineCode\":\"FZ\",\"airlineLogo\":null,\"flightNumber\":\"FZ1840\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T21:25:00+02:00\",\"arrivalTime\":\"2026-03-31T21:00:00+06:00\",\"duration\":\"19h 35m\",\"durationMinutes\":1175,\"stops\":1,\"stopCodes\":[\"DXB\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"I\",\"availableSeats\":7,\"price\":131600,\"baseFare\":971,\"taxes\":12509,\"totalRoundTripPrice\":263199,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"DXB\",\"departureTime\":\"2026-03-30T21:25:00+02:00\",\"arrivalTime\":\"2026-03-31T05:25:00+04:00\",\"durationMinutes\":360,\"duration\":\"6h\",\"flightNumber\":\"FZ1840\",\"airlineCode\":\"FZ\",\"operatingAirline\":\"FZ\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DXB\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T13:55:00+04:00\",\"arrivalTime\":\"2026-03-31T21:00:00+06:00\",\"durationMinutes\":305,\"duration\":\"5h 5m\",\"flightNumber\":\"FZ523\",\"airlineCode\":\"FZ\",\"operatingAirline\":\"FZ\",\"aircraft\":\"7M8\",\"originTerminal\":\"2\",\"destinationTerminal\":\"1\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"IRL7BD1\",\"bookingClass\":\"I\",\"cabinClass\":\"Y\",\"availableSeats\":7,\"price\":131600,\"baseFare\":971,\"taxes\":12509,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":971,\"taxes\":12509,\"total\":13480,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"FZ\",\"_sabreSeqNumber\":\"0-1\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-0-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-0\",\"airline\":\"flydubai\",\"airlineCode\":\"FZ\",\"airlineLogo\":null,\"flightNumber\":\"FZ524\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T21:40:00+06:00\",\"arrivalTime\":\"2026-03-28T19:10:00+01:00\",\"duration\":\"26h 30m\",\"durationMinutes\":1590,\"stops\":1,\"stopCodes\":[\"DXB\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"I\",\"availableSeats\":7,\"price\":131600,\"baseFare\":971,\"taxes\":12509,\"totalRoundTripPrice\":263199,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"DXB\",\"departureTime\":\"2026-03-27T21:40:00+06:00\",\"arrivalTime\":\"2026-03-28T01:30:00+04:00\",\"durationMinutes\":350,\"duration\":\"5h 50m\",\"flightNumber\":\"FZ524\",\"airlineCode\":\"FZ\",\"operatingAirline\":\"FZ\",\"aircraft\":\"7M8\",\"originTerminal\":\"1\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"DXB\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-28T14:00:00+04:00\",\"arrivalTime\":\"2026-03-28T19:10:00+01:00\",\"durationMinutes\":490,\"duration\":\"8h 10m\",\"flightNumber\":\"FZ1839\",\"airlineCode\":\"FZ\",\"operatingAirline\":\"FZ\",\"aircraft\":\"7M8\",\"originTerminal\":\"3\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"IRL7BD1\",\"bookingClass\":\"I\",\"cabinClass\":\"Y\",\"availableSeats\":7,\"price\":131600,\"baseFare\":971,\"taxes\":12509,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":971,\"taxes\":12509,\"total\":13480,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"FZ\",\"_sabreSeqNumber\":\"0-0\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-54-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-54\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7763\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T17:00:00+02:00\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"duration\":\"17h 10m\",\"durationMinutes\":1030,\"stops\":2,\"stopCodes\":[\"FRA\",\"DEL\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"totalRoundTripPrice\":662412,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"FRA\",\"departureTime\":\"2026-03-30T17:00:00+02:00\",\"arrivalTime\":\"2026-03-30T19:00:00+02:00\",\"durationMinutes\":120,\"duration\":\"2h\",\"flightNumber\":\"AI7763\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"1\",\"stops\":[]},{\"origin\":\"FRA\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-30T21:15:00+02:00\",\"arrivalTime\":\"2026-03-31T10:00:00+05:30\",\"durationMinutes\":555,\"duration\":\"9h 15m\",\"flightNumber\":\"AI2030\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"789\",\"originTerminal\":\"1\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T11:10:00+05:30\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI2227\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":331206,\"baseFare\":2390,\"taxes\":37929,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2390,\"taxes\":37929,\"total\":40319,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-54\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-58-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-58\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7919\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T17:00:00+02:00\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"duration\":\"17h 10m\",\"durationMinutes\":1030,\"stops\":2,\"stopCodes\":[\"ZRH\",\"DEL\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":183149,\"baseFare\":1203,\"taxes\":35590,\"totalRoundTripPrice\":684469,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"ZRH\",\"departureTime\":\"2026-03-30T17:00:00+02:00\",\"arrivalTime\":\"2026-03-30T19:05:00+02:00\",\"durationMinutes\":125,\"duration\":\"2h 5m\",\"flightNumber\":\"AI7919\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"ZRH\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-30T20:50:00+02:00\",\"arrivalTime\":\"2026-03-31T09:30:00+05:30\",\"durationMinutes\":550,\"duration\":\"9h 10m\",\"flightNumber\":\"AI152\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"788\",\"originTerminal\":\"\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T11:10:00+05:30\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI2227\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183149,\"baseFare\":1203,\"taxes\":35590,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":342235,\"baseFare\":2486,\"taxes\":37177,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2486,\"taxes\":37177,\"total\":39663,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-58\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-59-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-59\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7955\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T16:45:00+02:00\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"duration\":\"17h 25m\",\"durationMinutes\":1045,\"stops\":2,\"stopCodes\":[\"AMS\",\"DEL\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":183550,\"baseFare\":1201,\"taxes\":36236,\"totalRoundTripPrice\":685270,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"AMS\",\"departureTime\":\"2026-03-30T16:45:00+02:00\",\"arrivalTime\":\"2026-03-30T18:50:00+02:00\",\"durationMinutes\":125,\"duration\":\"2h 5m\",\"flightNumber\":\"AI7955\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"AMS\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-30T20:40:00+02:00\",\"arrivalTime\":\"2026-03-31T09:50:00+05:30\",\"durationMinutes\":580,\"duration\":\"9h 40m\",\"flightNumber\":\"AI156\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"788\",\"originTerminal\":\"\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T11:10:00+05:30\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI2227\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183550,\"baseFare\":1201,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":342635,\"baseFare\":2484,\"taxes\":37823,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2484,\"taxes\":37823,\"total\":40307,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-59\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-13-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-13\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI238\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-28T14:05:00+01:00\",\"duration\":\"21h 45m\",\"durationMinutes\":1305,\"stops\":2,\"stopCodes\":[\"DEL\",\"LHR\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"totalRoundTripPrice\":348654,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"320\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-27T23:50:00+05:30\",\"durationMinutes\":180,\"duration\":\"3h\",\"flightNumber\":\"AI238\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"2\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"LHR\",\"departureTime\":\"2026-03-28T01:00:00+05:30\",\"arrivalTime\":\"2026-03-28T06:35:00Z\",\"durationMinutes\":665,\"duration\":\"11h 5m\",\"flightNumber\":\"AI161\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"359\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"LHR\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-28T10:35:00Z\",\"arrivalTime\":\"2026-03-28T14:05:00+01:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI7762\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"2\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":174327,\"baseFare\":1120,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183149,\"baseFare\":1203,\"taxes\":35590,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183550,\"baseFare\":1201,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":184573,\"baseFare\":1204,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":283619,\"baseFare\":2016,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1120,\"taxes\":36892,\"total\":38012,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-13\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-55-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-55\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7771\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T07:40:00+02:00\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"duration\":\"26h 30m\",\"durationMinutes\":1590,\"stops\":2,\"stopCodes\":[\"FRA\",\"DEL\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"totalRoundTripPrice\":662412,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"FRA\",\"departureTime\":\"2026-03-30T07:40:00+02:00\",\"arrivalTime\":\"2026-03-30T09:40:00+02:00\",\"durationMinutes\":120,\"duration\":\"2h\",\"flightNumber\":\"AI7771\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"1\",\"stops\":[]},{\"origin\":\"FRA\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-30T21:15:00+02:00\",\"arrivalTime\":\"2026-03-31T10:00:00+05:30\",\"durationMinutes\":555,\"duration\":\"9h 15m\",\"flightNumber\":\"AI2030\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"789\",\"originTerminal\":\"1\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T11:10:00+05:30\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI2227\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":331206,\"baseFare\":2390,\"taxes\":37929,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2390,\"taxes\":37929,\"total\":40319,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-55\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-60-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-60\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7761\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T07:25:00+02:00\",\"arrivalTime\":\"2026-03-31T10:45:00+06:00\",\"duration\":\"23h 20m\",\"durationMinutes\":1400,\"stops\":2,\"stopCodes\":[\"LHR\",\"BOM\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":184573,\"baseFare\":1204,\"taxes\":36892,\"totalRoundTripPrice\":687317,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"LHR\",\"departureTime\":\"2026-03-30T07:25:00+02:00\",\"arrivalTime\":\"2026-03-30T09:20:00+01:00\",\"durationMinutes\":175,\"duration\":\"2h 55m\",\"flightNumber\":\"AI7761\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"LHR\",\"destination\":\"BOM\",\"departureTime\":\"2026-03-30T12:30:00+01:00\",\"arrivalTime\":\"2026-03-31T02:50:00+05:30\",\"durationMinutes\":590,\"duration\":\"9h 50m\",\"flightNumber\":\"AI128\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"77W\",\"originTerminal\":\"2\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"BOM\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T07:25:00+05:30\",\"arrivalTime\":\"2026-03-31T10:45:00+06:00\",\"durationMinutes\":170,\"duration\":\"2h 50m\",\"flightNumber\":\"AI2183\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"32N\",\"originTerminal\":\"2\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":184573,\"baseFare\":1204,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":343659,\"baseFare\":2487,\"taxes\":38479,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2487,\"taxes\":38479,\"total\":40966,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-60\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-56-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-56\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7761\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T07:25:00+02:00\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"duration\":\"26h 45m\",\"durationMinutes\":1605,\"stops\":2,\"stopCodes\":[\"LHR\",\"DEL\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":174327,\"baseFare\":1120,\"taxes\":36892,\"totalRoundTripPrice\":666824,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"LHR\",\"departureTime\":\"2026-03-30T07:25:00+02:00\",\"arrivalTime\":\"2026-03-30T09:20:00+01:00\",\"durationMinutes\":175,\"duration\":\"2h 55m\",\"flightNumber\":\"AI7761\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"LHR\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-30T13:15:00+01:00\",\"arrivalTime\":\"2026-03-31T03:40:00+05:30\",\"durationMinutes\":595,\"duration\":\"9h 55m\",\"flightNumber\":\"AI112\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"359\",\"originTerminal\":\"2\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T11:10:00+05:30\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI2227\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":174327,\"baseFare\":1120,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":333412,\"baseFare\":2404,\"taxes\":38479,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2404,\"taxes\":38479,\"total\":40882,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-56\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-9-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-9\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI238\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-28T22:00:00+01:00\",\"duration\":\"29h 40m\",\"durationMinutes\":1780,\"stops\":2,\"stopCodes\":[\"DEL\",\"LHR\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"totalRoundTripPrice\":348654,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"320\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-27T23:50:00+05:30\",\"durationMinutes\":180,\"duration\":\"3h\",\"flightNumber\":\"AI238\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"2\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"LHR\",\"departureTime\":\"2026-03-28T05:55:00+05:30\",\"arrivalTime\":\"2026-03-28T11:30:00Z\",\"durationMinutes\":665,\"duration\":\"11h 5m\",\"flightNumber\":\"AI111\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"359\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"LHR\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-28T18:20:00Z\",\"arrivalTime\":\"2026-03-28T22:00:00+01:00\",\"durationMinutes\":160,\"duration\":\"2h 40m\",\"flightNumber\":\"AI7760\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"2\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":174327,\"baseFare\":1120,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183149,\"baseFare\":1203,\"taxes\":35590,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183550,\"baseFare\":1201,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":184573,\"baseFare\":1204,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":283619,\"baseFare\":2016,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1120,\"taxes\":36892,\"total\":38012,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-9\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-11-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-11\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI238\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-28T22:00:00+01:00\",\"duration\":\"29h 40m\",\"durationMinutes\":1780,\"stops\":2,\"stopCodes\":[\"DEL\",\"LHR\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"totalRoundTripPrice\":348654,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"320\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-27T23:50:00+05:30\",\"durationMinutes\":180,\"duration\":\"3h\",\"flightNumber\":\"AI238\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"2\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"LHR\",\"departureTime\":\"2026-03-28T01:00:00+05:30\",\"arrivalTime\":\"2026-03-28T06:35:00Z\",\"durationMinutes\":665,\"duration\":\"11h 5m\",\"flightNumber\":\"AI161\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"359\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"LHR\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-28T18:20:00Z\",\"arrivalTime\":\"2026-03-28T22:00:00+01:00\",\"durationMinutes\":160,\"duration\":\"2h 40m\",\"flightNumber\":\"AI7760\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"2\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":172121,\"baseFare\":1107,\"taxes\":36342,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":174327,\"baseFare\":1120,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183149,\"baseFare\":1203,\"taxes\":35590,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":183550,\"baseFare\":1201,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":184573,\"baseFare\":1204,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":283619,\"baseFare\":2016,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1120,\"taxes\":36892,\"total\":38012,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-11\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-30-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-30\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK1266\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T10:05:00+02:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"duration\":\"15h 10m\",\"durationMinutes\":910,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"totalRoundTripPrice\":486711,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"73H\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"IST\",\"departureTime\":\"2026-03-30T10:05:00+02:00\",\"arrivalTime\":\"2026-03-30T13:45:00+03:00\",\"durationMinutes\":160,\"duration\":\"2h 40m\",\"flightNumber\":\"TK1266\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"73H\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T18:40:00+03:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"durationMinutes\":455,\"duration\":\"7h 35m\",\"flightNumber\":\"TK712\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":8,\"price\":243356,\"baseFare\":1716,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1716,\"taxes\":32785,\"total\":34501,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-30\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-33-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-33\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK713\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T17:55:00+01:00\",\"duration\":\"15h 50m\",\"durationMinutes\":950,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"totalRoundTripPrice\":486994,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"333\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"IST\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T13:15:00+03:00\",\"durationMinutes\":550,\"duration\":\"9h 10m\",\"flightNumber\":\"TK713\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T17:25:00+03:00\",\"arrivalTime\":\"2026-03-27T17:55:00+01:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"TK1263\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"32B\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":243497,\"baseFare\":1716,\"taxes\":32927,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":247165,\"baseFare\":1746,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":248833,\"baseFare\":1746,\"taxes\":34642,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1716,\"taxes\":32927,\"total\":34643,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-33\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-29-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-29\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK1262\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T09:10:00+02:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"duration\":\"16h 5m\",\"durationMinutes\":965,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"totalRoundTripPrice\":486711,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"73J\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"IST\",\"departureTime\":\"2026-03-30T09:10:00+02:00\",\"arrivalTime\":\"2026-03-30T12:55:00+03:00\",\"durationMinutes\":165,\"duration\":\"2h 45m\",\"flightNumber\":\"TK1262\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"73J\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T18:40:00+03:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"durationMinutes\":455,\"duration\":\"7h 35m\",\"flightNumber\":\"TK712\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":8,\"price\":243356,\"baseFare\":1716,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1716,\"taxes\":32785,\"total\":34501,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-29\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-34-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-34\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK713\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T18:25:00+01:00\",\"duration\":\"16h 20m\",\"durationMinutes\":980,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"totalRoundTripPrice\":486994,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"333\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"IST\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T13:15:00+03:00\",\"durationMinutes\":550,\"duration\":\"9h 10m\",\"flightNumber\":\"TK713\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T17:55:00+03:00\",\"arrivalTime\":\"2026-03-27T18:25:00+01:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"TK1765\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"73H\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":225446,\"baseFare\":1569,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":243497,\"baseFare\":1716,\"taxes\":32927,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":247165,\"baseFare\":1746,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":248833,\"baseFare\":1746,\"taxes\":34642,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1716,\"taxes\":32927,\"total\":34643,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-34\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-44-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-44\",\"airline\":\"LOT Polish Airlines\",\"airlineCode\":\"LO\",\"airlineLogo\":null,\"flightNumber\":\"LO135\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T12:55:00+02:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"duration\":\"12h 20m\",\"durationMinutes\":740,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":9,\"price\":243497,\"baseFare\":1716,\"taxes\":32927,\"totalRoundTripPrice\":522937,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"E95\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"IST\",\"departureTime\":\"2026-03-30T12:55:00+02:00\",\"arrivalTime\":\"2026-03-30T16:40:00+03:00\",\"durationMinutes\":165,\"duration\":\"2h 45m\",\"flightNumber\":\"LO135\",\"airlineCode\":\"LO\",\"operatingAirline\":\"LO\",\"aircraft\":\"E95\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T18:40:00+03:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"durationMinutes\":455,\"duration\":\"7h 35m\",\"flightNumber\":\"TK712\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":243497,\"baseFare\":1716,\"taxes\":32927,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":8,\"price\":261469,\"baseFare\":1864,\"taxes\":32737,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1864,\"taxes\":32737,\"total\":34601,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-44\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-42-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-42\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK713\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T15:35:00+01:00\",\"duration\":\"13h 30m\",\"durationMinutes\":810,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":8,\"price\":243356,\"baseFare\":1716,\"taxes\":32785,\"totalRoundTripPrice\":522937,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"333\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"IST\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T13:15:00+03:00\",\"durationMinutes\":550,\"duration\":\"9h 10m\",\"flightNumber\":\"TK713\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T15:00:00+03:00\",\"arrivalTime\":\"2026-03-27T15:35:00+01:00\",\"durationMinutes\":155,\"duration\":\"2h 35m\",\"flightNumber\":\"LO134\",\"airlineCode\":\"LO\",\"operatingAirline\":\"LO\",\"aircraft\":\"E90\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":8,\"price\":243356,\"baseFare\":1716,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":8,\"price\":261469,\"baseFare\":1864,\"taxes\":32737,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":265137,\"baseFare\":1894,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":266804,\"baseFare\":1894,\"taxes\":34453,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1864,\"taxes\":32737,\"total\":34601,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-42\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-48-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-48\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK8149\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T12:55:00+02:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"duration\":\"12h 20m\",\"durationMinutes\":740,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":247165,\"baseFare\":1746,\"taxes\":32975,\"totalRoundTripPrice\":530273,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"E95\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"IST\",\"departureTime\":\"2026-03-30T12:55:00+02:00\",\"arrivalTime\":\"2026-03-30T16:40:00+03:00\",\"durationMinutes\":165,\"duration\":\"2h 45m\",\"flightNumber\":\"TK8149\",\"airlineCode\":\"TK\",\"operatingAirline\":\"LO\",\"aircraft\":\"E95\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T18:40:00+03:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"durationMinutes\":455,\"duration\":\"7h 35m\",\"flightNumber\":\"TK712\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":247165,\"baseFare\":1746,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":3,\"price\":265137,\"baseFare\":1894,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1894,\"taxes\":32785,\"total\":34679,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-48\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-57-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-57\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7767\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T20:20:00+02:00\",\"arrivalTime\":\"2026-04-01T14:10:00+06:00\",\"duration\":\"37h 50m\",\"durationMinutes\":2270,\"stops\":2,\"stopCodes\":[\"LHR\",\"DEL\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":174327,\"baseFare\":1120,\"taxes\":36892,\"totalRoundTripPrice\":666824,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"LHR\",\"departureTime\":\"2026-03-30T20:20:00+02:00\",\"arrivalTime\":\"2026-03-30T22:00:00+01:00\",\"durationMinutes\":160,\"duration\":\"2h 40m\",\"flightNumber\":\"AI7767\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"2\",\"stops\":[]},{\"origin\":\"LHR\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-31T09:45:00+01:00\",\"arrivalTime\":\"2026-04-01T00:10:00+05:30\",\"durationMinutes\":595,\"duration\":\"9h 55m\",\"flightNumber\":\"AI162\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"359\",\"originTerminal\":\"2\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"DAC\",\"departureTime\":\"2026-04-01T11:10:00+05:30\",\"arrivalTime\":\"2026-04-01T14:10:00+06:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI2227\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":174327,\"baseFare\":1120,\"taxes\":36892,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":333412,\"baseFare\":2404,\"taxes\":38479,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2404,\"taxes\":38479,\"total\":40882,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-57\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-43-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-43\",\"airline\":\"LOT Polish Airlines\",\"airlineCode\":\"LO\",\"airlineLogo\":null,\"flightNumber\":\"LO133\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T09:15:00+02:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"duration\":\"16h\",\"durationMinutes\":960,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":9,\"price\":243497,\"baseFare\":1716,\"taxes\":32927,\"totalRoundTripPrice\":522937,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"E95\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"IST\",\"departureTime\":\"2026-03-30T09:15:00+02:00\",\"arrivalTime\":\"2026-03-30T13:05:00+03:00\",\"durationMinutes\":170,\"duration\":\"2h 50m\",\"flightNumber\":\"LO133\",\"airlineCode\":\"LO\",\"operatingAirline\":\"LO\",\"aircraft\":\"E95\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T18:40:00+03:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"durationMinutes\":455,\"duration\":\"7h 35m\",\"flightNumber\":\"TK712\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":9,\"price\":243497,\"baseFare\":1716,\"taxes\":32927,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":8,\"price\":261469,\"baseFare\":1864,\"taxes\":32737,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1864,\"taxes\":32737,\"total\":34601,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-43\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-44-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-44\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK713\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T19:05:00+01:00\",\"duration\":\"17h\",\"durationMinutes\":1020,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":3,\"price\":243356,\"baseFare\":1716,\"taxes\":32785,\"totalRoundTripPrice\":522937,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"333\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"IST\",\"departureTime\":\"2026-03-27T07:05:00+06:00\",\"arrivalTime\":\"2026-03-27T13:15:00+03:00\",\"durationMinutes\":550,\"duration\":\"9h 10m\",\"flightNumber\":\"TK713\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T18:30:00+03:00\",\"arrivalTime\":\"2026-03-27T19:05:00+01:00\",\"durationMinutes\":155,\"duration\":\"2h 35m\",\"flightNumber\":\"LO136\",\"airlineCode\":\"LO\",\"operatingAirline\":\"LO\",\"aircraft\":\"E90\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":3,\"price\":243356,\"baseFare\":1716,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":3,\"price\":261469,\"baseFare\":1864,\"taxes\":32737,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":3,\"price\":265137,\"baseFare\":1894,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":3,\"price\":266804,\"baseFare\":1894,\"taxes\":34453,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1864,\"taxes\":32737,\"total\":34601,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-44\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-47-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-47\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK9009\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T09:15:00+02:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"duration\":\"16h\",\"durationMinutes\":960,\"stops\":1,\"stopCodes\":[\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":247165,\"baseFare\":1746,\"taxes\":32975,\"totalRoundTripPrice\":530273,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"E95\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"IST\",\"departureTime\":\"2026-03-30T09:15:00+02:00\",\"arrivalTime\":\"2026-03-30T13:05:00+03:00\",\"durationMinutes\":170,\"duration\":\"2h 50m\",\"flightNumber\":\"TK9009\",\"airlineCode\":\"TK\",\"operatingAirline\":\"LO\",\"aircraft\":\"E95\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T18:40:00+03:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"durationMinutes\":455,\"duration\":\"7h 35m\",\"flightNumber\":\"TK712\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":247165,\"baseFare\":1746,\"taxes\":32975,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":3,\"price\":265137,\"baseFare\":1894,\"taxes\":32785,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1894,\"taxes\":32785,\"total\":34679,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-47\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-50-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-50\",\"airline\":\"Turkish Airlines\",\"airlineCode\":\"TK\",\"airlineLogo\":null,\"flightNumber\":\"TK8156\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T07:10:00+02:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"duration\":\"18h 5m\",\"durationMinutes\":1085,\"stops\":2,\"stopCodes\":[\"VIE\",\"IST\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":248833,\"baseFare\":1746,\"taxes\":34642,\"totalRoundTripPrice\":533608,\"currency\":\"BDT\",\"refundable\":true,\"baggage\":\"30KG\",\"handBaggage\":null,\"aircraft\":\"E90\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"VIE\",\"departureTime\":\"2026-03-30T07:10:00+02:00\",\"arrivalTime\":\"2026-03-30T08:30:00+02:00\",\"durationMinutes\":80,\"duration\":\"1h 20m\",\"flightNumber\":\"TK8156\",\"airlineCode\":\"TK\",\"operatingAirline\":\"LO\",\"aircraft\":\"E90\",\"originTerminal\":\"\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"VIE\",\"destination\":\"IST\",\"departureTime\":\"2026-03-30T10:50:00+02:00\",\"arrivalTime\":\"2026-03-30T14:10:00+03:00\",\"durationMinutes\":140,\"duration\":\"2h 20m\",\"flightNumber\":\"TK1884\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"359\",\"originTerminal\":\"1\",\"destinationTerminal\":\"\",\"stops\":[]},{\"origin\":\"IST\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T18:40:00+03:00\",\"arrivalTime\":\"2026-03-31T05:15:00+06:00\",\"durationMinutes\":455,\"duration\":\"7h 35m\",\"flightNumber\":\"TK712\",\"airlineCode\":\"TK\",\"operatingAirline\":\"TK\",\"aircraft\":\"333\",\"originTerminal\":\"\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":248833,\"baseFare\":1746,\"taxes\":34642,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true},{\"fareBasis\":\"YFRT\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":266804,\"baseFare\":1894,\"taxes\":34453,\"currency\":\"BDT\",\"baggage\":\"30KG\",\"handBaggage\":null,\"refundable\":true,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":true}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":1894,\"taxes\":34453,\"total\":36346,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"TK\",\"_sabreSeqNumber\":\"0-50\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-61-1\",\"source\":\"sabre\",\"direction\":\"return\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-61\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI7771\",\"origin\":\"WAW\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-30T07:40:00+02:00\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"duration\":\"26h 30m\",\"durationMinutes\":1590,\"stops\":2,\"stopCodes\":[\"FRA\",\"DEL\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"Y\",\"availableSeats\":4,\"price\":283619,\"baseFare\":2016,\"taxes\":36236,\"totalRoundTripPrice\":885409,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"7M8\",\"legs\":[{\"origin\":\"WAW\",\"destination\":\"FRA\",\"departureTime\":\"2026-03-30T07:40:00+02:00\",\"arrivalTime\":\"2026-03-30T09:40:00+02:00\",\"durationMinutes\":120,\"duration\":\"2h\",\"flightNumber\":\"AI7771\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"7M8\",\"originTerminal\":\"\",\"destinationTerminal\":\"1\",\"stops\":[]},{\"origin\":\"FRA\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-30T13:20:00+02:00\",\"arrivalTime\":\"2026-03-31T00:55:00+05:30\",\"durationMinutes\":485,\"duration\":\"8h 5m\",\"flightNumber\":\"AI8760\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LH\",\"aircraft\":\"787\",\"originTerminal\":\"1\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"DAC\",\"departureTime\":\"2026-03-31T11:10:00+05:30\",\"arrivalTime\":\"2026-03-31T14:10:00+06:00\",\"durationMinutes\":150,\"duration\":\"2h 30m\",\"flightNumber\":\"AI2227\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"3\",\"destinationTerminal\":\"2\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"YU2YXSDC\",\"bookingClass\":\"Y\",\"cabinClass\":\"Y\",\"availableSeats\":4,\"price\":283619,\"baseFare\":2016,\"taxes\":36236,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":442705,\"baseFare\":3300,\"taxes\":37823,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":3300,\"taxes\":37823,\"total\":41122,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-61\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}},{\"id\":\"sabre-g-0-57-0\",\"source\":\"sabre\",\"direction\":\"outbound\",\"isRoundTrip\":true,\"_itineraryId\":\"sabre-g-itin-0-57\",\"airline\":\"Air India\",\"airlineCode\":\"AI\",\"airlineLogo\":null,\"flightNumber\":\"AI238\",\"origin\":\"DAC\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-28T21:35:00+01:00\",\"duration\":\"29h 15m\",\"durationMinutes\":1755,\"stops\":2,\"stopCodes\":[\"DEL\",\"FRA\"],\"cabinClass\":\"Economy\",\"bookingClass\":\"C\",\"availableSeats\":2,\"price\":331206,\"baseFare\":2390,\"taxes\":37929,\"totalRoundTripPrice\":666824,\"currency\":\"BDT\",\"refundable\":false,\"baggage\":\"1 Piece\",\"handBaggage\":null,\"aircraft\":\"320\",\"legs\":[{\"origin\":\"DAC\",\"destination\":\"DEL\",\"departureTime\":\"2026-03-27T21:20:00+06:00\",\"arrivalTime\":\"2026-03-27T23:50:00+05:30\",\"durationMinutes\":180,\"duration\":\"3h\",\"flightNumber\":\"AI238\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"320\",\"originTerminal\":\"2\",\"destinationTerminal\":\"3\",\"stops\":[]},{\"origin\":\"DEL\",\"destination\":\"FRA\",\"departureTime\":\"2026-03-28T04:30:00+05:30\",\"arrivalTime\":\"2026-03-28T09:45:00+01:00\",\"durationMinutes\":585,\"duration\":\"9h 45m\",\"flightNumber\":\"AI2025\",\"airlineCode\":\"AI\",\"operatingAirline\":\"AI\",\"aircraft\":\"77L\",\"originTerminal\":\"3\",\"destinationTerminal\":\"1\",\"stops\":[]},{\"origin\":\"FRA\",\"destination\":\"WAW\",\"departureTime\":\"2026-03-28T19:50:00+01:00\",\"arrivalTime\":\"2026-03-28T21:35:00+01:00\",\"durationMinutes\":105,\"duration\":\"1h 45m\",\"flightNumber\":\"AI7764\",\"airlineCode\":\"AI\",\"operatingAirline\":\"LO\",\"aircraft\":\"E90\",\"originTerminal\":\"1\",\"destinationTerminal\":\"\",\"stops\":[]}],\"fareDetails\":[{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":331206,\"baseFare\":2390,\"taxes\":37929,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":333412,\"baseFare\":2404,\"taxes\":38479,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":342235,\"baseFare\":2486,\"taxes\":37177,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":342635,\"baseFare\":2484,\"taxes\":37823,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":343659,\"baseFare\":2487,\"taxes\":38479,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false},{\"fareBasis\":\"CK2CWSDC\",\"bookingClass\":\"C\",\"cabinClass\":\"C\",\"availableSeats\":2,\"price\":442705,\"baseFare\":3300,\"taxes\":37823,\"currency\":\"BDT\",\"baggage\":\"1 Piece\",\"handBaggage\":null,\"refundable\":false,\"brandName\":\"\",\"brandCode\":\"\",\"mealIncluded\":\"available\",\"seatSelection\":\"available\",\"rebookingAllowed\":true,\"cancellationAllowed\":false}],\"paxPricing\":[{\"type\":\"ADT\",\"label\":\"Adult\",\"count\":1,\"baseFare\":2404,\"taxes\":38479,\"total\":40882,\"currency\":\"BDT\",\"priceScope\":\"per-direction\"}],\"timeLimit\":\"2026-03-27\",\"cancellationPolicy\":null,\"dateChangePolicy\":null,\"validatingAirline\":\"AI\",\"_sabreSeqNumber\":\"0-57\",\"fareRules\":{\"discount\":6.3,\"aitVat\":0.3,\"markup\":0,\"fixedMarkup\":0,\"isGlobal\":true}}],\"airlines\":[\"flydubai\",\"Air India\",\"Turkish Airlines\",\"LOT Polish Airlines\"],\"cheapest\":131600,\"total\":26,\"page\":1,\"limit\":500,\"totalPages\":1,\"sources\":{\"db\":0,\"tti\":0,\"bdfare\":0,\"flyhub\":0,\"sabre\":124,\"galileo\":0,\"ndc\":0,\"lcc\":0}}"
+          },
+          "redirectURL": "",
+          "headersSize": 935,
+          "bodySize": 0,
+          "_transferSize": 935,
+          "_error": null,
+          "_fetchedViaServiceWorker": false
+        },
+        "serverIPAddress": "187.77.137.249",
+        "startedDateTime": "2026-03-14T20:11:48.366Z",
+        "time": 4951.975000090897,
+        "timings": {
+          "blocked": 337.8130000931099,
+          "dns": -1,
+          "ssl": -1,
+          "connect": -1,
+          "send": 0.09399999999999409,
+          "wait": 4613.020000050456,
+          "receive": 1.0479999473318458,
+          "_blocked_queueing": 1.8010000931099057,
+          "_workerStart": -1,
+          "_workerReady": -1,
+          "_workerFetchStart": -1,
+          "_workerRespondWithSettled": -1
+        }
+      }
+    ]
+  }
+}
