@@ -927,24 +927,25 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
 
   ttiPassengers.forEach((tp, idx) => {
     const pax = passengers[idx];
+    // Full Data structure with all WCF fields for proper deserialization
+    const buildSSRData = (overrides = {}) => ({
+      Doca: null, Doco: null, Docs: null, Foid: null, Fqtv: null,
+      Inft: null, Chld: null, Umnr: null, Adof: null, Seat: null,
+      Pctc: null, Ectc: null, Bill: null, Fields: null, Extensions: null,
+      ...overrides,
+    });
+
     if (tp.PassengerTypeCode === 'CHD') {
       const dobDate = tp.DateOfBirth; // Already in /Date(ms)/ format
       if (dobDate) {
         specialServices.push({
           Code: 'CHLD',
           RefPassenger: tp.Ref,
-          Data: {
-            Chld: {
-              DateOfBirth: dobDate,
-              RefPassengerWithSeat: null,
-            },
-          },
-          Status: null,
-          Text: null,
-          RefSegment: null,
-          TechnicalType: null,
-          Extensions: null,
-          Available: null,
+          Data: buildSSRData({
+            Chld: { DateOfBirth: dobDate, Extensions: null },
+          }),
+          Status: null, Text: null, RefSegment: null,
+          TechnicalType: null, Extensions: null, Available: null,
         });
       }
     } else if (tp.PassengerTypeCode === 'INF') {
@@ -955,18 +956,15 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         specialServices.push({
           Code: 'INFT',
           RefPassenger: tp.Ref,
-          Data: {
+          Data: buildSSRData({
             Inft: {
               DateOfBirth: dobDate,
               RefPassengerWithSeat: associatedAdult?.Ref || '1',
+              Extensions: null,
             },
-          },
-          Status: null,
-          Text: null,
-          RefSegment: null,
-          TechnicalType: null,
-          Extensions: null,
-          Available: null,
+          }),
+          Status: null, Text: null, RefSegment: null,
+          TechnicalType: null, Extensions: null, Available: null,
         });
       }
     }
