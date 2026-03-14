@@ -3148,7 +3148,7 @@ const FlightResults = () => {
       {/* Results Outdated Modal */}
       <AnimatePresence>
         {resultsExpired && (
-          <ResultsOutdatedModal onNewSearch={applySearchEdit} />
+          <ResultsOutdatedModal onNewSearch={() => navigate(`/flights?${searchParams.toString()}`)} />
         )}
       </AnimatePresence>
     </div>
