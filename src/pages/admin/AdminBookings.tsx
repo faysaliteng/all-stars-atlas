@@ -913,6 +913,46 @@ const AdminBookings = () => {
                   </Button>
                 </div>
 
+                {/* v4.0.0: Void / Refund / Exchange via Sabre */}
+                {viewBooking.pnr && viewBooking.pnr !== "—" && (
+                  <div className="mt-3 border border-border rounded-lg p-3 space-y-3">
+                    <p className="text-xs font-bold uppercase text-muted-foreground">GDS Actions (Sabre v4.0.0)</p>
+                    <div className="flex flex-wrap gap-2">
+                      <FlightStatusBadge
+                        airlineCode={viewBooking.details?.outbound?.airlineCode || viewBooking.details?.airlineCode || ""}
+                        flightNumber={viewBooking.details?.outbound?.flightNumber || viewBooking.details?.flightNumber || ""}
+                        date={(viewBooking.details?.outbound?.departureTime || viewBooking.details?.departureTime || "").substring(0, 10)}
+                        compact
+                      />
+                      <FareRulesModal
+                        origin={viewBooking.details?.outbound?.origin || viewBooking.details?.origin || ""}
+                        destination={viewBooking.details?.outbound?.destination || viewBooking.details?.destination || ""}
+                        departureDate={(viewBooking.details?.outbound?.departureTime || viewBooking.details?.departureTime || "").substring(0, 10)}
+                        airlineCode={viewBooking.details?.outbound?.airlineCode || viewBooking.details?.airlineCode || ""}
+                        flightNumber={viewBooking.details?.outbound?.flightNumber || viewBooking.details?.flightNumber || ""}
+                      />
+                    </div>
+                    <BookingActions
+                      booking={{
+                        rawId: viewBooking.rawId,
+                        id: viewBooking.id,
+                        pnr: viewBooking.pnr,
+                        status: viewBooking.status,
+                        airlineCode: viewBooking.details?.outbound?.airlineCode || viewBooking.details?.airlineCode || "",
+                        flightNumber: viewBooking.details?.outbound?.flightNumber || viewBooking.details?.flightNumber || "",
+                        origin: viewBooking.details?.outbound?.origin || viewBooking.details?.origin || "",
+                        destination: viewBooking.details?.outbound?.destination || viewBooking.details?.destination || "",
+                        departureTime: viewBooking.details?.outbound?.departureTime || viewBooking.details?.departureTime || "",
+                        ticketNo: viewBooking.ticketNo,
+                        refundable: viewBooking.details?.outbound?.refundable ?? viewBooking.details?.refundable,
+                        passengers: safeParsePax(viewBooking.passengerInfo || viewBooking.passengers || []),
+                      }}
+                      isAdmin={true}
+                      onActionComplete={() => { refetch(); setViewBooking(null); }}
+                    />
+                  </div>
+                )}
+
                 <Separator />
 
                 <div className="flex flex-wrap gap-2">
