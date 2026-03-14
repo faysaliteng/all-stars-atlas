@@ -1115,6 +1115,15 @@ function normalizeGroupedResponse(response, params) {
                     isTotalPrice: false,
                   }))
                 : fareDetailsArr,
+              paxPricing: itinLegs.length > 1
+                ? paxPricing.map(pp => ({
+                    ...pp,
+                    baseFare: Math.round(pp.baseFare / itinLegs.length),
+                    taxes: Math.round(pp.taxes / itinLegs.length),
+                    total: Math.round(pp.total / itinLegs.length),
+                    priceScope: 'per-direction',
+                  }))
+                : paxPricing,
               timeLimit: fare.lastTicketDate || null,
               cancellationPolicy,
               dateChangePolicy,
