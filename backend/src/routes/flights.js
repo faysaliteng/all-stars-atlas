@@ -1236,6 +1236,16 @@ function mergeBookingFlightData({ flightData, returnFlightData, multiCityFlights
     merged.legs = flattenLegs(flightData?.legs?.length ? flightData.legs : [flightData]);
   }
 
+  // CRITICAL: Propagate selected fare's bookingClass to every leg that lacks one
+  const parentClass = merged.bookingClass || merged.fareDetails?.[0]?.bookingClass || '';
+  if (parentClass && Array.isArray(merged.legs)) {
+    merged.legs = merged.legs.map(leg => ({
+      ...leg,
+      bookingClass: leg.bookingClass || parentClass,
+    }));
+    console.log(`[Booking] Propagated bookingClass "${parentClass}" to ${merged.legs.length} leg(s)`);
+  }
+
   return merged;
 }
 

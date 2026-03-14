@@ -659,12 +659,24 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
         cancellation: typeof f.cancellationAllowed === 'boolean' ? f.cancellationAllowed : (typeof primary.refundable === 'boolean' ? primary.refundable : null),
         miles: f.milesEarning || primary.milesEarning || null,
         grossFare: f.price || f.amount || f.total || primary.price || 0,
-        flight: {
-          ...primary,
-          price: f.price ?? primary.price,
-          taxes: f.taxes ?? primary.taxes,
-          fareDetails: [f],
-        },
+        flight: (() => {
+          const selectedClass = f.bookingClass || f.cabinClass || primary.bookingClass || '';
+          const baseFlight = {
+            ...primary,
+            price: f.price ?? primary.price,
+            taxes: f.taxes ?? primary.taxes,
+            bookingClass: selectedClass,
+            fareDetails: [f],
+          };
+          // CRITICAL: Propagate selected fare's bookingClass to every leg
+          if (selectedClass && Array.isArray(baseFlight.legs)) {
+            baseFlight.legs = baseFlight.legs.map((leg: any) => ({
+              ...leg,
+              bookingClass: leg.bookingClass || selectedClass,
+            }));
+          }
+          return baseFlight;
+        })(),
         isBestValue: i === 0,
         isSabre: isSabreSource,
       };
@@ -1148,18 +1160,26 @@ const RoundTripFlightCard = ({
               onBook={(selectedFlight) => {
                 const selectedFare = selectedFlight?.fareDetails?.[0];
                 const baseOutbound = selectedFlight?._baseOutboundFlight || outbound;
+                const selectedClass = selectedFare?.bookingClass || baseOutbound.bookingClass || '';
                 const selectedOutbound = selectedFare
-                  ? {
-                      ...baseOutbound,
-                      price: selectedFare._outboundGrossPrice ?? baseOutbound.price,
-                      taxes: selectedFare._outboundTaxes ?? baseOutbound.taxes,
-                      fareDetails: [selectedFare._outboundFareDetail || selectedFare],
-                      bookingClass: selectedFare.bookingClass || baseOutbound.bookingClass,
-                      cabinClass: selectedFare.cabinClass || baseOutbound.cabinClass,
-                      handBaggage: selectedFare.handBaggage || baseOutbound.handBaggage,
-                      baggage: selectedFare.checkedBaggage || selectedFare.baggage || baseOutbound.baggage,
-                      refundable: typeof selectedFare.refundable === 'boolean' ? selectedFare.refundable : baseOutbound.refundable,
-                    }
+                  ? (() => {
+                      const ob = {
+                        ...baseOutbound,
+                        price: selectedFare._outboundGrossPrice ?? baseOutbound.price,
+                        taxes: selectedFare._outboundTaxes ?? baseOutbound.taxes,
+                        fareDetails: [selectedFare._outboundFareDetail || selectedFare],
+                        bookingClass: selectedClass,
+                        cabinClass: selectedFare.cabinClass || baseOutbound.cabinClass,
+                        handBaggage: selectedFare.handBaggage || baseOutbound.handBaggage,
+                        baggage: selectedFare.checkedBaggage || selectedFare.baggage || baseOutbound.baggage,
+                        refundable: typeof selectedFare.refundable === 'boolean' ? selectedFare.refundable : baseOutbound.refundable,
+                      };
+                      // Propagate bookingClass to legs
+                      if (selectedClass && Array.isArray(ob.legs)) {
+                        ob.legs = ob.legs.map((leg: any) => ({ ...leg, bookingClass: leg.bookingClass || selectedClass }));
+                      }
+                      return ob;
+                    })()
                   : baseOutbound;
 
                 cardNavigate(
