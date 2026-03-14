@@ -1306,7 +1306,7 @@ const MultiCityExpandedDetails = ({ flight, segments }: { flight: any; segments:
               const logo = getAirlineLogo(seg.airlineCode);
               const cabin = seg.cabinClass || flight.cabinClass || "";
               const bkClass = seg.bookingClass || flight.bookingClass || flight.fareDetails?.[0]?.bookingClass || "";
-              const cabDisp = bkClass ? `${cabin} - ${bkClass}` : cabin;
+              const cabDisp = cabin && bkClass ? `${cabin} - ${bkClass}` : cabin || bkClass || "";
               const seats = seg.availableSeats ?? flight.availableSeats ?? null;
               const ac = seg.aircraft || "";
 
