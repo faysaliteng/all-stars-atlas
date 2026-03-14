@@ -270,6 +270,10 @@ async function searchFlights(params) {
 
   // Bargain Finder Max request body — proven working payload for PCC J4YL
   // FlexibleFares/MaxStopsQuantity/LongConnectTime cause NAV on this PCC — keep it simple
+  // STRATEGY: Maximize itinerary count + fare diversity to surface ALL available booking classes
+  // (V, S, L, T, Q, etc.) not just full-fare Y. Sabre returns multiple pricingInformation
+  // per itinerary — each with different booking classes. We sort by price and pick cheapest.
+  const isRoundTrip = !isMultiCity && ISO_DATE_RE.test(returnDateValue);
   const buildBfmRequestBody = () => ({
     OTA_AirLowFareSearchRQ: {
       Version: '5',
@@ -283,7 +287,7 @@ async function searchFlights(params) {
       TravelPreferences: {
         // NOTE: Keep this payload relaxed for PCC stability (NAV observed with restrictive knobs).
         TPA_Extensions: {
-          NumTrips: { Number: 200 },
+          NumTrips: { Number: 250 },
           DataSources: {
             NDC: 'Enable',
             ATPCO: 'Enable',
@@ -291,10 +295,14 @@ async function searchFlights(params) {
           },
           DiversityParameters: {
             Weightings: {
-              PriceWeight: 8,
-              TravelTimeWeight: 2,
+              PriceWeight: 10,    // Maximum price priority — cheapest booking classes first
+              TravelTimeWeight: 0, // Let filters handle travel time sorting
             },
+            // Ensure non-stop options are always represented even when connections are cheaper
+            AdditionalNonStopsPercentage: 20,
           },
+          // Allow split ticketing for round-trips — enables mixing V outbound + T return
+          ...(isRoundTrip ? { MultiTicket: { DisplayPolicy: 'SOW' } } : {}),
         },
         // Cabin is a preference so we don't return 0 inventory when Sabre can't honor strict cabin filtering.
         CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
@@ -309,6 +317,12 @@ async function searchFlights(params) {
         AirTravelerAvail: [{
           PassengerTypeQuantity: passengers,
         }],
+        // Request all available pricing options per itinerary for fare class diversity
+        PriceRequestInformation: {
+          TPA_Extensions: {
+            BrandedFareIndicators: { MultipleBrandedFares: true, ReturnBrandAncillaries: true },
+          },
+        },
       },
     },
   });
@@ -366,7 +380,13 @@ async function searchFlights(params) {
       returnDate: ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
       segmentCount: isMultiCity ? preparedSegments.length : (ISO_DATE_RE.test(returnDateValue) ? 2 : 1),
     });
-    console.log(`[Sabre] Normalized ${results.length} flights`);
+    // Log booking class diversity for debugging fare quality
+    const classCounts = {};
+    for (const f of results) {
+      const cls = f.bookingClass || 'unknown';
+      classCounts[cls] = (classCounts[cls] || 0) + 1;
+    }
+    console.log(`[Sabre] Normalized ${results.length} flights — booking classes: ${JSON.stringify(classCounts)}`);
     return results;
   } catch (err) {
     console.error('[Sabre] Search failed:', err.message);
