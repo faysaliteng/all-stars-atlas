@@ -3108,7 +3108,27 @@ const FlightResults = () => {
       }
       return true;
     });
-    if (sortBy === "cheapest" || sortBy === "best") filtered.sort((a, b) => a.totalPrice - b.totalPrice);
+    if (sortBy === "cheapest") filtered.sort((a, b) => a.totalPrice - b.totalPrice);
+    else if (sortBy === "best") {
+      // Best = weighted balance of price, duration, and stops (like BDFare)
+      // Normalize price and duration to comparable scales, then weight
+      const minP = Math.min(...filtered.map(p => p.totalPrice || Infinity));
+      const maxP = Math.max(...filtered.map(p => p.totalPrice || 0));
+      const minD = Math.min(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || Infinity));
+      const maxD = Math.max(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || 0));
+      const priceSpread = maxP - minP || 1;
+      const durSpread = maxD - minD || 1;
+      filtered.sort((a, b) => {
+        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
+        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
+        const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
+        // Normalized scores: 40% price, 45% duration, 15% stops
+        const scoreA = ((a.totalPrice - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
+        const scoreB = ((b.totalPrice - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
+        return scoreA - scoreB;
+      });
+    }
     else if (sortBy === "fastest") filtered.sort((a, b) => ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)));
     else if (sortBy === "departure") filtered.sort((a, b) => new Date(a.outbound.departureTime).getTime() - new Date(b.outbound.departureTime).getTime());
     return filtered;
