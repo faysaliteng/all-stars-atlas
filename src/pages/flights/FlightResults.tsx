@@ -1660,10 +1660,10 @@ const FlightCard = ({
   const fromCode = flight.origin || "";
   const toCode = flight.destination || "";
   const flightNo = flight.flightNumber || "";
-  // Always use the REAL cabin class from the API — never override with searched cabin
+  // Always use the REAL cabin class/class seats from API fare details first
   const cabin = flight.cabinClass || "Economy";
-  const bookingClass = flight.bookingClass || "";
-  const availableSeats = flight.availableSeats ?? null;
+  const bookingClass = getDisplayBookingClass(flight);
+  const availableSeats = getDisplayAvailableSeats(flight);
   const duration = flight.duration || "";
   const stops = flight.stops ?? 0;
   const price = flight.price ?? 0;
