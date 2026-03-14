@@ -3862,15 +3862,15 @@ const FlightResults = () => {
                   </div>
                 )}
                 {isRoundTrip && hasDirections ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {/* Header: showing X round-trip combinations */}
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="flex items-center gap-2 bg-accent/10 text-accent rounded-lg px-3 py-1.5">
-                        <Plane className="w-4 h-4" /><span className="text-sm font-bold">Round Trip</span>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <div className="flex items-center gap-1.5 bg-accent/10 text-accent rounded-lg px-2.5 py-1">
+                        <Plane className="w-3.5 h-3.5" /><span className="text-xs font-bold">Round Trip</span>
                       </div>
-                      <span className="text-sm font-medium">{fromCode} ↔ {toCode}</span>
-                      <span className="text-xs text-muted-foreground">{filteredPairs.length} combinations</span>
-                      <span className="text-xs text-muted-foreground italic">(Fares include. AIT VAT)</span>
+                      <span className="text-xs font-medium">{fromCode} ↔ {toCode}</span>
+                      <span className="text-[10px] text-muted-foreground">{filteredPairs.length} combinations</span>
+                      <span className="text-[10px] text-muted-foreground italic">(Fares include. AIT VAT)</span>
                     </div>
 
                     {filteredPairs.length === 0 ? (
