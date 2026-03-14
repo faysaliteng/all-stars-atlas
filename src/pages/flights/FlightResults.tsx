@@ -633,16 +633,14 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
   }, [flights]);
 
   const fareTypeLabels = [
-    { key: "fareBasis", label: "Fare Basis", icon: () => <span className="text-base">📋</span> },
-    { key: "bookingClass", label: "Booking Class", icon: () => <span className="text-base">🎫</span> },
-    { key: "availableSeats", label: "Seats Available", icon: Users },
     { key: "handBaggage", label: "Hand Baggage", icon: Package },
     { key: "checkedBaggage", label: "Checked Baggage", icon: Luggage },
     { key: "meal", label: "Meal", icon: () => <span className="text-base">🍽</span> },
     { key: "seatSelection", label: "Seat Selection", icon: () => <span className="text-base">💺</span> },
     { key: "rebooking", label: "Rebooking", icon: FileText },
     { key: "cancellation", label: "Cancellation", icon: Shield },
-    { key: "refundable", label: "Refundable", icon: () => <span className="text-base">🔄</span> },
+    { key: "miles", label: "Miles", icon: Star },
+    { key: "bookingClass", label: "Booking Class", icon: () => <span className="text-base">🎫</span> },
   ];
 
   return (
@@ -651,17 +649,24 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
       <div className="p-4 sm:p-5 bg-muted/10">
         <div className="flex gap-0">
           {/* Left: Fare Type Labels */}
-          <div className="w-40 shrink-0 pt-12">
+          <div className="w-40 shrink-0">
+            <div className="h-12 flex items-center px-3">
+              <span className="text-sm font-bold text-foreground">Fare Type</span>
+            </div>
             {fareTypeLabels.map((ft) => {
               const Icon = ft.icon;
               return (
                 <div key={ft.key} className="h-11 flex items-center gap-2 px-3">
-                  <span className="text-muted-foreground"><Icon className="w-4 h-4" /></span>
-                  <span className="text-xs font-medium text-muted-foreground">{ft.label}</span>
+                  <span className="text-accent"><Icon className="w-4 h-4" /></span>
+                  <span className="text-xs font-medium text-foreground">{ft.label}</span>
                 </div>
               );
             })}
-            <div className="h-16" />
+            <div className="h-16 flex items-start px-3 pt-2">
+              <button className="text-xs font-semibold text-accent hover:underline flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5" /> Fare Terms & Policies
+              </button>
+            </div>
           </div>
 
           {/* Right: Scrollable fare options */}
@@ -681,15 +686,12 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
             <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-none px-1">
               {fareOptions.map((opt, idx) => (
                 <div key={opt.id}
-                  className={`shrink-0 w-48 rounded-xl border transition-all hover:shadow-md ${
-                    opt.isBestValue ? "border-accent/40 bg-accent/[0.03] shadow-sm" : "border-border bg-card"
+                  className={`shrink-0 w-52 rounded-xl border transition-all hover:shadow-md ${
+                    opt.isBestValue ? "border-accent/40 bg-card shadow-sm" : "border-border bg-card"
                   }`}>
                   {/* Header */}
-                  <div className={`px-4 py-3 rounded-t-xl text-center ${
-                    opt.isBestValue ? "bg-accent/10" : "bg-muted/40"
-                  }`}>
-                    <p className={`text-sm font-bold ${opt.isBestValue ? "text-accent" : "text-foreground"}`}>{opt.label}</p>
-                    {opt.isBestValue && <p className="text-[10px] text-accent/70 font-medium mt-0.5">Best Value</p>}
+                  <div className="h-12 flex items-center justify-center px-4">
+                    <p className="text-sm font-bold text-foreground">{opt.label}</p>
                   </div>
 
                   {/* Values */}
@@ -698,52 +700,38 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
                       const val = opt[ft.key as keyof typeof opt];
                       let display: React.ReactNode;
 
-                      if (ft.key === "handBaggage" || ft.key === "checkedBaggage" || ft.key === "meal") {
-                        display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">Not included</span>;
-                      } else if (ft.key === "fareBasis") {
-                        display = val ? <span className="text-[10px] font-mono font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">—</span>;
+                      if (ft.key === "handBaggage" || ft.key === "checkedBaggage") {
+                        display = val ? <span className="text-xs font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">Not included</span>;
+                      } else if (ft.key === "meal") {
+                        display = val ? <span className="text-xs font-medium text-foreground">Free meals available</span> : <span className="text-xs text-muted-foreground">Not included</span>;
                       } else if (ft.key === "bookingClass") {
-                        display = <span className="text-xs font-semibold text-foreground">{String(val || "—")}</span>;
-                      } else if (ft.key === "availableSeats") {
-                        display = val !== null && val !== undefined 
-                          ? <span className={`text-xs font-bold ${Number(val) <= 4 ? "text-destructive" : Number(val) <= 9 ? "text-orange-500" : "text-foreground"}`}>{String(val)} Seats</span>
-                          : <span className="text-xs text-muted-foreground">—</span>;
-                      } else if (ft.key === "refundable") {
-                        display = val
-                          ? <span className="text-xs font-medium text-accent">Refundable</span>
-                          : <span className="text-xs font-medium text-destructive">Non-Refundable</span>;
-                      } else if (typeof val === "boolean") {
+                        display = <span className="text-xs font-bold text-foreground">{String(val || "—")}</span>;
+                      } else if (ft.key === "seatSelection") {
                         display = val
                           ? <span className="text-xs font-medium text-accent">Available</span>
                           : <X className="w-4 h-4 text-destructive/60 mx-auto" />;
-                      } else if (typeof val === "string" && val) {
-                        display = <span className="text-xs font-medium text-warning">{val}</span>;
+                      } else if (ft.key === "rebooking" || ft.key === "cancellation") {
+                        display = val
+                          ? <span className="text-xs font-medium text-orange-500">Penalties Apply</span>
+                          : <X className="w-4 h-4 text-destructive/60 mx-auto" />;
+                      } else if (ft.key === "miles") {
+                        display = <span className="text-xs font-medium text-foreground">Earn 50% Frequent Flyer Mileage.</span>;
                       } else {
-                        display = <X className="w-4 h-4 text-destructive/60 mx-auto" />;
+                        display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">—</span>;
                       }
 
                       return (
-                        <div key={ft.key} className="h-11 flex items-center justify-center px-3 border-t border-border/30">
+                        <div key={ft.key} className="h-11 flex items-center justify-center px-3 border-t border-border/30 text-center">
                           {display}
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* Footer: Payable Fare + Book */}
+                  {/* Footer: Gross Fare + Book */}
                   <div className="px-4 py-3 border-t border-border/50 text-center space-y-2">
-                    <p className="text-[10px] text-muted-foreground">Payable Fare</p>
-                    {(() => {
-                      const gf = opt.grossFare || 0;
-                      const tx = opt.flight?.taxes ?? 0;
-                      const bf = Math.max(0, Math.round(gf - tx));
-                      const discPct = opt.flight?.fareRules?.discount ?? 6.30;
-                      const aitPct = opt.flight?.fareRules?.aitVat ?? 0.3;
-                      const d = Math.round(bf * discPct / 100);
-                      const a = Math.round((bf - d) * aitPct / 100);
-                      const payable = bf - d + tx + a;
-                      return <p className="text-base font-black text-foreground">BDT {payable.toLocaleString()}</p>;
-                    })()}
+                    <p className="text-[10px] text-muted-foreground">Gross Fare</p>
+                    <p className="text-base font-black text-foreground">BDT {opt.grossFare.toLocaleString()}</p>
                     <Button size="sm" className="w-full font-bold rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground h-9"
                       onClick={() => onBook(opt.flight)}>
                       Book Now
