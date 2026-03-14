@@ -793,21 +793,19 @@ function normalizeGroupedResponse(response, params) {
         const pricingInfo = itin.pricingInformation || [];
         if (pricingInfo.length === 0) continue;
 
-        // ── CRITICAL: Sort pricing options by total price ascending ──
-        // Ensures cheapest booking class (V, L, S etc.) is primary, not full-fare Y
+        // ── CRITICAL: Sort pricing options by REAL API total price ascending ──
+        // Ensures cheapest booking class (V/L/S/T etc.) is primary; skips malformed 0-price artifacts.
         const sortedPricing = [...pricingInfo].sort((a, b) => {
-          const priceA = parseFloat(a?.fare?.totalFare?.totalPrice || 0);
-          const priceB = parseFloat(b?.fare?.totalFare?.totalPrice || 0);
-          return priceA - priceB;
+          const priceA = extractFareTotals(a?.fare || {}).total;
+          const priceB = extractFareTotals(b?.fare || {}).total;
+          const normalizedA = priceA > 0 ? priceA : Number.POSITIVE_INFINITY;
+          const normalizedB = priceB > 0 ? priceB : Number.POSITIVE_INFINITY;
+          return normalizedA - normalizedB;
         });
 
         const pricing = sortedPricing[0];
         const fare = pricing.fare || {};
-        const totalFare = fare.totalFare || {};
-        const totalAmount = parseFloat(totalFare.totalPrice || 0);
-        const baseFareAmt = parseFloat(totalFare.baseFareAmount || 0);
-        const taxesAmt = parseFloat(totalFare.totalTaxAmount || 0);
-        const currency = totalFare.currency || 'BDT';
+        const { total: totalAmount, baseFare: baseFareAmt, taxes: taxesAmt, currency } = extractFareTotals(fare);
 
         // Extract baggage per segment from passengerInfoList
         const passengerInfoList = fare.passengerInfoList || [];
