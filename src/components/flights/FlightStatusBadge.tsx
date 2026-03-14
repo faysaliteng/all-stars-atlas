@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plane, Clock, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
+import { formatApiTime } from "@/lib/flight-time";
 
 interface FlightStatusProps {
   airlineCode: string;
