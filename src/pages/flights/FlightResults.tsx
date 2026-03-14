@@ -953,11 +953,11 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         <span>{label}: {fromCode} → {toCode}</span>
         <span className="flight-date text-xs ml-1">· {formatShortDate(flight.departureTime)}</span>
       </div>
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Origin */}
         <div className="text-center shrink-0">
-          <p className="text-[10px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
-          <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
+          <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
+          <p className="text-xs sm:text-sm lg:text-base font-black tracking-tight flight-time">{departTime}</p>
         </div>
 
         {/* Duration bar */}
