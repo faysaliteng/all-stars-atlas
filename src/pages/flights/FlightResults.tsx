@@ -890,7 +890,7 @@ function buildFareRows(
     if (paxChildren > 0) {
       const childBase = Math.round(baseFare * 0.75);
       const disc = Math.round(childBase * discountPct / 100);
-      const aitVat = Math.round((childBase - disc) * aitVatPct / 100);
+      const aitVat = Math.round(childBase * aitVatPct / 100);
       fareRows.push({ paxType: "Child", baseFare: childBase, tax: taxes, other: 0, discount: disc, aitVat, count: paxChildren, amount: (childBase - disc + taxes + aitVat) * paxChildren });
     }
     if (paxInfants > 0) {
