@@ -2358,6 +2358,7 @@ const FlightResults = () => {
   const [selectedOutbound, setSelectedOutbound] = useState<any>(null);
   const [selectedReturn, setSelectedReturn] = useState<any>(null);
   const [searchStartTime] = useState(Date.now());
+  const [resultsExpired, setResultsExpired] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Inline editing state
