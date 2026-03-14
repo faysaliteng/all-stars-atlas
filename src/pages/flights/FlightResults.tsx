@@ -2516,6 +2516,7 @@ function sortFlights(flights: any[], sortBy: string) {
         const scoreB = ((b.price - minP) / priceSpread) * 0.4 + (((b.durationMinutes || 0) - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
         return scoreA - scoreB;
       });
+    }
   }
 }
 
