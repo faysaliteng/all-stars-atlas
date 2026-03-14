@@ -3316,11 +3316,11 @@ const FlightResults = () => {
             {!isMultiCity && (
               <Popover open={showRouteEdit} onOpenChange={setShowRouteEdit}>
                 <PopoverTrigger asChild>
-                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
-                    <span className="text-sm font-bold text-foreground">{fromCode || "—"}</span>
-                    <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-sm font-bold text-foreground">{toCode || "—"}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-0.5" />
+                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                    <span className="text-xs sm:text-sm font-bold text-foreground">{fromCode || "—"}</span>
+                    <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs sm:text-sm font-bold text-foreground">{toCode || "—"}</span>
+                    <ChevronDown className="w-3 h-3 text-muted-foreground ml-0.5" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-3 z-[60]" align="start">
