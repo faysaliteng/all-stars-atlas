@@ -878,12 +878,14 @@ const RoundTripFlightCard = ({
               <Luggage className="w-3.5 h-3.5" /> {outbound.baggage}
             </span>
           )}
-          {(outbound.availableSeats ?? null) !== null && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-              <Users className="w-3.5 h-3.5" /> {outbound.availableSeats} Seat{outbound.availableSeats !== 1 ? "s" : ""}
+          {(outbound.availableSeats ?? null) !== null && outbound.availableSeats <= 9 && (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 dark:text-orange-400">
+              <Users className="w-3.5 h-3.5" /> {outbound.availableSeats} Seat{outbound.availableSeats !== 1 ? "s" : ""} Left
             </span>
           )}
-          {bookingClassDisplay && <span className="text-xs text-muted-foreground font-medium">Class: {bookingClassDisplay}</span>}
+          {(outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass) && (
+            <span className="text-xs text-muted-foreground font-medium">Class: {outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass}</span>
+          )}
         </div>
 
         {/* Info bar */}
