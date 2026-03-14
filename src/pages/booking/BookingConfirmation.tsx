@@ -215,7 +215,12 @@ const BookingConfirmation = () => {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  {isRoundTrip && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Outbound</Badge>}
+                  {isRoundTrip && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 text-accent border border-accent/20 text-[10px] font-bold">
+                      <Plane className="w-3 h-3" />
+                      <span>Outbound</span>
+                    </div>
+                  )}
                   <p className="text-sm font-bold">{isRoundTrip ? `${booking.outbound?.origin || route.split(/[→⇄]/)[0]?.trim()} → ${booking.outbound?.destination || route.split(/[→⇄]/)[1]?.trim()}` : route}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">{date}{flightNo !== "—" ? ` · ${flightNo}` : ""}{cabin !== "Economy" || serviceType === "Flight" ? ` · ${cabin}` : ""}</p>
