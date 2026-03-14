@@ -554,6 +554,18 @@ function normalizeGroupedResponse(response, params) {
       console.log(`[Sabre] fareComponentDescs (${fareComponentDescs.length}):`, JSON.stringify(fareComponentDescs.slice(0, 3)));
     }
 
+    // Log multi-pricing stats
+    let totalPricingOptions = 0;
+    let itinsWithMultiplePricing = 0;
+    for (const g of itinGroups) {
+      for (const it of (g.itineraries || [])) {
+        const piCount = (it.pricingInformation || []).length;
+        totalPricingOptions += piCount;
+        if (piCount > 1) itinsWithMultiplePricing++;
+      }
+    }
+    console.log(`[Sabre] Pricing stats: ${totalPricingOptions} total options, ${itinsWithMultiplePricing} itineraries with multiple fares`);
+
     for (const group of itinGroups) {
       const groupDesc = group.groupDescription || {};
       const itineraries = group.itineraries || [];
