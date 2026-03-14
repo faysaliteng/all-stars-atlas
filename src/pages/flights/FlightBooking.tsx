@@ -259,13 +259,21 @@ const AddOnCard = ({ item, selected, onSelect, multi }: { item: { id: string; na
   </label>
 );
 
-/* ─── Session countdown timer ─── */
-const SessionTimer = ({ minutes = 20 }: { minutes?: number }) => {
+/* ─── Session countdown timer — redirects to search on expiry ─── */
+const SessionTimer = ({ minutes = 20, onExpired }: { minutes?: number; onExpired?: () => void }) => {
   const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
+  const expiredRef = useRef(false);
   useEffect(() => {
-    const interval = setInterval(() => setSecondsLeft(prev => (prev > 0 ? prev - 1 : 0)), 1000);
+    const interval = setInterval(() => setSecondsLeft(prev => {
+      if (prev <= 1 && !expiredRef.current) {
+        expiredRef.current = true;
+        onExpired?.();
+        return 0;
+      }
+      return prev > 0 ? prev - 1 : 0;
+    }), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [onExpired]);
   const m = Math.floor(secondsLeft / 60);
   const s = secondsLeft % 60;
   const isUrgent = secondsLeft < 300;
