@@ -338,14 +338,15 @@ const DashboardBookingDetail = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-border">
+          <div className="flex border-b border-border overflow-x-auto">
             {[
               { key: "itinerary", label: "Itinerary Information" },
               { key: "fare", label: "Fare Breakdown" },
               { key: "passengers", label: "Passengers" },
+              { key: "manage", label: "Manage Booking" },
             ].map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-colors ${
+                className={`px-4 py-3 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
                   activeTab === tab.key ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}>{tab.label}</button>
             ))}
