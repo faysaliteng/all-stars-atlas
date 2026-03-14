@@ -302,43 +302,11 @@ All core booking lifecycle features are production-verified:
 
 ---
 
-### ❌ Section 20: Structured Fare Rules — NOT IMPLEMENTED
+### ✅ Section 20: Structured Fare Rules — DONE (v4.0.0)
 
-**VPS Test:** ⏭️ SKIP — needs SOAP `StructureFareRulesRQ v3.0.1`
-
-**Official verified sample request:**
-```xml
-<StructureFareRulesRQ xmlns="http://webservices.sabre.com/sabreXML/2003/07" Version="3.0.1">
-  <PriceRequestInformation BuyingDate="2025-10-15T17:00:00">
-    <PassengerTypes>
-      <PassengerType Code="ADT" Count="2"/>
-    </PassengerTypes>
-    <ReturnFareComponentPenalties Ind="true"/>
-  </PriceRequestInformation>
-  <AirItinerary>
-    <OriginDestinationOptions>
-      <OriginDestinationOption>
-        <FlightSegment ArrivalDate="2025-11-16T19:25:00" DepartureDate="2025-11-16T17:50:00"
-          FlightNumber="584" RealReservationStatus="HK" ResBookDesigCode="G"
-          SegmentNumber="1" SegmentType="A" BookingDate="2025-10-01T04:07:00">
-          <DepartureAirport LocationCode="YYC"/>
-          <ArrivalAirport LocationCode="EWR"/>
-          <MarketingAirline Code="AC"/>
-          <OperatingAirline Code="AC"/>
-        </FlightSegment>
-        <SegmentInformation SegmentNumber="1"/>
-        <PaxTypeInformation FareBasisCode="GNA5A0TG" FareComponentNumber="1" PassengerType="ADT"/>
-      </OriginDestinationOption>
-    </OriginDestinationOptions>
-  </AirItinerary>
-</StructureFareRulesRQ>
-```
-[Source: Sabre StructureFareRulesRQ v3.0.1](https://developer.sabre.com/soap-api/get-structured-fare-rules/v3.0.1)
-
-**Implementation plan:**
-1. Add SOAP call in `sabre-soap.js` → `getStructuredFareRules(params)`
-2. Add route `GET /api/flights/fare-rules?fareBasis=...&origin=...&destination=...&airlineCode=...`
-3. Frontend: Fare rules modal on flight results/booking pages
+**Implementation:** `sabre-soap.js` → `getStructuredFareRules()`
+**Route:** `GET /api/flights/fare-rules?origin=...&destination=...&departureDate=...&airlineCode=...&flightNumber=...`
+**Features:** SOAP `StructureFareRulesRQ v3.0.1` with penalty parsing (exchange, refund, no-show), category extraction
 
 ---
 
