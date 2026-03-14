@@ -1594,9 +1594,9 @@ const MultiCityFlightCard = ({
                       <p className={`text-[10px] font-bold ${seg.stops === 0 ? "text-foreground" : "text-warning"}`}>
                         {seg.stops === 0 ? "Non-Stop" : `${seg.stops} Stop${seg.stops > 1 ? "s" : ""}`}
                       </p>
-                      {distanceKm(seg.origin, seg.destination) && (
+                      {calcDistanceKm(seg.origin, seg.destination) && (
                         <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                          <MapPin className="w-2.5 h-2.5" /> {distanceKm(seg.origin, seg.destination)?.toLocaleString()} Km
+                          <MapPin className="w-2.5 h-2.5" /> {calcDistanceKm(seg.origin, seg.destination)?.toLocaleString()} Km
                         </span>
                       )}
                     </div>
