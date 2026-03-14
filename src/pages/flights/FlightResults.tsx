@@ -907,6 +907,9 @@ const RoundTripFlightCard = ({
               )}
             </div>
             <p className="text-lg sm:text-xl lg:text-2xl font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
+            {grossTotalPrice > totalPrice && (
+              <p className="text-xs font-bold text-amber-500 line-through">BDT {grossTotalPrice.toLocaleString()}</p>
+            )}
             <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover>
               <PopoverTrigger asChild>
