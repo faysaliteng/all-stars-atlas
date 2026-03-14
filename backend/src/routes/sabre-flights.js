@@ -951,7 +951,7 @@ function normalizeGroupedResponse(response, params) {
         // Extract fare details from pricingInformation for fare options (branded fares)
         const fareDetailsArr = sortedPricing.map((pi, piIdx) => {
           const piFare = pi.fare || {};
-          const piTotal = piFare.totalFare || {};
+          const piFareTotals = extractFareTotals(piFare);
           const piPassengers = piFare.passengerInfoList || [];
           const piFareComponents = piPassengers[0]?.passengerInfo?.fareComponents || [];
           
