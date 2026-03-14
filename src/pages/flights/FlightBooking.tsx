@@ -703,7 +703,7 @@ const FlightBooking = () => {
     const discPct = f.fareRules?.discount ?? 6.30;
     const aitPct = f.fareRules?.aitVat ?? 0.3;
     const disc = Math.round(bf * discPct / 100);
-    const ait = Math.round((bf - disc) * aitPct / 100);
+    const ait = Math.round(bf * aitPct / 100);
     return { grossPrice: gross, baseFare: bf, taxes: tx, discount: disc, aitVat: ait, payable: bf - disc + tx + ait, discPct, aitPct };
   };
 

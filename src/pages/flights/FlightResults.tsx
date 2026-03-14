@@ -838,7 +838,7 @@ function calcRewardPoints(price: number): number {
 function calcPayableFromGross(grossPrice: number, taxes: number, discountPct = 6.30, aitVatPct = 0.3): number {
   const baseFare = Math.max(0, Math.round(grossPrice - taxes));
   const discount = Math.round(baseFare * discountPct / 100);
-  const aitVat = Math.round((baseFare - discount) * aitVatPct / 100);
+  const aitVat = Math.round(baseFare * aitVatPct / 100);
   return baseFare - discount + taxes + aitVat;
 }
 
@@ -867,7 +867,7 @@ function buildFareRows(
       const ppBase = pp.baseFare || 0;
       const ppTax = pp.taxes || 0;
       const disc = Math.round(ppBase * discountPct / 100);
-      const aitVat = Math.round((ppBase - disc) * aitVatPct / 100);
+      const aitVat = Math.round(ppBase * aitVatPct / 100);
       const count = pp.count || 1;
       fareRows.push({
         paxType: pp.label || pp.type || 'Adult',
@@ -884,20 +884,20 @@ function buildFareRows(
     // Fallback: only adult pricing available from API (no per-pax breakdown)
     if (paxAdults > 0) {
       const disc = Math.round(baseFare * discountPct / 100);
-      const aitVat = Math.round((baseFare - disc) * aitVatPct / 100);
+      const aitVat = Math.round(baseFare * aitVatPct / 100);
       fareRows.push({ paxType: "Adult", baseFare, tax: taxes, other: 0, discount: disc, aitVat, count: paxAdults, amount: (baseFare - disc + taxes + aitVat) * paxAdults });
     }
     if (paxChildren > 0) {
       const childBase = Math.round(baseFare * 0.75);
       const disc = Math.round(childBase * discountPct / 100);
-      const aitVat = Math.round((childBase - disc) * aitVatPct / 100);
+      const aitVat = Math.round(childBase * aitVatPct / 100);
       fareRows.push({ paxType: "Child", baseFare: childBase, tax: taxes, other: 0, discount: disc, aitVat, count: paxChildren, amount: (childBase - disc + taxes + aitVat) * paxChildren });
     }
     if (paxInfants > 0) {
       const infantBase = Math.round(baseFare * 0.1);
       const infantTax = Math.round(taxes * 0.5);
       const disc = Math.round(infantBase * discountPct / 100);
-      const aitVat = Math.round((infantBase - disc) * aitVatPct / 100);
+      const aitVat = Math.round(infantBase * aitVatPct / 100);
       fareRows.push({ paxType: "Infant", baseFare: infantBase, tax: infantTax, other: 0, discount: disc, aitVat, count: paxInfants, amount: (infantBase - disc + infantTax + aitVat) * paxInfants });
     }
   }
@@ -1979,7 +1979,7 @@ const FlightCard = ({
   const DISCOUNT_PCT = flight.fareRules?.discount ?? 6.30;
   const AIT_VAT_PCT = flight.fareRules?.aitVat ?? 0.3;
   const discount = Math.round(baseFare * DISCOUNT_PCT / 100);
-  const aitVat = Math.round((baseFare - discount) * AIT_VAT_PCT / 100);
+  const aitVat = Math.round(baseFare * AIT_VAT_PCT / 100);
   const price = baseFare - discount + taxes + aitVat;
   const refundable = flight.refundable ?? false;
   const fareType = flight.fareType || (refundable ? "Refundable" : "Non-Refundable");
