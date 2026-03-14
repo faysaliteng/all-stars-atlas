@@ -877,10 +877,10 @@ const RoundTripFlightCard = ({
               <PopoverContent side="left" className="w-64 p-3">
                 <p className="text-xs font-bold mb-2">Fare Breakdown</p>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Outbound</span><span className="font-medium">BDT {(outbound.price || 0).toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Return</span><span className="font-medium">BDT {(returnFlight.price || 0).toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Outbound</span><span className="font-medium">BDT {flightPayable(outbound).toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Return</span><span className="font-medium">BDT {flightPayable(returnFlight).toLocaleString()}</span></div>
                   <Separator className="my-1" />
-                  <div className="flex justify-between font-bold"><span>Total</span><span>BDT {totalPrice.toLocaleString()}</span></div>
+                  <div className="flex justify-between font-bold"><span>Total Payable</span><span>BDT {totalPrice.toLocaleString()}</span></div>
                 </div>
               </PopoverContent>
             </Popover>
