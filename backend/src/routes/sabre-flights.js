@@ -571,7 +571,8 @@ function normalizeGroupedResponse(response, params) {
     }
     console.log(`[Sabre] Pricing stats: ${totalPricingOptions} total options, ${itinsWithMultiplePricing} itineraries with multiple fares`);
 
-    for (const group of itinGroups) {
+    for (let groupIdx = 0; groupIdx < itinGroups.length; groupIdx++) {
+      const group = itinGroups[groupIdx];
       const groupDesc = group.groupDescription || {};
       const itineraries = group.itineraries || [];
 

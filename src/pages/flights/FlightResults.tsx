@@ -659,7 +659,12 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
         cancellation: typeof f.cancellationAllowed === 'boolean' ? f.cancellationAllowed : (typeof primary.refundable === 'boolean' ? primary.refundable : null),
         miles: f.milesEarning || primary.milesEarning || null,
         grossFare: f.price || f.amount || f.total || primary.price || 0,
-        flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
+        flight: {
+          ...primary,
+          price: f.price ?? primary.price,
+          taxes: f.taxes ?? primary.taxes,
+          fareDetails: [f],
+        },
         isBestValue: i === 0,
         isSabre: isSabreSource,
       };
