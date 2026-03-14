@@ -867,7 +867,7 @@ function buildFareRows(
       const ppBase = pp.baseFare || 0;
       const ppTax = pp.taxes || 0;
       const disc = Math.round(ppBase * discountPct / 100);
-      const aitVat = Math.round((ppBase - disc) * aitVatPct / 100);
+      const aitVat = Math.round(ppBase * aitVatPct / 100);
       const count = pp.count || 1;
       fareRows.push({
         paxType: pp.label || pp.type || 'Adult',
