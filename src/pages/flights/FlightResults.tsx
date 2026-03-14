@@ -3767,9 +3767,9 @@ const FlightResults = () => {
                 </Card>
               )}
 
-              {/* Quick sort chips — Cheapest / Fastest / Best, 3D cards */}
-              <div className="flex items-center justify-between gap-2 sm:gap-3">
-                <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
+              {/* Quick sort chips — Cheapest / Fastest / Best */}
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
                   {[
                     { key: "cheapest", label: "Cheapest", icon: TrendingUp, data: quickSortSummary.cheapest },
                     { key: "fastest", label: "Fastest", icon: Zap, data: quickSortSummary.fastest },
@@ -3781,18 +3781,18 @@ const FlightResults = () => {
                       <button
                         key={s.key}
                         onClick={() => setSortBy(s.key)}
-                        className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm whitespace-nowrap transition-all ${
+                        className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs whitespace-nowrap transition-all ${
                           isActive
-                            ? "bg-card border border-accent shadow-[0_4px_16px_-4px_hsl(var(--accent)/0.3),0_1px_3px_hsl(var(--foreground)/0.06)]"
-                            : "bg-card border border-border shadow-[0_2px_8px_-2px_hsl(var(--foreground)/0.06)] hover:shadow-[0_4px_12px_-4px_hsl(var(--foreground)/0.1)] hover:border-foreground/20"
+                            ? "bg-card border border-accent shadow-[0_2px_10px_-3px_hsl(var(--accent)/0.3)]"
+                            : "bg-card border border-border shadow-sm hover:shadow-md hover:border-foreground/20"
                         }`}
                       >
-                        <div className="flex items-center gap-1 sm:gap-1.5">
-                          <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? "text-accent" : ""}`} />
+                        <div className="flex items-center gap-1">
+                          <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? "text-accent" : ""}`} />
                           <span className={`font-bold ${isActive ? "text-foreground" : ""}`}>{s.label}</span>
                         </div>
                         {s.data && (
-                          <span className={`text-[10px] sm:text-xs ${isActive ? "text-muted-foreground" : "text-muted-foreground/70"}`}>
+                          <span className={`text-[9px] sm:text-[10px] ${isActive ? "text-muted-foreground" : "text-muted-foreground/70"}`}>
                             BDT {s.data.price?.toLocaleString()}{s.data.duration ? ` | ${s.data.duration}` : ""}
                           </span>
                         )}
@@ -3800,8 +3800,8 @@ const FlightResults = () => {
                     );
                   })}
                 </div>
-                <Button variant="outline" size="sm" className="lg:hidden shrink-0 shadow-[0_2px_8px_-2px_hsl(var(--foreground)/0.06)]" onClick={() => setShowFilters(true)}>
-                  <Filter className="w-4 h-4 mr-1" /> Filters
+                <Button variant="outline" size="sm" className="lg:hidden shrink-0 shadow-sm h-7 text-[11px] px-2" onClick={() => setShowFilters(true)}>
+                  <Filter className="w-3.5 h-3.5 mr-1" /> Filters
                 </Button>
               </div>
 
