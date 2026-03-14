@@ -665,6 +665,42 @@ function normalizeGroupedResponse(response, params) {
           console.log(`[Sabre] Resolved baggage: checked=${checkedBaggageGlobal}, hand=${handBaggageGlobal}, total infos=${allBaggageInfos.length}`);
         }
 
+        // ── Extract per-passenger-type pricing from passengerInfoList (real API data) ──
+        const paxPricing = [];
+        for (const paxInfo of passengerInfoList) {
+          const pInfo = paxInfo.passengerInfo || {};
+          const paxType = pInfo.passengerType || 'ADT';
+          const paxNumber = pInfo.passengerNumber || 1;
+          // Per-pax fare: Sabre provides currencyConversion with per-pax amounts
+          const cc = pInfo.currencyConversion || {};
+          // Also check passengerTotalFare for direct amounts
+          const ptf = pInfo.passengerTotalFare || {};
+          const paxBaseFare = parseFloat(cc.baseFareAmount || ptf.baseFareAmount || 0);
+          const paxTaxes = parseFloat(cc.totalTaxAmount || ptf.totalTaxAmount || 0);
+          const paxTotal = parseFloat(cc.totalPrice || ptf.totalPrice || 0) || (paxBaseFare + paxTaxes);
+          const paxCurrency = cc.currency || ptf.currency || currency;
+          
+          // Map Sabre pax types to readable names
+          let paxLabel = 'Adult';
+          if (paxType === 'CNN' || paxType === 'CHD' || paxType.startsWith('C')) paxLabel = 'Child';
+          else if (paxType === 'INF' || paxType === 'INS') paxLabel = 'Infant';
+          
+          paxPricing.push({
+            type: paxType,
+            label: paxLabel,
+            count: paxNumber,
+            baseFare: paxBaseFare,
+            taxes: paxTaxes,
+            total: paxTotal,
+            currency: paxCurrency,
+          });
+        }
+
+        // Debug first itinerary's pax pricing
+        if (idx === 0 && paxPricing.length > 0) {
+          console.log(`[Sabre] paxPricing:`, JSON.stringify(paxPricing));
+        }
+
         // Helper: resolve fareComponent segment data (inline or via fareComponentDescs ref)
         function resolveFareComponentSegments(fareComponents) {
           const resolvedSegments = [];
