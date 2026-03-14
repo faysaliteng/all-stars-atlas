@@ -3105,7 +3105,8 @@ const FlightResults = () => {
     const filtered = roundTripPairs.filter(p => {
       if (airlineFilter && p.outbound.airlineCode !== airlineFilter) return false;
       if (selectedAirlines.length > 0 && !selectedAirlines.includes(p.outbound.airline)) return false;
-      if (p.totalPrice < priceRange[0] || p.totalPrice > priceRange[1]) return false;
+      const payable = pairPayable(p);
+      if (payable < priceRange[0] || payable > priceRange[1]) return false;
       if (stopsFilter !== "all") {
         const stops = p.outbound.stops ?? 0;
         if (stopsFilter === "0" && stops !== 0) return false;
@@ -3164,7 +3165,7 @@ const FlightResults = () => {
       }
       return true;
     });
-    if (sortBy === "cheapest") filtered.sort((a, b) => a.totalPrice - b.totalPrice);
+    if (sortBy === "cheapest") filtered.sort((a, b) => pairPayable(a) - pairPayable(b));
     else if (sortBy === "best") {
       // Best = weighted balance of price, duration, and stops (like BDFare)
       // Normalize price and duration to comparable scales, then weight
