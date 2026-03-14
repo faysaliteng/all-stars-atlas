@@ -2558,6 +2558,8 @@ const FlightResults = () => {
   const [showPaxEdit, setShowPaxEdit] = useState(false);
   const [airportSearch, setAirportSearch] = useState("");
   const [editingField, setEditingField] = useState<"from" | "to" | null>(null);
+  const [showMultiCityEdit, setShowMultiCityEdit] = useState(false);
+  const [mcEditSearch, setMcEditSearch] = useState("");
 
   // Multi-city state
   const tripType = searchParams.get("tripType") || "";
