@@ -1,7 +1,7 @@
 # Seven Trip — Complete Deployment History
 
 > Every deployment to production with exact commands, what changed, and verification steps.
-> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features)
+> Last updated: 2026-03-14 (v4.1.0 — UI/UX Overhaul + Sabre PTC Fix)
 
 ---
 

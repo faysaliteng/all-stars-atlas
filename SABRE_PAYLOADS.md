@@ -1,10 +1,11 @@
-# Seven Trip — Sabre GDS Working Payloads Reference (v4.0.0)
+# Seven Trip — Sabre GDS Working Payloads Reference (v4.1.0)
 
 > Complete, production-verified payloads for all Sabre API operations.
 > PCC: J4YL | EPR: 631470 | Environment: Production
 > REST: `https://api.platform.sabre.com` | SOAP: `https://webservices.platform.sabre.com`
-> Last verified: 2026-03-14 (v4.0.0 — All 26 Sabre sections implemented)
+> Last verified: 2026-03-14 (v4.1.0 — Child/Infant PTC codes fixed)
 > Sections 17–26 implemented in v4.0.0 — see SABRE_FEATURE_AUDIT.md for payload samples
+> v4.1.0: Children use age-based PTC C05–C11, Infants use Infant.Ind=true with DateOfBirth
 
 ---
 

@@ -5,6 +5,20 @@
 
 ---
 
+## v4.1.0 — 2026-03-14
+
+### Changed (Backend — Sabre Passenger Types)
+- **Child PTC codes**: `createBooking()` now calculates child age from DOB and injects `PassengerType: { Code: 'C05'–'C11' }` per Sabre v2.4.0
+- **Infant marker**: Infants include `Infant: { Ind: true, DateOfBirth: 'YYYY-MM-DD' }` on PersonName
+- **NumberInParty**: Excludes infants (lap infants) — prevents overbooking seats
+
+### Changed (Frontend — No API Impact)
+- SearchWidget supports `initialFlightValues` and `compact` props
+- Flight results compact pill bar replaces full-widget modification
+- AnimatedFlightArc redesigned with animated chevrons and custom plane SVG
+
+---
+
 ## v4.0.0 — 2026-03-14
 
 ### Added — 10 New Endpoints (Sabre Sections 17–26 Complete)

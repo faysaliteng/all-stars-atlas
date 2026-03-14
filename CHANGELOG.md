@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
+## [4.1.0] — 2026-03-14 — UI/UX Overhaul: Search Widget, Flight Arc, Sabre Child/Infant PTC
+
+### Changed — Frontend
+- **SearchWidget refactored** with `flightOnly`, `initialFlightValues`, and `compact` props for reuse on results page
+- **Flight results modification bar** rebuilt as compact pill bar with full-feature popovers (Domestic/Intl toggle, fare type, preferred airline, cabin class)
+- **AnimatedFlightArc** redesigned: animated `›››› ✈ ››››` chevrons (departure=royal blue, return=purple) with custom plane SVG path
+- **Date picker auto-close** on flight results: selecting a date immediately triggers new search (one-way) or closes after both dates (round-trip)
+- **SearchWidget icons** updated: PlaneTakeoff (From), PlaneLanding (To), Repeat2 (Swap), CalendarDays (Date), Armchair (Cabin), UserRound (Travelers), SendHorizontal (Search)
+
+### Fixed — Backend
+- **Sabre child/infant PTC codes**: Children now use age-based `C05`–`C11` codes (from DOB); infants include `Infant: { Ind: true, DateOfBirth }` per Sabre v2.4.0 schema
+- **Sabre NumberInParty**: Excludes infants (lap infants don't get seats), preventing overbooking
+- **Session timeout redirect**: 20-min timer expiry now auto-redirects to `/flights?from=...&to=...` preserving search params
+
+### Result
+- Consistent UI across all search modes (one-way, round-trip, multi-city, domestic, international)
+- Compact results-page search bar with all homepage features accessible via popovers
+
+---
+
 ## [4.0.0] — 2026-03-14 — Full Sabre GDS Coverage: All 26 Features Implemented
 
 ### Added — 10 New API Endpoints

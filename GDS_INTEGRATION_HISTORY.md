@@ -1,7 +1,7 @@
 # Seven Trip — GDS Integration History & Troubleshooting
 
 > Complete timeline of all GDS provider integrations, issues encountered, and solutions applied.
-> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features Implemented)
+> Last updated: 2026-03-14 (v4.1.0 — Sabre Child/Infant PTC Fix)
 
 ---
 
