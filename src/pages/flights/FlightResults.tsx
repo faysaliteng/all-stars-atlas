@@ -631,14 +631,16 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
   }, [flights]);
 
   const fareTypeLabels = [
+    { key: "fareBasis", label: "Fare Basis", icon: () => <span className="text-base">📋</span> },
+    { key: "bookingClass", label: "Booking Class", icon: () => <span className="text-base">🎫</span> },
+    { key: "availableSeats", label: "Seats Available", icon: Users },
     { key: "handBaggage", label: "Hand Baggage", icon: Package },
     { key: "checkedBaggage", label: "Checked Baggage", icon: Luggage },
     { key: "meal", label: "Meal", icon: () => <span className="text-base">🍽</span> },
     { key: "seatSelection", label: "Seat Selection", icon: () => <span className="text-base">💺</span> },
     { key: "rebooking", label: "Rebooking", icon: FileText },
     { key: "cancellation", label: "Cancellation", icon: Shield },
-    { key: "miles", label: "Miles", icon: Star },
-    { key: "bookingClass", label: "Booking Class", icon: () => <span className="text-base">🎫</span> },
+    { key: "refundable", label: "Refundable", icon: () => <span className="text-base">🔄</span> },
   ];
 
   return (
