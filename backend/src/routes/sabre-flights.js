@@ -281,8 +281,9 @@ async function searchFlights(params) {
       },
       OriginDestinationInformation: originDest,
       TravelPreferences: {
+        // NOTE: Keep this payload relaxed for PCC stability (NAV observed with restrictive knobs).
         TPA_Extensions: {
-          NumTrips: { Number: 250 },
+          NumTrips: { Number: 200 },
           DataSources: {
             NDC: 'Enable',
             ATPCO: 'Enable',
@@ -290,17 +291,17 @@ async function searchFlights(params) {
           },
           DiversityParameters: {
             Weightings: {
-              PriceWeight: 10,
-              TravelTimeWeight: 0,
+              PriceWeight: 8,
+              TravelTimeWeight: 2,
             },
           },
         },
-        CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Only' }],
-        MaxStopsQuantity: 2,
+        // Cabin is a preference so we don't return 0 inventory when Sabre can't honor strict cabin filtering.
+        CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
       },
       TPA_Extensions: {
         IntelliSellTransaction: {
-          RequestType: { Name: '250ITINS' },
+          RequestType: { Name: '200ITINS' },
         },
       },
       TravelerInfoSummary: {
