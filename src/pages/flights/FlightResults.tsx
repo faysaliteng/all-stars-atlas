@@ -1093,7 +1093,7 @@ const RoundTripFlightCard = ({
                               <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
                                 <Plane className={`w-4 h-4 ${label === "Return" ? "rotate-180 text-warning" : "text-accent"}`} />
                                 {label}: {leg.origin} → {leg.destination}
-                                <span className="text-muted-foreground font-normal text-xs">· {formatDate(leg.departureTime)}</span>
+                                <span className="flight-date text-xs">· {formatDate(leg.departureTime)}</span>
                               </h4>
                               {(legs.length > 0 ? legs : [{ origin: leg.origin, destination: leg.destination, departureTime: leg.departureTime, arrivalTime: leg.arrivalTime, duration: leg.duration, flightNumber: leg.flightNumber, airlineCode: leg.airlineCode, aircraft: ac }]).map((segment: any, i: number) => (
                                 <div key={i} className="space-y-3 mb-4">
