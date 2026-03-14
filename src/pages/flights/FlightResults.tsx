@@ -2613,7 +2613,8 @@ const FlightResults = () => {
     return list.filter((f: any) => {
       if (airlineFilter && f.airlineCode !== airlineFilter) return false;
       if (selectedAirlines.length > 0 && !selectedAirlines.includes(f.airline)) return false;
-      if (f.price < priceRange[0] || f.price > priceRange[1]) return false;
+      const payable = flightPayable(f);
+      if (payable < priceRange[0] || payable > priceRange[1]) return false;
       if (stopsFilter !== "all") {
         const stops = f.stops ?? 0;
         if (stopsFilter === "0" && stops !== 0) return false;
