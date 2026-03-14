@@ -28,7 +28,7 @@ import { AIRPORTS } from "@/lib/airports";
 import { api } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { format } from "date-fns";
-import { formatApiDate, formatApiShortDate, formatApiTime, getApiLocalHour, isApiNextDay } from "@/lib/flight-time";
+import { formatApiDate, formatApiShortDate, formatApiTime, extractApiGMT, getApiLocalHour, isApiNextDay } from "@/lib/flight-time";
 
 /* ─── Airline logo — dynamic CDN, no hardcoded map ─── */
 function getAirlineLogo(code?: string): string | null {
@@ -85,7 +85,12 @@ function getAirlineFareParams(
 
 function formatTime(datetime?: string): string {
   if (!datetime) return "--:--";
-  return formatApiTime(datetime, { withGMT: true });
+  return formatApiTime(datetime);
+}
+
+function formatGMT(datetime?: string): string {
+  if (!datetime) return "";
+  return extractApiGMT(datetime);
 }
 
 function formatDate(datetime?: string): string {
@@ -929,9 +934,10 @@ function mergePaxPricingArrays(arr1?: any[], arr2?: any[]): any[] | null {
 
 /* ─── Leg Mini — compact leg display for grouped cards ─── */
 const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; labelColor: string }) => {
-  const logo = getAirlineLogo(flight.airlineCode);
   const departTime = formatTime(flight.departureTime);
   const arriveTime = formatTime(flight.arrivalTime);
+  const departGmt = formatGMT(flight.departureTime);
+  const arriveGmt = formatGMT(flight.arrivalTime);
   const duration = flight.duration || "";
   const stops = flight.stops ?? 0;
   const stopsLabel = stops === 0 ? "Non-Stop" : `${stops} Stop${stops > 1 ? "s" : ""}`;
@@ -944,24 +950,25 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
 
   return (
     <div className="flex-1 min-w-0">
-      <div className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-1.5 text-[10px] sm:text-xs font-bold shadow-sm ${
+      <div className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-2 text-[10px] sm:text-xs font-bold shadow-sm ${
         isReturn 
           ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30" 
           : "bg-accent/15 text-accent border border-accent/30"
       }`}>
         <Plane className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isReturn ? "rotate-180" : ""}`} />
-        <span>{label}: {fromCode} → {toCode}</span>
-        <span className="flight-date text-[10px] ml-0.5">· {formatShortDate(flight.departureTime)}</span>
+        <span>{isReturn ? "RETURN" : "DEPARTURE"}: {fromCode} → {toCode}</span>
+        <span className="flight-date text-[10px] ml-0.5">• {formatShortDate(flight.departureTime)}</span>
       </div>
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Origin */}
         <div className="text-center shrink-0">
-          <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
-          <p className="text-[11px] sm:text-xs font-black tracking-tight flight-time">{departTime}</p>
+          <p className="text-xs sm:text-sm font-bold text-foreground">{fromCode}</p>
+          <p className="text-sm sm:text-base font-black tracking-tight flight-time">{departTime}</p>
+          {departGmt && <p className="text-[9px] sm:text-[10px] text-muted-foreground">{departGmt}</p>}
         </div>
 
         {/* Duration bar */}
-        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[36px]">
+        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[50px]">
           {stops > 0 && legs.length > 1 ? (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
@@ -995,17 +1002,18 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
           ) : (
             <AnimatedFlightArc compact direction={isReturn ? "return" : "departure"} />
           )}
-          <p className="text-[8px] sm:text-[9px] text-muted-foreground">{duration}</p>
-          <p className={`text-[8px] sm:text-[9px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium">{duration}</p>
+          <p className={`text-[9px] sm:text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
         </div>
 
         {/* Destination */}
         <div className="text-center shrink-0">
-          <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{toCode}</p>
-          <p className="text-[11px] sm:text-xs font-black tracking-tight flight-time">
+          <p className="text-xs sm:text-sm font-bold text-foreground">{toCode}</p>
+          <p className="text-sm sm:text-base font-black tracking-tight flight-time">
             {arriveTime}
-            {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
+            {nextDay && <sup className="text-[8px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
+          {arriveGmt && <p className="text-[9px] sm:text-[10px] text-muted-foreground">{arriveGmt}</p>}
         </div>
       </div>
     </div>
@@ -1108,8 +1116,8 @@ const RoundTripFlightCard = ({
             <LegMini flight={returnFlight} label="Return" labelColor="text-foreground" />
           </div>
 
-          {/* Price */}
-          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-36 lg:w-40 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+          {/* Price + Airline info */}
+          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-40 lg:w-48 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-1.5">
               {totalPrice === cheapest && totalPrice > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
@@ -1119,6 +1127,16 @@ const RoundTripFlightCard = ({
                   <span className="text-xs">🪙</span> +{calcRewardPoints(totalPrice).toLocaleString()}
                 </Badge>
               )}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              {logo ? (
+                <img src={logo} alt={outbound.airline} className="w-6 h-6 object-contain hidden sm:block"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              ) : null}
+              <div className="hidden sm:block text-right min-w-0">
+                <p className="text-[10px] font-bold leading-tight truncate max-w-[70px]">{outbound.airline}</p>
+                <p className="text-[8px] text-muted-foreground truncate">{flightNo}</p>
+              </div>
             </div>
             <p className="text-base sm:text-lg lg:text-xl font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
             {grossTotalPrice > totalPrice && (
@@ -2026,11 +2044,18 @@ const FlightCard = ({
 
           {/* Flight times + baggage info */}
           <div className="flex-1 p-2.5 sm:p-3 min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Route label header */}
+            <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-2 text-[10px] sm:text-xs font-bold shadow-sm bg-accent/15 text-accent border border-accent/30">
+              <Plane className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>DEPARTURE: {fromCode} → {toCode}</span>
+              <span className="flight-date text-[10px] ml-0.5">• {departDateStr}</span>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Departure */}
               <div className="text-center shrink-0">
-                <p className="text-xs sm:text-sm font-black tracking-tight flight-time">{departTime}</p>
-                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{departDateStr}</p>
+                <p className="text-xs sm:text-sm font-bold text-foreground">{fromCode}</p>
+                <p className="text-sm sm:text-base font-black tracking-tight flight-time">{departTime}</p>
+                {(() => { const g = formatGMT(flight.departureTime); return g ? <p className="text-[9px] sm:text-[10px] text-muted-foreground">{g}</p> : null; })()}
               </div>
 
               {/* Duration bar */}
@@ -2081,11 +2106,12 @@ const FlightCard = ({
 
               {/* Arrival */}
               <div className="text-center shrink-0">
-                <p className="text-xs sm:text-sm font-black tracking-tight flight-time">
+                <p className="text-xs sm:text-sm font-bold text-foreground">{toCode}</p>
+                <p className="text-sm sm:text-base font-black tracking-tight flight-time">
                   {arriveTime}
-                  {nextDay && <sup className="text-[7px] sm:text-[8px] text-destructive font-bold ml-0.5">+1 days</sup>}
+                  {nextDay && <sup className="text-[8px] text-destructive font-bold ml-0.5">+1</sup>}
                 </p>
-                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{arriveDateStr}</p>
+                {(() => { const g = formatGMT(flight.arrivalTime); return g ? <p className="text-[9px] sm:text-[10px] text-muted-foreground">{g}</p> : null; })()}
               </div>
             </div>
 
@@ -2165,6 +2191,16 @@ const FlightCard = ({
                   <span className="text-xs">🪙</span> +{calcRewardPoints(price).toLocaleString()}
                 </Badge>
               )}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              {logo ? (
+                <img src={logo} alt={flight.airline} className="w-6 h-6 object-contain hidden sm:block"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              ) : null}
+              <div className="hidden sm:block text-right min-w-0">
+                <p className="text-[10px] font-bold leading-tight truncate max-w-[70px]">{flight.airline}</p>
+                <p className="text-[8px] text-muted-foreground truncate">{flightNo}</p>
+              </div>
             </div>
             <p className="text-base sm:text-lg lg:text-xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
             {discount > 0 && (
