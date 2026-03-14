@@ -854,15 +854,50 @@ function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
     return Number.isFinite(n) ? n : 0;
   };
 
-  const directGross = toNum(f?.price || f?.amount || f?.total);
-  const directTaxes = toNum(f?.taxes || f?.taxAmount || f?.totalTaxAmount);
+  const pickPositive = (...values: any[]) => {
+    for (const v of values) {
+      const n = toNum(v);
+      if (n > 0) return n;
+    }
+    return 0;
+  };
 
-  let grossPrice = directGross > 0 ? directGross : 0;
-  let taxes = directTaxes > 0 ? directTaxes : 0;
+  const directGross = pickPositive(
+    f?.price,
+    f?.totalPrice,
+    f?.grossPrice,
+    f?.amount,
+    f?.total,
+    f?.publishedFare,
+    f?.fareTotal,
+  );
+  const directTaxes = pickPositive(
+    f?.taxes,
+    f?.taxAmount,
+    f?.totalTaxAmount,
+    f?.tax,
+  );
 
+  let grossPrice = directGross;
+  let taxes = directTaxes;
+
+  // Top-level base + tax fallback
+  if (grossPrice <= 0) {
+    const baseFare = pickPositive(f?.baseFare, f?.adultBaseFare);
+    const taxFare = pickPositive(f?.taxes, f?.taxAmount, f?.totalTaxAmount, f?.tax);
+    if (baseFare > 0) {
+      grossPrice = baseFare + taxFare;
+      if (taxes <= 0) taxes = taxFare;
+    }
+  }
+
+  // Fare options fallback
   if (grossPrice <= 0 && Array.isArray(f?.fareDetails) && f.fareDetails.length > 0) {
     const priced = f.fareDetails
-      .map((d: any) => ({ price: toNum(d?.price || d?.amount || d?.total), taxes: toNum(d?.taxes || d?.totalTaxAmount || d?.taxAmount) }))
+      .map((d: any) => ({
+        price: pickPositive(d?.price, d?.totalPrice, d?.grossPrice, d?.amount, d?.total, d?.fareTotal),
+        taxes: pickPositive(d?.taxes, d?.totalTaxAmount, d?.taxAmount, d?.tax),
+      }))
       .filter((d: any) => d.price > 0)
       .sort((a: any, b: any) => a.price - b.price);
 
@@ -872,20 +907,38 @@ function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
     }
   }
 
+  // Pax pricing fallback
   if ((grossPrice <= 0 || taxes <= 0) && Array.isArray(f?.paxPricing) && f.paxPricing.length > 0) {
     const paxGross = f.paxPricing.reduce((sum: number, p: any) => {
       const count = Math.max(1, Number(p?.count) || 1);
-      const total = toNum(p?.total || 0);
+      const total = pickPositive(p?.total, p?.price, p?.grossPrice, p?.amount);
       return sum + (total * count);
     }, 0);
     const paxTaxes = f.paxPricing.reduce((sum: number, p: any) => {
       const count = Math.max(1, Number(p?.count) || 1);
-      const tax = toNum(p?.taxes || 0);
+      const tax = pickPositive(p?.taxes, p?.taxAmount, p?.totalTaxAmount, p?.tax);
       return sum + (tax * count);
     }, 0);
 
     if (grossPrice <= 0 && paxGross > 0) grossPrice = paxGross;
     if (taxes <= 0 && paxTaxes > 0) taxes = paxTaxes;
+  }
+
+  // Combined flight fallback (sum segment API prices)
+  if (grossPrice <= 0 && Array.isArray(f?.segments) && f.segments.length > 0) {
+    const segmentGross = f.segments.reduce(
+      (sum: number, seg: any) => sum + pickPositive(seg?.price, seg?.totalPrice, seg?.grossPrice, seg?.amount, seg?.total),
+      0,
+    );
+    const segmentTaxes = f.segments.reduce(
+      (sum: number, seg: any) => sum + pickPositive(seg?.taxes, seg?.taxAmount, seg?.totalTaxAmount, seg?.tax),
+      0,
+    );
+
+    if (segmentGross > 0) {
+      grossPrice = segmentGross;
+      if (taxes <= 0 && segmentTaxes > 0) taxes = segmentTaxes;
+    }
   }
 
   if (grossPrice > 0 && taxes > grossPrice) {
@@ -896,10 +949,9 @@ function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
 }
 
 /* ─── Shortcut: payable from a flight object ─── */
-/* Shows the raw API price directly — no agency discount/markup adjustments */
 function flightPayable(f: any): number {
   const apiFare = getApiFareTotals(f);
-  return apiFare.grossPrice;
+  return calcPayableFromGross(apiFare.grossPrice, apiFare.taxes, f?.fareRules?.discount ?? 6.30, f?.fareRules?.aitVat ?? 0.3);
 }
 
 /* ─── Build fare rows from real API per-pax pricing (no fabricated multipliers) ─── */
