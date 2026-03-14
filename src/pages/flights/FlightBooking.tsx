@@ -324,11 +324,39 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 text-[10px] sm:text-[11px] text-muted-foreground">
-          <span>{flight.airline} · {flight.flightNumber}</span>
-          <span>· {searchedCabinClass || flight.cabinClass || ""}</span>
-          {flight.baggage && <span className="flex items-center gap-1"><Luggage className="w-3 h-3" /> {flight.baggage}</span>}
-          {flight.aircraft && <span className="hidden sm:inline">· Aircraft: {flight.aircraft}</span>}
+        <div className="flex flex-wrap gap-2 mt-3">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] sm:text-[11px] font-semibold text-muted-foreground">
+            {flight.airline} · {flight.flightNumber}
+          </span>
+          {(flight.handBaggage || "7KG") && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] sm:text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+              <Package className="w-3 h-3" /> {flight.handBaggage || "7KG"}
+            </span>
+          )}
+          {flight.baggage && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] sm:text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+              <Luggage className="w-3 h-3" /> {flight.baggage}
+            </span>
+          )}
+          {(searchedCabinClass || flight.cabinClass) && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] sm:text-[11px] font-semibold text-muted-foreground">
+              <Plane className="w-3 h-3" /> {searchedCabinClass || flight.cabinClass}
+            </span>
+          )}
+          {flight.refundable !== undefined && (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] sm:text-[11px] font-bold ${
+              flight.refundable
+                ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
+                : "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
+            }`}>
+              {flight.refundable ? "Refundable" : "Non-Refundable"}
+            </span>
+          )}
+          {flight.aircraft && (
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] sm:text-[11px] font-semibold text-muted-foreground">
+              Aircraft: {flight.aircraft}
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>
