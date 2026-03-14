@@ -52,9 +52,11 @@ function resolveDeadlineInfo(flight: any): { deadline: Date; label: string } | n
   if (isNaN(tl.getTime()) || tl <= new Date()) return null;
   const now = new Date();
   const hoursLeft = Math.max(1, Math.floor((tl.getTime() - now.getTime()) / (1000 * 60 * 60)));
+  const deadlineDateLabel = formatApiDate(flight.timeLimit, { year: "numeric" });
+  const deadlineTimeLabel = formatApiTime(flight.timeLimit, { withGMT: true });
   const label = hoursLeft > 24
-    ? `Pay within ${Math.ceil(hoursLeft / 24)} days (by ${tl.toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })})`
-    : `Pay within ${hoursLeft} hours (by ${tl.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })})`;
+    ? `Pay within ${Math.ceil(hoursLeft / 24)} days (by ${deadlineDateLabel} ${deadlineTimeLabel})`
+    : `Pay within ${hoursLeft} hours (by ${deadlineTimeLabel})`;
   return { deadline: tl, label };
 }
 
