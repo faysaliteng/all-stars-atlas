@@ -730,10 +730,20 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
                     })}
                   </div>
 
-                  {/* Footer: Gross Fare + Book */}
+                  {/* Footer: Payable Fare + Book */}
                   <div className="px-4 py-3 border-t border-border/50 text-center space-y-2">
-                    <p className="text-[10px] text-muted-foreground">Gross Fare</p>
-                    <p className="text-base font-black text-foreground">BDT {opt.grossFare.toLocaleString()}</p>
+                    <p className="text-[10px] text-muted-foreground">Payable Fare</p>
+                    {(() => {
+                      const gf = opt.grossFare || 0;
+                      const tx = opt.flight?.taxes ?? 0;
+                      const bf = Math.max(0, Math.round(gf - tx));
+                      const discPct = opt.flight?.fareRules?.discount ?? 6.30;
+                      const aitPct = opt.flight?.fareRules?.aitVat ?? 0.3;
+                      const d = Math.round(bf * discPct / 100);
+                      const a = Math.round((bf - d) * aitPct / 100);
+                      const payable = bf - d + tx + a;
+                      return <p className="text-base font-black text-foreground">BDT {payable.toLocaleString()}</p>;
+                    })()}
                     <Button size="sm" className="w-full font-bold rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground h-9"
                       onClick={() => onBook(opt.flight)}>
                       Book Now
