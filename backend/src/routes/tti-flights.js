@@ -158,7 +158,7 @@ async function searchFlights({ origin, destination, departDate, returnDate, adul
   }
 
   // Map cabin class to TTI code: Y=Economy, W=Premium Economy, C=Business, F=First
-  const cabinMap = { economy: 'Y', premiumeconomy: 'W', business: 'C', first: 'F' };
+  const cabinMap = { economy: 'Y', premiumeconomy: 'W', 'premium-economy': 'W', premium_economy: 'W', business: 'C', first: 'F', y: 'Y', w: 'W', c: 'C', f: 'F' };
   const ttiCabinCode = cabinMap[(cabinClass || '').toLowerCase()] || null;
 
   const request = {
