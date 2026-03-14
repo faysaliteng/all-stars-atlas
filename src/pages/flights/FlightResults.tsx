@@ -935,6 +935,8 @@ const RoundTripFlightCard = ({
   const totalPrice = flightPayable(outbound) + flightPayable(returnFlight);
   const refundable = outbound.refundable ?? false;
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
+  const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
+
   const roundTripFarePanelFlights = useMemo(() => {
     // Always sum per-direction prices (BDFare-style cross-product pairing)
     const totalGross = (outbound.price || 0) + (returnFlight.price || 0);
