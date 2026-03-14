@@ -192,8 +192,8 @@
 | **TTI/ZENITH (Air Astra)** | `tti-flights.js` | Real-time flight search + booking (PNR creation). Cancel via `Cancel` method using airline PNR. Ticketing = manual (no API). |
 | **BDFare** | `bdf-flights.js` | Bangladesh flight aggregator (US-Bangla, Novoair, Biman) |
 | **FlyHub** | `flyhub-flights.js` | 450+ airline flight aggregator with token auth |
-| **Sabre GDS (REST)** | `sabre-flights.js` | International flights via Bargain Finder Max V5, PNR creation with SSR injection, ticketing, cancellation |
-| **Sabre GDS (SOAP)** | `sabre-soap.js` | Enhanced Seat Map (v6.0.0) + Ancillary Offers (v3.0.0) via BinarySecurityToken session |
+| **Sabre GDS (REST)** | `sabre-flights.js` | International flights: BFM V5 search, PNR creation with SSR, ticketing, cancellation, **void**, **refund** (price+fulfill), **FLIFO**, **stateless ancillaries**, **EMD fulfill**, **FF update** — all 26 Sabre sections |
+| **Sabre GDS (SOAP)** | `sabre-soap.js` | Enhanced Seat Map (v6.0.0), Ancillary Offers (v3.0.0), **Structured Fare Rules** (v3.0.1), **Exchange/Reissue** (v1.1.0), Cancel fallback |
 | **Ancillaries Engine** | `ancillaries.js` | Priority chain: Sabre SOAP → TTI → Standard fallback for seat maps, baggage, meals |
 | **HotelBeds** | `hotelbeds.js` | 180,000+ hotels worldwide with SHA256 signature |
 | **Airalo** | `airalo.js` | eSIM for 200+ countries with QR delivery |
