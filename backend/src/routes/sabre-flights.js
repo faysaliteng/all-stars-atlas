@@ -533,11 +533,21 @@ function normalizeGroupedResponse(response, params) {
       if (bdId !== undefined) baggageLookup[bdId] = bd;
     }
 
+    // Build fareComponent lookup: ref → descriptor (for bookingCode, seatsAvailable, cabin)
+    const fareComponentLookup = {};
+    for (const fcd of fareComponentDescs) {
+      const fcdId = fcd.id ?? fcd.Id ?? fcd.ID;
+      if (fcdId !== undefined) fareComponentLookup[fcdId] = fcd;
+    }
+
     // Debug: log baggage descriptors once
     if (baggageAllowanceDescs.length > 0) {
       console.log(`[Sabre] baggageAllowanceDescs (${baggageAllowanceDescs.length}):`, JSON.stringify(baggageAllowanceDescs.slice(0, 5)));
     } else {
       console.log(`[Sabre] WARNING: No baggageAllowanceDescs in grouped response`);
+    }
+    if (fareComponentDescs.length > 0) {
+      console.log(`[Sabre] fareComponentDescs (${fareComponentDescs.length}):`, JSON.stringify(fareComponentDescs.slice(0, 3)));
     }
 
     for (const group of itinGroups) {
