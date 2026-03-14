@@ -992,8 +992,98 @@ When passport DOCS exist in `AdvancePassenger`, the `no_special_req` fallback va
 | Check Tickets | POST | `/v1/trip/orders/checkFlightTickets` | v1 |
 | Issue Ticket | POST | `/v1.3.0/air/ticket` | v1.3.0 |
 | Cancel (primary) | POST | `/v2.0.2/booking/cancel` | v2.0.2 |
+| Void Tickets | POST | `/v1/trip/orders/voidFlightTickets` | v1 |
+| Refund Price | POST | `/v1/offers/refund/price` | v1 |
+| Refund Fulfill | POST | `/v1/offers/refund/fulfill` | v1 |
+| Flight Status | GET | `/products/air/flight/status` | v1 |
+| Stateless Ancillaries | POST | `/v1/offers/getAncillaries` | v1 |
+| Add Ancillary | POST | `/v1/offers/addAncillaries` | v1 |
+| Fulfill Tickets (EMD) | POST | `/v1/trip/orders/fulfillOrder` | v1 |
 | Seat Map REST | POST | `/v3/offers/getseats/byPnrLocator` or `/v1/offers/getseats` | v3/v1 |
 | Seat Map SOAP | SOAP | `EnhancedSeatMapRQ v6` via `webservices.platform.sabre.com` | v6 |
+
+---
+
+## TTI (Air Astra) Endpoints
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| Search | POST | `/<SearchFlights>` |
+| Book | POST | `/<CreateBooking>?BodyStyle=Bare` |
+| Cancel | POST | `/<Cancel>?BodyStyle=Bare` |
+| Void | POST | `/<CancelBooking>?BodyStyle=Bare` |
+| Ticket | POST | `/<IssueTicket>?BodyStyle=Bare` |
+
+### TTI Booking Payload (Production-Verified ✅)
+
+```json
+{
+  "RequestInfo": { "AuthenticationKey": "<TTI_API_KEY>" },
+  "Booking": {
+    "Passengers": [{
+      "Ref": "1",
+      "RefClient": null,
+      "PassengerQuantity": 1,
+      "PassengerTypeCode": "AD",
+      "NameElement": {
+        "CivilityCode": "MR",
+        "FirstName": "MD KAOSAR",
+        "LastName": "AHMED"
+      },
+      "DateOfBirth": "/Date(631152000000+0100)/",
+      "PassportNumber": "A12345678",
+      "PassportExpiry": "/Date(1901232000000+0100)/",
+      "GenderCode": "M",
+      "DocumentInfo": {
+        "DocumentNumber": "A12345678",
+        "NationalityCode": "BD"
+      }
+    }],
+    "Segments": [{
+      "Ref": "1",
+      "From": "DAC",
+      "To": "CXB",
+      "Carrier": "2A",
+      "FlightNumber": "443",
+      "DepartureDate": "/Date(1712966400000+0100)/",
+      "BookingClass": "S"
+    }],
+    "FareInfo": {
+      "ETTicketFares": [{
+        "RefPassenger": "1",
+        "RefItinerary": "IT_0"
+      }]
+    },
+    "ContactInfo": {
+      "Email": "booking@seventrip.com",
+      "Phone": "01700000000"
+    }
+  }
+}
+```
+
+### TTI Cancel Payload (Production-Verified ✅)
+
+```json
+{
+  "RequestInfo": { "AuthenticationKey": "<TTI_API_KEY>" },
+  "UniqueID": { "ID": "00KTUN" },
+  "CancelSettings": { "CancelSegmentSettings": {} }
+}
+```
+
+### TTI Response Fields
+
+| Field | Path | Example |
+|---|---|---|
+| PNR Code | `Booking.PnrInformation.PnrCode` | `00KTUN` |
+| Status | `Booking.PnrInformation.PnrStatusCode` | `Option` (reserved) |
+| Time Limit | `Booking.PnrInformation.TimeLimit` | `/Date(1773585817906+0100)/` |
+| Booking ID | `Booking.FareInfo.ETTicketFares[0].Ref` | `16755091` |
+| Total Fare | `Booking.FareInfo.SaleCurrencyAmountToPay.TotalAmount` | `5099` |
+| Baggage | `ETTicketFares[0].CouponFares[0].BagAllowances[0]` | `{ Weight: 20, WeightMeasureQualifier: "KG" }` |
+| Taxes | `ETTicketFares[0].Taxes[]` | `[{ Code: "BD", Amount: 25 }, { Code: "OW", Amount: 700 }, ...]` |
+| Fare Rules | `FareInfo.FareRules[0].Details` | Exchange/Refund penalties by time bracket |
 
 ---
 
@@ -1018,4 +1108,20 @@ Stored in: `system_settings` table, key: `api_sabre`
 
 ---
 
-*Last updated: 2026-03-14 | v4.0.0 | All 26 Sabre sections implemented*
+## Probe Evidence — All 9 PNRs (2026-03-14)
+
+| PNR | Provider | Route | Pax | Status |
+|-----|----------|-------|-----|--------|
+| DXGDPD | Sabre | DAC→DXB | 1 ADT | Created + Cancelled ✅ |
+| KIIRIF | Sabre | DAC→DXB | ADT+CHD+INF | Created + Cancelled ✅ |
+| KFGUNO | Sabre | DAC→SIN→DAC | 1 ADT RT | Created + Cancelled ✅ |
+| KLQPYW | Sabre | DAC→BKK | ADT+CHD | Created + Cancelled ✅ |
+| LQRTND | Sabre | DAC→KUL | 2 ADT | Created + Cancelled ✅ |
+| 00KTUN | TTI | DAC→CXB | 1 ADT | Created + Cancelled ✅ |
+| 00KTUP | TTI | DAC→CXB | ADT+CHD+INF+WCHR | Created + Cancelled ✅ |
+| 00KTUQ | TTI | DAC→CGP→DAC | 1 ADT RT | Created + Cancelled ✅ |
+| 00KTUS | TTI | DAC→CXB | ADT+CHD | Created + Cancelled ✅ |
+
+---
+
+*Last updated: 2026-03-14 | v4.1.1 | All 26 Sabre sections + TTI payloads | 100% probe pass rate*
