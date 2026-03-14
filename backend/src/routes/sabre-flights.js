@@ -197,10 +197,14 @@ async function searchFlights(params) {
 
   if (!isMultiCity && (!origin || !destination || !departDate)) return [];
 
-  // Map cabin class to Sabre codes
+  // Map cabin class to Sabre codes — accept human-readable, IATA codes, and lowercase
   const cabinMap = {
     'Economy': 'Y', 'Premium Economy': 'S', 'Business': 'C', 'First': 'F',
     'economy': 'Y', 'premium_economy': 'S', 'business': 'C', 'first': 'F',
+    'premium economy': 'S', 'premiumeconomy': 'S',
+    // IATA standard cabin codes (from TicketLagBe/BDFare)
+    'Y': 'Y', 'S': 'S', 'C': 'C', 'J': 'C', 'F': 'F', 'W': 'S',
+    'y': 'Y', 's': 'S', 'c': 'C', 'j': 'C', 'f': 'F', 'w': 'S',
   };
   const sabreCabin = cabinMap[cabinClass] || 'Y';
 
