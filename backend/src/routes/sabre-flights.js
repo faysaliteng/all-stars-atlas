@@ -1310,6 +1310,12 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       return raw.replace('Z', '').split('.')[0].replace(/[+-]\d{2}:?\d{2}$/, '');
     };
 
+    // Count non-infant passengers for NumberInParty (infants are lap, no seat)
+    const nonInfantCount = passengers.filter(p => {
+      const t = (p.type || p.passengerType || 'adult').toLowerCase();
+      return t !== 'infant' && t !== 'inf';
+    }).length;
+
     segs.forEach((seg) => {
       const departureDateTime = toSabreDateTime(seg.departureTime);
       const arrivalDateTime = toSabreDateTime(seg.arrivalTime);
@@ -1319,7 +1325,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         DepartureDateTime: departureDateTime,
         ArrivalDateTime: arrivalDateTime,
         FlightNumber: numericFlightNumber,
-        NumberInParty: String(Math.max(passengers.length || 1, 1)),
+        NumberInParty: String(Math.max(nonInfantCount, 1)),
         ResBookDesigCode: seg.bookingClass || 'Y',
         Status: 'NN',
         OriginLocation: { LocationCode: seg.origin || flightData.origin },
@@ -1328,9 +1334,28 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       });
     });
 
+    // Calculate child age from DOB for Sabre CNN age-based PTC (C05-C11)
+    const calcChildAge = (dob) => {
+      if (!dob) return 8; // default to 8 if no DOB
+      const birth = new Date(dob);
+      const now = new Date();
+      let age = now.getFullYear() - birth.getFullYear();
+      const monthDiff = now.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
+      return Math.max(2, Math.min(11, age)); // clamp 2-11
+    };
+
+    // Track which adult index each infant is associated with
+    let adultIndex = 0;
+    const adultIndices = [];
+    passengers.forEach((p) => {
+      const paxType = (p.type || p.passengerType || 'adult').toLowerCase();
+      if (paxType === 'adult' || paxType === 'adt') adultIndices.push(adultIndex++);
+    });
+
     const travelersInfo = passengers.map((p, i) => {
       // Sabre format: Title goes AFTER given name (e.g., "MST RAFIZA MS", "MD KAOSAR MR")
-      // For children: MSTR (boy) / MISS (girl); For infants: use parent title or MSTR/MISS
+      // For children: MSTR (boy) / MISS (girl); For infants: use MSTR/MISS
       const paxType = (p.type || p.passengerType || 'adult').toLowerCase();
       const rawTitle = (p.title || p.prefix || '').toUpperCase().replace(/\./g, '');
       let title = rawTitle;
@@ -1358,6 +1383,25 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         GivenName: title ? `${givenName} ${title}` : givenName,
         Surname: (p.lastName || p.surname || '').toUpperCase(),
       };
+
+      // Add PassengerType for children (CNN with age code C05-C11)
+      if (paxType === 'child' || paxType === 'cnn') {
+        const age = calcChildAge(p.dateOfBirth || p.dob);
+        personName.PassengerType = { Code: `C${String(age).padStart(2, '0')}` };
+        console.log(`[Sabre] Pax ${i + 1}: Child age ${age} → PTC C${String(age).padStart(2, '0')}`);
+      }
+
+      // Infants are marked with Infant indicator on the associated adult's name
+      // Sabre CreatePNR expects infants as Infant: { Ind: true } on the ADULT PersonName
+      if (paxType === 'infant' || paxType === 'inf') {
+        personName.Infant = { Ind: true };
+        // DOB is required for infants
+        if (p.dateOfBirth || p.dob) {
+          personName.Infant.DateOfBirth = (p.dateOfBirth || p.dob).substring(0, 10);
+        }
+        console.log(`[Sabre] Pax ${i + 1}: Infant → Infant.Ind=true`);
+      }
+
       return { PersonName: personName };
     });
 

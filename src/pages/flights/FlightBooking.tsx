@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -259,13 +259,21 @@ const AddOnCard = ({ item, selected, onSelect, multi }: { item: { id: string; na
   </label>
 );
 
-/* ─── Session countdown timer ─── */
-const SessionTimer = ({ minutes = 20 }: { minutes?: number }) => {
+/* ─── Session countdown timer — redirects to search on expiry ─── */
+const SessionTimer = ({ minutes = 20, onExpired }: { minutes?: number; onExpired?: () => void }) => {
   const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
+  const expiredRef = useRef(false);
   useEffect(() => {
-    const interval = setInterval(() => setSecondsLeft(prev => (prev > 0 ? prev - 1 : 0)), 1000);
+    const interval = setInterval(() => setSecondsLeft(prev => {
+      if (prev <= 1 && !expiredRef.current) {
+        expiredRef.current = true;
+        onExpired?.();
+        return 0;
+      }
+      return prev > 0 ? prev - 1 : 0;
+    }), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [onExpired]);
   const m = Math.floor(secondsLeft / 60);
   const s = secondsLeft % 60;
   const isUrgent = secondsLeft < 300;
@@ -327,6 +335,7 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
 };
 
 const FlightBooking = () => {
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [step, setStep] = useState(1);
   const [authOpen, setAuthOpen] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
@@ -473,6 +482,26 @@ const FlightBooking = () => {
   // Multi-city flights support
   const multiCityFlights: any[] = locationState?.multiCityFlights || [];
   const isMultiCity = multiCityFlights.length >= 2;
+
+  // Session expired → redirect to search with same route
+  const handleSessionExpired = useCallback(() => {
+    setSessionExpired(true);
+    toast({ title: "Session Expired", description: "Your booking session has timed out. Please search again.", variant: "destructive" });
+    const origin = outboundFlight?.origin || searchParams.get("from") || "";
+    const dest = outboundFlight?.destination || searchParams.get("to") || "";
+    const p = new URLSearchParams();
+    if (origin) p.set("from", origin);
+    if (dest) p.set("to", dest);
+    const cabin = searchParams.get("cabin");
+    if (cabin) p.set("cabin", cabin);
+    const adults = searchParams.get("adults");
+    if (adults) p.set("adults", adults);
+    const children = searchParams.get("children");
+    if (children && children !== "0") p.set("children", children);
+    const infants = searchParams.get("infants");
+    if (infants && infants !== "0") p.set("infants", infants);
+    setTimeout(() => navigate(`/flights?${p.toString()}`), 2000);
+  }, [outboundFlight, searchParams, navigate, toast]);
 
   const serviceFlight = useMemo(() => {
     if (multiCityFlights.length > 0) return multiCityFlights[0];
@@ -1016,7 +1045,7 @@ const FlightBooking = () => {
               );
             })}
           </div>
-          <SessionTimer minutes={20} />
+          <SessionTimer minutes={20} onExpired={handleSessionExpired} />
         </div>
 
         {/* Biman notice */}
