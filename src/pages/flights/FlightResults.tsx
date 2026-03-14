@@ -2941,11 +2941,37 @@ const FlightResults = () => {
               </Popover>
             )}
             {isMultiCity && (
-              <div className="bg-muted border border-border rounded-lg px-4 py-2.5 flex items-center gap-2 shrink-0">
-                <span className="text-sm font-medium text-foreground">
-                  {multiCitySegments.map(s => s.from).join(" → ")} → {multiCitySegments[multiCitySegments.length - 1]?.to || "—"}
-                </span>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2.5 flex items-center gap-2 shrink-0 transition-colors">
+                    <span className="text-sm font-bold text-foreground">
+                      {multiCitySegments.map(s => s.from).join(" → ")} → {multiCitySegments[multiCitySegments.length - 1]?.to || "—"}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-96 p-4" align="start">
+                  <p className="text-xs font-bold text-muted-foreground mb-3">Multi-City Segments</p>
+                  <div className="space-y-2.5">
+                    {multiCitySegments.map((seg, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2.5 border border-border/50">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">Trip {i + 1}</span>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="text-sm font-bold text-foreground">{seg.from}</span>
+                          <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-sm font-bold text-foreground">{seg.to}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {seg.date ? (() => { try { return format(new Date(seg.date), "dd MMM, EEE"); } catch { return seg.date; } })() : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button size="sm" className="w-full mt-3 bg-accent text-accent-foreground" onClick={() => navigate("/")}>
+                    <Search className="w-3.5 h-3.5 mr-1.5" /> New Multi-City Search
+                  </Button>
+                </PopoverContent>
+              </Popover>
             )}
 
             {/* Prev Day button */}
