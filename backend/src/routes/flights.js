@@ -586,34 +586,59 @@ router.get('/search', async (req, res) => {
       segments: segmentsRaw, // multi-city: JSON array of {from, to, date}
     } = req.query;
 
-    // Parse multi-city segments
+    const IATA_CODE_RE = /^[A-Z]{3}$/;
+    const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+    const BD_ROUTE_AIRPORTS = new Set(['DAC', 'CXB', 'CGP', 'ZYL', 'JSR', 'RJH', 'SPD', 'BZL', 'IRD', 'TKR']);
+    const normalizeCode = (v) => String(v || '').trim().toUpperCase();
+    const normalizeDate = (v) => String(v || '').trim();
+
+    // Parse + sanitize multi-city segments
     let multiCitySegments = null;
     if (segmentsRaw) {
       try {
-        multiCitySegments = JSON.parse(segmentsRaw);
-        if (!Array.isArray(multiCitySegments) || multiCitySegments.length < 2) {
-          multiCitySegments = null;
+        const parsed = JSON.parse(segmentsRaw);
+        if (Array.isArray(parsed) && parsed.length >= 2) {
+          const cleaned = parsed
+            .map((seg) => ({
+              from: normalizeCode(seg?.from),
+              to: normalizeCode(seg?.to),
+              date: normalizeDate(seg?.date),
+            }))
+            .filter((seg) => IATA_CODE_RE.test(seg.from) && IATA_CODE_RE.test(seg.to) && ISO_DATE_RE.test(seg.date));
+          if (cleaned.length >= 2) multiCitySegments = cleaned;
         }
-      } catch { multiCitySegments = null; }
+      } catch {
+        multiCitySegments = null;
+      }
     }
     const isMultiCity = !!multiCitySegments;
 
     // Normalize params (frontend sends various names)
-    const originCode = origin || from || '';
-    const destCode = destination || to || '';
-    const dDate = departDate || date || depart || '';
-    const rDate = returnDate || returnParam || '';
-    const cabClass = cabinClass || classParam || cabin || '';
+    const originCode = normalizeCode(origin || from);
+    const destCode = normalizeCode(destination || to);
+    const dDate = normalizeDate(departDate || date || depart);
+    const rDate = normalizeDate(returnDate || returnParam);
+    const cabClass = String(cabinClass || classParam || cabin || '').trim();
     const adultCount = parseInt(adults) || 1;
     const childCount = parseInt(children) || 0;
     const infantCount = parseInt(infants) || 0;
+
+    if (!isMultiCity) {
+      const hasValidParams = IATA_CODE_RE.test(originCode) && IATA_CODE_RE.test(destCode) && ISO_DATE_RE.test(dDate);
+      if (!hasValidParams) {
+        console.warn(`[Search] Invalid search params ignored: origin=${originCode || '-'} destination=${destCode || '-'} depart=${dDate || '-'}`);
+        return res.json({ success: true, data: [], flights: [], total: 0, page: Number(page) || 1, limit: Number(limit) || 500, message: 'Missing or invalid search parameters' });
+      }
+    }
+
+    const shouldSearchTTI = !isMultiCity && BD_ROUTE_AIRPORTS.has(originCode) && BD_ROUTE_AIRPORTS.has(destCode);
 
     // ── Multi-provider parallel search ──
     const searchParams = {
       origin: isMultiCity ? multiCitySegments[0].from : originCode,
       destination: isMultiCity ? multiCitySegments[multiCitySegments.length - 1].to : destCode,
       departDate: isMultiCity ? multiCitySegments[0].date : dDate,
-      returnDate: isMultiCity ? undefined : (rDate || undefined),
+      returnDate: isMultiCity ? undefined : (ISO_DATE_RE.test(rDate) ? rDate : undefined),
       adults: adultCount,
       children: childCount,
       infants: infantCount,
@@ -627,10 +652,10 @@ router.get('/search', async (req, res) => {
 
     const [dbFlights, ttiFlights, bdfFlights, flyhubFlights, sabreFlights, galileoFlights, ndcFlights, lccFlights] = await Promise.allSettled([
       isMultiCity ? Promise.resolve([]) : searchDB({ originCode, destCode, dDate, cabClass, page, limit }),
-      isMultiCity ? Promise.resolve([]) : ttiSearch(searchParams).catch(err => {
+      shouldSearchTTI ? ttiSearch(searchParams).catch(err => {
         console.error('TTI search failed (continuing with other providers):', err.message);
         return [];
-      }),
+      }) : Promise.resolve([]),
       isMultiCity ? Promise.resolve([]) : bdfSearch(searchParams).catch(err => {
         console.error('BDFare search failed (continuing with other providers):', err.message);
         return [];

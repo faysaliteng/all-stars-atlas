@@ -192,10 +192,36 @@ async function searchFlights(params) {
     segments, // multi-city: [{ from, to, date }, ...]
   } = params;
 
-  // Multi-city: build OD from segments array
-  const isMultiCity = Array.isArray(segments) && segments.length >= 2;
+  const IATA_CODE_RE = /^[A-Z]{3}$/;
+  const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  const normalizeCode = (v) => String(v || '').trim().toUpperCase();
+  const normalizeDate = (v) => String(v || '').trim();
 
-  if (!isMultiCity && (!origin || !destination || !departDate)) return [];
+  const originCode = normalizeCode(origin);
+  const destinationCode = normalizeCode(destination);
+  const departDateValue = normalizeDate(departDate);
+  const returnDateValue = normalizeDate(returnDate);
+
+  const preparedSegments = Array.isArray(segments)
+    ? segments
+        .map((seg) => ({
+          from: normalizeCode(seg?.from),
+          to: normalizeCode(seg?.to),
+          date: normalizeDate(seg?.date),
+        }))
+        .filter((seg) => IATA_CODE_RE.test(seg.from) && IATA_CODE_RE.test(seg.to) && ISO_DATE_RE.test(seg.date))
+    : [];
+
+  // Multi-city: build OD from sanitized segments array
+  const isMultiCity = preparedSegments.length >= 2;
+
+  if (!isMultiCity) {
+    const hasValidSingleRoute = IATA_CODE_RE.test(originCode) && IATA_CODE_RE.test(destinationCode) && ISO_DATE_RE.test(departDateValue);
+    if (!hasValidSingleRoute) {
+      console.warn(`[Sabre] Skipping invalid search params: origin=${originCode || '-'} destination=${destinationCode || '-'} depart=${departDateValue || '-'}`);
+      return [];
+    }
+  }
 
   // Map cabin class to Sabre codes — accept all formats: human-readable, IATA, kebab-case, snake_case
   const cabinMap = {
@@ -218,26 +244,26 @@ async function searchFlights(params) {
   // Build origin-destination info
   let originDest;
   if (isMultiCity) {
-    originDest = segments.map((seg, i) => ({
+    originDest = preparedSegments.map((seg, i) => ({
       RPH: String(i + 1),
       DepartureDateTime: `${seg.date}T00:00:00`,
       OriginLocation: { LocationCode: seg.from },
       DestinationLocation: { LocationCode: seg.to },
     }));
-    console.log(`[Sabre] Multi-city search: ${segments.map(s => `${s.from}→${s.to}`).join(', ')}`);
+    console.log(`[Sabre] Multi-city search: ${preparedSegments.map(s => `${s.from}→${s.to}`).join(', ')}`);
   } else {
     originDest = [{
       RPH: '1',
-      DepartureDateTime: `${departDate}T00:00:00`,
-      OriginLocation: { LocationCode: origin },
-      DestinationLocation: { LocationCode: destination },
+      DepartureDateTime: `${departDateValue}T00:00:00`,
+      OriginLocation: { LocationCode: originCode },
+      DestinationLocation: { LocationCode: destinationCode },
     }];
-    if (returnDate) {
+    if (ISO_DATE_RE.test(returnDateValue)) {
       originDest.push({
         RPH: '2',
-        DepartureDateTime: `${returnDate}T00:00:00`,
-        OriginLocation: { LocationCode: destination },
-        DestinationLocation: { LocationCode: origin },
+        DepartureDateTime: `${returnDateValue}T00:00:00`,
+        OriginLocation: { LocationCode: destinationCode },
+        DestinationLocation: { LocationCode: originCode },
       });
     }
   }
@@ -298,8 +324,8 @@ async function searchFlights(params) {
 
   try {
     const logRoute = isMultiCity
-      ? segments.map(s => `${s.from}→${s.to}`).join(', ')
-      : `${origin} → ${destination}`;
+      ? preparedSegments.map(s => `${s.from}→${s.to}`).join(', ')
+      : `${originCode} → ${destinationCode}`;
     console.log(`[Sabre] Searching ${logRoute}...`);
     let raw = await sabreRequest(config, '/v5/offers/shop', requestBody);
 
@@ -325,7 +351,16 @@ async function searchFlights(params) {
     if (itinCount === 0) {
       console.log(`[Sabre] BFM raw (truncated): ${JSON.stringify(raw).slice(0, 2000)}`);
     }
-    const results = normalizeSabreResponse(raw, { ...params, isMultiCity, segmentCount: isMultiCity ? segments.length : (returnDate ? 2 : 1) });
+    const results = normalizeSabreResponse(raw, {
+      ...params,
+      isMultiCity,
+      segments: isMultiCity ? preparedSegments : undefined,
+      origin: originCode,
+      destination: destinationCode,
+      departDate: departDateValue,
+      returnDate: ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
+      segmentCount: isMultiCity ? preparedSegments.length : (ISO_DATE_RE.test(returnDateValue) ? 2 : 1),
+    });
     console.log(`[Sabre] Normalized ${results.length} flights`);
     return results;
   } catch (err) {
