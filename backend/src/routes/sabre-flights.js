@@ -812,7 +812,7 @@ function normalizeGroupedResponse(response, params) {
         }
 
         // Extract fare details from pricingInformation for fare options (branded fares)
-        const fareDetailsArr = pricingInfo.map((pi, piIdx) => {
+        const fareDetailsArr = sortedPricing.map((pi, piIdx) => {
           const piFare = pi.fare || {};
           const piTotal = piFare.totalFare || {};
           const piPassengers = piFare.passengerInfoList || [];
