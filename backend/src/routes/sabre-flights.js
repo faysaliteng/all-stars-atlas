@@ -492,7 +492,7 @@ function normalizeSabreResponse(raw, params) {
           currency,
           refundable: isRefundable,
           baggage: checkedBaggage || null,
-          handBaggage: '7KG',
+          handBaggage: null, // No hardcoded fallback — only real API data
           aircraft: firstLeg.aircraft,
           legs,
           fareDetails: fareInfos.map(fi => ({
