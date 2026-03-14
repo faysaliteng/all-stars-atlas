@@ -9,6 +9,16 @@
   100% { background-position: 200px 0; }
 }
 
+@keyframes chevron-scroll-right {
+  0% { transform: translateX(-30px); }
+  100% { transform: translateX(0px); }
+}
+
+@keyframes chevron-scroll-left {
+  0% { transform: translateX(0px); }
+  100% { transform: translateX(-30px); }
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20% { transform: translateX(-4px); }
