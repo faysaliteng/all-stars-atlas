@@ -961,14 +961,13 @@ function normalizeGroupedResponse(response, params) {
             let minSeats = Infinity;
             let bookingClass = '';
             const fareComponents = passengerInfoList[0]?.passengerInfo?.fareComponents || [];
-            for (const fc of fareComponents) {
-              const segments = fc.segments || [];
-              for (const seg of segments) {
-                if (seg.seatsAvailable !== undefined && seg.seatsAvailable < minSeats) {
-                  minSeats = seg.seatsAvailable;
-                }
-                if (seg.bookingCode) bookingClass = seg.bookingCode;
+            const owResolvedSegs = resolveFareComponentSegments(fareComponents);
+            for (const rs of owResolvedSegs) {
+              if (rs.seatsAvailable !== null && rs.seatsAvailable !== undefined) {
+                const s = parseInt(rs.seatsAvailable);
+                if (!isNaN(s) && s < minSeats) minSeats = s;
               }
+              if (rs.bookingCode) bookingClass = rs.bookingCode;
             }
 
             // Determine refundable status

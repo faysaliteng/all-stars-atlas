@@ -1563,7 +1563,9 @@ const MultiCityFlightCard = ({
                       {seg.handBaggage && <span className="flex items-center gap-0.5 text-accent"><Luggage className="w-3 h-3" /> {seg.handBaggage}</span>}
                       {seg.baggage && <span className="flex items-center gap-0.5 text-accent"><Luggage className="w-3 h-3" /> {seg.baggage}</span>}
                     </div>
-                    <span className="text-[10px] text-muted-foreground">Class: {flight.bookingClass || "E"}</span>
+                    {(flight.bookingClass || flight.fareDetails?.[0]?.bookingClass) && (
+                      <span className="text-[10px] text-muted-foreground">Class: {flight.bookingClass || flight.fareDetails?.[0]?.bookingClass}</span>
+                    )}
                   </div>
                 </div>
               );
