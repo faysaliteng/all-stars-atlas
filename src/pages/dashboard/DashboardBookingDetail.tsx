@@ -43,9 +43,8 @@ const statusColors: Record<string, string> = {
 
 const BD_AIRPORTS = ["DAC", "CXB", "CGP", "ZYL", "JSR", "RJH", "SPD", "BZL", "IRD", "TKR"];
 
-function stripTZ(dt: string): string { return dt.replace(/([+-]\d{2}:\d{2}|Z)$/, ''); }
-function fmtTime(dt?: string) { if (!dt) return "—"; try { const d = new Date(stripTZ(dt)); return isNaN(d.getTime()) ? dt : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return dt; } }
-function fmtDate(dt?: string) { if (!dt) return "—"; try { const d = new Date(stripTZ(dt)); return isNaN(d.getTime()) ? dt : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }); } catch { return dt; } }
+function fmtTime(dt?: string) { return dt ? formatApiTime(dt, { withGMT: true }) : "—"; }
+function fmtDate(dt?: string) { return dt ? formatApiDate(dt, { year: "numeric" }) : "—"; }
 function getAirlineLogo(code?: string): string | null { return code ? `https://images.kiwi.com/airlines/64/${code}.png` : null; }
 
 function parseAmount(value: any): number | undefined {
