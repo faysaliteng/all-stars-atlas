@@ -115,6 +115,18 @@ grep -n "^\s*\.\.\.\s*$" backend/src/routes/sabre-flights.js
 pm2 restart seventrip-api && pm2 logs seventrip-api --lines 30 --err
 ```
 
+### Sabre fallback returns 0 flights with no API error
+Cause: missing helper bindings (`getResponseStats`, `normalizeParams`) or undefined decoder call in fallback block.
+
+```bash
+cd ~/projects/all-stars-atlas
+# verify no undefined decoder reference remains
+grep -n "decodeCompressedResponse" backend/src/routes/sabre-flights.js
+# verify helper symbols exist
+grep -n "getResponseStats\|normalizeParams" backend/src/routes/sabre-flights.js
+cd backend && pm2 restart seventrip-api && pm2 logs seventrip-api --lines 50 | grep -E "BFM attempt|stats:|normalized|attempt failed"
+```
+
 ### Build fails
 ```bash
 cd ~/projects/all-stars-atlas && rm -rf node_modules && npm install && npm run build
@@ -145,6 +157,7 @@ pm2 logs seventrip-api --lines 30
 
 | Date | Change | Deploy Command |
 |------|--------|----------------|
+| 2026-03-14 | **v4.1.3** Sabre search recovery hotfix: restored missing `getResponseStats` + `normalizeParams` and removed undefined decoder dependency in BFM fallback flow. | Backend Only |
 | 2026-03-14 | **v4.1.2** Sabre search crash hotfix: removed accidental `...` token in `backend/src/routes/sabre-flights.js` that caused Node startup `SyntaxError` and intermittent 502 on `/api/flights/search`. | Backend Only |
 | 2026-03-14 | **v4.1.1** 100% production probe verified: 10/10 tests, 34 assertions, 9 PNRs created+cancelled. UI pill badges for baggage/seats/class. Full documentation overhaul. | Standard Deployment |
 | 2026-03-14 | **v4.0.0** All 26 Sabre GDS features implemented: void, refund (price+fulfill), exchange, fare rules, FLIFO, stateless ancillaries, add ancillary, EMD fulfill, FF update. 10 new endpoints. | Backend Only |
