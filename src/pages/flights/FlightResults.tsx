@@ -578,7 +578,7 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
           fareBasis: f.fareBasis || "",
           bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
           availableSeats: f.availableSeats ?? primary.availableSeats ?? null,
-          handBaggage: f.handBaggage || primary.handBaggage || null,
+          handBaggage: f.handBaggage || primary.handBaggage || "7KG",
           checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
           meal: f.mealIncluded ? "Included" : null,
           seatSelection: f.seatSelection ?? false,
@@ -599,7 +599,7 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
         fareBasis: f.fareBasis || "",
         bookingClass: f.bookingClass || primary.bookingClass || "",
         availableSeats: f.availableSeats ?? primary.availableSeats ?? null,
-        handBaggage: f.handBaggage || primary.handBaggage || null,
+        handBaggage: f.handBaggage || primary.handBaggage || "7KG",
         checkedBaggage: f.baggage || primary.baggage || null,
         meal: f.mealIncluded ? "Included" : null,
         seatSelection: f.seatSelection ?? false,
@@ -619,7 +619,7 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
       fareBasis: primary.fareDetails?.[0]?.fareBasis || "",
       bookingClass: primary.fareDetails?.[0]?.bookingClass || primary.bookingClass || primary.cabinClass?.charAt(0) || "",
       availableSeats: primary.fareDetails?.[0]?.availableSeats ?? primary.availableSeats ?? null,
-      handBaggage: primary.fareDetails?.[0]?.handBaggage || primary.handBaggage || null,
+      handBaggage: primary.fareDetails?.[0]?.handBaggage || primary.handBaggage || "7KG",
       checkedBaggage: primary.fareDetails?.[0]?.baggage || primary.baggage || null,
       meal: (primary.fareDetails?.[0]?.mealIncluded || primary.mealIncluded) ? "Included" : null,
       seatSelection: primary.fareDetails?.[0]?.seatSelection ?? false,
@@ -730,10 +730,20 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
                     })}
                   </div>
 
-                  {/* Footer: Gross Fare + Book */}
+                  {/* Footer: Payable Fare + Book */}
                   <div className="px-4 py-3 border-t border-border/50 text-center space-y-2">
-                    <p className="text-[10px] text-muted-foreground">Gross Fare</p>
-                    <p className="text-base font-black text-foreground">BDT {opt.grossFare.toLocaleString()}</p>
+                    <p className="text-[10px] text-muted-foreground">Payable Fare</p>
+                    {(() => {
+                      const gf = opt.grossFare || 0;
+                      const tx = opt.flight?.taxes ?? 0;
+                      const bf = Math.max(0, Math.round(gf - tx));
+                      const discPct = opt.flight?.fareRules?.discount ?? 6.30;
+                      const aitPct = opt.flight?.fareRules?.aitVat ?? 0.3;
+                      const d = Math.round(bf * discPct / 100);
+                      const a = Math.round((bf - d) * aitPct / 100);
+                      const payable = bf - d + tx + a;
+                      return <p className="text-base font-black text-foreground">BDT {payable.toLocaleString()}</p>;
+                    })()}
                     <Button size="sm" className="w-full font-bold rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground h-9"
                       onClick={() => onBook(opt.flight)}>
                       Book Now
@@ -1162,12 +1172,12 @@ const RoundTripFlightCard = ({
                             <tr className="border-t border-border/50">
                               <td className="px-4 py-3 font-semibold text-base"><span className="flex items-center gap-2">{outbound.origin} <Plane className="w-3.5 h-3.5 text-muted-foreground" /> {outbound.destination}</span></td>
                               <td className="px-4 py-3 text-muted-foreground">{obBaggage ? `ADT : ${obBaggage}` : "Not provided"}</td>
-                              <td className="px-4 py-3 text-muted-foreground">{outbound.handBaggage ? `ADT : ${outbound.handBaggage}` : "Not provided"}</td>
+                              <td className="px-4 py-3 text-muted-foreground">{outbound.handBaggage ? `ADT : ${outbound.handBaggage}` : "ADT : 7KG"}</td>
                             </tr>
                             <tr className="border-t border-border/50">
                               <td className="px-4 py-3 font-semibold text-base"><span className="flex items-center gap-2">{returnFlight.origin} <Plane className="w-3.5 h-3.5 text-muted-foreground" /> {returnFlight.destination}</span></td>
                               <td className="px-4 py-3 text-muted-foreground">{retBaggage ? `ADT : ${retBaggage}` : "Not provided"}</td>
-                              <td className="px-4 py-3 text-muted-foreground">{returnFlight.handBaggage ? `ADT : ${returnFlight.handBaggage}` : "Not provided"}</td>
+                              <td className="px-4 py-3 text-muted-foreground">{returnFlight.handBaggage ? `ADT : ${returnFlight.handBaggage}` : "ADT : 7KG"}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -1683,11 +1693,17 @@ const FlightCard = ({
   const availableSeats = getDisplayAvailableSeats(flight);
   const duration = flight.duration || "";
   const stops = flight.stops ?? 0;
-  const price = flight.price ?? 0;
+  const grossPrice = flight.price ?? 0;
   const taxes = flight.taxes ?? 0;
   // CRITICAL: baseFare from API may be in foreign currency (e.g. USD from Sabre).
   // Always derive baseFare in BDT as (price - taxes) to ensure the breakdown sums correctly.
-  const baseFare = Math.max(0, Math.round(price - taxes));
+  const baseFare = Math.max(0, Math.round(grossPrice - taxes));
+  // Calculate payable price (with discount and AIT VAT applied)
+  const DISCOUNT_PCT = flight.fareRules?.discount ?? 6.30;
+  const AIT_VAT_PCT = flight.fareRules?.aitVat ?? 0.3;
+  const discount = Math.round(baseFare * DISCOUNT_PCT / 100);
+  const aitVat = Math.round((baseFare - discount) * AIT_VAT_PCT / 100);
+  const price = baseFare - discount + taxes + aitVat;
   const refundable = flight.refundable ?? false;
   const fareType = flight.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const nextDay = isNextDay(flight.departureTime, flight.arrivalTime);
@@ -1696,7 +1712,7 @@ const FlightCard = ({
   const aircraft = flight.aircraft || legs[0]?.aircraft || "";
   const source = flight.source || "db";
   const baggage = flight.baggage || null;
-  const handBaggage = flight.handBaggage || null;
+  const handBaggage = flight.handBaggage || "7KG";
   const cancellationPolicy = flight.cancellationPolicy || null;
   const dateChangePolicy = flight.dateChangePolicy || null;
   const [activeDetailTab, setActiveDetailTab] = useState("itinerary");
@@ -1728,9 +1744,6 @@ const FlightCard = ({
             <div className="min-w-0">
               <p className="text-xs sm:text-sm font-bold leading-tight truncate">{flight.airline}</p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
-              {availableSeats !== null && availableSeats <= 9 && (
-                <p className="text-[10px] sm:text-[11px] font-bold text-orange-500 mt-0.5">{availableSeats} Seat{availableSeats !== 1 ? "s" : ""} Left</p>
-              )}
             </div>
           </div>
 
@@ -1841,7 +1854,7 @@ const FlightCard = ({
           {/* Price section */}
           <div className="flex flex-col items-end gap-1 p-4 sm:p-5 sm:w-56 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-2">
-              {price === cheapest && price > 0 && (
+              {grossPrice === cheapest && price > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
               )}
               {/* Reward Points Badge */}
@@ -1852,8 +1865,8 @@ const FlightCard = ({
               )}
             </div>
             <p className="text-xl sm:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
-            {baseFare > 0 && (
-              <p className="text-[10px] text-muted-foreground line-through">BDT {Math.round(price * 1.05).toLocaleString()}</p>
+            {discount > 0 && (
+              <p className="text-[10px] text-muted-foreground line-through">BDT {grossPrice.toLocaleString()}</p>
             )}
             <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover open={showPriceBreakdown} onOpenChange={setShowPriceBreakdown}>
@@ -1862,13 +1875,15 @@ const FlightCard = ({
                   Price Breakdown <ChevronRight className="w-3 h-3" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="left" className="w-64 p-3">
+              <PopoverContent side="left" className="w-72 p-3">
                 <p className="text-xs font-bold mb-2">Fare Breakdown</p>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between"><span className="text-muted-foreground">Base Fare</span><span className="font-medium">BDT {baseFare.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Taxes & Fees</span><span className="font-medium">BDT {taxes.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Discount ({DISCOUNT_PCT}%)</span><span className="font-medium text-accent">- BDT {discount.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">AIT VAT ({AIT_VAT_PCT}%)</span><span className="font-medium">BDT {aitVat.toLocaleString()}</span></div>
                   <Separator className="my-1" />
-                  <div className="flex justify-between font-bold"><span>Total</span><span>BDT {price.toLocaleString()}</span></div>
+                  <div className="flex justify-between font-bold"><span>Total Payable</span><span>BDT {price.toLocaleString()}</span></div>
                 </div>
               </PopoverContent>
             </Popover>
@@ -2132,7 +2147,7 @@ const FlightCard = ({
                           <tr className="border-t border-border/50">
                             <td className="px-4 py-3 font-semibold text-base flex items-center gap-2">{fromCode} <Plane className="w-3.5 h-3.5 text-muted-foreground" /> {toCode}</td>
                             <td className="px-4 py-3 text-muted-foreground">{baggage ? `ADT : ${baggage}` : "Not provided"}</td>
-                            <td className="px-4 py-3 text-muted-foreground">{handBaggage ? `ADT : ${handBaggage}` : "Not provided"}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{handBaggage ? `ADT : ${handBaggage}` : "ADT : 7KG"}</td>
                           </tr>
                         </tbody>
                       </table>
