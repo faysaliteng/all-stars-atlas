@@ -973,74 +973,65 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
   });
 
   // ── Inject user-requested SSRs: meal, wheelchair, medical, pet, frequent flyer, free text ──
+  // TTI requires RefSegment on all SSRs — expand each SSR per-segment
   const ssrData = ssrInput || {};
   const perPax = ssrData.perPassenger || [];
+  const segmentRefs = segments.map(s => s.Ref).filter(Boolean);
   
   ttiPassengers.forEach((tp, idx) => {
     const paxSSR = perPax[idx] || {};
     
+    // Helper: push SSR for each segment (TTI requires RefSegment)
+    const pushSSR = (code, text, data = null) => {
+      if (segmentRefs.length > 0) {
+        for (const segRef of segmentRefs) {
+          specialServices.push({
+            Code: code, RefPassenger: tp.Ref, RefSegment: segRef, Data: data, Status: null,
+            Text: text, TechnicalType: null, Extensions: null, Available: null,
+          });
+        }
+      } else {
+        // Fallback: single SSR without RefSegment (shouldn't happen with valid data)
+        specialServices.push({
+          Code: code, RefPassenger: tp.Ref, RefSegment: null, Data: data, Status: null,
+          Text: text, TechnicalType: null, Extensions: null, Available: null,
+        });
+      }
+    };
+    
     // Meal SSR (MOML, AVML, VGML, etc.)
     if (paxSSR.meal) {
-      specialServices.push({
-        Code: String(paxSSR.meal).toUpperCase(),
-        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
-        Text: `Meal request: ${paxSSR.meal}`, TechnicalType: null, Extensions: null, Available: null,
-      });
+      pushSSR(String(paxSSR.meal).toUpperCase(), `Meal request: ${paxSSR.meal}`);
     }
     
     // Wheelchair SSR (WCHR, WCHS, WCHC)
     if (paxSSR.wheelchair) {
-      specialServices.push({
-        Code: String(paxSSR.wheelchair).toUpperCase(),
-        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
-        Text: 'Wheelchair assistance required', TechnicalType: null, Extensions: null, Available: null,
-      });
+      pushSSR(String(paxSSR.wheelchair).toUpperCase(), 'Wheelchair assistance required');
     }
     
     // Medical (MEDA), Blind (BLND), Deaf (DEAF)
     if (paxSSR.medical) {
-      specialServices.push({
-        Code: String(paxSSR.medical).toUpperCase(),
-        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
-        Text: paxSSR.medicalNote || 'Medical assistance required', TechnicalType: null, Extensions: null, Available: null,
-      });
+      pushSSR(String(paxSSR.medical).toUpperCase(), paxSSR.medicalNote || 'Medical assistance required');
     }
     
     // Pet in cabin (PETC) or hold (AVIH)
     if (paxSSR.pet) {
-      specialServices.push({
-        Code: String(paxSSR.pet).toUpperCase(),
-        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
-        Text: paxSSR.petNote || 'Pet transport requested', TechnicalType: null, Extensions: null, Available: null,
-      });
+      pushSSR(String(paxSSR.pet).toUpperCase(), paxSSR.petNote || 'Pet transport requested');
     }
     
     // Frequent Flyer (FQTV)
     if (paxSSR.frequentFlyer?.number) {
-      specialServices.push({
-        Code: 'FQTV',
-        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
-        Text: `${paxSSR.frequentFlyer.airline || ''} ${paxSSR.frequentFlyer.number}`.trim(),
-        TechnicalType: null, Extensions: null, Available: null,
-      });
+      pushSSR('FQTV', `${paxSSR.frequentFlyer.airline || ''} ${paxSSR.frequentFlyer.number}`.trim());
     }
     
     // Free text special request
     if (paxSSR.specialRequest) {
-      specialServices.push({
-        Code: 'OTHS',
-        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
-        Text: String(paxSSR.specialRequest).substring(0, 200), TechnicalType: null, Extensions: null, Available: null,
-      });
+      pushSSR('OTHS', String(paxSSR.specialRequest).substring(0, 200));
     }
     
     // Extra baggage (XBAG)
     if (paxSSR.extraBaggage) {
-      specialServices.push({
-        Code: 'XBAG',
-        RefPassenger: tp.Ref, RefSegment: null, Data: null, Status: null,
-        Text: `Extra baggage: ${paxSSR.extraBaggage}`, TechnicalType: null, Extensions: null, Available: null,
-      });
+      pushSSR('XBAG', `Extra baggage: ${paxSSR.extraBaggage}`);
     }
   });
 
