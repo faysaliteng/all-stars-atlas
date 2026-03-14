@@ -1101,7 +1101,7 @@ const RoundTripFlightCard = ({
           </div>
 
           {/* Both legs side by side */}
-          <div className="flex-1 flex flex-col sm:flex-row p-3 sm:p-4 gap-3 sm:gap-3 min-w-0">
+          <div className="flex-1 flex flex-col sm:flex-row p-2.5 sm:p-3 gap-2 sm:gap-2 min-w-0">
             <LegMini flight={outbound} label="Departure" labelColor="text-foreground" />
             <div className="hidden sm:block w-px bg-border/60 self-stretch shrink-0" />
             <div className="sm:hidden h-px bg-border/60" />
