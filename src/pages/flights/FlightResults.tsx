@@ -935,6 +935,12 @@ const RoundTripFlightCard = ({
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
 
   const roundTripFarePanelFlights = useMemo(() => {
+    // fareDetails from the outbound flight may contain FULL itinerary prices (from BFM)
+    // Use totalRoundTripPrice when available to avoid double-counting
+    const hasTotalPrice = !!outbound.totalRoundTripPrice;
+    const totalGross = outbound.totalRoundTripPrice || ((outbound.price || 0) + (returnFlight.price || 0));
+    const totalTaxes = (outbound.taxes || 0) + (returnFlight.taxes || 0);
+
     const outboundFareDetails = Array.isArray(outbound?.fareDetails) && outbound.fareDetails.length > 0
       ? outbound.fareDetails
       : [{
@@ -949,17 +955,23 @@ const RoundTripFlightCard = ({
         }];
 
     const combinedFareDetails = outboundFareDetails.map((fare: any) => {
-      const outboundGross = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
-      const outboundTaxes = fare?.taxes ?? outbound.taxes ?? 0;
-      const returnGross = returnFlight?.price ?? 0;
-      const returnTaxes = returnFlight?.taxes ?? 0;
+      // If fareDetails already has full-trip price (from grouped BFM), use it directly
+      // Otherwise sum outbound + return per-direction prices
+      const farePrice = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
+      const fareTaxes = fare?.taxes ?? outbound.taxes ?? 0;
+      
+      // Detect if fareDetail price is full-trip (close to totalRoundTripPrice) or per-direction
+      const isFareFullTrip = hasTotalPrice && farePrice > 0 && Math.abs(farePrice - outbound.totalRoundTripPrice) < Math.abs(farePrice - outbound.price);
+      
+      const combinedPrice = isFareFullTrip ? farePrice : (farePrice + (returnFlight?.price ?? 0));
+      const combinedTaxes = isFareFullTrip ? fareTaxes : (fareTaxes + (returnFlight?.taxes ?? 0));
 
       return {
         ...fare,
-        price: outboundGross + returnGross,
-        taxes: outboundTaxes + returnTaxes,
-        _outboundGrossPrice: outboundGross,
-        _outboundTaxes: outboundTaxes,
+        price: combinedPrice,
+        taxes: combinedTaxes,
+        _outboundGrossPrice: outbound.price || 0,
+        _outboundTaxes: outbound.taxes || 0,
         _outboundFareDetail: fare,
         _isRoundTripCombinedFare: true,
       };
@@ -967,8 +979,8 @@ const RoundTripFlightCard = ({
 
     return [{
       ...outbound,
-      price: (outbound?.price || 0) + (returnFlight?.price || 0),
-      taxes: (outbound?.taxes || 0) + (returnFlight?.taxes || 0),
+      price: totalGross,
+      taxes: totalTaxes,
       baggage: outbound?.baggage || returnFlight?.baggage,
       handBaggage: outbound?.handBaggage || returnFlight?.handBaggage,
       fareDetails: combinedFareDetails,
