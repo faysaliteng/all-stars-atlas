@@ -572,7 +572,7 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
         id: `option-${i}`,
         label,
         bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
-        handBaggage: f.handBaggage || primary.handBaggage || null,
+        handBaggage: f.handBaggage || primary.handBaggage || "7KG",
         checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
         meal: f.mealIncluded === true ? true : f.mealIncluded === false ? false : null,
         seatSelection: f.seatSelection === true ? true : null,
@@ -595,7 +595,7 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
     // Generate from flight data
     return [buildOption({
       bookingClass: primary.bookingClass || primary.cabinClass?.charAt(0) || "",
-      handBaggage: primary.handBaggage || null,
+      handBaggage: primary.handBaggage || "7KG",
       baggage: primary.baggage,
       mealIncluded: primary.mealIncluded ?? null,
       seatSelection: primary.seatSelection ?? null,
@@ -1020,9 +1020,9 @@ const RoundTripFlightCard = ({
                         {[{ leg: outbound, label: "Outbound" }, { leg: returnFlight, label: "Return" }].map(({ leg, label }) => {
                           const legs = leg.legs || [];
                           const legLogo = getAirlineLogo(leg.airlineCode);
-                          const cabin = leg.cabinClass || "Economy";
+                          const cabin = leg.cabinClass || "";
                           const bkClass = leg.bookingClass || leg.fareDetails?.[0]?.bookingClass || "";
-                          const cabDisp = bkClass ? `${cabin} - ${bkClass}` : cabin;
+                          const cabDisp = cabin && bkClass ? `${cabin} - ${bkClass}` : cabin || bkClass || "";
                           const seats = leg.availableSeats ?? null;
                           const ac = leg.aircraft || legs[0]?.aircraft || "";
 
@@ -1304,9 +1304,9 @@ const MultiCityExpandedDetails = ({ flight, segments }: { flight: any; segments:
             {segments.map((seg: any, i: number) => {
               const segLegs = seg.legs || [];
               const logo = getAirlineLogo(seg.airlineCode);
-              const cabin = seg.cabinClass || flight.cabinClass || "Economy";
+              const cabin = seg.cabinClass || flight.cabinClass || "";
               const bkClass = seg.bookingClass || flight.bookingClass || flight.fareDetails?.[0]?.bookingClass || "";
-              const cabDisp = bkClass ? `${cabin} - ${bkClass}` : cabin;
+              const cabDisp = cabin && bkClass ? `${cabin} - ${bkClass}` : cabin || bkClass || "";
               const seats = seg.availableSeats ?? flight.availableSeats ?? null;
               const ac = seg.aircraft || "";
 
@@ -1667,7 +1667,7 @@ const FlightCard = ({
   const toCode = flight.destination || "";
   const flightNo = flight.flightNumber || "";
   // Always use the REAL cabin class/class seats from API fare details first
-  const cabin = flight.cabinClass || "Economy";
+  const cabin = flight.cabinClass || "";
   const bookingClass = getDisplayBookingClass(flight);
   const availableSeats = getDisplayAvailableSeats(flight);
   const duration = flight.duration || "";
@@ -1698,7 +1698,7 @@ const FlightCard = ({
   const [showFareOptions, setShowFareOptions] = useState(false);
 
   const stopsLabel = stops === 0 ? "Non-Stop" : `${stops} Stop${stops > 1 ? "s" : ""}`;
-  const cabinDisplay = bookingClass ? `${cabin} - ${bookingClass}` : cabin;
+  const cabinDisplay = cabin && bookingClass ? `${cabin} - ${bookingClass}` : cabin || bookingClass || "";
   const fareDetailsCount = Array.isArray(flight.fareDetails) ? flight.fareDetails.length : 0;
   const distanceKm = calcDistanceKm(fromCode, toCode);
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
