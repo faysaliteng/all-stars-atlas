@@ -270,12 +270,10 @@ async function searchFlights(params) {
 
   // Bargain Finder Max request body — proven working payload for PCC J4YL
   // Strategy: try a smart profile first, then progressively relaxed fallbacks so search never silently dies.
-  const isRoundTrip = !isMultiCity && ISO_DATE_RE.test(returnDateValue);
   const buildBfmRequestBody = ({
     numTrips = 250,
     enableDiversity = true,
     additionalNonStops = 20,
-    enableMultiTicket = false,
     includeBrandedFareIndicators = true,
   } = {}) => {
     const travelTpaExtensions = {
@@ -295,10 +293,6 @@ async function searchFlights(params) {
         },
         ...(typeof additionalNonStops === 'number' ? { AdditionalNonStopsPercentage: additionalNonStops } : {}),
       };
-    }
-
-    if (isRoundTrip && enableMultiTicket) {
-      travelTpaExtensions.MultiTicket = { DisplayPolicy: 'SOW' };
     }
 
     const travelerInfoSummary = {
@@ -341,66 +335,20 @@ async function searchFlights(params) {
       },
     };
   };
-
-  const decodeCompressedResponse = (raw) => {
-    if (!raw?.compressedResponse || typeof raw.compressedResponse !== 'string') return raw;
-    try {
-      const buf = Buffer.from(raw.compressedResponse, 'base64');
-      const decompressed = zlib.gunzipSync(buf);
-      console.log('[Sabre] Decompressed response successfully');
-      return JSON.parse(decompressed.toString('utf8'));
-    } catch (decompErr) {
-      console.error('[Sabre] Failed to decompress compressedResponse:', decompErr.message);
-      return raw;
-    }
-  };
-
-  const getResponseStats = (raw) => {
-    const rs = raw?.OTA_AirLowFareSearchRS || raw?.groupedItineraryResponse || raw;
-    const itinCount = rs?.PricedItineraries?.PricedItinerary?.length
-      || rs?.itineraryGroups?.[0]?.itineraries?.length
-      || 0;
-    const messages = Array.isArray(rs?.messages) ? rs.messages : [];
-    const hasNoAvailability = messages.some((m) => {
-      const code = String(m?.code || '').toUpperCase();
-      const text = String(m?.text || m?.value || '').toUpperCase();
-      return code === 'NAV' || text.includes('NO AVAILABILITY');
-    });
-    return { itinCount, hasNoAvailability };
-  };
-
-  try {
-    const logRoute = isMultiCity
-      ? preparedSegments.map((s) => `${s.from}→${s.to}`).join(', ')
-      : `${originCode} → ${destinationCode}`;
-    console.log(`[Sabre] Searching ${logRoute}...`);
-
-    const normalizeParams = {
-      ...params,
-      isMultiCity,
-      segments: isMultiCity ? preparedSegments : undefined,
-      origin: originCode,
-      destination: destinationCode,
-      departDate: departDateValue,
-      returnDate: ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
-      segmentCount: isMultiCity ? preparedSegments.length : (ISO_DATE_RE.test(returnDateValue) ? 2 : 1),
-    };
-
+...
     const requestProfiles = [
       {
         name: 'smart_diverse',
         numTrips: 250,
         enableDiversity: true,
         additionalNonStops: 20,
-        enableMultiTicket: isRoundTrip,
         includeBrandedFareIndicators: true,
       },
       {
-        name: 'fallback_no_multiticket',
+        name: 'fallback_diverse_relaxed',
         numTrips: 220,
         enableDiversity: true,
         additionalNonStops: null,
-        enableMultiTicket: false,
         includeBrandedFareIndicators: true,
       },
       {
@@ -408,7 +356,6 @@ async function searchFlights(params) {
         numTrips: 180,
         enableDiversity: false,
         additionalNonStops: null,
-        enableMultiTicket: false,
         includeBrandedFareIndicators: false,
       },
     ];
@@ -710,6 +657,110 @@ function normalizeGroupedResponse(response, params) {
       if (fcdId !== undefined) fareComponentLookup[fcdId] = fcd;
     }
 
+    const toNumber = (value) => {
+      if (value === null || value === undefined || value === '') return NaN;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : NaN;
+    };
+
+    const firstPositiveNumber = (...values) => {
+      for (const v of values) {
+        const n = toNumber(v);
+        if (Number.isFinite(n) && n > 0) return n;
+      }
+      return 0;
+    };
+
+    const sumPassengerTotals = (passengerInfoList = []) => {
+      let total = 0;
+      let baseFare = 0;
+      let taxes = 0;
+      let currency = '';
+
+      for (const pax of (Array.isArray(passengerInfoList) ? passengerInfoList : [])) {
+        const pInfo = pax?.passengerInfo || {};
+        const cc = pInfo.currencyConversion || {};
+        const ptf = pInfo.passengerTotalFare || {};
+        const qty = Math.max(1, parseInt(pInfo.passengerNumber || 1, 10) || 1);
+
+        const paxTotal = firstPositiveNumber(
+          cc.totalPrice,
+          ptf.totalPrice,
+          cc.equivalentAmount,
+          ptf.equivalentAmount,
+          cc.equivalentPrice,
+          ptf.equivalentPrice,
+        );
+        const paxBase = firstPositiveNumber(
+          cc.baseFareAmount,
+          ptf.baseFareAmount,
+          cc.baseFare,
+          ptf.baseFare,
+          cc.equivalentBaseFareAmount,
+          ptf.equivalentBaseFareAmount,
+        );
+        const paxTax = firstPositiveNumber(
+          cc.totalTaxAmount,
+          ptf.totalTaxAmount,
+          cc.taxAmount,
+          ptf.taxAmount,
+        );
+
+        if (!currency) {
+          currency = cc.currency || ptf.currency || '';
+        }
+
+        total += paxTotal * qty;
+        baseFare += paxBase * qty;
+        taxes += paxTax * qty;
+      }
+
+      return { total, baseFare, taxes, currency };
+    };
+
+    const extractFareTotals = (fare = {}) => {
+      const totalFare = fare?.totalFare || {};
+      const paxTotals = sumPassengerTotals(fare?.passengerInfoList || []);
+
+      let total = firstPositiveNumber(
+        totalFare.totalPrice,
+        totalFare.totalFareAmount,
+        totalFare.totalAmount,
+        totalFare.equivalentAmount,
+        totalFare.equivalentPrice,
+        paxTotals.total,
+      );
+
+      let baseFare = firstPositiveNumber(
+        totalFare.baseFareAmount,
+        totalFare.baseFare,
+        totalFare.baseAmount,
+        totalFare.equivalentBaseFareAmount,
+        paxTotals.baseFare,
+      );
+
+      let taxes = firstPositiveNumber(
+        totalFare.totalTaxAmount,
+        totalFare.taxAmount,
+        totalFare.taxes,
+        paxTotals.taxes,
+      );
+
+      if (total <= 0 && baseFare > 0 && taxes > 0) {
+        total = baseFare + taxes;
+      }
+      if (baseFare <= 0 && total > 0 && taxes > 0 && total >= taxes) {
+        baseFare = total - taxes;
+      }
+      if (taxes <= 0 && total > 0 && baseFare > 0 && total >= baseFare) {
+        taxes = total - baseFare;
+      }
+
+      const currency = totalFare.currency || paxTotals.currency || 'BDT';
+
+      return { total, baseFare, taxes, currency };
+    };
+
     // Debug: log baggage descriptors once
     if (baggageAllowanceDescs.length > 0) {
       console.log(`[Sabre] baggageAllowanceDescs (${baggageAllowanceDescs.length}):`, JSON.stringify(baggageAllowanceDescs.slice(0, 5)));
@@ -742,21 +793,19 @@ function normalizeGroupedResponse(response, params) {
         const pricingInfo = itin.pricingInformation || [];
         if (pricingInfo.length === 0) continue;
 
-        // ── CRITICAL: Sort pricing options by total price ascending ──
-        // Ensures cheapest booking class (V, L, S etc.) is primary, not full-fare Y
+        // ── CRITICAL: Sort pricing options by REAL API total price ascending ──
+        // Ensures cheapest booking class (V/L/S/T etc.) is primary; skips malformed 0-price artifacts.
         const sortedPricing = [...pricingInfo].sort((a, b) => {
-          const priceA = parseFloat(a?.fare?.totalFare?.totalPrice || 0);
-          const priceB = parseFloat(b?.fare?.totalFare?.totalPrice || 0);
-          return priceA - priceB;
+          const priceA = extractFareTotals(a?.fare || {}).total;
+          const priceB = extractFareTotals(b?.fare || {}).total;
+          const normalizedA = priceA > 0 ? priceA : Number.POSITIVE_INFINITY;
+          const normalizedB = priceB > 0 ? priceB : Number.POSITIVE_INFINITY;
+          return normalizedA - normalizedB;
         });
 
         const pricing = sortedPricing[0];
         const fare = pricing.fare || {};
-        const totalFare = fare.totalFare || {};
-        const totalAmount = parseFloat(totalFare.totalPrice || 0);
-        const baseFareAmt = parseFloat(totalFare.baseFareAmount || 0);
-        const taxesAmt = parseFloat(totalFare.totalTaxAmount || 0);
-        const currency = totalFare.currency || 'BDT';
+        const { total: totalAmount, baseFare: baseFareAmt, taxes: taxesAmt, currency } = extractFareTotals(fare);
 
         // Extract baggage per segment from passengerInfoList
         const passengerInfoList = fare.passengerInfoList || [];
@@ -902,7 +951,7 @@ function normalizeGroupedResponse(response, params) {
         // Extract fare details from pricingInformation for fare options (branded fares)
         const fareDetailsArr = sortedPricing.map((pi, piIdx) => {
           const piFare = pi.fare || {};
-          const piTotal = piFare.totalFare || {};
+          const piFareTotals = extractFareTotals(piFare);
           const piPassengers = piFare.passengerInfoList || [];
           const piFareComponents = piPassengers[0]?.passengerInfo?.fareComponents || [];
           
@@ -986,10 +1035,10 @@ function normalizeGroupedResponse(response, params) {
             bookingClass: firstSeg.bookingCode || '',
             cabinClass: firstSeg.cabin || '',
             availableSeats: piMinSeats === Infinity ? null : piMinSeats,
-            price: parseFloat(piTotal.totalPrice || 0),
-            baseFare: parseFloat(piTotal.baseFareAmount || 0),
-            taxes: parseFloat(piTotal.totalTaxAmount || 0),
-            currency: piTotal.currency || 'BDT',
+            price: piFareTotals.total,
+            baseFare: piFareTotals.baseFare,
+            taxes: piFareTotals.taxes,
+            currency: piFareTotals.currency || 'BDT',
             priceScope: 'itinerary',
             isTotalPrice: true,
             baggage: piBaggage,

@@ -847,9 +847,58 @@ function calcPayableFromGross(grossPrice: number, taxes: number, discountPct = 6
   return baseFare - discount + taxes + aitVat;
 }
 
+/* ─── API-first fare extraction (prevents zero-price leakage) ─── */
+function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
+  const toNum = (v: any) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const directGross = toNum(f?.price || f?.amount || f?.total);
+  const directTaxes = toNum(f?.taxes || f?.taxAmount || f?.totalTaxAmount);
+
+  let grossPrice = directGross > 0 ? directGross : 0;
+  let taxes = directTaxes > 0 ? directTaxes : 0;
+
+  if (grossPrice <= 0 && Array.isArray(f?.fareDetails) && f.fareDetails.length > 0) {
+    const priced = f.fareDetails
+      .map((d: any) => ({ price: toNum(d?.price || d?.amount || d?.total), taxes: toNum(d?.taxes || d?.totalTaxAmount || d?.taxAmount) }))
+      .filter((d: any) => d.price > 0)
+      .sort((a: any, b: any) => a.price - b.price);
+
+    if (priced.length > 0) {
+      grossPrice = priced[0].price;
+      if (taxes <= 0 && priced[0].taxes > 0) taxes = priced[0].taxes;
+    }
+  }
+
+  if ((grossPrice <= 0 || taxes <= 0) && Array.isArray(f?.paxPricing) && f.paxPricing.length > 0) {
+    const paxGross = f.paxPricing.reduce((sum: number, p: any) => {
+      const count = Math.max(1, Number(p?.count) || 1);
+      const total = toNum(p?.total || 0);
+      return sum + (total * count);
+    }, 0);
+    const paxTaxes = f.paxPricing.reduce((sum: number, p: any) => {
+      const count = Math.max(1, Number(p?.count) || 1);
+      const tax = toNum(p?.taxes || 0);
+      return sum + (tax * count);
+    }, 0);
+
+    if (grossPrice <= 0 && paxGross > 0) grossPrice = paxGross;
+    if (taxes <= 0 && paxTaxes > 0) taxes = paxTaxes;
+  }
+
+  if (grossPrice > 0 && taxes > grossPrice) {
+    taxes = Math.max(0, grossPrice);
+  }
+
+  return { grossPrice, taxes };
+}
+
 /* ─── Shortcut: payable from a flight object ─── */
 function flightPayable(f: any): number {
-  return calcPayableFromGross(f.price || 0, f.taxes || 0, f.fareRules?.discount ?? 6.30, f.fareRules?.aitVat ?? 0.3);
+  const apiFare = getApiFareTotals(f);
+  return calcPayableFromGross(apiFare.grossPrice, apiFare.taxes, f?.fareRules?.discount ?? 6.30, f?.fareRules?.aitVat ?? 0.3);
 }
 
 /* ─── Build fare rows from real API per-pax pricing (no fabricated multipliers) ─── */
@@ -1034,16 +1083,19 @@ const RoundTripFlightCard = ({
   const [activeTab, setActiveTab] = useState("itinerary");
   const [showFareOptions, setShowFareOptions] = useState(false);
   const logo = getAirlineLogo(outbound.airlineCode);
-  const grossTotalPrice = outbound.totalRoundTripPrice || ((outbound.price || 0) + (returnFlight.price || 0));
+  const outboundApiFare = getApiFareTotals(outbound);
+  const returnApiFare = getApiFareTotals(returnFlight);
+  const apiRoundTripGross = outboundApiFare.grossPrice + returnApiFare.grossPrice;
+  const grossTotalPrice = Number(outbound?.totalRoundTripPrice) > 0 ? Number(outbound.totalRoundTripPrice) : apiRoundTripGross;
   const totalPrice = flightPayable(outbound) + flightPayable(returnFlight);
   const refundable = outbound.refundable ?? false;
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
 
   const roundTripFarePanelFlights = useMemo(() => {
-    // Always sum per-direction prices (BDFare-style cross-product pairing)
-    const totalGross = (outbound.price || 0) + (returnFlight.price || 0);
-    const totalTaxes = (outbound.taxes || 0) + (returnFlight.taxes || 0);
+    // Always sum per-direction API prices (BDFare-style cross-product pairing)
+    const totalGross = outboundApiFare.grossPrice + returnApiFare.grossPrice;
+    const totalTaxes = outboundApiFare.taxes + returnApiFare.taxes;
 
     const outboundFareDetails = Array.isArray(outbound?.fareDetails) && outbound.fareDetails.length > 0
       ? outbound.fareDetails
@@ -1054,24 +1106,24 @@ const RoundTripFlightCard = ({
           handBaggage: outbound.handBaggage,
           baggage: outbound.baggage,
           refundable: outbound.refundable,
-          price: outbound.price || 0,
-          taxes: outbound.taxes || 0,
+          price: outboundApiFare.grossPrice,
+          taxes: outboundApiFare.taxes,
         }];
 
     const combinedFareDetails = outboundFareDetails.map((fare: any) => {
-      const farePrice = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
-      const fareTaxes = fare?.taxes ?? outbound.taxes ?? 0;
+      const farePrice = Number(fare?.price ?? fare?.amount ?? outboundApiFare.grossPrice ?? 0) || 0;
+      const fareTaxes = Number(fare?.taxes ?? outboundApiFare.taxes ?? 0) || 0;
 
-      // For cross-product pairs, always sum outbound fare + return flight price
-      const combinedPrice = farePrice + (returnFlight?.price ?? 0);
-      const combinedTaxes = fareTaxes + (returnFlight?.taxes ?? 0);
+      // For cross-product pairs, always sum outbound fare + return API fare
+      const combinedPrice = farePrice + returnApiFare.grossPrice;
+      const combinedTaxes = fareTaxes + returnApiFare.taxes;
 
       return {
         ...fare,
         price: combinedPrice,
         taxes: combinedTaxes,
-        _outboundGrossPrice: outbound.price || 0,
-        _outboundTaxes: outbound.taxes || 0,
+        _outboundGrossPrice: outboundApiFare.grossPrice,
+        _outboundTaxes: outboundApiFare.taxes,
         _outboundFareDetail: fare,
         _isRoundTripCombinedFare: true,
       };
@@ -1302,14 +1354,12 @@ const RoundTripFlightCard = ({
             const retBaggage = returnFlight.baggage || null;
 
             // Build fare rows from real API per-pax pricing
-            const obPrice = outbound.price ?? 0;
-            const obTax = outbound.taxes ?? 0;
-            const obBase = Math.max(0, Math.round(obPrice - obTax));
-            const retPrice = returnFlight.price ?? 0;
-            const retTax = returnFlight.taxes ?? 0;
-            const retBase = Math.max(0, Math.round(retPrice - retTax));
+            const outboundFare = getApiFareTotals(outbound);
+            const returnFare = getApiFareTotals(returnFlight);
+            const obBase = Math.max(0, Math.round(outboundFare.grossPrice - outboundFare.taxes));
+            const retBase = Math.max(0, Math.round(returnFare.grossPrice - returnFare.taxes));
             const combinedBase = obBase + retBase;
-            const combinedTax = obTax + retTax;
+            const combinedTax = outboundFare.taxes + returnFare.taxes;
 
             const DISCOUNT_PCT = outbound.fareRules?.discount ?? 6.30;
             const AIT_VAT_PCT = outbound.fareRules?.aitVat ?? 0.3;
@@ -2856,7 +2906,9 @@ const FlightResults = () => {
       const key = `${ob.id}__${rf.id}`;
       if (seen.has(key)) return;
       seen.add(key);
-      pairs.push({ outbound: ob, returnFlight: rf, totalPrice: (ob.price || 0) + (rf.price || 0) });
+      const obFare = getApiFareTotals(ob);
+      const rfFare = getApiFareTotals(rf);
+      pairs.push({ outbound: ob, returnFlight: rf, totalPrice: obFare.grossPrice + rfFare.grossPrice });
     };
 
     // 1) Exact itinerary linking from backend (Sabre BFM grouped itineraries)
