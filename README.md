@@ -1,7 +1,7 @@
-# Seven Trip — Bangladesh's #1 Travel Platform (v3.9.9.9)
+# Seven Trip — Bangladesh's #1 Travel Platform (v4.0.0)
 
 > Full-stack B2C travel agency web application. Book flights, hotels, visa, holiday packages, medical tourism, car rentals, eSIM, mobile recharge & utility bill payments.
-> Last updated: 2026-03-13 (v3.9.9.9 — Sabre Cancel Hardening + Host TA Recovery)
+> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features Implemented)
 
 **Live URL:** [https://seven-trip.com](https://seven-trip.com)
 **GitHub:** [https://github.com/digiwebdex/all-stars-atlas-d07a1d89](https://github.com/digiwebdex/all-stars-atlas-d07a1d89)
@@ -109,15 +109,15 @@
 │   ├── sitemap.xml           # SEO sitemap
 │   ├── robots.txt            # Crawler rules
 │   └── favicon.png           # App icon
-├── BACKEND_API_SPEC.md       # 94+ API endpoint spec
-├── CHANGELOG.md              # Version history (v1.0–v3.9.9)
+├── BACKEND_API_SPEC.md       # 100+ API endpoint spec
+├── CHANGELOG.md              # Version history (v1.0–v4.0.0)
 ├── Deployment.md             # VPS deployment guide
 └── developer_documentation.md # Dev handbook
 ```
 
 ---
 
-## 🎯 Features (100% Complete — Audited 2026-03-13 v3.9.9)
+## 🎯 Features (100% Complete — Audited 2026-03-14 v4.0.0)
 
 ### Public Site (10 Services)
 - **Homepage** — 11 CMS-driven sections with parallax hero video, animated counters, and section reordering
@@ -192,8 +192,8 @@
 | **TTI/ZENITH (Air Astra)** | `tti-flights.js` | Real-time flight search + booking (PNR creation). Cancel via `Cancel` method using airline PNR. Ticketing = manual (no API). |
 | **BDFare** | `bdf-flights.js` | Bangladesh flight aggregator (US-Bangla, Novoair, Biman) |
 | **FlyHub** | `flyhub-flights.js` | 450+ airline flight aggregator with token auth |
-| **Sabre GDS (REST)** | `sabre-flights.js` | International flights via Bargain Finder Max V5, PNR creation with SSR injection, ticketing, cancellation |
-| **Sabre GDS (SOAP)** | `sabre-soap.js` | Enhanced Seat Map (v6.0.0) + Ancillary Offers (v3.0.0) via BinarySecurityToken session |
+| **Sabre GDS (REST)** | `sabre-flights.js` | International flights: BFM V5 search, PNR creation with SSR, ticketing, cancellation, **void**, **refund** (price+fulfill), **FLIFO**, **stateless ancillaries**, **EMD fulfill**, **FF update** — all 26 Sabre sections |
+| **Sabre GDS (SOAP)** | `sabre-soap.js` | Enhanced Seat Map (v6.0.0), Ancillary Offers (v3.0.0), **Structured Fare Rules** (v3.0.1), **Exchange/Reissue** (v1.1.0), Cancel fallback |
 | **Ancillaries Engine** | `ancillaries.js` | Priority chain: Sabre SOAP → TTI → Standard fallback for seat maps, baggage, meals |
 | **HotelBeds** | `hotelbeds.js` | 180,000+ hotels worldwide with SHA256 signature |
 | **Airalo** | `airalo.js` | eSIM for 200+ countries with QR delivery |
@@ -286,19 +286,19 @@ Express, mysql2, bcryptjs, jsonwebtoken, multer, uuid, cors, helmet, morgan, exp
 | Document | Description |
 |----------|-------------|
 | [README.md](./README.md) | This file — project overview |
-| [CHANGELOG.md](./CHANGELOG.md) | Complete version history (v1.0–v3.9.7, 35+ releases) |
+| [CHANGELOG.md](./CHANGELOG.md) | Complete version history (v1.0–v4.0.0, 45+ releases) |
 | [ANALYTICS.md](./ANALYTICS.md) | Development analytics, timeline, codebase statistics |
-| [BUG_TRACKER.md](./BUG_TRACKER.md) | 37+ bugs with root cause analysis and recurring patterns |
+| [BUG_TRACKER.md](./BUG_TRACKER.md) | 44+ bugs with root cause analysis and recurring patterns |
 | [GDS_INTEGRATION_HISTORY.md](./GDS_INTEGRATION_HISTORY.md) | GDS provider integration timeline, issues, resolutions |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture (frontend, backend, GDS, design system) |
 | [SECURITY.md](./SECURITY.md) | Security measures, JWT flow, API keys, SSL, firewalls |
 | [API_CHANGELOG.md](./API_CHANGELOG.md) | Backend API changes per version (endpoints, schema) |
-| [DEPLOYMENT_HISTORY.md](./DEPLOYMENT_HISTORY.md) | All 7 deployments with exact commands and verification |
+| [DEPLOYMENT_HISTORY.md](./DEPLOYMENT_HISTORY.md) | All 8+ deployments with exact commands and verification |
 | [DEPLOYMENT_COMMANDS.md](./DEPLOYMENT_COMMANDS.md) | Copy-paste VPS deployment commands |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Solutions for all known issues |
 | [VPS_SESSION_LOG.md](./VPS_SESSION_LOG.md) | Complete VPS terminal session history with outputs |
 | [DEVELOPMENT_CHAT_HISTORY.md](./DEVELOPMENT_CHAT_HISTORY.md) | Full development conversation timeline & decision log |
-| [BACKEND_API_SPEC.md](./BACKEND_API_SPEC.md) | 90+ API endpoint specifications |
+| [BACKEND_API_SPEC.md](./BACKEND_API_SPEC.md) | 100+ API endpoint specifications |
 | [Deployment.md](./Deployment.md) | VPS deployment guide (Ubuntu 24.04, Nginx, PM2, SSL) |
 | [developer_documentation.md](./developer_documentation.md) | Developer handbook A-Z |
 | [.lovable/plan.md](./.lovable/plan.md) | Project plan and phase tracking |

@@ -1,6 +1,6 @@
 # Seven Trip — Developer Documentation
 
-> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v3.9.9.9 (2026-03-13).
+> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v4.0.0 (2026-03-14).
 
 ---
 
@@ -630,6 +630,16 @@ POST   /flights/revalidate-price          # v3.9.9 — Sabre BFM revalidation be
 GET    /flights/booking/:pnr              # v3.9.9 — Retrieve PNR details via Sabre REST
 GET    /flights/ticket-status/:pnr        # v3.9.9 — Check ticket issuance status
 GET    /flights/seats-rest                # v3.9.9.4 — REST seat map (v3+v1 probing, SOAP fallback, viewership hints)
+POST   /flights/void                     # v4.0.0 — Void tickets via Sabre REST
+POST   /flights/refund/price             # v4.0.0 — Refund pricing via Sabre REST
+POST   /flights/refund/fulfill           # v4.0.0 — Refund fulfill via Sabre REST
+POST   /flights/exchange                 # v4.0.0 — Exchange/reissue via Sabre SOAP
+GET    /flights/fare-rules               # v4.0.0 — Structured fare rules via Sabre SOAP
+GET    /flights/status                   # v4.0.0 — Flight status (FLIFO) via Sabre REST
+POST   /flights/ancillaries-stateless    # v4.0.0 — Stateless ancillaries via Sabre REST
+POST   /flights/add-ancillary-stateless  # v4.0.0 — Add ancillary stateless via Sabre REST
+POST   /flights/fulfill-tickets          # v4.0.0 — EMD issuance via Sabre REST
+POST   /flights/update-frequent-flyer    # v4.0.0 — Post-booking FF update via Sabre REST
 POST   /flights/upload-travel-docs
 GET    /flights/travel-docs/:bookingId
 GET    /flights/ancillaries?airlineCode=FZ&origin=DAC&destination=DXB&flightNumber=8508&departureDate=2026-03-14

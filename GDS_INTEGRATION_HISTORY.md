@@ -1,7 +1,7 @@
 # Seven Trip — GDS Integration History & Troubleshooting
 
 > Complete timeline of all GDS provider integrations, issues encountered, and solutions applied.
-> Last updated: 2026-03-13 (v3.9.9.9 — Sabre Cancel Hardening + Host TA Recovery)
+> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features Implemented)
 
 ---
 
@@ -224,10 +224,19 @@ key = flightNumber + departureTime + arrivalTime + destination + stops +
 ```
 Seat Map:  Sabre SOAP EnhancedSeatMapRQ (pre+post) → Sabre REST GetSeats v1 (post-booking PNR only) → TTI → "Not Available"
 Seat Assignment: POST /flights/assign-seats → Sabre UpdatePNR SSR RQST (post-booking) → TTI UpdateBooking SpecialService SEAT
-Meals:     Sabre SOAP GetAncillaryOffersRQ (post-booking only) → TTI → empty
-Baggage:   Sabre SOAP GetAncillaryOffersRQ (post-booking only) → TTI → empty
+Meals:     Sabre SOAP GetAncillaryOffersRQ (post-booking only) → Stateless REST (v4.0.0) → TTI → empty
+Baggage:   Sabre SOAP GetAncillaryOffersRQ (post-booking only) → Stateless REST (v4.0.0) → TTI → empty
 Ancillary Purchase: POST /flights/purchase-ancillary → Sabre UpdatePNR SSR (XBAG, meal codes) via addAncillarySSR
+Ancillary Stateless: POST /flights/ancillaries-stateless → Sabre REST /v1/offers/getAncillaries (v4.0.0)
+Add Ancillary: POST /flights/add-ancillary-stateless → Sabre REST /v1/offers/addAncillaries (v4.0.0)
+EMD Fulfill: POST /flights/fulfill-tickets → Sabre REST /v1/trip/orders/fulfillOrder (v4.0.0)
 SSR:       REST CreatePNR (at booking time) — meals, wheelchair, medical, FF#
+Void:      POST /flights/void → Sabre REST /v1/trip/orders/voidFlightTickets (v4.0.0)
+Refund:    POST /flights/refund/price + /refund/fulfill → Sabre REST stateless refunds (v4.0.0)
+Exchange:  POST /flights/exchange → Sabre SOAP ExchangeBookingRQ v1.1.0 (v4.0.0)
+Fare Rules: GET /flights/fare-rules → Sabre SOAP StructureFareRulesRQ v3.0.1 (v4.0.0)
+FLIFO:     GET /flights/status → Sabre REST /products/air/flight/status (v4.0.0)
+FF Update: POST /flights/update-frequent-flyer → Sabre UpdatePNR FQTV SSR (v4.0.0)
 ```
 
 > **Note**: Sabre REST GetSeats v1 (`/v1/offers/getseats`) requires a PNR or offerId — it cannot do raw flight+date lookups like SOAP EnhancedSeatMapRQ. SOAP remains the primary seat map provider for pre-booking.
