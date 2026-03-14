@@ -1690,6 +1690,7 @@ const FlightCard = ({
 
   const stopsLabel = stops === 0 ? "Non-Stop" : `${stops} Stop${stops > 1 ? "s" : ""}`;
   const cabinDisplay = bookingClass ? `${cabin} - ${bookingClass}` : cabin;
+  const fareDetailsCount = Array.isArray(flight.fareDetails) ? flight.fareDetails.length : 0;
   const distanceKm = calcDistanceKm(fromCode, toCode);
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
 

@@ -237,7 +237,8 @@ async function searchFlights(params) {
     }
   }
 
-  // Bargain Finder Max request body
+  // Bargain Finder Max request body — request multiple fare options per itinerary
+  // FlexibleFares with multiple FareParameters enables Sabre to return branded/multi-class fares
   const requestBody = {
     OTA_AirLowFareSearchRQ: {
       Version: '5',
@@ -262,14 +263,21 @@ async function searchFlights(params) {
               TravelTimeWeight: 2,
             },
           },
+          FlexibleFares: {
+            FareParameters: [
+              { Cabin: { Type: sabreCabin }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
+              { Cabin: { Type: sabreCabin }, PublicFare: { Ind: true }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
+              { Cabin: { Type: sabreCabin }, PrivateFare: { Ind: true }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
+            ],
+          },
         },
         CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
       },
-        TPA_Extensions: {
-          IntelliSellTransaction: {
-            RequestType: { Name: '200ITINS' },
-          },
+      TPA_Extensions: {
+        IntelliSellTransaction: {
+          RequestType: { Name: '200ITINS' },
         },
+      },
       TravelerInfoSummary: {
         SeatsRequested: [parseInt(adults) + parseInt(children)],
         AirTravelerAvail: [{
