@@ -22,7 +22,7 @@ export default function AnimatedFlightArc({ height = 12, direction = "departure"
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}55` }} />
       </div>
 
-      {/* LEFT arrow track (before plane) */}
+      {/* Single continuous arrow track — no gap */}
       <div className="flex-1 relative overflow-hidden flex items-center" style={{ height: h }}>
         <div
           className="absolute inset-0 flex items-center"
@@ -30,7 +30,7 @@ export default function AnimatedFlightArc({ height = 12, direction = "departure"
             animation: isReturn ? 'arrow-scroll-left 1.8s linear infinite' : 'arrow-scroll-right 1.8s linear infinite',
           }}
         >
-          {Array.from({ length: 28 }).map((_, i) => (
+          {Array.from({ length: 60 }).map((_, i) => (
             <span
               key={i}
               className="shrink-0 select-none font-black"
@@ -46,53 +46,28 @@ export default function AnimatedFlightArc({ height = 12, direction = "departure"
             </span>
           ))}
         </div>
+        {/* Fade edges */}
         <div className="absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
-      </div>
 
-      {/* Plane icon */}
-      <div className="shrink-0 z-20 mx-0.5 relative">
-        <div className="absolute -inset-2 rounded-full blur-md" style={{ backgroundColor: `${color}18` }} />
-        <svg
-          viewBox="0 0 24 24"
-          fill={color}
-          style={{
-            width: planeSize,
-            height: planeSize,
-            transform: isReturn ? "scaleX(-1) rotate(-90deg)" : "rotate(90deg)",
-            filter: `drop-shadow(0 0 5px ${color}66)`,
-          }}
-        >
-          <path d={planePath} />
-        </svg>
-      </div>
-
-      {/* RIGHT arrow track (after plane) */}
-      <div className="flex-1 relative overflow-hidden flex items-center" style={{ height: h }}>
-        <div
-          className="absolute inset-0 flex items-center"
-          style={{
-            animation: isReturn ? 'arrow-scroll-left 1.8s linear infinite' : 'arrow-scroll-right 1.8s linear infinite',
-          }}
-        >
-          {Array.from({ length: 28 }).map((_, i) => (
-            <span
-              key={i}
-              className="shrink-0 select-none font-black"
+        {/* Plane icon — centered overlay on the track */}
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div className="relative">
+            <div className="absolute -inset-2 rounded-full blur-md" style={{ backgroundColor: `${color}18` }} />
+            <svg
+              viewBox="0 0 24 24"
+              fill={color}
               style={{
-                color,
-                opacity: 0.2 + (i % 4) * 0.07,
-                fontSize: compact ? 11 : 13,
-                width: compact ? 7 : 9,
-                letterSpacing: -2,
+                width: planeSize,
+                height: planeSize,
+                transform: isReturn ? "scaleX(-1) rotate(-90deg)" : "rotate(90deg)",
+                filter: `drop-shadow(0 0 5px ${color}66)`,
               }}
             >
-              {isReturn ? "‹" : "›"}
-            </span>
-          ))}
+              <path d={planePath} />
+            </svg>
+          </div>
         </div>
-        <div className="absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
       </div>
 
       {/* Destination dot */}
