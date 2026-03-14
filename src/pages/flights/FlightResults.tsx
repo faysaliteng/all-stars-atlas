@@ -2986,38 +2986,25 @@ const FlightResults = () => {
       }
     }
 
-    // 2) N×N cross-product by airline — pair every outbound with every return of the same airline
-    // Deduplicate by schedule to avoid showing identical flight times multiple times
-    const scheduleKey = (f: any) => `${f.airlineCode || ''}::${f.origin || ''}::${f.destination || ''}::${f.departureTime || ''}::${f.arrivalTime || ''}::${f.stops ?? 0}`;
-    
-    // Group unique outbound/return by airline
+    // 2) N×N cross-product by airline — keep all API options (do not collapse schedules)
     const obByAirline: Record<string, any[]> = {};
     const rtByAirline: Record<string, any[]> = {};
-    const obScheduleSeen = new Set<string>();
-    const rtScheduleSeen = new Set<string>();
 
-    // Sort by price so cheapest variant is kept when deduplicating schedules
-    const sortedOutbound = [...outboundFlights].sort((a, b) => (a.price || 0) - (b.price || 0));
-    const sortedReturn = [...returnFlights].sort((a, b) => (a.price || 0) - (b.price || 0));
+    const sortedOutbound = [...outboundFlights].sort((a, b) => flightPayable(a) - flightPayable(b));
+    const sortedReturn = [...returnFlights].sort((a, b) => flightPayable(a) - flightPayable(b));
 
     for (const f of sortedOutbound) {
-      const sk = scheduleKey(f);
-      if (obScheduleSeen.has(sk)) continue;
-      obScheduleSeen.add(sk);
       const airline = f.airlineCode || 'unknown';
       if (!obByAirline[airline]) obByAirline[airline] = [];
       obByAirline[airline].push(f);
     }
     for (const f of sortedReturn) {
-      const sk = scheduleKey(f);
-      if (rtScheduleSeen.has(sk)) continue;
-      rtScheduleSeen.add(sk);
       const airline = f.airlineCode || 'unknown';
       if (!rtByAirline[airline]) rtByAirline[airline] = [];
       rtByAirline[airline].push(f);
     }
 
-    // Cross-product per airline
+    // Cross-product per airline (all available outbound × return options)
     for (const airline of Object.keys(obByAirline)) {
       const obs = obByAirline[airline] || [];
       const rts = rtByAirline[airline] || [];
