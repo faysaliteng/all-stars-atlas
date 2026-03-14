@@ -3007,7 +3007,7 @@ const FlightResults = () => {
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-96 p-4" align="start">
+                <PopoverContent className="w-96 p-4 z-[60]" align="start">
                   <p className="text-xs font-bold text-muted-foreground mb-3">Multi-City Segments</p>
                   <div className="space-y-2.5">
                     {multiCitySegments.map((seg, i) => (
