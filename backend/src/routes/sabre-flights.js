@@ -324,8 +324,8 @@ async function searchFlights(params) {
 
   try {
     const logRoute = isMultiCity
-      ? segments.map(s => `${s.from}→${s.to}`).join(', ')
-      : `${origin} → ${destination}`;
+      ? preparedSegments.map(s => `${s.from}→${s.to}`).join(', ')
+      : `${originCode} → ${destinationCode}`;
     console.log(`[Sabre] Searching ${logRoute}...`);
     let raw = await sabreRequest(config, '/v5/offers/shop', requestBody);
 
@@ -351,7 +351,16 @@ async function searchFlights(params) {
     if (itinCount === 0) {
       console.log(`[Sabre] BFM raw (truncated): ${JSON.stringify(raw).slice(0, 2000)}`);
     }
-    const results = normalizeSabreResponse(raw, { ...params, isMultiCity, segmentCount: isMultiCity ? segments.length : (returnDate ? 2 : 1) });
+    const results = normalizeSabreResponse(raw, {
+      ...params,
+      isMultiCity,
+      segments: isMultiCity ? preparedSegments : undefined,
+      origin: originCode,
+      destination: destinationCode,
+      departDate: departDateValue,
+      returnDate: ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
+      segmentCount: isMultiCity ? preparedSegments.length : (ISO_DATE_RE.test(returnDateValue) ? 2 : 1),
+    });
     console.log(`[Sabre] Normalized ${results.length} flights`);
     return results;
   } catch (err) {
