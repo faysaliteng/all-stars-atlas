@@ -532,6 +532,9 @@ function normalizeSabreResponse(raw, params) {
             rebookingAllowed: true,
             cancellationAllowed: isRefundable,
           })),
+          paxPricing: odOptions.length > 1
+            ? classicPaxPricing.map(pp => ({ ...pp, baseFare: Math.round(pp.baseFare / odOptions.length), taxes: Math.round(pp.taxes / odOptions.length), total: Math.round(pp.total / odOptions.length), priceScope: 'per-direction' }))
+            : classicPaxPricing,
           timeLimit,
           cancellationPolicy,
           dateChangePolicy,
