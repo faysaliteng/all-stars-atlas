@@ -2503,12 +2503,20 @@ function sortFlights(flights: any[], sortBy: string) {
       return da - db;
     });
     case "fastest": return sorted.sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity));
-    case "best": default:
+    case "best": default: {
+      // Best = normalized weighted balance: 40% price, 45% duration, 15% stops (BDFare-style)
+      const minP = Math.min(...sorted.map(f => f.price || Infinity));
+      const maxP = Math.max(...sorted.map(f => f.price || 0));
+      const minD = Math.min(...sorted.map(f => f.durationMinutes || Infinity));
+      const maxD = Math.max(...sorted.map(f => f.durationMinutes || 0));
+      const priceSpread = maxP - minP || 1;
+      const durSpread = maxD - minD || 1;
       return sorted.sort((a, b) => {
-        const scoreA = (a.price || 0) * 0.5 + (a.durationMinutes || 0) * 30 + (a.stops || 0) * 3000;
-        const scoreB = (b.price || 0) * 0.5 + (b.durationMinutes || 0) * 30 + (b.stops || 0) * 3000;
+        const scoreA = ((a.price - minP) / priceSpread) * 0.4 + (((a.durationMinutes || 0) - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
+        const scoreB = ((b.price - minP) / priceSpread) * 0.4 + (((b.durationMinutes || 0) - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
         return scoreA - scoreB;
       });
+    }
   }
 }
 
@@ -2945,9 +2953,19 @@ const FlightResults = () => {
         ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - 
         ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0))
       )[0];
+      const minP = Math.min(...withPayable.map(p => p.payableTotal));
+      const maxP = Math.max(...withPayable.map(p => p.payableTotal));
+      const minD = Math.min(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
+      const maxD = Math.max(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
+      const priceSpread = maxP - minP || 1;
+      const durSpread = maxD - minD || 1;
       const bestPair = [...withPayable].sort((a, b) => {
-        const sa = a.payableTotal * 0.5 + ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) * 30;
-        const sb = b.payableTotal * 0.5 + ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)) * 30;
+        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
+        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
+        const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
+        const sa = ((a.payableTotal - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
+        const sb = ((b.payableTotal - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
         return sa - sb;
       })[0];
       return {
@@ -2961,9 +2979,15 @@ const FlightResults = () => {
     const withPayable = relevantFlights.map((f: any) => ({ ...f, _payable: flightPayable(f) }));
     const cheapestFlight = [...withPayable].sort((a, b) => a._payable - b._payable)[0];
     const fastestFlight = [...withPayable].sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity))[0];
+    const minP = Math.min(...withPayable.map(f => f._payable));
+    const maxP = Math.max(...withPayable.map(f => f._payable));
+    const minD = Math.min(...withPayable.map(f => f.durationMinutes || Infinity));
+    const maxD = Math.max(...withPayable.map(f => f.durationMinutes || 0));
+    const priceSpread = maxP - minP || 1;
+    const durSpread = maxD - minD || 1;
     const bestFlight = [...withPayable].sort((a, b) => {
-      const sa = a._payable * 0.5 + (a.durationMinutes || 0) * 30 + (a.stops || 0) * 3000;
-      const sb = b._payable * 0.5 + (b.durationMinutes || 0) * 30 + (b.stops || 0) * 3000;
+      const sa = ((a._payable - minP) / priceSpread) * 0.4 + (((a.durationMinutes || 0) - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
+      const sb = ((b._payable - minP) / priceSpread) * 0.4 + (((b.durationMinutes || 0) - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
       return sa - sb;
     })[0];
     return {
@@ -3108,7 +3132,27 @@ const FlightResults = () => {
       }
       return true;
     });
-    if (sortBy === "cheapest" || sortBy === "best") filtered.sort((a, b) => a.totalPrice - b.totalPrice);
+    if (sortBy === "cheapest") filtered.sort((a, b) => a.totalPrice - b.totalPrice);
+    else if (sortBy === "best") {
+      // Best = weighted balance of price, duration, and stops (like BDFare)
+      // Normalize price and duration to comparable scales, then weight
+      const minP = Math.min(...filtered.map(p => p.totalPrice || Infinity));
+      const maxP = Math.max(...filtered.map(p => p.totalPrice || 0));
+      const minD = Math.min(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || Infinity));
+      const maxD = Math.max(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || 0));
+      const priceSpread = maxP - minP || 1;
+      const durSpread = maxD - minD || 1;
+      filtered.sort((a, b) => {
+        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
+        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
+        const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
+        // Normalized scores: 40% price, 45% duration, 15% stops
+        const scoreA = ((a.totalPrice - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
+        const scoreB = ((b.totalPrice - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
+        return scoreA - scoreB;
+      });
+    }
     else if (sortBy === "fastest") filtered.sort((a, b) => ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)));
     else if (sortBy === "departure") filtered.sort((a, b) => new Date(a.outbound.departureTime).getTime() - new Date(b.outbound.departureTime).getTime());
     return filtered;
