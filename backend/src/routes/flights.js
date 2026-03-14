@@ -652,10 +652,10 @@ router.get('/search', async (req, res) => {
 
     const [dbFlights, ttiFlights, bdfFlights, flyhubFlights, sabreFlights, galileoFlights, ndcFlights, lccFlights] = await Promise.allSettled([
       isMultiCity ? Promise.resolve([]) : searchDB({ originCode, destCode, dDate, cabClass, page, limit }),
-      isMultiCity ? Promise.resolve([]) : ttiSearch(searchParams).catch(err => {
+      shouldSearchTTI ? ttiSearch(searchParams).catch(err => {
         console.error('TTI search failed (continuing with other providers):', err.message);
         return [];
-      }),
+      }) : Promise.resolve([]),
       isMultiCity ? Promise.resolve([]) : bdfSearch(searchParams).catch(err => {
         console.error('BDFare search failed (continuing with other providers):', err.message);
         return [];
