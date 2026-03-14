@@ -1097,6 +1097,12 @@ img, video {
   }
 }
 
+  .flight-date {
+    color: hsl(225 80% 25%);
+    font-weight: 700;
+    text-shadow: -0.5px -0.5px 0 hsl(0 80% 50%), 0.5px -0.5px 0 hsl(0 80% 50%), -0.5px 0.5px 0 hsl(0 80% 50%), 0.5px 0.5px 0 hsl(0 80% 50%);
+  }
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }

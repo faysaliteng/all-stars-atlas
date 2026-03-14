@@ -1093,7 +1093,7 @@ const RoundTripFlightCard = ({
                               <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
                                 <Plane className={`w-4 h-4 ${label === "Return" ? "rotate-180 text-warning" : "text-accent"}`} />
                                 {label}: {leg.origin} → {leg.destination}
-                                <span className="text-muted-foreground font-normal text-xs">· {formatDate(leg.departureTime)}</span>
+                                <span className="flight-date text-xs">· {formatDate(leg.departureTime)}</span>
                               </h4>
                               {(legs.length > 0 ? legs : [{ origin: leg.origin, destination: leg.destination, departureTime: leg.departureTime, arrivalTime: leg.arrivalTime, duration: leg.duration, flightNumber: leg.flightNumber, airlineCode: leg.airlineCode, aircraft: ac }]).map((segment: any, i: number) => (
                                 <div key={i} className="space-y-3 mb-4">
@@ -1109,7 +1109,7 @@ const RoundTripFlightCard = ({
                                   <div className="flex items-start justify-between pt-2 pb-1">
                                     <div className="text-left shrink-0 max-w-[38%]">
                                       <p className="text-xl font-black">{formatTime(segment.departureTime)}</p>
-                                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(segment.departureTime)}</p>
+                                      <p className="text-xs flight-date mt-0.5">{formatDate(segment.departureTime)}</p>
                                       <p className="text-[11px] text-muted-foreground mt-1">{getAirportName(segment.origin || leg.origin)} ({segment.origin || leg.origin})</p>
                                     </div>
                                     <div className="flex-1 flex flex-col items-center justify-center pt-1 px-4">
@@ -1118,7 +1118,7 @@ const RoundTripFlightCard = ({
                                     </div>
                                     <div className="text-right shrink-0 max-w-[38%]">
                                       <p className="text-xl font-black">{formatTime(segment.arrivalTime)}</p>
-                                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(segment.arrivalTime)}</p>
+                                      <p className="text-xs flight-date mt-0.5">{formatDate(segment.arrivalTime)}</p>
                                       <p className="text-[11px] text-muted-foreground mt-1">{getAirportName(segment.destination || leg.destination)} ({segment.destination || leg.destination})</p>
                                     </div>
                                   </div>
@@ -1794,7 +1794,7 @@ const FlightCard = ({
               {/* Departure */}
               <div className="text-center shrink-0">
                 <p className="text-lg sm:text-2xl font-black tracking-tight">{departTime}</p>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{departDateStr}</p>
+                <p className="text-[10px] sm:text-[11px] flight-date mt-0.5">{departDateStr}</p>
               </div>
 
               {/* Duration bar */}
@@ -1849,7 +1849,7 @@ const FlightCard = ({
                   {arriveTime}
                   {nextDay && <sup className="text-[8px] sm:text-[9px] text-destructive font-bold ml-0.5">+1 days</sup>}
                 </p>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-0.5">{arriveDateStr}</p>
+                <p className="text-[10px] sm:text-[11px] flight-date mt-0.5">{arriveDateStr}</p>
               </div>
             </div>
 
@@ -2024,7 +2024,7 @@ const FlightCard = ({
                               <Plane className="w-4 h-4 text-muted-foreground" />
                               <span className="font-bold">{legDest}</span>
                               <span className="text-muted-foreground font-normal">|</span>
-                              <span className="text-muted-foreground font-normal text-sm">{legDepartDate}</span>
+                              <span className="flight-date text-sm">{legDepartDate}</span>
                               <span className="text-muted-foreground font-normal">|</span>
                               <span className="font-semibold text-sm">{legStopsLabel}</span>
                             </div>
@@ -2052,7 +2052,7 @@ const FlightCard = ({
                               {/* Departure info */}
                               <div className="text-left shrink-0 max-w-[38%]">
                                 <p className="text-xl sm:text-2xl font-black">{formatTime(leg.departureTime)}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{legDepartDate}</p>
+                                <p className="text-xs flight-date mt-0.5">{legDepartDate}</p>
                                 <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
                                   {leg.originTerminal ? `Terminal: ${leg.originTerminal}, ` : ""}{getAirportName(legOrigin)} ({legOrigin})
                                 </p>
@@ -2067,7 +2067,7 @@ const FlightCard = ({
                               {/* Arrival info */}
                               <div className="text-right shrink-0 max-w-[38%]">
                                 <p className="text-xl sm:text-2xl font-black">{formatTime(leg.arrivalTime)}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{formatDate(leg.arrivalTime)}</p>
+                                <p className="text-xs flight-date mt-0.5">{formatDate(leg.arrivalTime)}</p>
                                 <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
                                   {leg.destinationTerminal ? `Terminal: ${leg.destinationTerminal}, ` : ""}{getAirportName(legDest)} ({legDest})
                                 </p>
@@ -3018,7 +3018,7 @@ const FlightResults = () => {
                           <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span className="text-sm font-bold text-foreground">{seg.to}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
+                        <span className="text-xs flight-date shrink-0">
                           {seg.date ? (() => { try { return format(new Date(seg.date), "dd MMM, EEE"); } catch { return seg.date; } })() : "—"}
                         </span>
                       </div>
