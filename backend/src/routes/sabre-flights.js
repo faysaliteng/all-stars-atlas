@@ -269,10 +269,6 @@ async function searchFlights(params) {
           IntelliSellTransaction: {
             RequestType: { Name: '200ITINS' },
           },
-          BrandedOneWayItineraries: {
-            Enabled: true,
-            ParticipantLevel: 'AllPartners',
-          },
         },
       TravelerInfoSummary: {
         SeatsRequested: [parseInt(adults) + parseInt(children)],
