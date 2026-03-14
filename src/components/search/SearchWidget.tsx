@@ -786,7 +786,7 @@ const SearchWidget = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
             <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
-              <AirportInput label="From" value={fromAirport} onChange={setFromAirport} placeholder="Type city or airport..." airports={scopedFromAirports} />
+              <AirportInput label="From" value={fromAirport} onChange={setFromAirport} placeholder="Type city or airport..." airports={scopedFromAirports} icon={<PlaneTakeoff className="w-5 h-5" />} />
             </div>
 
             <div className="flex md:hidden items-center justify-center py-1">
