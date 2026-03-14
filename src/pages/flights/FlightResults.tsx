@@ -625,25 +625,43 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
     if (flights.length === 0) return [];
     const primary = flights[0];
     const fd = primary.fareDetails || [];
+    const isSabreSource = String(primary.source || '').toLowerCase().includes('sabre') || !!primary._sabreSeqNumber || !!primary._sabreSource;
     
     const buildOption = (f: any, i: number, isSingle: boolean) => {
-      const label = f.brandName 
-        ? f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-        : isSingle ? "Available Fare" : (f.label || `Fare Option ${i + 1}`);
+      // Smart label: use brandName → fareBasis → generic
+      let label = '';
+      if (f.brandName) {
+        label = f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      } else if (f.fareBasis && !isSingle) {
+        label = `Fare ${f.fareBasis}`;
+      } else {
+        label = isSingle ? "Available Fare" : (f.label || `Fare Option ${i + 1}`);
+      }
+
+      // Determine meal/seat status — 'available' means "can be added as SSR/ancillary"
+      const mealStatus = f.mealIncluded === true ? 'included' 
+        : f.mealIncluded === 'available' || isSabreSource ? 'available' 
+        : f.mealIncluded === false ? 'not_included' : null;
+      const seatStatus = f.seatSelection === true ? 'included'
+        : f.seatSelection === 'available' || isSabreSource ? 'available'
+        : f.seatSelection === false ? 'not_available' : null;
+
       return {
         id: `option-${i}`,
         label,
+        fareBasis: f.fareBasis || '',
         bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
         handBaggage: f.handBaggage || primary.handBaggage || "7KG",
         checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
-        meal: f.mealIncluded === true ? true : f.mealIncluded === false ? false : null,
-        seatSelection: f.seatSelection === true ? true : null,
-        rebooking: typeof f.rebookingAllowed === 'boolean' ? f.rebookingAllowed : null,
+        meal: mealStatus,
+        seatSelection: seatStatus,
+        rebooking: typeof f.rebookingAllowed === 'boolean' ? f.rebookingAllowed : (isSabreSource ? true : null),
         cancellation: typeof f.cancellationAllowed === 'boolean' ? f.cancellationAllowed : (typeof primary.refundable === 'boolean' ? primary.refundable : null),
         miles: f.milesEarning || primary.milesEarning || null,
         grossFare: f.price || f.amount || f.total || primary.price || 0,
         flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
         isBestValue: i === 0,
+        isSabre: isSabreSource,
       };
     };
 
@@ -659,9 +677,9 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
       bookingClass: primary.bookingClass || primary.cabinClass?.charAt(0) || "",
       handBaggage: primary.handBaggage || "7KG",
       baggage: primary.baggage,
-      mealIncluded: primary.mealIncluded ?? null,
-      seatSelection: primary.seatSelection ?? null,
-      rebookingAllowed: typeof primary.rebookingAllowed === 'boolean' ? primary.rebookingAllowed : null,
+      mealIncluded: primary.mealIncluded ?? (isSabreSource ? 'available' : null),
+      seatSelection: primary.seatSelection ?? (isSabreSource ? 'available' : null),
+      rebookingAllowed: typeof primary.rebookingAllowed === 'boolean' ? primary.rebookingAllowed : (isSabreSource ? true : null),
       cancellationAllowed: typeof primary.refundable === 'boolean' ? primary.refundable : null,
     }, 0, true)];
   }, [flights]);
@@ -724,8 +742,11 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
                     opt.isBestValue ? "border-accent/40 bg-card shadow-sm" : "border-border bg-card"
                   }`}>
                   {/* Header */}
-                  <div className="h-12 flex items-center justify-center px-4">
+                  <div className="h-12 flex flex-col items-center justify-center px-4">
                     <p className="text-sm font-bold text-foreground">{opt.label}</p>
+                    {opt.fareBasis && opt.label !== `Fare ${opt.fareBasis}` && (
+                      <p className="text-[9px] text-muted-foreground font-mono">{opt.fareBasis}</p>
+                    )}
                   </div>
 
                   {/* Values */}
@@ -737,14 +758,22 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
                       if (ft.key === "handBaggage" || ft.key === "checkedBaggage") {
                         display = val ? <span className="text-xs font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "meal") {
-                        display = val === true ? <span className="text-xs font-medium text-foreground">Included</span> : val === false ? <span className="text-xs text-muted-foreground">Not included</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
+                        display = val === 'included' 
+                          ? <span className="text-xs font-medium text-accent">Included</span>
+                          : val === 'available'
+                            ? <span className="text-xs font-medium text-accent">Available to add</span>
+                            : val === 'not_included' 
+                              ? <span className="text-xs text-muted-foreground">Not included</span> 
+                              : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "bookingClass") {
                         display = <span className="text-xs font-bold text-foreground">{String(val || "—")}</span>;
                       } else if (ft.key === "seatSelection") {
-                        display = val === true
-                          ? <span className="text-xs font-medium text-accent">Available</span>
-                          : val === false ? <X className="w-4 h-4 text-destructive/60 mx-auto" />
-                          : <span className="text-xs text-muted-foreground italic">Not provided</span>;
+                        display = val === 'included'
+                          ? <span className="text-xs font-medium text-accent">Included</span>
+                          : val === 'available'
+                            ? <span className="text-xs font-medium text-accent">Available to add</span>
+                            : val === 'not_available' ? <X className="w-4 h-4 text-destructive/60 mx-auto" />
+                            : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "rebooking" || ft.key === "cancellation") {
                         display = val === true
                           ? <span className="text-xs font-medium text-orange-500">Penalties Apply</span>
