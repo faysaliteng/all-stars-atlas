@@ -1354,14 +1354,12 @@ const RoundTripFlightCard = ({
             const retBaggage = returnFlight.baggage || null;
 
             // Build fare rows from real API per-pax pricing
-            const obPrice = outbound.price ?? 0;
-            const obTax = outbound.taxes ?? 0;
-            const obBase = Math.max(0, Math.round(obPrice - obTax));
-            const retPrice = returnFlight.price ?? 0;
-            const retTax = returnFlight.taxes ?? 0;
-            const retBase = Math.max(0, Math.round(retPrice - retTax));
+            const outboundFare = getApiFareTotals(outbound);
+            const returnFare = getApiFareTotals(returnFlight);
+            const obBase = Math.max(0, Math.round(outboundFare.grossPrice - outboundFare.taxes));
+            const retBase = Math.max(0, Math.round(returnFare.grossPrice - returnFare.taxes));
             const combinedBase = obBase + retBase;
-            const combinedTax = obTax + retTax;
+            const combinedTax = outboundFare.taxes + returnFare.taxes;
 
             const DISCOUNT_PCT = outbound.fareRules?.discount ?? 6.30;
             const AIT_VAT_PCT = outbound.fareRules?.aitVat ?? 0.3;
