@@ -2024,7 +2024,7 @@ const FlightCard = ({
                               <Plane className="w-4 h-4 text-muted-foreground" />
                               <span className="font-bold">{legDest}</span>
                               <span className="text-muted-foreground font-normal">|</span>
-                              <span className="text-muted-foreground font-normal text-sm">{legDepartDate}</span>
+                              <span className="flight-date text-sm">{legDepartDate}</span>
                               <span className="text-muted-foreground font-normal">|</span>
                               <span className="font-semibold text-sm">{legStopsLabel}</span>
                             </div>
