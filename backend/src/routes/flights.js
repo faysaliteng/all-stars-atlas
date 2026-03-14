@@ -885,19 +885,124 @@ router.get('/search', async (req, res) => {
       }
     }
 
-    // Deduplicate flights from multiple providers
-    // Key includes ALL leg flight numbers + times to preserve different round-trip/connection combos
-    const seen = new Set();
-    flights = flights.filter(f => {
-      // Build a comprehensive key from all legs
+    // Deduplicate by itinerary key, but PRESERVE fare variants and prefer richer data (Sabre booking class/seats)
+    const itineraryMap = new Map();
+
+    const toFareOption = (flight, detail = null) => {
+      const d = detail || {};
+      return {
+        fareBasis: d.fareBasis || flight.fareBasis || '',
+        bookingClass: d.bookingClass || flight.bookingClass || '',
+        cabinClass: d.cabinClass || flight.cabinClass || '',
+        availableSeats: d.availableSeats ?? flight.availableSeats ?? null,
+        price: Number(d.price ?? flight.price ?? 0),
+        baseFare: Number(d.baseFare ?? flight.baseFare ?? 0),
+        taxes: Number(d.taxes ?? flight.taxes ?? 0),
+        currency: d.currency || flight.currency || 'BDT',
+        baggage: d.baggage ?? flight.baggage ?? null,
+        handBaggage: d.handBaggage ?? flight.handBaggage ?? null,
+        refundable: d.refundable ?? flight.refundable ?? false,
+        brandName: d.brandName || '',
+        brandCode: d.brandCode || '',
+        mealIncluded: d.mealIncluded ?? false,
+        seatSelection: d.seatSelection ?? false,
+        rebookingAllowed: d.rebookingAllowed ?? true,
+        cancellationAllowed: d.cancellationAllowed ?? (d.refundable ?? flight.refundable ?? false),
+      };
+    };
+
+    const addFareOptions = (target, flight) => {
+      const sourceOptions = Array.isArray(flight.fareDetails) && flight.fareDetails.length > 0
+        ? flight.fareDetails
+        : [null];
+
+      if (!Array.isArray(target.fareDetails)) target.fareDetails = [];
+      const existingSigs = new Set(target.fareDetails.map((d) => `${d.price}|${d.bookingClass}|${d.fareBasis}|${d.brandCode}`));
+
+      for (const opt of sourceOptions) {
+        const normalized = toFareOption(flight, opt);
+        const sig = `${normalized.price}|${normalized.bookingClass}|${normalized.fareBasis}|${normalized.brandCode}`;
+        if (!existingSigs.has(sig)) {
+          target.fareDetails.push(normalized);
+          existingSigs.add(sig);
+        }
+      }
+
+      target.fareDetails.sort((a, b) => (a.price || 0) - (b.price || 0));
+    };
+
+    const qualityScore = (f) => {
+      const src = String(f.source || '').toLowerCase();
+      let score = 0;
+      if (src.includes('sabre')) score += 5;
+      if (f.bookingClass || (f.fareDetails || []).some((d) => d?.bookingClass)) score += 3;
+      if (f.availableSeats !== null && f.availableSeats !== undefined) score += 2;
+      if ((f.fareDetails || []).some((d) => d?.availableSeats !== null && d?.availableSeats !== undefined)) score += 2;
+      score += Math.min((f.fareDetails || []).length || 0, 3);
+      return score;
+    };
+
+    for (const f of flights) {
       const legsKey = (f.legs || []).map(l => `${l.flightNumber || ''}@${l.departureTime || ''}`).join('|');
       const stopKey = (f.stopCodes || []).join(',');
-      const key = `${f.flightNumber}-${f.departureTime}-${f.arrivalTime || ''}-${f.destination}-${f.stops ?? 0}-${stopKey}-${f.direction || ''}-${legsKey}`;
-      if (key === '---------' || !f.flightNumber) return true; // keep unkeyed
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+      const baseKey = `${f.flightNumber}-${f.departureTime}-${f.arrivalTime || ''}-${f.destination}-${f.stops ?? 0}-${stopKey}-${f.direction || ''}-${legsKey}`;
+      const key = (baseKey === '---------' || !f.flightNumber)
+        ? `unkeyed-${f.id || `${f.source || 'src'}-${Math.random().toString(36).slice(2, 10)}`}`
+        : baseKey;
+
+      if (!itineraryMap.has(key)) {
+        const clone = { ...f, fareDetails: [] };
+        addFareOptions(clone, f);
+        const best = clone.fareDetails[0];
+        if (best) {
+          clone.bookingClass = best.bookingClass || clone.bookingClass || '';
+          clone.availableSeats = best.availableSeats ?? clone.availableSeats ?? null;
+          clone.cabinClass = clone.cabinClass || best.cabinClass || '';
+          clone.price = best.price ?? clone.price;
+          clone.baseFare = best.baseFare ?? clone.baseFare;
+          clone.taxes = best.taxes ?? clone.taxes;
+          clone.currency = best.currency || clone.currency;
+        }
+        itineraryMap.set(key, clone);
+        continue;
+      }
+
+      const existing = itineraryMap.get(key);
+      addFareOptions(existing, f);
+
+      const existingBestPrice = existing.fareDetails?.[0]?.price ?? existing.price ?? Infinity;
+      const incomingBestPrice = (() => {
+        if (Array.isArray(f.fareDetails) && f.fareDetails.length > 0) {
+          return Math.min(...f.fareDetails.map((d) => Number(d?.price ?? Infinity)));
+        }
+        return Number(f.price ?? Infinity);
+      })();
+
+      const shouldPreferIncoming = qualityScore(f) > qualityScore(existing)
+        || (qualityScore(f) === qualityScore(existing) && incomingBestPrice < existingBestPrice);
+
+      if (shouldPreferIncoming) {
+        const mergedFareDetails = existing.fareDetails;
+        Object.assign(existing, f);
+        existing.fareDetails = mergedFareDetails;
+      }
+
+      const best = existing.fareDetails?.[0];
+      if (best) {
+        existing.bookingClass = best.bookingClass || existing.bookingClass || '';
+        existing.availableSeats = best.availableSeats ?? existing.availableSeats ?? null;
+        existing.cabinClass = existing.cabinClass || best.cabinClass || '';
+        existing.price = best.price ?? existing.price;
+        existing.baseFare = best.baseFare ?? existing.baseFare;
+        existing.taxes = best.taxes ?? existing.taxes;
+        existing.currency = best.currency || existing.currency;
+        if (best.baggage !== null && best.baggage !== undefined) existing.baggage = best.baggage;
+        if (best.handBaggage !== null && best.handBaggage !== undefined) existing.handBaggage = best.handBaggage;
+        existing.refundable = best.refundable ?? existing.refundable;
+      }
+    }
+
+    flights = Array.from(itineraryMap.values());
 
     // ── Apply per-airline fare rules from admin settings ──
     try {
