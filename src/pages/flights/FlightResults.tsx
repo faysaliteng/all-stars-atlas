@@ -21,7 +21,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import AnimatedFlightArc from "@/components/flights/AnimatedFlightArc";
-import SearchWidget from "@/components/search/SearchWidget";
 import { useFlightSearch } from "@/hooks/useApiData";
 import { useCmsPageContent } from "@/hooks/useCmsContent";
 import DataLoader from "@/components/DataLoader";
@@ -2337,6 +2336,23 @@ const FlightResults = () => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Inline editing state
+  const [editFrom, setEditFrom] = useState("");
+  const [editTo, setEditTo] = useState("");
+  const [editDepart, setEditDepart] = useState<Date | undefined>();
+  const [editReturn, setEditReturn] = useState<Date | undefined>();
+  const [editAdults, setEditAdults] = useState(1);
+  const [editChildren, setEditChildren] = useState(0);
+  const [editInfants, setEditInfants] = useState(0);
+  const [editCabin, setEditCabin] = useState("");
+  const [editScope, setEditScope] = useState<"domestic" | "international">("international");
+  const [editFareType, setEditFareType] = useState("regular");
+  const [editPreferredCarrier, setEditPreferredCarrier] = useState("any");
+  const [showModifyPanel, setShowModifyPanel] = useState(false);
+  const [showRouteEdit, setShowRouteEdit] = useState(false);
+  const [showDateEdit, setShowDateEdit] = useState(false);
+  const [showPaxEdit, setShowPaxEdit] = useState(false);
+  const [airportSearch, setAirportSearch] = useState("");
+  const [editingField, setEditingField] = useState<"from" | "to" | null>(null);
 
   // Multi-city state
   const tripType = searchParams.get("tripType") || "";
@@ -2364,19 +2380,54 @@ const FlightResults = () => {
   const hasRequiredParams = isMultiCity ? multiCitySegments.length >= 2 : (!!fromCode && !!toCode && !!departDate);
   const isRoundTrip = !!returnDate && !isMultiCity;
 
-  // SearchWidget initial values from URL
-  const searchWidgetInitial = useMemo(() => ({
-    from: fromCode,
-    to: toCode,
-    depart: departDate,
-    returnDate: returnDate || undefined,
-    adults: parseInt(adults),
-    children: parseInt(children),
-    infants: parseInt(infants),
-    cabin: cabinClass,
-    tripType: isMultiCity ? "multicity" : isRoundTrip ? "roundtrip" : "oneway",
-    segments: multiCitySegments,
-  }), [fromCode, toCode, departDate, returnDate, adults, children, infants, cabinClass, isMultiCity, isRoundTrip, multiCitySegments]);
+  // Sync edit state from URL
+  useEffect(() => {
+    setEditFrom(fromCode); setEditTo(toCode);
+    setEditDepart(departDate ? new Date(departDate) : undefined);
+    setEditReturn(returnDate ? new Date(returnDate) : undefined);
+    setEditAdults(parseInt(adults)); setEditChildren(parseInt(children)); setEditInfants(parseInt(infants));
+    setEditCabin(cabinClass);
+    const fromAp = AIRPORTS.find(a => a.code === fromCode);
+    const toAp = AIRPORTS.find(a => a.code === toCode);
+    setEditScope(fromAp?.country === "BD" && toAp?.country === "BD" ? "domestic" : "international");
+  }, [fromCode, toCode, departDate, returnDate, adults, children, infants, cabinClass]);
+
+  const applySearchEdit = useCallback(() => {
+    const p = new URLSearchParams();
+    if (editFrom) p.set("from", editFrom);
+    if (editTo) p.set("to", editTo);
+    if (editDepart) p.set("depart", format(editDepart, "yyyy-MM-dd"));
+    if (editReturn) p.set("return", format(editReturn, "yyyy-MM-dd"));
+    p.set("adults", String(editAdults));
+    if (editChildren > 0) p.set("children", String(editChildren));
+    if (editInfants > 0) p.set("infants", String(editInfants));
+    if (editCabin) p.set("cabin", editCabin);
+    if (editPreferredCarrier && editPreferredCarrier !== "any") p.set("carrier", editPreferredCarrier);
+    if (isMultiCity) p.set("tripType", "multicity");
+    navigate(`/flights?${p.toString()}`);
+    setShowRouteEdit(false); setShowDateEdit(false); setShowPaxEdit(false); setShowModifyPanel(false);
+  }, [editFrom, editTo, editDepart, editReturn, editAdults, editChildren, editInfants, editCabin, editPreferredCarrier, isMultiCity, navigate]);
+
+  const shiftDate = useCallback((days: number) => {
+    const p = new URLSearchParams(searchParams.toString());
+    if (departDate) {
+      const d = new Date(departDate);
+      d.setDate(d.getDate() + days);
+      if (d >= new Date(new Date().toDateString())) p.set("depart", format(d, "yyyy-MM-dd"));
+    }
+    if (returnDate && days > 0) {
+      const r = new Date(returnDate);
+      r.setDate(r.getDate() + days);
+      p.set("return", format(r, "yyyy-MM-dd"));
+    }
+    navigate(`/flights?${p.toString()}`);
+  }, [departDate, returnDate, searchParams, navigate]);
+
+  const filteredAirports = useMemo(() => {
+    if (!airportSearch) return AIRPORTS.slice(0, 10);
+    const q = airportSearch.toLowerCase();
+    return AIRPORTS.filter(a => a.code.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [airportSearch]);
 
 
   const carrierCode = searchParams.get("carrier") || "";
@@ -2792,10 +2843,262 @@ const FlightResults = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* ─── Full Search Widget as Modification Bar ─── */}
-      <div className="bg-card border-b border-border pt-20 sm:pt-24 lg:pt-28 pb-0">
-        <div className="container mx-auto px-3 sm:px-4 py-3">
-          <SearchWidget initialFlightValues={searchWidgetInitial} compact />
+      {/* ─── Compact Pill Modification Bar with Full Features ─── */}
+      <div className="bg-card border-b border-border pt-20 sm:pt-28 lg:pt-36 pb-0">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex flex-wrap items-center gap-2.5 py-3">
+            {/* Trip Type pill */}
+            <div className="bg-muted border border-border rounded-lg px-4 py-2 flex items-center gap-2 shrink-0">
+              <Plane className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">
+                {isMultiCity ? "Multi-City" : isRoundTrip ? "Return" : "One Way"}
+              </span>
+            </div>
+
+            {/* Route pill */}
+            {!isMultiCity && (
+              <Popover open={showRouteEdit} onOpenChange={setShowRouteEdit}>
+                <PopoverTrigger asChild>
+                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
+                    <span className="text-sm font-bold text-foreground">{fromCode || "—"}</span>
+                    <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-sm font-bold text-foreground">{toCode || "—"}</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-0.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-3" align="start">
+                  <p className="text-xs font-bold text-muted-foreground mb-2">Edit Route</p>
+                  {/* Scope toggle */}
+                  <div className="flex gap-1.5 mb-3">
+                    {(["domestic", "international"] as const).map(s => (
+                      <button key={s} onClick={() => setEditScope(s)}
+                        className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${editScope === s ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:border-primary/40"}`}>
+                        {s === "domestic" ? "Domestic" : "International"}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium">From</label>
+                      <input className="w-full h-9 px-3 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={editingField === "from" ? airportSearch : editFrom}
+                        onFocus={() => { setEditingField("from"); setAirportSearch(editFrom); }}
+                        onChange={(e) => setAirportSearch(e.target.value)} placeholder="Airport code or city" />
+                      {editingField === "from" && (
+                        <div className="max-h-32 overflow-y-auto border border-border rounded-md mt-1">
+                          {filteredAirports.map(a => (
+                            <button key={a.code} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 flex justify-between"
+                              onClick={() => { setEditFrom(a.code); setEditingField(null); setAirportSearch(""); }}>
+                              <span className="font-bold">{a.code}</span>
+                              <span className="text-muted-foreground truncate ml-2">{a.city}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium">To</label>
+                      <input className="w-full h-9 px-3 text-sm border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={editingField === "to" ? airportSearch : editTo}
+                        onFocus={() => { setEditingField("to"); setAirportSearch(editTo); }}
+                        onChange={(e) => setAirportSearch(e.target.value)} placeholder="Airport code or city" />
+                      {editingField === "to" && (
+                        <div className="max-h-32 overflow-y-auto border border-border rounded-md mt-1">
+                          {filteredAirports.map(a => (
+                            <button key={a.code} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 flex justify-between"
+                              onClick={() => { setEditTo(a.code); setEditingField(null); setAirportSearch(""); }}>
+                              <span className="font-bold">{a.code}</span>
+                              <span className="text-muted-foreground truncate ml-2">{a.city}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <Button size="sm" className="w-full bg-accent text-accent-foreground" onClick={applySearchEdit}>
+                      <Search className="w-3.5 h-3.5 mr-1.5" /> Search
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+            {isMultiCity && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
+                    <span className="text-sm font-bold text-foreground">
+                      {multiCitySegments.map(s => s.from).join(" → ")} → {multiCitySegments[multiCitySegments.length - 1]?.to || "—"}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-96 p-4" align="start">
+                  <p className="text-xs font-bold text-muted-foreground mb-3">Multi-City Segments</p>
+                  <div className="space-y-2.5">
+                    {multiCitySegments.map((seg, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2 border border-border/50">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">Trip {i + 1}</span>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="text-sm font-bold text-foreground">{seg.from}</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-sm font-bold text-foreground">{seg.to}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {seg.date ? (() => { try { return format(new Date(seg.date), "dd MMM, EEE"); } catch { return seg.date; } })() : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button size="sm" className="w-full mt-3 bg-accent text-accent-foreground" onClick={() => navigate("/")}>
+                    <Search className="w-3.5 h-3.5 mr-1.5" /> New Multi-City Search
+                  </Button>
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {/* Prev Day */}
+            {!isMultiCity && (
+              <button onClick={() => shiftDate(-1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Previous Day">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Date pill */}
+            <Popover open={showDateEdit} onOpenChange={setShowDateEdit}>
+              <PopoverTrigger asChild>
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
+                  <CalendarDays className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">
+                    {isMultiCity
+                      ? multiCitySegments.map(s => s.date).filter(Boolean).join(", ")
+                      : departDate ? (() => { try { return format(new Date(departDate), "dd MMM, EEE"); } catch { return departDate; } })() : "—"}
+                    {isRoundTrip && returnDate && (() => { try { return ` — ${format(new Date(returnDate), "dd MMM, EEE")}`; } catch { return ""; } })()}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3" align="start">
+                <p className="text-xs font-bold text-muted-foreground mb-2">{isRoundTrip ? "Departure Date" : "Select Date"}</p>
+                <Calendar mode="single" selected={editDepart} onSelect={(d) => {
+                  setEditDepart(d || undefined);
+                  if (!isRoundTrip && d) {
+                    setShowDateEdit(false);
+                    setTimeout(() => {
+                      const p = new URLSearchParams(searchParams);
+                      p.set("depart", format(d, "yyyy-MM-dd"));
+                      navigate(`/flights?${p.toString()}`);
+                    }, 100);
+                  }
+                }} disabled={(date) => date < new Date(new Date().toDateString())} />
+                {isRoundTrip && (
+                  <>
+                    <p className="text-xs font-bold text-muted-foreground mb-2 mt-3">Return Date</p>
+                    <Calendar mode="single" selected={editReturn} onSelect={(d) => {
+                      setEditReturn(d || undefined);
+                      if (d && editDepart) {
+                        setShowDateEdit(false);
+                        setTimeout(() => {
+                          const p = new URLSearchParams(searchParams);
+                          p.set("depart", format(editDepart, "yyyy-MM-dd"));
+                          p.set("return", format(d, "yyyy-MM-dd"));
+                          navigate(`/flights?${p.toString()}`);
+                        }, 100);
+                      }
+                    }} disabled={(date) => date < (editDepart || new Date())} />
+                  </>
+                )}
+              </PopoverContent>
+            </Popover>
+
+            {/* Next Day */}
+            {!isMultiCity && (
+              <button onClick={() => shiftDate(1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Next Day">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Pax & Cabin pill */}
+            <Popover open={showPaxEdit} onOpenChange={setShowPaxEdit}>
+              <PopoverTrigger asChild>
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
+                  <Users className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">
+                    {totalPax} Pax{cabinClass ? `, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-3" align="start">
+                <p className="text-xs font-bold text-muted-foreground mb-3">Passengers, Cabin & Preferences</p>
+                <div className="space-y-3">
+                  {[
+                    { label: "Adults (12+)", value: editAdults, set: setEditAdults, min: 1, max: 9 },
+                    { label: "Children (2-11)", value: editChildren, set: setEditChildren, min: 0, max: 6 },
+                    { label: "Infants (0-2)", value: editInfants, set: setEditInfants, min: 0, max: editAdults },
+                  ].map(p => (
+                    <div key={p.label} className="flex items-center justify-between">
+                      <span className="text-xs font-medium">{p.label}</span>
+                      <div className="flex items-center gap-2">
+                        <button className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm hover:bg-muted"
+                          onClick={() => p.set(Math.max(p.min, p.value - 1))}>−</button>
+                        <span className="text-sm font-bold w-5 text-center">{p.value}</span>
+                        <button className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm hover:bg-muted"
+                          onClick={() => p.set(Math.min(p.max, p.value + 1))}>+</button>
+                      </div>
+                    </div>
+                  ))}
+                  <Separator />
+                  <div>
+                    <label className="text-[10px] text-muted-foreground font-medium">Cabin Class</label>
+                    <select className="w-full h-9 px-2 text-sm border border-border rounded-md bg-background mt-1"
+                      value={editCabin} onChange={(e) => setEditCabin(e.target.value)}>
+                      <option value="economy">Economy</option>
+                      <option value="premium-economy">Premium Economy</option>
+                      <option value="business">Business</option>
+                      <option value="first">First</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground font-medium">Preferred Airline</label>
+                    <select className="w-full h-9 px-2 text-sm border border-border rounded-md bg-background mt-1"
+                      value={editPreferredCarrier} onChange={(e) => setEditPreferredCarrier(e.target.value)}>
+                      <option value="any">Any Airline</option>
+                      <option value="BG">Biman Bangladesh</option>
+                      <option value="2A">Air Astra</option>
+                      <option value="BS">US-Bangla</option>
+                      <option value="VQ">Novoair</option>
+                      <option value="EK">Emirates</option>
+                      <option value="QR">Qatar Airways</option>
+                      <option value="SQ">Singapore Airlines</option>
+                      <option value="TK">Turkish Airlines</option>
+                      <option value="SV">Saudia</option>
+                    </select>
+                  </div>
+                  <Separator />
+                  <div>
+                    <label className="text-[10px] text-muted-foreground font-medium mb-1.5 block">Fare Type</label>
+                    <div className="flex gap-2">
+                      {["Regular", "Student", "Umrah"].map(f => (
+                        <button key={f} onClick={() => setEditFareType(f.toLowerCase())}
+                          className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${editFareType === f.toLowerCase() ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:border-primary/40"}`}>
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Button size="sm" className="w-full bg-accent text-accent-foreground" onClick={applySearchEdit}>
+                    <Search className="w-3.5 h-3.5 mr-1.5" /> Search
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Modify button */}
+            <div className="ml-auto shrink-0">
+              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-6 h-9" onClick={applySearchEdit}>
+                <Search className="w-4 h-4 mr-1.5" /> Modify
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
