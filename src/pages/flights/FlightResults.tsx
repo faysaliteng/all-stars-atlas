@@ -2795,7 +2795,7 @@ const FlightResults = () => {
       {/* ─── Full Search Widget as Modification Bar ─── */}
       <div className="bg-card border-b border-border pt-20 sm:pt-24 lg:pt-28 pb-0">
         <div className="container mx-auto px-3 sm:px-4 py-3">
-          <SearchWidget initialFlightValues={searchWidgetInitial} />
+          <SearchWidget initialFlightValues={searchWidgetInitial} compact />
         </div>
       </div>
 
