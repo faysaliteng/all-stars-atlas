@@ -2376,27 +2376,11 @@ const FlightCard = ({
                     const DISCOUNT_PCT = flight.fareRules?.discount ?? 6.30;
                     const AIT_VAT_PCT = flight.fareRules?.aitVat ?? 0.3;
 
-                    const fareRows: { paxType: string; baseFare: number; tax: number; other: number; discount: number; aitVat: number; count: number; amount: number }[] = [];
-
-                    // Construct fare rows with discount and AIT VAT
-                    if (paxAdults > 0) {
-                      const disc = Math.round(baseFare * DISCOUNT_PCT / 100);
-                      const aitVat = Math.round((baseFare - disc) * AIT_VAT_PCT / 100);
-                      fareRows.push({ paxType: "Adult", baseFare, tax: taxes, other: 0, discount: disc, aitVat, count: paxAdults, amount: (baseFare - disc + taxes + aitVat) * paxAdults });
-                    }
-                    if (paxChildren > 0) {
-                      const childBase = Math.round(baseFare * 0.75);
-                      const disc = Math.round(childBase * DISCOUNT_PCT / 100);
-                      const aitVat = Math.round((childBase - disc) * AIT_VAT_PCT / 100);
-                      fareRows.push({ paxType: "Child", baseFare: childBase, tax: taxes, other: 0, discount: disc, aitVat, count: paxChildren, amount: (childBase - disc + taxes + aitVat) * paxChildren });
-                    }
-                    if (paxInfants > 0) {
-                      const infantBase = Math.round(baseFare * 0.1);
-                      const infantTax = Math.round(taxes * 0.5);
-                      const disc = Math.round(infantBase * DISCOUNT_PCT / 100);
-                      const aitVat = Math.round((infantBase - disc) * AIT_VAT_PCT / 100);
-                      fareRows.push({ paxType: "Infant", baseFare: infantBase, tax: infantTax, other: 0, discount: disc, aitVat, count: paxInfants, amount: (infantBase - disc + infantTax + aitVat) * paxInfants });
-                    }
+                    const fareRows = buildFareRows(
+                      flight.paxPricing, baseFare, taxes,
+                      paxAdults, paxChildren, paxInfants,
+                      DISCOUNT_PCT, AIT_VAT_PCT
+                    );
                     const totalPayable = fareRows.reduce((s, r) => s + r.amount, 0);
 
                     return (
