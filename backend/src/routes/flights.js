@@ -1055,6 +1055,11 @@ router.get('/search', async (req, res) => {
     }
 
     // Apply client-side filters
+    const preferredCode = carrier || preferredAirline || '';
+    if (preferredCode) {
+      flights = flights.filter(f => f.airlineCode === preferredCode || f.airline?.toLowerCase().includes(preferredCode.toLowerCase()));
+      console.log(`[Search] Preferred airline filter: ${preferredCode} → ${flights.length} results`);
+    }
     if (priceMin) flights = flights.filter(f => f.price >= parseFloat(priceMin));
     if (priceMax) flights = flights.filter(f => f.price <= parseFloat(priceMax));
 
