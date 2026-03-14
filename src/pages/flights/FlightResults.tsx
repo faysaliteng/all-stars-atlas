@@ -935,13 +935,9 @@ const RoundTripFlightCard = ({
   const totalPrice = flightPayable(outbound) + flightPayable(returnFlight);
   const refundable = outbound.refundable ?? false;
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
-  const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
-
   const roundTripFarePanelFlights = useMemo(() => {
-    // fareDetails from the outbound flight may contain FULL itinerary prices (from BFM)
-    // Use totalRoundTripPrice when available to avoid double-counting
-    const hasTotalPrice = !!outbound.totalRoundTripPrice;
-    const totalGross = outbound.totalRoundTripPrice || ((outbound.price || 0) + (returnFlight.price || 0));
+    // Always sum per-direction prices (BDFare-style cross-product pairing)
+    const totalGross = (outbound.price || 0) + (returnFlight.price || 0);
     const totalTaxes = (outbound.taxes || 0) + (returnFlight.taxes || 0);
 
     const outboundFareDetails = Array.isArray(outbound?.fareDetails) && outbound.fareDetails.length > 0
@@ -961,17 +957,9 @@ const RoundTripFlightCard = ({
       const farePrice = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
       const fareTaxes = fare?.taxes ?? outbound.taxes ?? 0;
 
-      // Prefer explicit backend metadata; keep a heuristic fallback for older payloads
-      const isExplicitFullTrip = fare?.priceScope === 'itinerary' || fare?.isTotalPrice === true || fare?._isRoundTripTotal === true;
-      const isHeuristicFullTrip = hasTotalPrice
-        && farePrice > 0
-        && Math.abs(farePrice - (outbound.totalRoundTripPrice || 0)) <= Math.abs(farePrice - (outbound.price || 0));
-      const isFareFullTrip = isExplicitFullTrip || isHeuristicFullTrip;
-
-      const combinedPrice = isFareFullTrip ? farePrice : (farePrice + (returnFlight?.price ?? 0));
-      const combinedTaxes = isFareFullTrip
-        ? (fareTaxes > 0 ? fareTaxes : totalTaxes)
-        : (fareTaxes + (returnFlight?.taxes ?? 0));
+      // For cross-product pairs, always sum outbound fare + return flight price
+      const combinedPrice = farePrice + (returnFlight?.price ?? 0);
+      const combinedTaxes = fareTaxes + (returnFlight?.taxes ?? 0);
 
       return {
         ...fare,
