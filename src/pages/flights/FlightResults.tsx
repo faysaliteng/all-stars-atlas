@@ -1022,7 +1022,7 @@ const RoundTripFlightCard = ({
                           const legLogo = getAirlineLogo(leg.airlineCode);
                           const cabin = leg.cabinClass || "";
                           const bkClass = leg.bookingClass || leg.fareDetails?.[0]?.bookingClass || "";
-                          const cabDisp = bkClass ? `${cabin} - ${bkClass}` : cabin;
+                          const cabDisp = cabin && bkClass ? `${cabin} - ${bkClass}` : cabin || bkClass || "";
                           const seats = leg.availableSeats ?? null;
                           const ac = leg.aircraft || legs[0]?.aircraft || "";
 
