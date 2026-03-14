@@ -15,7 +15,7 @@ import {
   CircleDot, Zap, TrendingUp, Check, Info, FileText,
   ChevronLeft, ChevronRight, Star, Sun, Moon, Sunrise, Sunset,
   ArrowLeftRight, Users, Search, CalendarDays, MapPin,
-  Navigation, Package, Armchair,
+  Navigation, Package, Armchair, Briefcase,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
