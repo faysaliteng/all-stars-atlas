@@ -298,7 +298,7 @@ Express, mysql2, bcryptjs, jsonwebtoken, multer, uuid, cors, helmet, morgan, exp
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Solutions for all known issues |
 | [VPS_SESSION_LOG.md](./VPS_SESSION_LOG.md) | Complete VPS terminal session history with outputs |
 | [DEVELOPMENT_CHAT_HISTORY.md](./DEVELOPMENT_CHAT_HISTORY.md) | Full development conversation timeline & decision log |
-| [BACKEND_API_SPEC.md](./BACKEND_API_SPEC.md) | 90+ API endpoint specifications |
+| [BACKEND_API_SPEC.md](./BACKEND_API_SPEC.md) | 100+ API endpoint specifications |
 | [Deployment.md](./Deployment.md) | VPS deployment guide (Ubuntu 24.04, Nginx, PM2, SSL) |
 | [developer_documentation.md](./developer_documentation.md) | Developer handbook A-Z |
 | [.lovable/plan.md](./.lovable/plan.md) | Project plan and phase tracking |
