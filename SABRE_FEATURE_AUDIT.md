@@ -26,16 +26,16 @@
 | 14 | SSR Reference Table | ✅ DONE | `sabre-flights.js` | Internal (CTCM/CTCE/VGML/WCHR/XBAG/FQTV/RQST) |
 | 15 | Name & Title Rules | ✅ DONE | `sabre-flights.js` | Internal |
 | 16 | DOCS Payload Rules | ✅ DONE | `sabre-flights.js` | Internal |
-| **17** | **Get Ancillaries (Stateless REST)** | ⚠️ PARTIAL | `sabre-soap.js` → SOAP GAO only | Missing: REST `POST /v1/offers/getAncillaries` |
-| **18** | **Add Ancillary + EMD** | ⚠️ PARTIAL | SSR-based add only | Missing: REST stateless add + EMD issuance |
+| **17** | **Get Ancillaries (Stateless REST)** | ✅ DONE | `sabre-flights.js` | `POST /v1/offers/getAncillaries` + SOAP GAO |
+| **18** | **Add Ancillary + EMD** | ✅ DONE | `sabre-flights.js` | `POST /v1/offers/addAncillaries` + `POST /v1/trip/orders/fulfillOrder` |
 | **19** | **Baggage Allowance** | ✅ DONE | `sabre-flights.js` | Via BFM `AncillaryFees` in search response |
-| **20** | **Structured Fare Rules** | ❌ NOT DONE | — | Need: SOAP `StructureFareRulesRQ v3.0.1` |
+| **20** | **Structured Fare Rules** | ✅ DONE | `sabre-soap.js` | SOAP `StructureFareRulesRQ v3.0.1` |
 | **21** | **Branded Fares / Fare Families** | ⚠️ PARTIAL | Brand data extracted from BFM | Missing: Dedicated `BargainFinderMax_BFRQ` |
-| **22** | **Exchange / Reissue** | ❌ NOT DONE | — | Need: SOAP `ExchangeBookingRQ v1.1.0` |
-| **23** | **Refund** | ❌ NOT DONE | — | Need: REST Stateless Refunds API |
-| **24** | **Void** | ❌ NOT DONE | — | Need: REST Void Flight Tickets |
-| **25** | **Flight Status (FLIFO)** | ❌ NOT DONE | — | Need: `GET /products/air/flight/status` |
-| **26** | **Frequent Flyer Update** | ⚠️ PARTIAL | FQTV SSR in CreatePNR | Missing: Post-booking FF update via UpdatePNR |
+| **22** | **Exchange / Reissue** | ✅ DONE | `sabre-soap.js` | SOAP `ExchangeBookingRQ v1.1.0` |
+| **23** | **Refund** | ✅ DONE | `sabre-flights.js` | REST `POST /v1/offers/refund/price` + `/fulfill` |
+| **24** | **Void** | ✅ DONE | `sabre-flights.js` | REST `POST /v1/trip/orders/voidFlightTickets` |
+| **25** | **Flight Status (FLIFO)** | ✅ DONE | `sabre-flights.js` | `GET /products/air/flight/status` |
+| **26** | **Frequent Flyer Update** | ✅ DONE | `sabre-flights.js` | FQTV SSR in CreatePNR + Post-booking UpdatePNR |
 
 ---
 
