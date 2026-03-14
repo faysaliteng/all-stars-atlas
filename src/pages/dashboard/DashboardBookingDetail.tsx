@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Plane, ArrowLeft, Copy, Download, CreditCard, Timer, Luggage, Shield,
   Users, Package, RotateCcw, XCircle, ArrowRight, AlertTriangle, Ban,
+  FileText,
 } from "lucide-react";
 import { generateTicketPDF } from "@/lib/pdf-generator";
 import { AIRPORTS } from "@/lib/airports";
@@ -17,6 +18,9 @@ import { api } from "@/lib/api";
 import DataLoader from "@/components/DataLoader";
 import { useToast } from "@/hooks/use-toast";
 import TravelDocVerificationModal from "@/components/TravelDocVerificationModal";
+import BookingActions from "@/components/flights/BookingActions";
+import FlightStatusBadge from "@/components/flights/FlightStatusBadge";
+import FareRulesModal from "@/components/flights/FareRulesModal";
 
 const statusLabelMap: Record<string, string> = {
   on_hold: "Reserved", confirmed: "Confirmed", pending: "Pending", in_progress: "In Progress",
