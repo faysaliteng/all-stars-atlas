@@ -569,23 +569,23 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
       // Sort by price ascending
       const sorted = [...fd].sort((a: any, b: any) => (a.price || a.amount || 0) - (b.price || b.amount || 0));
       return sorted.map((f: any, i: number) => {
-        // Use brand name if available, otherwise generate label
         const label = f.brandName 
           ? f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
           : f.label || `Fare Option ${i + 1}`;
         return {
           id: `option-${i}`,
           label,
+          fareBasis: f.fareBasis || "",
+          bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
+          availableSeats: f.availableSeats ?? primary.availableSeats ?? null,
           handBaggage: f.handBaggage || primary.handBaggage || null,
           checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
           meal: f.mealIncluded ? "Included" : null,
           seatSelection: f.seatSelection ?? false,
           rebooking: f.rebookingAllowed !== false,
           cancellation: f.cancellationAllowed !== false,
-          miles: f.milesAccrual ?? false,
-          bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
-          grossFare: f.price || f.amount || f.total || primary.price || 0,
           refundable: f.refundable ?? primary.refundable ?? false,
+          grossFare: f.price || f.amount || f.total || primary.price || 0,
           flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
           isBestValue: i === 0,
         };
@@ -596,16 +596,17 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
       return [{
         id: "option-0",
         label: f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
+        fareBasis: f.fareBasis || "",
+        bookingClass: f.bookingClass || primary.bookingClass || "",
+        availableSeats: f.availableSeats ?? primary.availableSeats ?? null,
         handBaggage: f.handBaggage || primary.handBaggage || null,
         checkedBaggage: f.baggage || primary.baggage || null,
         meal: f.mealIncluded ? "Included" : null,
         seatSelection: f.seatSelection ?? false,
         rebooking: f.rebookingAllowed !== false,
         cancellation: f.cancellationAllowed !== false,
-        miles: false,
-        bookingClass: f.bookingClass || primary.bookingClass || "",
-        grossFare: f.price || primary.price || 0,
         refundable: f.refundable ?? primary.refundable ?? false,
+        grossFare: f.price || primary.price || 0,
         flight: primary,
         isBestValue: true,
       }];
@@ -615,30 +616,33 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
     return [{
       id: "option-0",
       label: "Available Fare",
-      handBaggage: primary.handBaggage || null,
-      checkedBaggage: primary.baggage || null,
-      meal: primary.mealIncluded ? "Included" : null,
-      seatSelection: false,
-      rebooking: true,
-      cancellation: primary.refundable ?? false,
-      miles: false,
-      bookingClass: primary.bookingClass || primary.cabinClass?.charAt(0) || "",
+      fareBasis: primary.fareDetails?.[0]?.fareBasis || "",
+      bookingClass: primary.fareDetails?.[0]?.bookingClass || primary.bookingClass || primary.cabinClass?.charAt(0) || "",
+      availableSeats: primary.fareDetails?.[0]?.availableSeats ?? primary.availableSeats ?? null,
+      handBaggage: primary.fareDetails?.[0]?.handBaggage || primary.handBaggage || null,
+      checkedBaggage: primary.fareDetails?.[0]?.baggage || primary.baggage || null,
+      meal: (primary.fareDetails?.[0]?.mealIncluded || primary.mealIncluded) ? "Included" : null,
+      seatSelection: primary.fareDetails?.[0]?.seatSelection ?? false,
+      rebooking: primary.fareDetails?.[0]?.rebookingAllowed ?? true,
+      cancellation: primary.fareDetails?.[0]?.cancellationAllowed ?? (primary.refundable ?? false),
+      refundable: primary.fareDetails?.[0]?.refundable ?? primary.refundable ?? false,
       grossFare: primary.price || 0,
-      refundable: primary.refundable ?? false,
       flight: primary,
       isBestValue: true,
     }];
   }, [flights]);
 
   const fareTypeLabels = [
+    { key: "fareBasis", label: "Fare Basis", icon: () => <span className="text-base">📋</span> },
+    { key: "bookingClass", label: "Booking Class", icon: () => <span className="text-base">🎫</span> },
+    { key: "availableSeats", label: "Seats Available", icon: Users },
     { key: "handBaggage", label: "Hand Baggage", icon: Package },
     { key: "checkedBaggage", label: "Checked Baggage", icon: Luggage },
     { key: "meal", label: "Meal", icon: () => <span className="text-base">🍽</span> },
     { key: "seatSelection", label: "Seat Selection", icon: () => <span className="text-base">💺</span> },
     { key: "rebooking", label: "Rebooking", icon: FileText },
     { key: "cancellation", label: "Cancellation", icon: Shield },
-    { key: "miles", label: "Miles", icon: Star },
-    { key: "bookingClass", label: "Booking Class", icon: () => <span className="text-base">🎫</span> },
+    { key: "refundable", label: "Refundable", icon: () => <span className="text-base">🔄</span> },
   ];
 
   return (
@@ -696,8 +700,18 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
 
                       if (ft.key === "handBaggage" || ft.key === "checkedBaggage" || ft.key === "meal") {
                         display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">Not included</span>;
+                      } else if (ft.key === "fareBasis") {
+                        display = val ? <span className="text-[10px] font-mono font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">—</span>;
                       } else if (ft.key === "bookingClass") {
                         display = <span className="text-xs font-semibold text-foreground">{String(val || "—")}</span>;
+                      } else if (ft.key === "availableSeats") {
+                        display = val !== null && val !== undefined 
+                          ? <span className={`text-xs font-bold ${Number(val) <= 4 ? "text-destructive" : Number(val) <= 9 ? "text-orange-500" : "text-foreground"}`}>{String(val)} Seats</span>
+                          : <span className="text-xs text-muted-foreground">—</span>;
+                      } else if (ft.key === "refundable") {
+                        display = val
+                          ? <span className="text-xs font-medium text-accent">Refundable</span>
+                          : <span className="text-xs font-medium text-destructive">Non-Refundable</span>;
                       } else if (typeof val === "boolean") {
                         display = val
                           ? <span className="text-xs font-medium text-accent">Available</span>
@@ -1792,11 +1806,35 @@ const FlightCard = ({
                 </span>
               )}
               {availableSeats !== null && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                <span className={`flex items-center gap-1.5 text-xs font-bold ${availableSeats <= 4 ? "text-destructive" : availableSeats <= 9 ? "text-orange-500" : "text-muted-foreground"}`}>
                   <Users className="w-3.5 h-3.5" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""} Left
                 </span>
               )}
               <span className="text-xs text-muted-foreground font-medium">{cabinDisplay}</span>
+              {/* Fare feature badges */}
+              {(() => {
+                const best = getBestFareDetail(flight);
+                if (!best) return null;
+                return (
+                  <div className="flex items-center gap-2 ml-auto">
+                    {best.refundable && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">Refundable</Badge>
+                    )}
+                    {best.mealIncluded && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">🍽 Meal</Badge>
+                    )}
+                    {best.seatSelection && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">💺 Seat</Badge>
+                    )}
+                    {best.cancellationAllowed && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Cancellable</Badge>
+                    )}
+                    {best.rebookingAllowed && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Rebookable</Badge>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
