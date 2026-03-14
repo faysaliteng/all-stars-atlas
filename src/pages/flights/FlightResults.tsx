@@ -944,24 +944,24 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
 
   return (
     <div className="flex-1 min-w-0">
-      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-2 text-xs sm:text-sm font-bold shadow-sm ${
+      <div className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-1.5 text-[10px] sm:text-xs font-bold shadow-sm ${
         isReturn 
           ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30" 
           : "bg-accent/15 text-accent border border-accent/30"
       }`}>
-        <Plane className={`w-4 h-4 ${isReturn ? "rotate-180" : ""}`} />
+        <Plane className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isReturn ? "rotate-180" : ""}`} />
         <span>{label}: {fromCode} → {toCode}</span>
-        <span className="flight-date text-xs ml-1">· {formatShortDate(flight.departureTime)}</span>
+        <span className="flight-date text-[10px] ml-0.5">· {formatShortDate(flight.departureTime)}</span>
       </div>
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Origin */}
         <div className="text-center shrink-0">
-          <p className="text-[10px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
-          <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
+          <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
+          <p className="text-xs sm:text-sm lg:text-base font-black tracking-tight flight-time">{departTime}</p>
         </div>
 
         {/* Duration bar */}
-        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[40px]">
+        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[36px]">
           {stops > 0 && legs.length > 1 ? (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
@@ -995,14 +995,14 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
           ) : (
             <AnimatedFlightArc compact direction={isReturn ? "return" : "departure"} />
           )}
-          <p className="text-[9px] sm:text-[10px] text-muted-foreground">{duration}</p>
-          <p className={`text-[9px] sm:text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground">{duration}</p>
+          <p className={`text-[8px] sm:text-[9px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
         </div>
 
         {/* Destination */}
         <div className="text-center shrink-0">
-          <p className="text-[10px] sm:text-[10px] font-medium text-muted-foreground">{toCode}</p>
-          <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">
+          <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{toCode}</p>
+          <p className="text-xs sm:text-sm lg:text-base font-black tracking-tight flight-time">
             {arriveTime}
             {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
@@ -1083,25 +1083,25 @@ const RoundTripFlightCard = ({
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-3 p-3 sm:p-4 sm:w-36 lg:w-40 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
-            <div className="flex flex-col items-center gap-1 shrink-0">
+          <div className="flex items-center gap-2 p-2.5 sm:p-3 sm:w-32 lg:w-36 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
+            <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
-                <img src={logo} alt={outbound.airline} className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center"><span class="text-xs font-bold text-muted-foreground">${(outbound.airlineCode || "").toUpperCase()}</span></div>`; }} />
+                <img src={logo} alt={outbound.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(outbound.airlineCode || "").toUpperCase()}</span></div>`; }} />
               ) : (
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <span className="text-xs font-bold text-muted-foreground">{(outbound.airlineCode || "").toUpperCase()}</span>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-muted-foreground">{(outbound.airlineCode || "").toUpperCase()}</span>
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-bold leading-tight truncate">{outbound.airline}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
+              <p className="text-[11px] sm:text-xs font-bold leading-tight truncate">{outbound.airline}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
           </div>
 
           {/* Both legs side by side */}
-          <div className="flex-1 flex flex-col sm:flex-row p-3 sm:p-4 gap-3 sm:gap-3 min-w-0">
+          <div className="flex-1 flex flex-col sm:flex-row p-2.5 sm:p-3 gap-2 sm:gap-2 min-w-0">
             <LegMini flight={outbound} label="Departure" labelColor="text-foreground" />
             <div className="hidden sm:block w-px bg-border/60 self-stretch shrink-0" />
             <div className="sm:hidden h-px bg-border/60" />
@@ -1109,23 +1109,22 @@ const RoundTripFlightCard = ({
           </div>
 
           {/* Price */}
-          <div className="flex flex-col items-end gap-1 p-3 sm:p-4 sm:w-40 lg:w-48 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-36 lg:w-40 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+            <div className="flex items-center gap-1.5">
               {totalPrice === cheapest && totalPrice > 0 && (
-                <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
+                <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
               )}
-              {/* Reward Points Badge */}
               {totalPrice > 0 && (
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[9px] font-bold flex items-center gap-1">
-                  <span className="text-sm">🪙</span> +{calcRewardPoints(totalPrice).toLocaleString()}
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[8px] font-bold flex items-center gap-0.5 px-1.5 py-0">
+                  <span className="text-xs">🪙</span> +{calcRewardPoints(totalPrice).toLocaleString()}
                 </Badge>
               )}
             </div>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
+            <p className="text-base sm:text-lg lg:text-xl font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
             {grossTotalPrice > totalPrice && (
-              <p className="text-xs font-bold text-amber-500 line-through">BDT {grossTotalPrice.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-amber-500 line-through">BDT {grossTotalPrice.toLocaleString()}</p>
             )}
-            <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
+            <p className="text-[9px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover>
               <PopoverTrigger asChild>
                 <button className="text-[11px] text-accent font-semibold flex items-center gap-1 hover:underline mt-0.5">
@@ -1145,32 +1144,32 @@ const RoundTripFlightCard = ({
           </div>
         </div>
 
-        {/* Baggage + Seats + Class info row — BDFare style (matches one-way FlightCard) */}
-        <div className="flex items-center flex-wrap gap-2 px-3 sm:px-5 py-2 border-t border-border/30">
+        {/* Baggage + Seats + Class info row */}
+        <div className="flex items-center flex-wrap gap-1.5 px-2.5 sm:px-4 py-1.5 border-t border-border/30">
           {(() => {
             const hb = outbound.handBaggage || "7KG";
             return hb ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                <Briefcase className="w-3.5 h-3.5" /> {hb}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+                <Briefcase className="w-3 h-3" /> {hb}
               </span>
             ) : null;
           })()}
           {outbound.baggage && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-              <Luggage className="w-3.5 h-3.5" /> {outbound.baggage}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+              <Luggage className="w-3 h-3" /> {outbound.baggage}
             </span>
           )}
           {(() => {
             const seats = getDisplayAvailableSeats(outbound);
             return seats !== null ? (
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
                 seats <= 4
                   ? "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
                   : seats <= 9
                     ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200/60 dark:border-orange-800/40 text-orange-600 dark:text-orange-400"
                     : "bg-accent/5 border-accent/20 text-accent"
               }`}>
-                <Armchair className="w-3.5 h-3.5" /> {seats} Seats Left
+                <Armchair className="w-3 h-3" /> {seats} Seats Left
               </span>
             ) : null;
           })()}
@@ -1179,8 +1178,8 @@ const RoundTripFlightCard = ({
             const bClass = getDisplayBookingClass(outbound);
             const cabinDisplay = cabin && bClass ? `${cabin}-${bClass} Class` : cabin || bClass || "";
             return cabinDisplay ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-[11px] font-semibold text-muted-foreground">
-                <Plane className="w-3.5 h-3.5" /> {cabinDisplay}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] font-semibold text-muted-foreground">
+                <Plane className="w-3 h-3" /> {cabinDisplay}
               </span>
             ) : null;
           })()}
@@ -1188,7 +1187,7 @@ const RoundTripFlightCard = ({
             const best = getBestFareDetail(outbound);
             const isRefundable = best?.refundable ?? outbound.refundable ?? false;
             return (
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
                 isRefundable
                   ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
                   : "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
@@ -1198,36 +1197,37 @@ const RoundTripFlightCard = ({
             );
           })()}
           {(outbound.stops ?? 0) === 0 && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
               Direct
             </span>
           )}
         </div>
 
         {/* Info bar */}
-        <div className="flex items-center px-3 sm:px-5 py-2.5 bg-muted/30 border-t border-border/50">
-          <button className="flex items-center gap-1 text-accent font-bold text-xs sm:text-sm hover:underline shrink-0" onClick={onToggleExpand}>
-            Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        <div className="flex items-center px-2.5 sm:px-4 py-2 bg-muted/30 border-t border-border/50">
+          <button className="flex items-center gap-1 text-accent font-bold text-[11px] sm:text-xs hover:underline shrink-0" onClick={onToggleExpand}>
+            Flight Details {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
-          <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
-            <span className={`font-bold text-xs sm:text-sm ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
+          <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4">
+            <span className={`font-bold text-[11px] sm:text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {outbound.airlineCode?.toUpperCase() !== "BG" && (
-              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs sm:text-sm">Book &amp; Hold</span>
+              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-[11px] sm:text-xs hidden sm:inline">Book &amp; Hold</span>
             )}
-            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1 text-[10px] font-bold text-accent">
+            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[9px] font-bold text-accent">
               Single Booking · One PNR
             </span>
           </div>
           <div className="shrink-0">
-            <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground"
+            <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs"
               onClick={() => setShowFareOptions(!showFareOptions)}>
-              View Round-Trip Prices
+              <span className="hidden sm:inline">View Round-Trip Prices</span>
+              <span className="sm:hidden">View Prices</span>
               {roundTripFarePanelFlights[0]?.fareDetails?.length > 1 && (
-                <Badge className="ml-1.5 bg-accent-foreground/20 text-accent-foreground border-0 text-[10px] px-1.5 py-0">
+                <Badge className="ml-1 bg-accent-foreground/20 text-accent-foreground border-0 text-[9px] px-1 py-0">
                   {roundTripFarePanelFlights[0].fareDetails.length}
                 </Badge>
               )}
-              {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+              {showFareOptions ? <ChevronUp className="w-3 h-3 ml-0.5" /> : <ChevronDown className="w-3 h-3 ml-0.5" />}
             </Button>
           </div>
         </div>
@@ -2010,34 +2010,34 @@ const FlightCard = ({
         {/* ── Main card row ── */}
         <div className="flex flex-col sm:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-3 p-3 sm:p-4 sm:w-36 lg:w-44 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
-            <div className="flex flex-col items-center gap-1 shrink-0">
+          <div className="flex items-center gap-2 p-2.5 sm:p-3 sm:w-32 lg:w-36 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
+            <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
-                <img src={logo} alt={flight.airline} className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center"><span class="text-xs font-bold text-muted-foreground">${(flight.airlineCode || "").toUpperCase()}</span></div>`; }} />
+                <img src={logo} alt={flight.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(flight.airlineCode || "").toUpperCase()}</span></div>`; }} />
               ) : (
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <span className="text-xs font-bold text-muted-foreground">{(flight.airlineCode || "").toUpperCase()}</span>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-muted-foreground">{(flight.airlineCode || "").toUpperCase()}</span>
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-bold leading-tight truncate">{flight.airline}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
+              <p className="text-[11px] sm:text-xs font-bold leading-tight truncate">{flight.airline}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
           </div>
 
           {/* Flight times + baggage info */}
-          <div className="flex-1 p-3 sm:p-4 min-w-0">
-            <div className="flex items-center gap-2 sm:gap-5">
+          <div className="flex-1 p-2.5 sm:p-3 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Departure */}
               <div className="text-center shrink-0">
-                <p className="text-lg sm:text-2xl font-black tracking-tight flight-time">{departTime}</p>
-                <p className="text-[10px] sm:text-[11px] flight-date mt-0.5">{departDateStr}</p>
+                <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
+                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{departDateStr}</p>
               </div>
 
               {/* Duration bar */}
-              <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[60px] sm:min-w-[100px]">
+              <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[50px] sm:min-w-[80px]">
                 {stops > 0 && legs.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
@@ -2071,11 +2071,11 @@ const FlightCard = ({
                 ) : (
                   <AnimatedFlightArc compact direction="departure" />
                 )}
-                <p className="text-xs text-muted-foreground font-medium">{duration}</p>
-                <div className="flex items-center gap-2">
-                  <p className={`text-[11px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">{duration}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className={`text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
                   {distanceKm && (
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
                       <MapPin className="w-2.5 h-2.5" /> {distanceKm.toLocaleString()} Km
                     </span>
                   )}
@@ -2084,40 +2084,40 @@ const FlightCard = ({
 
               {/* Arrival */}
               <div className="text-center shrink-0">
-                <p className="text-lg sm:text-2xl font-black tracking-tight flight-time">
+                <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">
                   {arriveTime}
-                  {nextDay && <sup className="text-[8px] sm:text-[9px] text-destructive font-bold ml-0.5">+1 days</sup>}
+                  {nextDay && <sup className="text-[7px] sm:text-[8px] text-destructive font-bold ml-0.5">+1 days</sup>}
                 </p>
-                <p className="text-[10px] sm:text-[11px] flight-date mt-0.5">{arriveDateStr}</p>
+                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{arriveDateStr}</p>
               </div>
             </div>
 
             {/* Baggage + Seats + Class info row — elegant pill badges */}
-            <div className="flex items-center flex-wrap gap-2 mt-2">
+            <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
               {handBaggage && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                  <Briefcase className="w-3.5 h-3.5" /> {handBaggage}
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+                  <Briefcase className="w-3 h-3" /> {handBaggage}
                 </span>
               )}
               {baggage && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                  <Luggage className="w-3.5 h-3.5" /> {baggage}
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
+                  <Luggage className="w-3 h-3" /> {baggage}
                 </span>
               )}
               {availableSeats !== null && (
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
                   availableSeats <= 4
                     ? "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
                     : availableSeats <= 9
                       ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200/60 dark:border-orange-800/40 text-orange-600 dark:text-orange-400"
                       : "bg-accent/5 border-accent/20 text-accent"
                 }`}>
-                  <Armchair className="w-3.5 h-3.5" /> {availableSeats} Seats Left
+                  <Armchair className="w-3 h-3" /> {availableSeats} Seats Left
                 </span>
               )}
               {cabinDisplay && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-[11px] font-semibold text-muted-foreground">
-                  <Plane className="w-3.5 h-3.5" /> {cabinDisplay}
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] font-semibold text-muted-foreground">
+                  <Plane className="w-3 h-3" /> {cabinDisplay}
                 </span>
               )}
               {/* Refundable / Non-Refundable pill */}
@@ -2125,7 +2125,7 @@ const FlightCard = ({
                 const best = getBestFareDetail(flight);
                 const isRefundable = best?.refundable ?? flight.refundable ?? false;
                 return (
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
                     isRefundable
                       ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
                       : "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
@@ -2135,7 +2135,7 @@ const FlightCard = ({
                 );
               })()}
               {stops === 0 && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
                   Direct
                 </span>
               )}
@@ -2145,10 +2145,10 @@ const FlightCard = ({
                 if (!isSabre) return null;
                 return (
                   <>
-                    <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
                       💺 Seat Map
                     </span>
-                    <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
                       🍽 Meals
                     </span>
                   </>
@@ -2158,23 +2158,22 @@ const FlightCard = ({
           </div>
 
           {/* Price section */}
-          <div className="flex flex-col items-end gap-1 p-4 sm:p-5 sm:w-56 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-0.5 p-2.5 sm:p-3 sm:w-44 lg:w-48 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+            <div className="flex items-center gap-1.5">
               {grossPrice === cheapest && price > 0 && (
-                <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
+                <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
               )}
-              {/* Reward Points Badge */}
               {price > 0 && (
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[9px] font-bold flex items-center gap-1">
-                  <span className="text-sm">🪙</span> +{calcRewardPoints(price).toLocaleString()}
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-0 text-[8px] font-bold flex items-center gap-0.5 px-1.5 py-0">
+                  <span className="text-xs">🪙</span> +{calcRewardPoints(price).toLocaleString()}
                 </Badge>
               )}
             </div>
-            <p className="text-xl sm:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
+            <p className="text-base sm:text-lg lg:text-xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
             {discount > 0 && (
-              <p className="text-xs font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
             )}
-            <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
+            <p className="text-[9px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover open={showPriceBreakdown} onOpenChange={setShowPriceBreakdown}>
               <PopoverTrigger asChild>
                 <button className="text-[11px] text-accent font-semibold flex items-center gap-1 hover:underline mt-0.5">
@@ -2197,30 +2196,30 @@ const FlightCard = ({
         </div>
 
         {/* ── Info bar: Flight Details ▲ | Refundable  Book & Hold | View Prices ▼ ── */}
-        <div className="flex items-center px-3 sm:px-5 py-2.5 bg-muted/30 border-t border-border/50">
+        <div className="flex items-center px-2.5 sm:px-4 py-2 bg-muted/30 border-t border-border/50">
           {/* Left: Flight Details toggle */}
-          <button className="flex items-center gap-1 text-accent font-bold text-xs sm:text-sm hover:underline shrink-0" onClick={onToggleExpand}>
-            Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          <button className="flex items-center gap-1 text-accent font-bold text-[11px] sm:text-xs hover:underline shrink-0" onClick={onToggleExpand}>
+            Flight Details {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
 
           {/* Center: Refundable + Book & Hold badges */}
-          <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
-            <span className={`font-bold text-xs sm:text-sm ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
+          <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4">
+            <span className={`font-bold text-[11px] sm:text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {flight.airlineCode?.toUpperCase() !== "BG" && (
-              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs sm:text-sm">Book &amp; Hold</span>
+              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-[11px] sm:text-xs hidden sm:inline">Book &amp; Hold</span>
             )}
           </div>
 
           {/* Right: View Prices / Select button */}
           <div className="shrink-0">
             {selectionMode ? (
-              <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={onSelect}>
-                {isSelected ? <><Check className="w-3.5 h-3.5 mr-1" /> Selected</> : "Select Flight"}
+              <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs" onClick={onSelect}>
+                {isSelected ? <><Check className="w-3 h-3 mr-1" /> Selected</> : "Select"}
               </Button>
             ) : (
-              <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground"
+              <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs"
                 onClick={() => setShowFareOptions(!showFareOptions)}>
-                View Prices {fareDetailsCount > 1 && <Badge className="ml-1.5 bg-accent-foreground/20 text-accent-foreground border-0 text-[10px] px-1.5 py-0">{fareDetailsCount}</Badge>} {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+                View Prices {fareDetailsCount > 1 && <Badge className="ml-1 bg-accent-foreground/20 text-accent-foreground border-0 text-[9px] px-1 py-0">{fareDetailsCount}</Badge>} {showFareOptions ? <ChevronUp className="w-3 h-3 ml-0.5" /> : <ChevronDown className="w-3 h-3 ml-0.5" />}
               </Button>
             )}
           </div>
@@ -3243,18 +3242,18 @@ const FlightResults = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* ─── Compact Pill Modification Bar with Full Features ─── */}
-      <div className="bg-card border-b border-border pt-20 sm:pt-28 lg:pt-36 pb-0">
-        <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex flex-wrap items-center gap-2.5 py-3">
+      <div className="bg-card border-b border-border pt-16 sm:pt-24 lg:pt-32 pb-0">
+        <div className="container mx-auto px-2 sm:px-4">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 py-2 sm:py-2.5">
             {/* Trip Type pill — clickable to switch */}
             <Popover>
               <PopoverTrigger asChild>
-                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
-                  <Plane className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold text-foreground">
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                  <Plane className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs sm:text-sm font-semibold text-foreground">
                     {isMultiCity ? "Multi-City" : isRoundTrip ? "Round Trip" : "One Way"}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-48 p-2 z-[60]" align="start">
@@ -3317,11 +3316,11 @@ const FlightResults = () => {
             {!isMultiCity && (
               <Popover open={showRouteEdit} onOpenChange={setShowRouteEdit}>
                 <PopoverTrigger asChild>
-                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
-                    <span className="text-sm font-bold text-foreground">{fromCode || "—"}</span>
-                    <ArrowLeftRight className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-sm font-bold text-foreground">{toCode || "—"}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-0.5" />
+                  <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                    <span className="text-xs sm:text-sm font-bold text-foreground">{fromCode || "—"}</span>
+                    <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs sm:text-sm font-bold text-foreground">{toCode || "—"}</span>
+                    <ChevronDown className="w-3 h-3 text-muted-foreground ml-0.5" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-3 z-[60]" align="start">
@@ -3500,23 +3499,23 @@ const FlightResults = () => {
 
             {/* Prev Day */}
             {!isMultiCity && (
-              <button onClick={() => shiftDate(-1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Previous Day">
-                <ChevronLeft className="w-4 h-4" />
+              <button onClick={() => shiftDate(-1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Previous Day">
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
             )}
 
             {/* Date pill */}
             <Popover open={showDateEdit} onOpenChange={setShowDateEdit}>
               <PopoverTrigger asChild>
-                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
-                  <CalendarDays className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                  <CalendarDays className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs sm:text-sm font-medium text-foreground">
                     {isMultiCity
                       ? multiCitySegments.map(s => s.date).filter(Boolean).join(", ")
                       : departDate ? (() => { try { return format(new Date(departDate), "dd MMM, EEE"); } catch { return departDate; } })() : "—"}
                     {isRoundTrip && returnDate && (() => { try { return ` — ${format(new Date(returnDate), "dd MMM, EEE")}`; } catch { return ""; } })()}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-3 z-[60]" align="start">
@@ -3554,20 +3553,20 @@ const FlightResults = () => {
 
             {/* Next Day */}
             {!isMultiCity && (
-              <button onClick={() => shiftDate(1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Next Day">
-                <ChevronRight className="w-4 h-4" />
+              <button onClick={() => shiftDate(1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Next Day">
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             )}
 
             {/* Pax & Cabin pill */}
             <Popover open={showPaxEdit} onOpenChange={setShowPaxEdit}>
               <PopoverTrigger asChild>
-                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
-                  <Users className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                  <Users className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs sm:text-sm font-medium text-foreground">
                     {totalPax} Pax{cabinClass ? `, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-72 p-3 z-[60]" align="start">
@@ -3637,8 +3636,8 @@ const FlightResults = () => {
 
             {/* Modify button */}
             <div className="ml-auto shrink-0">
-              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-6 h-9" onClick={applySearchEdit}>
-                <Search className="w-4 h-4 mr-1.5" /> Modify
+              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-3 sm:px-5 h-7 sm:h-8 text-xs" onClick={applySearchEdit}>
+                <Search className="w-3.5 h-3.5 mr-1" /> Modify
               </Button>
             </div>
           </div>
@@ -3647,29 +3646,29 @@ const FlightResults = () => {
 
       {/* Results info bar */}
       <div className="bg-card border-b border-border">
-        <div className="container mx-auto px-3 sm:px-4 py-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-foreground font-semibold">
+        <div className="container mx-auto px-2 sm:px-4 py-1.5 sm:py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs sm:text-sm text-foreground font-semibold">
               {isMultiCity ? (
                 <>Showing <strong>{totalMultiCityFlights}</strong> flights</>
               ) : isRoundTrip && hasDirections ? (
-                <>Showing <strong>{filteredPairs.length} flights</strong> &amp; <strong>{airlineStats.length} Airlines</strong> <span className="text-muted-foreground font-normal text-xs">(Fares include. AIT VAT)</span></>
+                <>Showing <strong>{filteredPairs.length} flights</strong> &amp; <strong>{airlineStats.length} Airlines</strong> <span className="text-muted-foreground font-normal text-[10px] sm:text-xs">(Fares include. AIT VAT)</span></>
               ) : (
                 <>Showing <strong>{flights.length} flights</strong>
-                  {sources.tti > 0 && <span className="text-muted-foreground font-normal text-xs ml-1">({sources.tti} Air Astra)</span>}
-                  {sources.sabre > 0 && <span className="text-muted-foreground font-normal text-xs ml-1">({sources.sabre} Sabre)</span>}
-                  {sources.flyhub > 0 && <span className="text-muted-foreground font-normal text-xs ml-1">({sources.flyhub} FlyHub)</span>}
+                  {sources.tti > 0 && <span className="text-muted-foreground font-normal text-[10px] ml-1">({sources.tti} Air Astra)</span>}
+                  {sources.sabre > 0 && <span className="text-muted-foreground font-normal text-[10px] ml-1">({sources.sabre} Sabre)</span>}
+                  {sources.flyhub > 0 && <span className="text-muted-foreground font-normal text-[10px] ml-1">({sources.flyhub} FlyHub)</span>}
                 </>
               )}
             </p>
             {cheapest > 0 && (
-              <span className="text-xs text-muted-foreground">Sort by: <strong className="text-accent">{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</strong></span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">Sort by: <strong className="text-accent">{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</strong></span>
             )}
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
         {!hasRequiredParams ? (
           <Card>
             <CardContent className="py-16 text-center">
@@ -3680,7 +3679,7 @@ const FlightResults = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex gap-6">
+          <div className="flex gap-3 sm:gap-5">
             {/* Sidebar filters */}
             <aside className="hidden lg:block w-72 shrink-0">
               <Card className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto shadow-[0_4px_20px_-4px_hsl(var(--foreground)/0.08),0_1px_3px_hsl(var(--foreground)/0.06)] border-border/60">
@@ -3768,9 +3767,9 @@ const FlightResults = () => {
                 </Card>
               )}
 
-              {/* Quick sort chips — Cheapest / Fastest / Best, 3D cards */}
-              <div className="flex items-center justify-between gap-2 sm:gap-3">
-                <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
+              {/* Quick sort chips — Cheapest / Fastest / Best */}
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
                   {[
                     { key: "cheapest", label: "Cheapest", icon: TrendingUp, data: quickSortSummary.cheapest },
                     { key: "fastest", label: "Fastest", icon: Zap, data: quickSortSummary.fastest },
@@ -3782,18 +3781,18 @@ const FlightResults = () => {
                       <button
                         key={s.key}
                         onClick={() => setSortBy(s.key)}
-                        className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm whitespace-nowrap transition-all ${
+                        className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs whitespace-nowrap transition-all ${
                           isActive
-                            ? "bg-card border border-accent shadow-[0_4px_16px_-4px_hsl(var(--accent)/0.3),0_1px_3px_hsl(var(--foreground)/0.06)]"
-                            : "bg-card border border-border shadow-[0_2px_8px_-2px_hsl(var(--foreground)/0.06)] hover:shadow-[0_4px_12px_-4px_hsl(var(--foreground)/0.1)] hover:border-foreground/20"
+                            ? "bg-card border border-accent shadow-[0_2px_10px_-3px_hsl(var(--accent)/0.3)]"
+                            : "bg-card border border-border shadow-sm hover:shadow-md hover:border-foreground/20"
                         }`}
                       >
-                        <div className="flex items-center gap-1 sm:gap-1.5">
-                          <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? "text-accent" : ""}`} />
+                        <div className="flex items-center gap-1">
+                          <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? "text-accent" : ""}`} />
                           <span className={`font-bold ${isActive ? "text-foreground" : ""}`}>{s.label}</span>
                         </div>
                         {s.data && (
-                          <span className={`text-[10px] sm:text-xs ${isActive ? "text-muted-foreground" : "text-muted-foreground/70"}`}>
+                          <span className={`text-[9px] sm:text-[10px] ${isActive ? "text-muted-foreground" : "text-muted-foreground/70"}`}>
                             BDT {s.data.price?.toLocaleString()}{s.data.duration ? ` | ${s.data.duration}` : ""}
                           </span>
                         )}
@@ -3801,8 +3800,8 @@ const FlightResults = () => {
                     );
                   })}
                 </div>
-                <Button variant="outline" size="sm" className="lg:hidden shrink-0 shadow-[0_2px_8px_-2px_hsl(var(--foreground)/0.06)]" onClick={() => setShowFilters(true)}>
-                  <Filter className="w-4 h-4 mr-1" /> Filters
+                <Button variant="outline" size="sm" className="lg:hidden shrink-0 shadow-sm h-7 text-[11px] px-2" onClick={() => setShowFilters(true)}>
+                  <Filter className="w-3.5 h-3.5 mr-1" /> Filters
                 </Button>
               </div>
 
@@ -3863,15 +3862,15 @@ const FlightResults = () => {
                   </div>
                 )}
                 {isRoundTrip && hasDirections ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {/* Header: showing X round-trip combinations */}
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="flex items-center gap-2 bg-accent/10 text-accent rounded-lg px-3 py-1.5">
-                        <Plane className="w-4 h-4" /><span className="text-sm font-bold">Round Trip</span>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <div className="flex items-center gap-1.5 bg-accent/10 text-accent rounded-lg px-2.5 py-1">
+                        <Plane className="w-3.5 h-3.5" /><span className="text-xs font-bold">Round Trip</span>
                       </div>
-                      <span className="text-sm font-medium">{fromCode} ↔ {toCode}</span>
-                      <span className="text-xs text-muted-foreground">{filteredPairs.length} combinations</span>
-                      <span className="text-xs text-muted-foreground italic">(Fares include. AIT VAT)</span>
+                      <span className="text-xs font-medium">{fromCode} ↔ {toCode}</span>
+                      <span className="text-[10px] text-muted-foreground">{filteredPairs.length} combinations</span>
+                      <span className="text-[10px] text-muted-foreground italic">(Fares include. AIT VAT)</span>
                     </div>
 
                     {filteredPairs.length === 0 ? (
