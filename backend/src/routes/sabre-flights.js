@@ -367,7 +367,7 @@ async function searchFlights(params) {
       try {
         console.log(`[Sabre] BFM attempt: ${profile.name}`);
         const requestBody = buildBfmRequestBody(profile);
-        const raw = decodeCompressedResponse(await sabreRequest(config, '/v5/offers/shop', requestBody));
+        const raw = await sabreRequest(config, '/v5/offers/shop', requestBody);
         lastRaw = raw;
 
         const { itinCount, hasNoAvailability } = getResponseStats(raw);
