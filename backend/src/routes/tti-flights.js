@@ -699,7 +699,7 @@ function getAirlineName(code) {
  * Create a booking in TTI/Zenith GDS
  * This sends passenger + itinerary data to TTI to create a real PNR
  */
-async function createBooking({ flightData, passengers, contactInfo, specialServices }) {
+async function createBooking({ flightData, passengers, contactInfo, specialServices: ssrInput }) {
   const config = await getTTIConfig();
   if (!config) throw new Error('TTI API not configured');
 
