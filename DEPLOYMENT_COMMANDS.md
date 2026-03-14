@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-14 (v4.1.0 — UI/UX Overhaul: SearchWidget, AnimatedFlightArc, Sabre PTC)
+> Last updated: 2026-03-14 (v4.1.1 — 100% Production Probe Verified: 10/10 Tests Passed)
 
 ---
 
