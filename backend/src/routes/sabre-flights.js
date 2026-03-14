@@ -282,7 +282,7 @@ async function searchFlights(params) {
       OriginDestinationInformation: originDest,
       TravelPreferences: {
         TPA_Extensions: {
-          NumTrips: { Number: 200 },
+          NumTrips: { Number: 250 },
           DataSources: {
             NDC: 'Enable',
             ATPCO: 'Enable',
@@ -290,16 +290,17 @@ async function searchFlights(params) {
           },
           DiversityParameters: {
             Weightings: {
-              PriceWeight: 8,
-              TravelTimeWeight: 2,
+              PriceWeight: 10,
+              TravelTimeWeight: 0,
             },
           },
         },
         CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
+        MaxStopsQuantity: 2,
       },
       TPA_Extensions: {
         IntelliSellTransaction: {
-          RequestType: { Name: '200ITINS' },
+          RequestType: { Name: '250ITINS' },
         },
       },
       TravelerInfoSummary: {
@@ -653,7 +654,15 @@ function normalizeGroupedResponse(response, params) {
         const pricingInfo = itin.pricingInformation || [];
         if (pricingInfo.length === 0) continue;
 
-        const pricing = pricingInfo[0];
+        // ── CRITICAL: Sort pricing options by total price ascending ──
+        // Ensures cheapest booking class (V, L, S etc.) is primary, not full-fare Y
+        const sortedPricing = [...pricingInfo].sort((a, b) => {
+          const priceA = parseFloat(a?.fare?.totalFare?.totalPrice || 0);
+          const priceB = parseFloat(b?.fare?.totalFare?.totalPrice || 0);
+          return priceA - priceB;
+        });
+
+        const pricing = sortedPricing[0];
         const fare = pricing.fare || {};
         const totalFare = fare.totalFare || {};
         const totalAmount = parseFloat(totalFare.totalPrice || 0);
@@ -803,7 +812,7 @@ function normalizeGroupedResponse(response, params) {
         }
 
         // Extract fare details from pricingInformation for fare options (branded fares)
-        const fareDetailsArr = pricingInfo.map((pi, piIdx) => {
+        const fareDetailsArr = sortedPricing.map((pi, piIdx) => {
           const piFare = pi.fare || {};
           const piTotal = piFare.totalFare || {};
           const piPassengers = piFare.passengerInfoList || [];
