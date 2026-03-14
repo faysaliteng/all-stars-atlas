@@ -2887,7 +2887,7 @@ const FlightResults = () => {
         const code = p.outbound.airlineCode || '';
         const name = p.outbound.airline || code;
         if (!code) continue;
-        const payable = flightPayable(p.outbound) + flightPayable(p.returnFlight);
+        const payable = pairPayable(p);
         if (!map[code]) map[code] = { code, name, cheapest: payable, count: 0 };
         map[code].count++;
         if (payable < map[code].cheapest) map[code].cheapest = payable;
