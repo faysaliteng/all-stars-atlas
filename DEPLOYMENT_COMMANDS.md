@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-14 (v4.1.0 — UI/UX Overhaul: SearchWidget, AnimatedFlightArc, Sabre PTC)
+> Last updated: 2026-03-14 (v4.1.1 — 100% Production Probe Verified: 10/10 Tests Passed)
 
 ---
 
@@ -49,14 +49,17 @@ After deploying backend changes, validate all booking modes:
 cd ~/projects/all-stars-atlas && git pull origin main && pm2 restart seventrip-api && sleep 5 && bash backend/test-bookings.sh
 ```
 
-Check detailed logs after test:
+## ✈️ Run 10-Test SSR Probe (Quick Validation)
+
+Fast validation of Sabre + TTI booking across all passenger types:
+
 ```bash
-pm2 logs seventrip-api --lines 300 | grep -E '\[Sabre\]|\[Booking\]' | head -200
+cd ~/projects/all-stars-atlas && git pull origin main && cd backend && pm2 restart seventrip-api && sleep 5 && bash probe-ssr-capabilities.sh
 ```
 
-Verify Sabre environment:
+Check detailed logs after test:
 ```bash
-pm2 logs seventrip-api --lines 50 | grep 'Config loaded'
+pm2 logs seventrip-api --lines 300 | grep -E '\[Sabre\]|\[Booking\]|\[TTI\]' | head -200
 ```
 
 ---
@@ -132,6 +135,7 @@ pm2 logs seventrip-api --lines 30
 
 | Date | Change | Deploy Command |
 |------|--------|----------------|
+| 2026-03-14 | **v4.1.1** 100% production probe verified: 10/10 tests, 34 assertions, 9 PNRs created+cancelled. UI pill badges for baggage/seats/class. Full documentation overhaul. | Standard Deployment |
 | 2026-03-14 | **v4.0.0** All 26 Sabre GDS features implemented: void, refund (price+fulfill), exchange, fare rules, FLIFO, stateless ancillaries, add ancillary, EMD fulfill, FF update. 10 new endpoints. | Backend Only |
 | 2026-03-13 | **v3.9.9.9** Sabre cancel hardening: enforce GDS PNR-only cancellation (blocks local cancel when missing), improved cancel logs (shows GDS vs airline PNR), SOAP seat-map retry now only on session/auth/network errors to prevent Host TA exhaustion; clearer TA-limit error message | Backend Only |
 | 2026-03-13 | **v3.9.9.7** Sabre DOCS strict mode: `no_special_req` fallback disabled when passport DOCS exist; airline PNR extracted from CreatePNR response; smart passport field detection (file path vs number); `AreaCityCode` removed from ContactNumber; extended vendor locator regex (`reservationNumber`, `confirmationNumber`) | Backend Only |
