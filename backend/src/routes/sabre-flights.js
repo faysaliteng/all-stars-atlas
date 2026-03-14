@@ -351,6 +351,22 @@ function normalizeSabreResponse(raw, params) {
       const taxesAmt = parseFloat(totalFare.Taxes?.Tax?.[0]?.Amount || totalFare.Taxes?.Amount || 0) || (totalAmount - baseFareAmt);
       const currency = totalFare.TotalFare?.CurrencyCode || totalFare.CurrencyCode || 'BDT';
 
+      // ── Extract per-passenger-type pricing from PTC_FareBreakdowns ──
+      const ptcBreakdowns = pricingInfo.PTC_FareBreakdowns?.PTC_FareBreakdown || [];
+      const classicPaxPricing = [];
+      for (const ptc of (Array.isArray(ptcBreakdowns) ? ptcBreakdowns : [ptcBreakdowns])) {
+        const ptcCode = ptc.PassengerTypeQuantity?.Code || 'ADT';
+        const ptcQty = parseInt(ptc.PassengerTypeQuantity?.Quantity || 1);
+        const ptcFare = ptc.PassengerFare || {};
+        const ptcBase = parseFloat(ptcFare.BaseFare?.Amount || 0);
+        const ptcTax = parseFloat(ptcFare.Taxes?.TotalAmount || ptcFare.Taxes?.Tax?.[0]?.Amount || 0);
+        const ptcTotal = parseFloat(ptcFare.TotalFare?.Amount || 0) || (ptcBase + ptcTax);
+        let paxLabel = 'Adult';
+        if (ptcCode === 'CNN' || ptcCode === 'CHD' || ptcCode.startsWith('C')) paxLabel = 'Child';
+        else if (ptcCode === 'INF' || ptcCode === 'INS') paxLabel = 'Infant';
+        classicPaxPricing.push({ type: ptcCode, label: paxLabel, count: ptcQty, baseFare: ptcBase, taxes: ptcTax, total: ptcTotal, currency });
+      }
+
       // Extract fare rules
       let isRefundable = false;
       let cancellationPolicy = null;
@@ -516,6 +532,9 @@ function normalizeSabreResponse(raw, params) {
             rebookingAllowed: true,
             cancellationAllowed: isRefundable,
           })),
+          paxPricing: odOptions.length > 1
+            ? classicPaxPricing.map(pp => ({ ...pp, baseFare: Math.round(pp.baseFare / odOptions.length), taxes: Math.round(pp.taxes / odOptions.length), total: Math.round(pp.total / odOptions.length), priceScope: 'per-direction' }))
+            : classicPaxPricing,
           timeLimit,
           cancellationPolicy,
           dateChangePolicy,
@@ -663,6 +682,42 @@ function normalizeGroupedResponse(response, params) {
         // Debug baggage result for first itinerary
         if (idx === 0) {
           console.log(`[Sabre] Resolved baggage: checked=${checkedBaggageGlobal}, hand=${handBaggageGlobal}, total infos=${allBaggageInfos.length}`);
+        }
+
+        // ── Extract per-passenger-type pricing from passengerInfoList (real API data) ──
+        const paxPricing = [];
+        for (const paxInfo of passengerInfoList) {
+          const pInfo = paxInfo.passengerInfo || {};
+          const paxType = pInfo.passengerType || 'ADT';
+          const paxNumber = pInfo.passengerNumber || 1;
+          // Per-pax fare: Sabre provides currencyConversion with per-pax amounts
+          const cc = pInfo.currencyConversion || {};
+          // Also check passengerTotalFare for direct amounts
+          const ptf = pInfo.passengerTotalFare || {};
+          const paxBaseFare = parseFloat(cc.baseFareAmount || ptf.baseFareAmount || 0);
+          const paxTaxes = parseFloat(cc.totalTaxAmount || ptf.totalTaxAmount || 0);
+          const paxTotal = parseFloat(cc.totalPrice || ptf.totalPrice || 0) || (paxBaseFare + paxTaxes);
+          const paxCurrency = cc.currency || ptf.currency || currency;
+          
+          // Map Sabre pax types to readable names
+          let paxLabel = 'Adult';
+          if (paxType === 'CNN' || paxType === 'CHD' || paxType.startsWith('C')) paxLabel = 'Child';
+          else if (paxType === 'INF' || paxType === 'INS') paxLabel = 'Infant';
+          
+          paxPricing.push({
+            type: paxType,
+            label: paxLabel,
+            count: paxNumber,
+            baseFare: paxBaseFare,
+            taxes: paxTaxes,
+            total: paxTotal,
+            currency: paxCurrency,
+          });
+        }
+
+        // Debug first itinerary's pax pricing
+        if (idx === 0 && paxPricing.length > 0) {
+          console.log(`[Sabre] paxPricing:`, JSON.stringify(paxPricing));
         }
 
         // Helper: resolve fareComponent segment data (inline or via fareComponentDescs ref)
@@ -936,6 +991,7 @@ function normalizeGroupedResponse(response, params) {
             aircraft: firstSeg.aircraft,
             legs: allLegs,
             fareDetails: fareDetailsArr,
+            paxPricing,
             timeLimit: fare.lastTicketDate || null,
             validatingAirline: fare.validatingCarrierCode || firstSeg.airlineCode,
             _sabreSeqNumber: `${groupIdx}-${idx}`,
@@ -1078,6 +1134,15 @@ function normalizeGroupedResponse(response, params) {
                     isTotalPrice: false,
                   }))
                 : fareDetailsArr,
+              paxPricing: itinLegs.length > 1
+                ? paxPricing.map(pp => ({
+                    ...pp,
+                    baseFare: Math.round(pp.baseFare / itinLegs.length),
+                    taxes: Math.round(pp.taxes / itinLegs.length),
+                    total: Math.round(pp.total / itinLegs.length),
+                    priceScope: 'per-direction',
+                  }))
+                : paxPricing,
               timeLimit: fare.lastTicketDate || null,
               cancellationPolicy,
               dateChangePolicy,
