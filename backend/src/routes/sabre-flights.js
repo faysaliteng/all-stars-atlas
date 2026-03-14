@@ -197,10 +197,15 @@ async function searchFlights(params) {
 
   if (!isMultiCity && (!origin || !destination || !departDate)) return [];
 
-  // Map cabin class to Sabre codes
+  // Map cabin class to Sabre codes — accept all formats: human-readable, IATA, kebab-case, snake_case
   const cabinMap = {
     'Economy': 'Y', 'Premium Economy': 'S', 'Business': 'C', 'First': 'F',
     'economy': 'Y', 'premium_economy': 'S', 'business': 'C', 'first': 'F',
+    'premium economy': 'S', 'premiumeconomy': 'S',
+    'premium-economy': 'S', // kebab-case from frontend SelectItem
+    // IATA standard cabin codes (from TicketLagBe/BDFare)
+    'Y': 'Y', 'S': 'S', 'C': 'C', 'J': 'C', 'F': 'F', 'W': 'S',
+    'y': 'Y', 's': 'S', 'c': 'C', 'j': 'C', 'f': 'F', 'w': 'S',
   };
   const sabreCabin = cabinMap[cabinClass] || 'Y';
 
@@ -237,8 +242,8 @@ async function searchFlights(params) {
     }
   }
 
-  // Bargain Finder Max request body — request multiple fare options per itinerary
-  // FlexibleFares with multiple FareParameters enables Sabre to return branded/multi-class fares
+  // Bargain Finder Max request body — matches BDFare/TicketLagBe parameters
+  // Key params: MaxStopsQuantity=2 (up to 2 connections), NumTrips=250, all data sources enabled
   const requestBody = {
     OTA_AirLowFareSearchRQ: {
       Version: '5',
@@ -250,8 +255,9 @@ async function searchFlights(params) {
       },
       OriginDestinationInformation: originDest,
       TravelPreferences: {
+        MaxStopsQuantity: 2, // BDFare uses unlimited, TicketLagBe uses connection:2 — allow up to 2 stops
         TPA_Extensions: {
-          NumTrips: { Number: 200 },
+          NumTrips: { Number: 250 },
           DataSources: {
             NDC: 'Enable',
             ATPCO: 'Enable',
@@ -259,10 +265,13 @@ async function searchFlights(params) {
           },
           DiversityParameters: {
             Weightings: {
-              PriceWeight: 8,
-              TravelTimeWeight: 2,
+              PriceWeight: 6,
+              TravelTimeWeight: 4,
             },
           },
+          LongConnectTime: { Enable: true },
+          ExemptAllTaxes: { Value: false },
+          ExemptAllTaxesAndFees: { Value: false },
           FlexibleFares: {
             FareParameters: [
               { Cabin: { Type: sabreCabin }, PassengerTypeQuantity: passengers.map(p => ({ ...p })) },
@@ -275,7 +284,7 @@ async function searchFlights(params) {
       },
       TPA_Extensions: {
         IntelliSellTransaction: {
-          RequestType: { Name: '200ITINS' },
+          RequestType: { Name: '250ITINS' },
         },
       },
       TravelerInfoSummary: {
