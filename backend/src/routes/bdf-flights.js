@@ -68,7 +68,10 @@ async function searchFlights({ origin, destination, departDate, returnDate, adul
       adults: parseInt(adults),
       children: parseInt(children),
       infants: parseInt(infants),
-      cabinClass: (cabinClass || 'Economy').charAt(0).toUpperCase() + (cabinClass || 'Economy').slice(1),
+      cabinClass: (() => {
+        const map = { economy: 'Economy', 'premium-economy': 'Premium Economy', premium_economy: 'Premium Economy', business: 'Business', first: 'First', y: 'Economy', s: 'Premium Economy', c: 'Business', f: 'First' };
+        return map[(cabinClass || '').toLowerCase()] || (cabinClass || 'Economy').charAt(0).toUpperCase() + (cabinClass || 'Economy').slice(1);
+      })(),
       currency: 'BDT',
     };
 
