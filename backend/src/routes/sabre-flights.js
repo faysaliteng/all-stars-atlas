@@ -1345,13 +1345,8 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       return Math.max(2, Math.min(11, age)); // clamp 2-11
     };
 
-    // Track which adult index each infant is associated with
-    let adultIndex = 0;
-    const adultIndices = [];
-    passengers.forEach((p) => {
-      const paxType = (p.type || p.passengerType || 'adult').toLowerCase();
-      if (paxType === 'adult' || paxType === 'adt') adultIndices.push(adultIndex++);
-    });
+    const adultPersonNameIndexes = [];
+    const infantDobByTraveler = [];
 
     const travelersInfo = passengers.map((p, i) => {
       // Sabre format: Title goes AFTER given name (e.g., "MST RAFIZA MS", "MD KAOSAR MR")
@@ -1359,24 +1354,16 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       const paxType = (p.type || p.passengerType || 'adult').toLowerCase();
       const rawTitle = (p.title || p.prefix || '').toUpperCase().replace(/\./g, '');
       let title = rawTitle;
-      
+
       // Child/Infant title rules per Sabre standard
       if (paxType === 'child' || paxType === 'cnn') {
         const gender = (p.gender || '').toLowerCase();
-        if (gender === 'female' || gender === 'f' || ['MS', 'MRS', 'MISS'].includes(rawTitle)) {
-          title = 'MISS';
-        } else {
-          title = 'MSTR';
-        }
+        title = (gender === 'female' || gender === 'f' || ['MS', 'MRS', 'MISS'].includes(rawTitle)) ? 'MISS' : 'MSTR';
       } else if (paxType === 'infant' || paxType === 'inf') {
         const gender = (p.gender || '').toLowerCase();
-        if (gender === 'female' || gender === 'f' || ['MS', 'MRS', 'MISS'].includes(rawTitle)) {
-          title = 'MISS';
-        } else {
-          title = 'MSTR';
-        }
+        title = (gender === 'female' || gender === 'f' || ['MS', 'MRS', 'MISS'].includes(rawTitle)) ? 'MISS' : 'MSTR';
       }
-      
+
       const givenName = (p.firstName || p.givenName || '').toUpperCase();
       const personName = {
         NameNumber: `${i + 1}.1`,
@@ -1384,26 +1371,39 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         Surname: (p.lastName || p.surname || '').toUpperCase(),
       };
 
-      // Add PassengerType for children (CNN with age code C05-C11)
-      if (paxType === 'child' || paxType === 'cnn') {
-        const age = calcChildAge(p.dateOfBirth || p.dob);
-        personName.PassengerType = { Code: `C${String(age).padStart(2, '0')}` };
-        console.log(`[Sabre] Pax ${i + 1}: Child age ${age} → PTC C${String(age).padStart(2, '0')}`);
+      if (paxType === 'adult' || paxType === 'adt') {
+        adultPersonNameIndexes.push(i);
       }
 
-      // Infants are marked with Infant indicator on the associated adult's name
-      // Sabre CreatePNR expects infants as Infant: { Ind: true } on the ADULT PersonName
+      // Sabre expects primitive string for PassengerType (not object)
+      if (paxType === 'child' || paxType === 'cnn') {
+        const age = calcChildAge(p.dateOfBirth || p.dob);
+        personName.PassengerType = `C${String(age).padStart(2, '0')}`;
+        console.log(`[Sabre] Pax ${i + 1}: Child age ${age} → PTC ${personName.PassengerType}`);
+      }
+
+      // Infant DOB is associated to adult PersonName.Infant (lap infant)
       if (paxType === 'infant' || paxType === 'inf') {
-        personName.Infant = { Ind: true };
-        // DOB is required for infants
-        if (p.dateOfBirth || p.dob) {
-          personName.Infant.DateOfBirth = (p.dateOfBirth || p.dob).substring(0, 10);
-        }
-        console.log(`[Sabre] Pax ${i + 1}: Infant → Infant.Ind=true`);
+        const infantDob = (p.dateOfBirth || p.dob || '').toString().substring(0, 10);
+        infantDobByTraveler.push(infantDob || null);
+        console.log(`[Sabre] Pax ${i + 1}: Infant captured for adult association`);
       }
 
       return { PersonName: personName };
     });
+
+    if (infantDobByTraveler.length > 0 && adultPersonNameIndexes.length > 0) {
+      infantDobByTraveler.forEach((infDob, infIdx) => {
+        const adultPersonIndex = adultPersonNameIndexes[Math.min(infIdx, adultPersonNameIndexes.length - 1)];
+        const adultPerson = travelersInfo[adultPersonIndex]?.PersonName;
+        if (!adultPerson) return;
+        adultPerson.Infant = {
+          Ind: true,
+          ...(infDob ? { DateOfBirth: infDob } : {}),
+        };
+        console.log(`[Sabre] Infant ${infIdx + 1} associated with adult NameNumber ${adultPerson.NameNumber}`);
+      });
+    }
 
     // ── Build SSR (Special Service Requests) ──
     const ssrList = [];
