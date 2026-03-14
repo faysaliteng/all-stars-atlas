@@ -380,7 +380,13 @@ async function searchFlights(params) {
       returnDate: ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
       segmentCount: isMultiCity ? preparedSegments.length : (ISO_DATE_RE.test(returnDateValue) ? 2 : 1),
     });
-    console.log(`[Sabre] Normalized ${results.length} flights`);
+    // Log booking class diversity for debugging fare quality
+    const classCounts = {};
+    for (const f of results) {
+      const cls = f.bookingClass || 'unknown';
+      classCounts[cls] = (classCounts[cls] || 0) + 1;
+    }
+    console.log(`[Sabre] Normalized ${results.length} flights — booking classes: ${JSON.stringify(classCounts)}`);
     return results;
   } catch (err) {
     console.error('[Sabre] Search failed:', err.message);
