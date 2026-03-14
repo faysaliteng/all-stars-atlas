@@ -3636,8 +3636,8 @@ const FlightResults = () => {
 
             {/* Modify button */}
             <div className="ml-auto shrink-0">
-              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-6 h-9" onClick={applySearchEdit}>
-                <Search className="w-4 h-4 mr-1.5" /> Modify
+              <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-lg px-3 sm:px-5 h-7 sm:h-8 text-xs" onClick={applySearchEdit}>
+                <Search className="w-3.5 h-3.5 mr-1" /> Modify
               </Button>
             </div>
           </div>
