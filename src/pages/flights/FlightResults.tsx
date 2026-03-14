@@ -1585,42 +1585,24 @@ const MultiCityFlightCard = ({
                   <div className="flex-1 flex items-center gap-2 sm:gap-4 min-w-0">
                     <div className="text-center shrink-0">
                       <p className="text-lg sm:text-xl font-black leading-tight">{formatTime(seg.departureTime)}</p>
-                      <p className="text-[10px] text-muted-foreground">{formatShortDate(seg.departureTime)}</p>
+                      <p className="text-[10px] flight-date">{formatShortDate(seg.departureTime)}</p>
                       <p className="text-[10px] font-bold text-muted-foreground">{seg.origin}</p>
                     </div>
                     <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[80px]">
-                      <p className="text-[10px] text-muted-foreground">{seg.duration}</p>
-                      <div className="w-full flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-accent/70 ring-2 ring-accent/20" />
-                        <div className="flex-1 h-[1.5px] relative overflow-visible">
-                          {/* Gradient track */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-accent/40 via-accent/20 to-accent/40 rounded-full" />
-                          {/* Animated dashed overlay */}
-                          <div className="absolute inset-0 rounded-full" style={{
-                            backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, hsl(var(--accent) / 0.3) 4px, hsl(var(--accent) / 0.3) 8px)',
-                            animation: 'flight-dash 12s linear infinite',
-                          }} />
-                          {/* Animated plane */}
-                          <motion.div
-                            className="absolute top-1/2 -translate-y-1/2 z-10"
-                            animate={{ left: ['15%', '85%'] }}
-                            transition={{ duration: 4, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
-                          >
-                            <div className="relative">
-                              <div className="absolute -inset-1.5 bg-accent/15 rounded-full blur-sm" />
-                              <Plane className="w-3.5 h-3.5 text-accent drop-shadow-sm" style={{ filter: 'drop-shadow(0 0 3px hsl(var(--accent) / 0.4))' }} />
-                            </div>
-                          </motion.div>
-                        </div>
-                        <div className="w-2 h-2 rounded-full bg-accent/70 ring-2 ring-accent/20" />
-                      </div>
-                      <p className={`text-[10px] font-bold ${seg.stops === 0 ? "text-accent" : "text-destructive"}`}>
+                      <AnimatedFlightArc compact direction="departure" />
+                      <p className="text-xs text-muted-foreground font-medium">{seg.duration}</p>
+                      <p className={`text-[10px] font-bold ${seg.stops === 0 ? "text-foreground" : "text-warning"}`}>
                         {seg.stops === 0 ? "Non-Stop" : `${seg.stops} Stop${seg.stops > 1 ? "s" : ""}`}
                       </p>
+                      {distanceKm(seg.origin, seg.destination) && (
+                        <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                          <MapPin className="w-2.5 h-2.5" /> {distanceKm(seg.origin, seg.destination)?.toLocaleString()} Km
+                        </span>
+                      )}
                     </div>
                     <div className="text-center shrink-0">
                       <p className="text-lg sm:text-xl font-black leading-tight">{formatTime(seg.arrivalTime)}</p>
-                      <p className="text-[10px] text-muted-foreground">{formatShortDate(seg.arrivalTime)}</p>
+                      <p className="text-[10px] flight-date">{formatShortDate(seg.arrivalTime)}</p>
                       <p className="text-[10px] font-bold text-muted-foreground">{seg.destination}</p>
                     </div>
                   </div>
