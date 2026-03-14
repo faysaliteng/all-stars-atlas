@@ -1806,19 +1806,35 @@ const FlightCard = ({
                 </span>
               )}
               {availableSeats !== null && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                <span className={`flex items-center gap-1.5 text-xs font-bold ${availableSeats <= 4 ? "text-destructive" : availableSeats <= 9 ? "text-orange-500" : "text-muted-foreground"}`}>
                   <Users className="w-3.5 h-3.5" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""} Left
                 </span>
               )}
               <span className="text-xs text-muted-foreground font-medium">{cabinDisplay}</span>
-            </div>
-          </div>
-
-          {/* Price section */}
-          <div className="flex flex-col items-end gap-1 p-4 sm:p-5 sm:w-56 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
-            <div className="flex items-center gap-2">
-              {price === cheapest && price > 0 && (
-                <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
+              {/* Fare feature badges */}
+              {(() => {
+                const best = getBestFareDetail(flight);
+                if (!best) return null;
+                return (
+                  <div className="flex items-center gap-2 ml-auto">
+                    {best.refundable && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">Refundable</Badge>
+                    )}
+                    {best.mealIncluded && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">🍽 Meal</Badge>
+                    )}
+                    {best.seatSelection && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent font-medium">💺 Seat</Badge>
+                    )}
+                    {best.cancellationAllowed && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Cancellable</Badge>
+                    )}
+                    {best.rebookingAllowed && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground font-medium">Rebookable</Badge>
+                    )}
+                  </div>
+                );
+              })()}
               )}
               {/* Reward Points Badge */}
               {price > 0 && (
