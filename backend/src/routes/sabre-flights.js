@@ -784,8 +784,10 @@ function normalizeGroupedResponse(response, params) {
             refundable: !isNonRefundable,
             brandName: brandName || '',
             brandCode: brandCode || '',
-            mealIncluded,
-            seatSelection,
+            // Sabre supports meal SSR and seat map for virtually all flights
+            // If BFM didn't explicitly include/exclude, mark as 'available' (add-on)
+            mealIncluded: mealIncluded === true ? true : 'available',
+            seatSelection: seatSelection === true ? true : 'available',
             rebookingAllowed,
             cancellationAllowed,
           };
