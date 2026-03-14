@@ -2145,7 +2145,7 @@ const FlightCard = ({
                           <tr className="border-t border-border/50">
                             <td className="px-4 py-3 font-semibold text-base flex items-center gap-2">{fromCode} <Plane className="w-3.5 h-3.5 text-muted-foreground" /> {toCode}</td>
                             <td className="px-4 py-3 text-muted-foreground">{baggage ? `ADT : ${baggage}` : "Not provided"}</td>
-                            <td className="px-4 py-3 text-muted-foreground">{handBaggage ? `ADT : ${handBaggage}` : "Not provided"}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{handBaggage ? `ADT : ${handBaggage}` : "ADT : 7KG"}</td>
                           </tr>
                         </tbody>
                       </table>
