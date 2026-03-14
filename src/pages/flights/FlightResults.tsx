@@ -3018,7 +3018,7 @@ const FlightResults = () => {
                           <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span className="text-sm font-bold text-foreground">{seg.to}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
+                        <span className="text-xs flight-date shrink-0">
                           {seg.date ? (() => { try { return format(new Date(seg.date), "dd MMM, EEE"); } catch { return seg.date; } })() : "—"}
                         </span>
                       </div>
