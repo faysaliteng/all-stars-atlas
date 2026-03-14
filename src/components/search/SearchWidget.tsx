@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import {
-  Plane, Building2, FileText, Palmtree, Stethoscope, Car,
-  Smartphone, PhoneCall, Receipt, ArrowLeftRight, Search, Users,
-  MapPin, ChevronDown, Wifi, Globe, Zap, CreditCard
+  PlaneTakeoff, PlaneLanding, Building2, FileText, Palmtree, Stethoscope, Car,
+  Smartphone, PhoneCall, Receipt, Repeat2, Search, Users,
+  MapPin, ChevronDown, Wifi, Globe, Zap, CreditCard,
+  CalendarDays, Armchair, SendHorizontal, CirclePlus, UserRound, Plane,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -83,9 +84,10 @@ interface AirportInputProps {
   onChange: (airport: typeof AIRPORTS[0]) => void;
   placeholder?: string;
   airports?: typeof AIRPORTS;
+  icon?: React.ReactNode;
 }
 
-const AirportInput = ({ label, value, onChange, placeholder, airports: airportList }: AirportInputProps) => {
+const AirportInput = ({ label, value, onChange, placeholder, airports: airportList, icon }: AirportInputProps) => {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -119,6 +121,7 @@ const AirportInput = ({ label, value, onChange, placeholder, airports: airportLi
           className="flex items-center gap-2 w-full text-left"
           onClick={() => { setFocused(true); setOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
         >
+          {icon && <span className="text-primary shrink-0">{icon}</span>}
           <span className="text-lg sm:text-xl font-black text-primary tracking-tight">{value.code}</span>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold truncate">{value.city}</div>
@@ -629,19 +632,20 @@ const SearchWidget = () => {
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3">
           <RadioGroup value={tripType} onValueChange={setTripType} className="flex gap-1.5 flex-wrap">
             {[
-              { value: "oneway", label: "One Way" },
-              { value: "roundtrip", label: "Round Trip" },
-              { value: "multicity", label: "Multi City" },
+              { value: "oneway", label: "One Way", icon: <SendHorizontal className="w-3.5 h-3.5" /> },
+              { value: "roundtrip", label: "Round Trip", icon: <Repeat2 className="w-3.5 h-3.5" /> },
+              { value: "multicity", label: "Multi City", icon: <Plane className="w-3.5 h-3.5" /> },
             ].map((t) => (
               <label
                 key={t.value}
-                className={`px-3 sm:px-4 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold cursor-pointer transition-all border ${
+                className={`px-3 sm:px-4 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold cursor-pointer transition-all border flex items-center gap-1.5 ${
                   tripType === t.value
                     ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
                     : "bg-transparent text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
                 }`}
               >
                 <RadioGroupItem value={t.value} className="sr-only" />
+                {t.icon}
                 {t.label}
               </label>
             ))}
@@ -651,7 +655,7 @@ const SearchWidget = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5 h-8 rounded-lg font-semibold flex-1 sm:flex-none">
-                  <Users className="w-3.5 h-3.5" />
+                  <UserRound className="w-3.5 h-3.5" />
                   {totalPax} Traveller{totalPax > 1 ? "s" : ""}
                   <ChevronDown className="w-3 h-3" />
                 </Button>
@@ -687,6 +691,7 @@ const SearchWidget = () => {
 
             <Select value={cabinClass} onValueChange={setCabinClass}>
               <SelectTrigger className="h-8 w-auto text-xs border gap-1 rounded-lg font-semibold flex-1 sm:flex-none">
+                <Armchair className="w-3.5 h-3.5 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -725,15 +730,15 @@ const SearchWidget = () => {
             {multiCitySegments.map((segment, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm relative">
                 <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
-                  <AirportInput label={`From (Flight ${index + 1})`} value={segment.from} onChange={(a) => updateSegment(index, 'from', a)} placeholder="Type city or airport..." airports={scopedMultiCityFromAirports} />
+                  <AirportInput label={`From (Flight ${index + 1})`} value={segment.from} onChange={(a) => updateSegment(index, 'from', a)} placeholder="Type city or airport..." airports={scopedMultiCityFromAirports} icon={<PlaneTakeoff className="w-5 h-5" />} />
                 </div>
 
                 <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
-                  <AirportInput label={`To (Flight ${index + 1})`} value={segment.to} onChange={(a) => updateSegment(index, 'to', a)} placeholder="Where to?" airports={getMultiCityToAirports(segment.from)} />
+                  <AirportInput label={`To (Flight ${index + 1})`} value={segment.to} onChange={(a) => updateSegment(index, 'to', a)} placeholder="Where to?" airports={getMultiCityToAirports(segment.from)} icon={<PlaneLanding className="w-5 h-5" />} />
                 </div>
 
                 <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Departure</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Departure</div>
                   <Popover open={openDatePopover === `mc-${index}`} onOpenChange={(o) => setOpenDatePopover(o ? `mc-${index}` : null)}>
                     <PopoverTrigger className="w-full text-left">
                       <DateDisplay date={segment.date} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
@@ -776,33 +781,33 @@ const SearchWidget = () => {
                 </Button>
               )}
               <Button onClick={handleFlightSearch} className="flex-1 sm:flex-none h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-base font-extrabold shadow-xl shadow-secondary/25 hover:shadow-secondary/40 transition-all active:scale-[0.98]">
-                <Search className="w-5 h-5 mr-2" /> Search
+                <SendHorizontal className="w-5 h-5 mr-2" /> SEARCH
               </Button>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm">
             <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
-              <AirportInput label="From" value={fromAirport} onChange={setFromAirport} placeholder="Type city or airport..." airports={scopedFromAirports} />
+              <AirportInput label="From" value={fromAirport} onChange={setFromAirport} placeholder="Type city or airport..." airports={scopedFromAirports} icon={<PlaneTakeoff className="w-5 h-5" />} />
             </div>
 
             <div className="flex md:hidden items-center justify-center py-1">
               <button onClick={swapAirports} className="w-9 h-9 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm">
-                <ArrowLeftRight className="w-4 h-4 rotate-90" />
+                <Repeat2 className="w-4 h-4 rotate-90" />
               </button>
             </div>
             <div className="hidden md:flex items-center justify-center -mx-4 z-10">
               <button onClick={swapAirports} className="w-10 h-10 rounded-full bg-card border-2 border-primary/30 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-md hover:shadow-lg hover:scale-110">
-                <ArrowLeftRight className="w-4 h-4" />
+                <Repeat2 className="w-4 h-4" />
               </button>
             </div>
 
             <div className="md:col-span-3 search-field border-b md:border-b-0 flex-col items-start">
-              <AirportInput label="To" value={toAirport} onChange={setToAirport} placeholder="Where to?" airports={scopedToAirports} />
+              <AirportInput label="To" value={toAirport} onChange={setToAirport} placeholder="Where to?" airports={scopedToAirports} icon={<PlaneLanding className="w-5 h-5" />} />
             </div>
 
             <div className={`${tripType === "roundtrip" ? "col-span-1 sm:col-span-1" : ""} md:col-span-2 search-field border-b md:border-b-0 flex-col items-start ${dateErrorClass("depart")}`}>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Departure</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Departure</div>
               <Popover open={openDatePopover === "depart"} onOpenChange={(o) => setOpenDatePopover(o ? "depart" : null)}>
                 <PopoverTrigger className="w-full text-left">
                   <DateDisplay date={departDate} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
@@ -815,7 +820,7 @@ const SearchWidget = () => {
 
             {tripType === "roundtrip" && (
               <div className={`md:col-span-2 search-field border-b md:border-b-0 flex-col items-start ${dateErrorClass("return")}`}>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Return</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 flex items-center gap-1"><CalendarDays className="w-3 h-3" /> Return</div>
                 <Popover open={openDatePopover === "return"} onOpenChange={(o) => setOpenDatePopover(o ? "return" : null)}>
                   <PopoverTrigger className="w-full text-left">
                     <DateDisplay date={returnDate} fallbackDay="—" fallbackMonth="Select" fallbackWeekday="Date" />
@@ -829,7 +834,7 @@ const SearchWidget = () => {
 
             <div className={`${tripType === "roundtrip" ? "md:col-span-2" : "md:col-span-4"} flex items-center justify-center p-3`}>
               <Button onClick={handleFlightSearch} className="w-full h-12 md:h-full md:min-h-[56px] rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-base font-extrabold shadow-xl shadow-secondary/25 hover:shadow-secondary/40 transition-all active:scale-[0.98]">
-                <Search className="w-5 h-5 mr-2" /> Search
+                <SendHorizontal className="w-5 h-5 mr-2" /> SEARCH
               </Button>
             </div>
           </div>
