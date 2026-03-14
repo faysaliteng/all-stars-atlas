@@ -1865,8 +1865,8 @@ const FlightCard = ({
               )}
             </div>
             <p className="text-xl sm:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
-            {baseFare > 0 && (
-              <p className="text-[10px] text-muted-foreground line-through">BDT {Math.round(price * 1.05).toLocaleString()}</p>
+            {discount > 0 && (
+              <p className="text-[10px] text-muted-foreground line-through">BDT {grossPrice.toLocaleString()}</p>
             )}
             <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover open={showPriceBreakdown} onOpenChange={setShowPriceBreakdown}>
@@ -1875,13 +1875,15 @@ const FlightCard = ({
                   Price Breakdown <ChevronRight className="w-3 h-3" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="left" className="w-64 p-3">
+              <PopoverContent side="left" className="w-72 p-3">
                 <p className="text-xs font-bold mb-2">Fare Breakdown</p>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between"><span className="text-muted-foreground">Base Fare</span><span className="font-medium">BDT {baseFare.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Taxes & Fees</span><span className="font-medium">BDT {taxes.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Discount ({DISCOUNT_PCT}%)</span><span className="font-medium text-accent">- BDT {discount.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">AIT VAT ({AIT_VAT_PCT}%)</span><span className="font-medium">BDT {aitVat.toLocaleString()}</span></div>
                   <Separator className="my-1" />
-                  <div className="flex justify-between font-bold"><span>Total</span><span>BDT {price.toLocaleString()}</span></div>
+                  <div className="flex justify-between font-bold"><span>Total Payable</span><span>BDT {price.toLocaleString()}</span></div>
                 </div>
               </PopoverContent>
             </Popover>
