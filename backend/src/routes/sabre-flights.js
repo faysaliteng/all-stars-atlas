@@ -1322,7 +1322,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         DepartureDateTime: departureDateTime,
         ArrivalDateTime: arrivalDateTime,
         FlightNumber: numericFlightNumber,
-        NumberInParty: String(Math.max(nonInfantCount, 1)),
+        NumberInParty: String(Math.max(totalPaxCount, 1)),
         ResBookDesigCode: seg.bookingClass || 'Y',
         Status: 'NN',
         OriginLocation: { LocationCode: seg.origin || flightData.origin },
