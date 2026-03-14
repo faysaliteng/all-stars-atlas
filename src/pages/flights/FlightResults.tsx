@@ -2389,6 +2389,7 @@ const FlightResults = () => {
     return AIRPORTS.filter(a => a.code.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)).slice(0, 8);
   }, [airportSearch]);
 
+  const carrierCode = searchParams.get("carrier") || "";
   // Search params — works for all modes: one-way, round-trip, AND multi-city
   const params = hasRequiredParams ? (() => {
     const p: Record<string, string | undefined> = {
@@ -2396,6 +2397,7 @@ const FlightResults = () => {
       children: children !== "0" ? children : undefined,
       infants: infants !== "0" ? infants : undefined,
       cabinClass: cabinClass || undefined,
+      carrier: carrierCode || undefined,
     };
     if (isMultiCity) {
       // Send segments as JSON to backend — single Sabre BFM request
