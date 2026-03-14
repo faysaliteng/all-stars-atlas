@@ -2568,38 +2568,40 @@ const FlightResults = () => {
     return Object.values(map).sort((a, b) => a.cheapest - b.cheapest);
   }, [flights, roundTripPairs, isRoundTrip, hasDirections, isMultiCity, allMultiCityFlights]);
 
-  // Quick sort summaries — Cheapest, Fastest, Best from real data
+  // Quick sort summaries — Cheapest, Fastest, Best from real data (payable prices)
   const quickSortSummary = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      const cheapestPair = [...roundTripPairs].sort((a, b) => a.totalPrice - b.totalPrice)[0];
-      const fastestPair = [...roundTripPairs].sort((a, b) => 
+      const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: flightPayable(p.outbound) + flightPayable(p.returnFlight) }));
+      const cheapestPair = [...withPayable].sort((a, b) => a.payableTotal - b.payableTotal)[0];
+      const fastestPair = [...withPayable].sort((a, b) => 
         ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - 
         ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0))
       )[0];
-      const bestPair = [...roundTripPairs].sort((a, b) => {
-        const sa = a.totalPrice * 0.5 + ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) * 30;
-        const sb = b.totalPrice * 0.5 + ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)) * 30;
+      const bestPair = [...withPayable].sort((a, b) => {
+        const sa = a.payableTotal * 0.5 + ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) * 30;
+        const sb = b.payableTotal * 0.5 + ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)) * 30;
         return sa - sb;
       })[0];
       return {
-        cheapest: cheapestPair ? { price: cheapestPair.totalPrice, duration: cheapestPair.outbound.duration || '' } : null,
-        fastest: fastestPair ? { price: fastestPair.totalPrice, duration: fastestPair.outbound.duration || '' } : null,
-        best: bestPair ? { price: bestPair.totalPrice, duration: bestPair.outbound.duration || '' } : null,
+        cheapest: cheapestPair ? { price: cheapestPair.payableTotal, duration: cheapestPair.outbound.duration || '' } : null,
+        fastest: fastestPair ? { price: fastestPair.payableTotal, duration: fastestPair.outbound.duration || '' } : null,
+        best: bestPair ? { price: bestPair.payableTotal, duration: bestPair.outbound.duration || '' } : null,
       };
     }
     const relevantFlights = isMultiCity ? allMultiCityFlights : flights;
     if (relevantFlights.length === 0) return { cheapest: null, fastest: null, best: null };
-    const cheapestFlight = [...relevantFlights].sort((a, b) => (a.price || 0) - (b.price || 0))[0];
-    const fastestFlight = [...relevantFlights].sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity))[0];
-    const bestFlight = [...relevantFlights].sort((a, b) => {
-      const sa = (a.price || 0) * 0.5 + (a.durationMinutes || 0) * 30 + (a.stops || 0) * 3000;
-      const sb = (b.price || 0) * 0.5 + (b.durationMinutes || 0) * 30 + (b.stops || 0) * 3000;
+    const withPayable = relevantFlights.map((f: any) => ({ ...f, _payable: flightPayable(f) }));
+    const cheapestFlight = [...withPayable].sort((a, b) => a._payable - b._payable)[0];
+    const fastestFlight = [...withPayable].sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity))[0];
+    const bestFlight = [...withPayable].sort((a, b) => {
+      const sa = a._payable * 0.5 + (a.durationMinutes || 0) * 30 + (a.stops || 0) * 3000;
+      const sb = b._payable * 0.5 + (b.durationMinutes || 0) * 30 + (b.stops || 0) * 3000;
       return sa - sb;
     })[0];
     return {
-      cheapest: cheapestFlight ? { price: cheapestFlight.price, duration: cheapestFlight.duration || '' } : null,
-      fastest: fastestFlight ? { price: fastestFlight.price, duration: fastestFlight.duration || '' } : null,
-      best: bestFlight ? { price: bestFlight.price, duration: bestFlight.duration || '' } : null,
+      cheapest: cheapestFlight ? { price: cheapestFlight._payable, duration: cheapestFlight.duration || '' } : null,
+      fastest: fastestFlight ? { price: fastestFlight._payable, duration: fastestFlight.duration || '' } : null,
+      best: bestFlight ? { price: bestFlight._payable, duration: bestFlight.duration || '' } : null,
     };
   }, [flights, roundTripPairs, isRoundTrip, hasDirections, isMultiCity, allMultiCityFlights]);
 
