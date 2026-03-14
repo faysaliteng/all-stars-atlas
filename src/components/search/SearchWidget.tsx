@@ -779,7 +779,7 @@ const SearchWidget = () => {
                 </Button>
               )}
               <Button onClick={handleFlightSearch} className="flex-1 sm:flex-none h-12 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-base font-extrabold shadow-xl shadow-secondary/25 hover:shadow-secondary/40 transition-all active:scale-[0.98]">
-                <Search className="w-5 h-5 mr-2" /> Search
+                <SendHorizontal className="w-5 h-5 mr-2" /> SEARCH
               </Button>
             </div>
           </div>
