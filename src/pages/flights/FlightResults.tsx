@@ -1247,11 +1247,15 @@ const RoundTripFlightCard = ({
 
                           return (
                             <div key={label}>
-                              <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
-                                <Plane className={`w-4 h-4 ${label === "Return" ? "rotate-180 text-warning" : "text-accent"}`} />
+                              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-3 text-sm font-bold shadow-sm ${
+                                label === "Return"
+                                  ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30"
+                                  : "bg-accent/15 text-accent border border-accent/30"
+                              }`}>
+                                <Plane className={`w-4 h-4 ${label === "Return" ? "rotate-180" : ""}`} />
                                 {label}: {leg.origin} → {leg.destination}
-                                <span className="flight-date text-xs">· {formatDate(leg.departureTime)}</span>
-                              </h4>
+                                <span className="flight-date text-xs ml-1">· {formatDate(leg.departureTime)}</span>
+                              </div>
                               {(legs.length > 0 ? legs : [{ origin: leg.origin, destination: leg.destination, departureTime: leg.departureTime, arrivalTime: leg.arrivalTime, duration: leg.duration, flightNumber: leg.flightNumber, airlineCode: leg.airlineCode, aircraft: ac }]).map((segment: any, i: number) => (
                                 <div key={i} className="space-y-3 mb-4">
                                   <div className="flex items-center gap-2 flex-wrap">
