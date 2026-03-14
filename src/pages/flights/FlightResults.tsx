@@ -2010,30 +2010,30 @@ const FlightCard = ({
         {/* ── Main card row ── */}
         <div className="flex flex-col sm:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-3 p-3 sm:p-4 sm:w-36 lg:w-44 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
-            <div className="flex flex-col items-center gap-1 shrink-0">
+          <div className="flex items-center gap-2 p-2.5 sm:p-3 sm:w-32 lg:w-36 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
+            <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
-                <img src={logo} alt={flight.airline} className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center"><span class="text-xs font-bold text-muted-foreground">${(flight.airlineCode || "").toUpperCase()}</span></div>`; }} />
+                <img src={logo} alt={flight.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(flight.airlineCode || "").toUpperCase()}</span></div>`; }} />
               ) : (
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <span className="text-xs font-bold text-muted-foreground">{(flight.airlineCode || "").toUpperCase()}</span>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-muted-foreground">{(flight.airlineCode || "").toUpperCase()}</span>
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-bold leading-tight truncate">{flight.airline}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
+              <p className="text-[11px] sm:text-xs font-bold leading-tight truncate">{flight.airline}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
           </div>
 
           {/* Flight times + baggage info */}
-          <div className="flex-1 p-3 sm:p-4 min-w-0">
-            <div className="flex items-center gap-2 sm:gap-5">
+          <div className="flex-1 p-2.5 sm:p-3 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Departure */}
               <div className="text-center shrink-0">
-                <p className="text-lg sm:text-2xl font-black tracking-tight flight-time">{departTime}</p>
-                <p className="text-[10px] sm:text-[11px] flight-date mt-0.5">{departDateStr}</p>
+                <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
+                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{departDateStr}</p>
               </div>
 
               {/* Duration bar */}
