@@ -2830,7 +2830,7 @@ const FlightResults = () => {
   // For round-trip mode, compute price bounds from pair totalPrices; for one-way from individual prices
   const maxPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.max(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
+      return Math.max(...roundTripPairs.map(p => pairPayable(p)));
     }
     return allFlightsForFilters.length > 0 ? Math.max(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 200000;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
