@@ -269,63 +269,78 @@ async function searchFlights(params) {
   }
 
   // Bargain Finder Max request body — proven working payload for PCC J4YL
-  // FlexibleFares/MaxStopsQuantity/LongConnectTime cause NAV on this PCC — keep it simple
-  // STRATEGY: Maximize itinerary count + fare diversity to surface ALL available booking classes
-  // (V, S, L, T, Q, etc.) not just full-fare Y. Sabre returns multiple pricingInformation
-  // per itinerary — each with different booking classes. We sort by price and pick cheapest.
+  // Strategy: try a smart profile first, then progressively relaxed fallbacks so search never silently dies.
   const isRoundTrip = !isMultiCity && ISO_DATE_RE.test(returnDateValue);
-  const buildBfmRequestBody = () => ({
-    OTA_AirLowFareSearchRQ: {
-      Version: '5',
-      POS: {
-        Source: [{
-          PseudoCityCode: config.pcc || 'F9CE',
-          RequestorID: { Type: '1', ID: '1', CompanyName: { Code: 'TN' } },
-        }],
+  const buildBfmRequestBody = ({
+    numTrips = 250,
+    enableDiversity = true,
+    additionalNonStops = 20,
+    enableMultiTicket = false,
+    includeBrandedFareIndicators = true,
+  } = {}) => {
+    const travelTpaExtensions = {
+      NumTrips: { Number: numTrips },
+      DataSources: {
+        NDC: 'Enable',
+        ATPCO: 'Enable',
+        LCC: 'Enable',
       },
-      OriginDestinationInformation: originDest,
-      TravelPreferences: {
-        // NOTE: Keep this payload relaxed for PCC stability (NAV observed with restrictive knobs).
+    };
+
+    if (enableDiversity) {
+      travelTpaExtensions.DiversityParameters = {
+        Weightings: {
+          PriceWeight: 10,
+          TravelTimeWeight: 0,
+        },
+        ...(typeof additionalNonStops === 'number' ? { AdditionalNonStopsPercentage: additionalNonStops } : {}),
+      };
+    }
+
+    if (isRoundTrip && enableMultiTicket) {
+      travelTpaExtensions.MultiTicket = { DisplayPolicy: 'SOW' };
+    }
+
+    const travelerInfoSummary = {
+      SeatsRequested: [parseInt(adults) + parseInt(children)],
+      AirTravelerAvail: [{ PassengerTypeQuantity: passengers }],
+    };
+
+    if (includeBrandedFareIndicators) {
+      travelerInfoSummary.PriceRequestInformation = {
         TPA_Extensions: {
-          NumTrips: { Number: 250 },
-          DataSources: {
-            NDC: 'Enable',
-            ATPCO: 'Enable',
-            LCC: 'Enable',
-          },
-          DiversityParameters: {
-            Weightings: {
-              PriceWeight: 10,    // Maximum price priority — cheapest booking classes first
-              TravelTimeWeight: 0, // Let filters handle travel time sorting
-            },
-            // Ensure non-stop options are always represented even when connections are cheaper
-            AdditionalNonStopsPercentage: 20,
-          },
-          // Allow split ticketing for round-trips — enables mixing V outbound + T return
-          ...(isRoundTrip ? { MultiTicket: { DisplayPolicy: 'SOW' } } : {}),
-        },
-        // Cabin is a preference so we don't return 0 inventory when Sabre can't honor strict cabin filtering.
-        CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
-      },
-      TPA_Extensions: {
-        IntelliSellTransaction: {
-          RequestType: { Name: '200ITINS' },
-        },
-      },
-      TravelerInfoSummary: {
-        SeatsRequested: [parseInt(adults) + parseInt(children)],
-        AirTravelerAvail: [{
-          PassengerTypeQuantity: passengers,
-        }],
-        // Request all available pricing options per itinerary for fare class diversity
-        PriceRequestInformation: {
-          TPA_Extensions: {
-            BrandedFareIndicators: { MultipleBrandedFares: true, ReturnBrandAncillaries: true },
+          BrandedFareIndicators: {
+            MultipleBrandedFares: true,
+            ReturnBrandAncillaries: true,
           },
         },
+      };
+    }
+
+    return {
+      OTA_AirLowFareSearchRQ: {
+        Version: '5',
+        POS: {
+          Source: [{
+            PseudoCityCode: config.pcc || 'F9CE',
+            RequestorID: { Type: '1', ID: '1', CompanyName: { Code: 'TN' } },
+          }],
+        },
+        OriginDestinationInformation: originDest,
+        TravelPreferences: {
+          TPA_Extensions: travelTpaExtensions,
+          // Cabin is a preference so we don't return 0 inventory when Sabre can't honor strict cabin filtering.
+          CabinPref: [{ Cabin: sabreCabin, PreferLevel: 'Preferred' }],
+        },
+        TPA_Extensions: {
+          IntelliSellTransaction: {
+            RequestType: { Name: '200ITINS' },
+          },
+        },
+        TravelerInfoSummary: travelerInfoSummary,
       },
-    },
-  });
+    };
+  };
 
   const decodeCompressedResponse = (raw) => {
     if (!raw?.compressedResponse || typeof raw.compressedResponse !== 'string') return raw;
@@ -351,7 +366,7 @@ async function searchFlights(params) {
       const text = String(m?.text || m?.value || '').toUpperCase();
       return code === 'NAV' || text.includes('NO AVAILABILITY');
     });
-    return { rs, itinCount, hasNoAvailability };
+    return { itinCount, hasNoAvailability };
   };
 
   try {
@@ -360,17 +375,7 @@ async function searchFlights(params) {
       : `${originCode} → ${destinationCode}`;
     console.log(`[Sabre] Searching ${logRoute}...`);
 
-    let raw = decodeCompressedResponse(await sabreRequest(config, '/v5/offers/shop', buildBfmRequestBody()));
-    const { itinCount } = getResponseStats(raw);
-
-    console.log(`[Sabre] BFM response keys: ${JSON.stringify(raw ? Object.keys(raw) : [])}`);
-    console.log(`[Sabre] BFM itinerary count: ${itinCount}, hasStatistics: ${!!(raw?.OTA_AirLowFareSearchRS || raw?.groupedItineraryResponse || raw)?.statistics}`);
-
-    if (itinCount === 0) {
-      console.log(`[Sabre] BFM raw (truncated): ${JSON.stringify(raw).slice(0, 2000)}`);
-    }
-
-    const results = normalizeSabreResponse(raw, {
+    const normalizeParams = {
       ...params,
       isMultiCity,
       segments: isMultiCity ? preparedSegments : undefined,
@@ -379,15 +384,77 @@ async function searchFlights(params) {
       departDate: departDateValue,
       returnDate: ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
       segmentCount: isMultiCity ? preparedSegments.length : (ISO_DATE_RE.test(returnDateValue) ? 2 : 1),
-    });
-    // Log booking class diversity for debugging fare quality
-    const classCounts = {};
-    for (const f of results) {
-      const cls = f.bookingClass || 'unknown';
-      classCounts[cls] = (classCounts[cls] || 0) + 1;
+    };
+
+    const requestProfiles = [
+      {
+        name: 'smart_diverse',
+        numTrips: 250,
+        enableDiversity: true,
+        additionalNonStops: 20,
+        enableMultiTicket: isRoundTrip,
+        includeBrandedFareIndicators: true,
+      },
+      {
+        name: 'fallback_no_multiticket',
+        numTrips: 220,
+        enableDiversity: true,
+        additionalNonStops: null,
+        enableMultiTicket: false,
+        includeBrandedFareIndicators: true,
+      },
+      {
+        name: 'fallback_safe',
+        numTrips: 180,
+        enableDiversity: false,
+        additionalNonStops: null,
+        enableMultiTicket: false,
+        includeBrandedFareIndicators: false,
+      },
+    ];
+
+    let lastRaw = null;
+
+    for (const profile of requestProfiles) {
+      try {
+        console.log(`[Sabre] BFM attempt: ${profile.name}`);
+        const requestBody = buildBfmRequestBody(profile);
+        const raw = decodeCompressedResponse(await sabreRequest(config, '/v5/offers/shop', requestBody));
+        lastRaw = raw;
+
+        const { itinCount, hasNoAvailability } = getResponseStats(raw);
+        console.log(`[Sabre] ${profile.name} stats: itineraries=${itinCount}, NAV=${hasNoAvailability}`);
+
+        if (itinCount === 0) {
+          console.log(`[Sabre] ${profile.name} raw (truncated): ${JSON.stringify(raw).slice(0, 1200)}`);
+          continue;
+        }
+
+        const results = normalizeSabreResponse(raw, normalizeParams);
+
+        const classCounts = {};
+        for (const f of results) {
+          const cls = f.bookingClass || 'unknown';
+          classCounts[cls] = (classCounts[cls] || 0) + 1;
+        }
+
+        console.log(`[Sabre] ${profile.name} normalized ${results.length} flights — booking classes: ${JSON.stringify(classCounts)}`);
+
+        if (results.length > 0) {
+          return results;
+        }
+
+        console.warn(`[Sabre] ${profile.name} returned itineraries but normalized to 0. Trying fallback...`);
+      } catch (attemptErr) {
+        console.error(`[Sabre] ${profile.name} attempt failed:`, attemptErr.message);
+      }
     }
-    console.log(`[Sabre] Normalized ${results.length} flights — booking classes: ${JSON.stringify(classCounts)}`);
-    return results;
+
+    console.warn('[Sabre] All BFM attempts returned no usable results');
+    if (lastRaw) {
+      console.log(`[Sabre] Last BFM raw (truncated): ${JSON.stringify(lastRaw).slice(0, 2000)}`);
+    }
+    return [];
   } catch (err) {
     console.error('[Sabre] Search failed:', err.message);
     return [];
