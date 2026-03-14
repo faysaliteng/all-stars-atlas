@@ -1799,7 +1799,39 @@ const FlightCard = ({
 
               {/* Duration bar */}
               <div className="flex-1 flex flex-col items-center gap-0.5 sm:gap-1 min-w-[60px] sm:min-w-[100px]">
-                <AnimatedFlightArc compact direction="departure" />
+                {stops > 0 && legs.length > 1 ? (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-full cursor-pointer">
+                          <AnimatedFlightArc compact direction="departure" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs p-3 space-y-2">
+                        <p className="font-semibold text-xs mb-1.5">Layover Details</p>
+                        {legs.map((leg: any, li: number) => {
+                          if (li === 0) return null;
+                          const prevLeg = legs[li - 1];
+                          const prevArr = prevLeg?.arrivalTime ? new Date(prevLeg.arrivalTime).getTime() : 0;
+                          const curDep = leg?.departureTime ? new Date(leg.departureTime).getTime() : 0;
+                          const layoverMins = prevArr && curDep ? Math.round((curDep - prevArr) / 60000) : 0;
+                          const layoverStr = layoverMins > 0 ? fmtDurationMins(layoverMins) : "";
+                          const stopCity = prevLeg?.destination || stopCodes[li - 1] || "";
+                          const stopName = stopCity ? getAirportCity(stopCity) : "";
+                          return (
+                            <div key={li} className="flex items-center gap-2 text-xs">
+                              <div className="w-2 h-2 rounded-full bg-warning shrink-0" />
+                              <span className="font-medium">{stopCity}{stopName && stopName !== stopCity ? ` (${stopName})` : ""}</span>
+                              {layoverStr && <span className="text-muted-foreground">— {layoverStr} layover</span>}
+                            </div>
+                          );
+                        })}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <AnimatedFlightArc compact direction="departure" />
+                )}
                 <p className="text-xs text-muted-foreground font-medium">{duration}</p>
                 <div className="flex items-center gap-2">
                   <p className={`text-[11px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
