@@ -884,7 +884,7 @@ function buildFareRows(
     // Fallback: only adult pricing available from API (no per-pax breakdown)
     if (paxAdults > 0) {
       const disc = Math.round(baseFare * discountPct / 100);
-      const aitVat = Math.round((baseFare - disc) * aitVatPct / 100);
+      const aitVat = Math.round(baseFare * aitVatPct / 100);
       fareRows.push({ paxType: "Adult", baseFare, tax: taxes, other: 0, discount: disc, aitVat, count: paxAdults, amount: (baseFare - disc + taxes + aitVat) * paxAdults });
     }
     if (paxChildren > 0) {
