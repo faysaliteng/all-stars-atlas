@@ -2116,8 +2116,8 @@ const FlightCard = ({
                 </span>
               )}
               {cabinDisplay && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/60 text-[11px] font-semibold text-muted-foreground">
-                  <Plane className="w-3.5 h-3.5" /> {cabinDisplay}
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 border border-border/60 text-[10px] font-semibold text-muted-foreground">
+                  <Plane className="w-3 h-3" /> {cabinDisplay}
                 </span>
               )}
               {/* Refundable / Non-Refundable pill */}
@@ -2125,7 +2125,7 @@ const FlightCard = ({
                 const best = getBestFareDetail(flight);
                 const isRefundable = best?.refundable ?? flight.refundable ?? false;
                 return (
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-bold ${
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
                     isRefundable
                       ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
                       : "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40 text-destructive"
@@ -2135,7 +2135,7 @@ const FlightCard = ({
                 );
               })()}
               {stops === 0 && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/5 border border-accent/20 text-[11px] font-bold text-accent">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] font-bold text-accent">
                   Direct
                 </span>
               )}
