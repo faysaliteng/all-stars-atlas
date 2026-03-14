@@ -1331,16 +1331,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       });
     });
 
-    // Calculate child age from DOB for Sabre CNN age-based PTC (C05-C11)
-    const calcChildAge = (dob) => {
-      if (!dob) return 8; // default to 8 if no DOB
-      const birth = new Date(dob);
-      const now = new Date();
-      let age = now.getFullYear() - birth.getFullYear();
-      const monthDiff = now.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
-      return Math.max(2, Math.min(11, age)); // clamp 2-11
-    };
+    // Per verified Sabre payload: all passengers (ADT/CHD/INF) are plain PersonName entries
 
     // Per verified Sabre payload (SABRE_PAYLOADS.md §4c):
     // - ALL passengers (adult, child, infant) get their own PersonName entry
