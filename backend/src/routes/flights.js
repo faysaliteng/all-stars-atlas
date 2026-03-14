@@ -581,6 +581,7 @@ router.get('/search', async (req, res) => {
       cabinClass, class: classParam, cabin,
       adults, children, infants,
       sort, priceMin, priceMax,
+      carrier, preferredAirline,
       page = 1, limit = 500,
       segments: segmentsRaw, // multi-city: JSON array of {from, to, date}
     } = req.query;
