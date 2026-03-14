@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [4.1.1] — 2026-03-14 — 100% Production Probe Verified + Documentation Overhaul
+
+### Verified — Full Automated Production Probe (10/10 Tests Passed)
+- **34 assertions, 29 passed, 0 failed, 5 skipped** (non-critical feature tests)
+- **Sabre**: 5 booking scenarios — 1 ADT, ADT+CHD, 2 ADT, ADT+CHD+INF+SSR, Round-Trip — all PNRs created and cancelled
+- **TTI**: 5 booking scenarios — 1 ADT, ADT+CHD, ADT+CHD+INF+WCHR, Round-Trip, ADT+CHD — all PNRs created and cancelled
+- **PNRs verified**: DXGDPD, KIIRIF, KFGUNO, KLQPYW, LQRTND (Sabre) | 00KTUN, 00KTUP, 00KTUQ, 00KTUS (TTI)
+- **Dual PNR extraction**: GDS PNR + Airline PNR confirmed (e.g., DXGDPD + FQAHDU)
+
+### Added — Flight Results UI Enhancement
+- **Elegant pill badges** for baggage, seats, cabin class, and refund status on all flight cards
+- **Dynamic seat urgency coloring**: >9 seats (green), 5-9 (orange), ≤4 (red)
+- **Button-style route labels**: Outbound (accent), Return (amber), Multi-City (blue) with Plane icons
+- **Consistent styling** across one-way, round-trip, multi-city cards and booking flow
+
+### Updated — Complete Documentation Overhaul
+- **SABRE_FEATURE_AUDIT.md**: Atom-by-atom technical detail for all 10 probe tests with exact payloads, response fields, and PNR evidence
+- **SABRE_PAYLOADS.md**: Added TTI payload reference (booking, cancel, response fields), expanded endpoint table with all 18 Sabre operations + 5 TTI operations
+- **All .md files**: Updated to v4.1.1 with full probe results and technical specifications
+
+---
+
 ## [4.1.0] — 2026-03-14 — UI/UX Overhaul: Search Widget, Flight Arc, Sabre Child/Infant PTC
 
 ### Changed — Frontend

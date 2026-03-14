@@ -1,6 +1,6 @@
 # Seven Trip — Developer Documentation
 
-> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v4.1.0 (2026-03-14).
+> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v4.1.1 (2026-03-14 — 100% Production Probe Verified).
 
 ---
 

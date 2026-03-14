@@ -135,6 +135,7 @@ pm2 logs seventrip-api --lines 30
 
 | Date | Change | Deploy Command |
 |------|--------|----------------|
+| 2026-03-14 | **v4.1.1** 100% production probe verified: 10/10 tests, 34 assertions, 9 PNRs created+cancelled. UI pill badges for baggage/seats/class. Full documentation overhaul. | Standard Deployment |
 | 2026-03-14 | **v4.0.0** All 26 Sabre GDS features implemented: void, refund (price+fulfill), exchange, fare rules, FLIFO, stateless ancillaries, add ancillary, EMD fulfill, FF update. 10 new endpoints. | Backend Only |
 | 2026-03-13 | **v3.9.9.9** Sabre cancel hardening: enforce GDS PNR-only cancellation (blocks local cancel when missing), improved cancel logs (shows GDS vs airline PNR), SOAP seat-map retry now only on session/auth/network errors to prevent Host TA exhaustion; clearer TA-limit error message | Backend Only |
 | 2026-03-13 | **v3.9.9.7** Sabre DOCS strict mode: `no_special_req` fallback disabled when passport DOCS exist; airline PNR extracted from CreatePNR response; smart passport field detection (file path vs number); `AreaCityCode` removed from ContactNumber; extended vendor locator regex (`reservationNumber`, `confirmationNumber`) | Backend Only |
