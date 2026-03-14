@@ -2890,7 +2890,7 @@ const FlightResults = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="start">
+              <PopoverContent className="w-48 p-2 z-[60]" align="start">
                 <div className="space-y-1">
                   {[
                     { label: "One Way", key: "oneway" },
@@ -2942,7 +2942,7 @@ const FlightResults = () => {
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-0.5" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-3" align="start">
+                <PopoverContent className="w-80 p-3 z-[60]" align="start">
                   <p className="text-xs font-bold text-muted-foreground mb-2">Edit Route</p>
                   {/* Scope toggle */}
                   <div className="flex gap-1.5 mb-3">
@@ -3007,7 +3007,7 @@ const FlightResults = () => {
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-96 p-4" align="start">
+                <PopoverContent className="w-96 p-4 z-[60]" align="start">
                   <p className="text-xs font-bold text-muted-foreground mb-3">Multi-City Segments</p>
                   <div className="space-y-2.5">
                     {multiCitySegments.map((seg, i) => (
@@ -3052,7 +3052,7 @@ const FlightResults = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-3" align="start">
+              <PopoverContent className="w-auto p-3 z-[60]" align="start">
                 <p className="text-xs font-bold text-muted-foreground mb-2">{isRoundTrip ? "Departure Date" : "Select Date"}</p>
                 <Calendar mode="single" selected={editDepart} onSelect={(d) => {
                   setEditDepart(d || undefined);
@@ -3103,7 +3103,7 @@ const FlightResults = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 p-3" align="start">
+              <PopoverContent className="w-72 p-3 z-[60]" align="start">
                 <p className="text-xs font-bold text-muted-foreground mb-3">Passengers, Cabin & Preferences</p>
                 <div className="space-y-3">
                   {[
