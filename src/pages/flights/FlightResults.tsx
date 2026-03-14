@@ -82,24 +82,45 @@ function getAirlineFareParams(
   return { discountPct: markupSettings.discount, aitVatPct: markupSettings.aitVat };
 }
 
+/**
+ * Strip timezone offset from ISO datetime so Date() treats it as local airport time.
+ * Sabre returns e.g. "2026-03-31T13:55:00+04:00" — we want to display 13:55 regardless
+ * of the user's browser timezone.
+ */
+function stripTZ(datetime: string): string {
+  // Remove trailing timezone offset (+HH:MM, -HH:MM, Z)
+  return datetime.replace(/([+-]\d{2}:\d{2}|Z)$/, '');
+}
+
+/** Extract GMT offset string from ISO datetime, e.g. "+04:00" → "GMT+4" */
+function extractGMT(datetime?: string): string {
+  if (!datetime) return "";
+  const m = datetime.match(/([+-])(\d{2}):(\d{2})$/);
+  if (!m) return "";
+  const sign = m[1];
+  const hours = parseInt(m[2], 10);
+  const mins = parseInt(m[3], 10);
+  return mins > 0 ? `GMT${sign}${hours}:${m[3]}` : `GMT${sign}${hours}`;
+}
+
 function formatTime(datetime?: string): string {
   if (!datetime) return "--:--";
-  try { const d = new Date(datetime); return isNaN(d.getTime()) ? datetime : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return datetime; }
+  try { const d = new Date(stripTZ(datetime)); return isNaN(d.getTime()) ? datetime : d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }); } catch { return datetime; }
 }
 
 function formatDate(datetime?: string): string {
   if (!datetime) return "";
-  try { const d = new Date(datetime); return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "2-digit" }); } catch { return ""; }
+  try { const d = new Date(stripTZ(datetime)); return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "2-digit" }); } catch { return ""; }
 }
 
 function formatShortDate(datetime?: string): string {
   if (!datetime) return "";
-  try { const d = new Date(datetime); return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", weekday: "short" }); } catch { return ""; }
+  try { const d = new Date(stripTZ(datetime)); return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", weekday: "short" }); } catch { return ""; }
 }
 
 function isNextDay(depart?: string, arrive?: string): boolean {
   if (!depart || !arrive) return false;
-  return new Date(arrive).getDate() !== new Date(depart).getDate();
+  return new Date(stripTZ(arrive)).getDate() !== new Date(stripTZ(depart)).getDate();
 }
 
 function getBestFareDetail(flight: any) {
@@ -866,6 +887,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         <div className="text-center shrink-0">
           <p className="text-[10px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
           <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
+          {extractGMT(flight.departureTime) && <p className="text-[8px] text-muted-foreground/60">{extractGMT(flight.departureTime)}</p>}
         </div>
 
         {/* Duration bar */}
@@ -914,6 +936,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
             {arriveTime}
             {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
+          {extractGMT(flight.arrivalTime) && <p className="text-[8px] text-muted-foreground/60">{extractGMT(flight.arrivalTime)}</p>}
         </div>
       </div>
     </div>
