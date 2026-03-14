@@ -423,6 +423,20 @@ const DashboardBookingDetail = () => {
                 <span>Cabin: {booking.cabinClass}</span>
                 {booking.refundable && <span className="flex items-center gap-1 text-accent"><Shield className="w-3.5 h-3.5" /> Refundable</span>}
                 <span>{booking.stops === 0 ? "Non-stop" : `${booking.stops} stop(s)`}</span>
+                <Separator orientation="vertical" className="h-4" />
+                <FlightStatusBadge
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                  date={(booking.departureTime || "").substring(0, 10)}
+                  compact
+                />
+                <FareRulesModal
+                  origin={booking.origin}
+                  destination={booking.destination}
+                  departureDate={(booking.departureTime || "").substring(0, 10)}
+                  airlineCode={booking.airlineCode}
+                  flightNumber={booking.flightNumber}
+                />
               </div>
 
               {booking.isRoundTrip && booking.returnFlight && (
