@@ -1992,7 +1992,7 @@ const FlightCard = ({
 
               {/* Arrival */}
               <div className="text-center shrink-0">
-                <p className="text-lg sm:text-2xl font-black tracking-tight">
+                <p className="text-lg sm:text-2xl font-black tracking-tight flight-time">
                   {arriveTime}
                   {nextDay && <sup className="text-[8px] sm:text-[9px] text-destructive font-bold ml-0.5">+1 days</sup>}
                 </p>
