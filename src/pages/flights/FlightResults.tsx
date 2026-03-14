@@ -847,14 +847,14 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
 
   return (
     <div className="flex-1 min-w-0">
-      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg mb-1.5 text-[10px] sm:text-xs font-bold ${
+      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-2 text-xs sm:text-sm font-bold shadow-sm ${
         isReturn 
-          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" 
-          : "bg-accent/10 text-accent border border-accent/20"
+          ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30" 
+          : "bg-accent/15 text-accent border border-accent/30"
       }`}>
-        <Plane className={`w-3 h-3 ${isReturn ? "rotate-180" : ""}`} />
+        <Plane className={`w-4 h-4 ${isReturn ? "rotate-180" : ""}`} />
         <span>{label}: {fromCode} → {toCode}</span>
-        <span className="text-[9px] opacity-70 font-semibold">· {formatShortDate(flight.departureTime)}</span>
+        <span className="flight-date text-xs ml-1">· {formatShortDate(flight.departureTime)}</span>
       </div>
       <div className="flex items-center gap-1.5 sm:gap-2">
         {/* Origin */}
