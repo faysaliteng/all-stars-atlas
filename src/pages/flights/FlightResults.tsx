@@ -1109,7 +1109,7 @@ const RoundTripFlightCard = ({
                                   <div className="flex items-start justify-between pt-2 pb-1">
                                     <div className="text-left shrink-0 max-w-[38%]">
                                       <p className="text-xl font-black">{formatTime(segment.departureTime)}</p>
-                                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(segment.departureTime)}</p>
+                                      <p className="text-xs flight-date mt-0.5">{formatDate(segment.departureTime)}</p>
                                       <p className="text-[11px] text-muted-foreground mt-1">{getAirportName(segment.origin || leg.origin)} ({segment.origin || leg.origin})</p>
                                     </div>
                                     <div className="flex-1 flex flex-col items-center justify-center pt-1 px-4">
