@@ -883,7 +883,7 @@ const RoundTripFlightCard = ({
               <Users className="w-3.5 h-3.5" /> {outbound.availableSeats} Seat{outbound.availableSeats !== 1 ? "s" : ""}
             </span>
           )}
-          <span className="text-xs text-muted-foreground font-medium">Class: {outbound.bookingClass || outbound.cabinClass?.charAt(0) || "Y"}</span>
+          {bookingClassDisplay && <span className="text-xs text-muted-foreground font-medium">Class: {bookingClassDisplay}</span>}
         </div>
 
         {/* Info bar */}
