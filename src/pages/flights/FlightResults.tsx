@@ -572,13 +572,13 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
         id: `option-${i}`,
         label,
         bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
-        handBaggage: f.handBaggage || primary.handBaggage || "7KG",
+        handBaggage: f.handBaggage || primary.handBaggage || null,
         checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
-        meal: f.mealIncluded ? true : null,
-        seatSelection: f.seatSelection ?? false,
-        rebooking: f.rebookingAllowed !== false,
-        cancellation: f.cancellationAllowed !== false,
-        miles: true,
+        meal: f.mealIncluded === true ? true : f.mealIncluded === false ? false : null,
+        seatSelection: f.seatSelection === true ? true : null,
+        rebooking: typeof f.rebookingAllowed === 'boolean' ? f.rebookingAllowed : null,
+        cancellation: typeof f.cancellationAllowed === 'boolean' ? f.cancellationAllowed : (typeof primary.refundable === 'boolean' ? primary.refundable : null),
+        miles: f.milesEarning || primary.milesEarning || null,
         grossFare: f.price || f.amount || f.total || primary.price || 0,
         flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
         isBestValue: i === 0,
@@ -595,12 +595,12 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
     // Generate from flight data
     return [buildOption({
       bookingClass: primary.bookingClass || primary.cabinClass?.charAt(0) || "",
-      handBaggage: primary.handBaggage || "7KG",
+      handBaggage: primary.handBaggage || null,
       baggage: primary.baggage,
-      mealIncluded: primary.mealIncluded,
-      seatSelection: false,
-      rebookingAllowed: true,
-      cancellationAllowed: primary.refundable ?? false,
+      mealIncluded: primary.mealIncluded ?? null,
+      seatSelection: primary.seatSelection ?? null,
+      rebookingAllowed: typeof primary.rebookingAllowed === 'boolean' ? primary.rebookingAllowed : null,
+      cancellationAllowed: typeof primary.refundable === 'boolean' ? primary.refundable : null,
     }, 0, true)];
   }, [flights]);
 
@@ -673,21 +673,23 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
                       let display: React.ReactNode;
 
                       if (ft.key === "handBaggage" || ft.key === "checkedBaggage") {
-                        display = val ? <span className="text-xs font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">Not included</span>;
+                        display = val ? <span className="text-xs font-semibold text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "meal") {
-                        display = val ? <span className="text-xs font-medium text-foreground">Free meals available</span> : <span className="text-xs text-muted-foreground">Not included</span>;
+                        display = val === true ? <span className="text-xs font-medium text-foreground">Included</span> : val === false ? <span className="text-xs text-muted-foreground">Not included</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "bookingClass") {
                         display = <span className="text-xs font-bold text-foreground">{String(val || "—")}</span>;
                       } else if (ft.key === "seatSelection") {
-                        display = val
+                        display = val === true
                           ? <span className="text-xs font-medium text-accent">Available</span>
-                          : <X className="w-4 h-4 text-destructive/60 mx-auto" />;
+                          : val === false ? <X className="w-4 h-4 text-destructive/60 mx-auto" />
+                          : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "rebooking" || ft.key === "cancellation") {
-                        display = val
+                        display = val === true
                           ? <span className="text-xs font-medium text-orange-500">Penalties Apply</span>
-                          : <X className="w-4 h-4 text-destructive/60 mx-auto" />;
+                          : val === false ? <X className="w-4 h-4 text-destructive/60 mx-auto" />
+                          : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else if (ft.key === "miles") {
-                        display = <span className="text-xs font-medium text-foreground">Earn 50% Frequent Flyer Mileage.</span>;
+                        display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground italic">Not provided</span>;
                       } else {
                         display = val ? <span className="text-xs font-medium text-foreground">{String(val)}</span> : <span className="text-xs text-muted-foreground">—</span>;
                       }
