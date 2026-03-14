@@ -1565,8 +1565,8 @@ const MultiCityExpandedDetails = ({ flight, segments }: { flight: any; segments:
                           <p className="text-xs text-muted-foreground font-medium -mt-0.5">{leg.duration || seg.duration}</p>
                         </div>
                         <div className="text-right shrink-0 max-w-[38%]">
-                          <p className="text-xl font-black">{formatTime(leg.arrivalTime || seg.arrivalTime)}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{formatShortDate(leg.arrivalTime || seg.arrivalTime)}</p>
+                          <p className="text-xl font-black flight-time">{formatTime(leg.arrivalTime || seg.arrivalTime)}</p>
+                          <p className="text-xs flight-date mt-0.5">{formatShortDate(leg.arrivalTime || seg.arrivalTime)}</p>
                           <p className="text-[11px] text-muted-foreground mt-1">{getAirportName(leg.destination || seg.destination)} ({leg.destination || seg.destination})</p>
                         </div>
                       </div>
