@@ -2489,7 +2489,7 @@ const FlightResults = () => {
   const allFlightsForFilters = isMultiCity ? allMultiCityFlights : flights;
 
   const airlines = useMemo(() => apiData.airlines || [...new Set(allFlightsForFilters.map((f: any) => f.airline).filter(Boolean))], [apiData.airlines, allFlightsForFilters]);
-  const cheapest = useMemo(() => apiData.cheapest || (allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => f.price || Infinity)) : 0), [apiData.cheapest, allFlightsForFilters]);
+  const cheapest = useMemo(() => allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 0, [allFlightsForFilters]);
 
   // For round-trip mode, compute price bounds from pair totalPrices; for one-way from individual prices
   const maxPrice = useMemo(() => {
