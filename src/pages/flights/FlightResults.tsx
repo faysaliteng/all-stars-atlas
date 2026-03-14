@@ -1083,20 +1083,20 @@ const RoundTripFlightCard = ({
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-3 p-3 sm:p-4 sm:w-36 lg:w-40 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
-            <div className="flex flex-col items-center gap-1 shrink-0">
+          <div className="flex items-center gap-2 p-2.5 sm:p-3 sm:w-32 lg:w-36 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
+            <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
-                <img src={logo} alt={outbound.airline} className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center"><span class="text-xs font-bold text-muted-foreground">${(outbound.airlineCode || "").toUpperCase()}</span></div>`; }} />
+                <img src={logo} alt={outbound.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(outbound.airlineCode || "").toUpperCase()}</span></div>`; }} />
               ) : (
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <span className="text-xs font-bold text-muted-foreground">{(outbound.airlineCode || "").toUpperCase()}</span>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-muted-foreground">{(outbound.airlineCode || "").toUpperCase()}</span>
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-bold leading-tight truncate">{outbound.airline}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
+              <p className="text-[11px] sm:text-xs font-bold leading-tight truncate">{outbound.airline}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
           </div>
 
