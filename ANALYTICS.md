@@ -160,15 +160,15 @@
 
 ## 🌐 API Provider Integration Status
 
-| Provider | Status | Search | Book | Cancel | Ticket | Seat Map | Ancillaries |
-|----------|--------|--------|------|--------|--------|----------|-------------|
-| **Sabre REST** | ✅ Active | ✅ BFM v5 | ✅ PNR + SSR | ✅ REST + SOAP fallback | ✅ AirTicketRQ | — | — |
-| **Sabre SOAP** | ✅ Active | — | — | ✅ Fallback | — | ✅ SeatMap v6 | ✅ GAO v3 |
-| **TTI/ZENITH** | ✅ Active | ✅ SearchFlights | ✅ CreateBooking | ✅ Cancel (airline PNR) | ⚠️ Manual | — | — |
-| **BDFare** | ✅ Active | ✅ API v2 | ✅ CreateBooking | ✅ Cancel | ✅ IssueTicket | — | — |
-| **FlyHub** | ✅ Active | ✅ AirSearch | ✅ AirBook | ✅ AirCancel | ✅ AirTicketing | — | — |
-| **Galileo** | 🔧 Planned | — | — | — | — | — | — |
-| **NDC** | ⏳ Pending PCC activation | — | — | — | — | — | — |
+| Provider | Status | Search | Book | Cancel | Ticket | Seat Map | Ancillaries | Void | Refund | Exchange | Fare Rules | FLIFO |
+|----------|--------|--------|------|--------|--------|----------|-------------|------|--------|----------|------------|-------|
+| **Sabre REST** | ✅ Active | ✅ BFM v5 | ✅ PNR + SSR | ✅ REST + SOAP fallback | ✅ AirTicketRQ | — | ✅ Stateless | ✅ | ✅ 2-step | — | — | ✅ |
+| **Sabre SOAP** | ✅ Active | — | — | ✅ Fallback | — | ✅ SeatMap v6 | ✅ GAO v3 | — | — | ✅ v1.1.0 | ✅ v3.0.1 | — |
+| **TTI/ZENITH** | ✅ Active | ✅ SearchFlights | ✅ CreateBooking | ✅ Cancel (airline PNR) | ⚠️ Manual | — | — | — | — | — | — | — |
+| **BDFare** | ✅ Active | ✅ API v2 | ✅ CreateBooking | ✅ Cancel | ✅ IssueTicket | — | — | — | — | — | — | — |
+| **FlyHub** | ✅ Active | ✅ AirSearch | ✅ AirBook | ✅ AirCancel | ✅ AirTicketing | — | — | — | — | — | — | — |
+| **Galileo** | 🔧 Planned | — | — | — | — | — | — | — | — | — | — | — |
+| **NDC** | ⏳ Pending PCC activation | — | — | — | — | — | — | — | — | — | — | — |
 
 ---
 
