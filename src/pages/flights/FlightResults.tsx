@@ -4036,48 +4036,17 @@ const FlightResults = () => {
                           )}
                         </CardContent>
                       </Card>
-                    ) : (() => {
-                      const groups = groupSimilarFlights(filteredAll);
-                      return groups.map((group) => {
-                        const groupKey = `${group.primary.airlineCode}_${group.primary.stops}_${group.primary.id}`;
-                        const isGroupExpanded = expandedGroups.has(groupKey);
-                        return (
-                          <div key={groupKey}>
-                            <FlightCard flight={group.primary} cheapest={cheapest}
-                              isExpanded={expandedFlight === group.primary.id} onToggleExpand={() => setExpandedFlight(expandedFlight === group.primary.id ? null : group.primary.id)} />
-                            {group.similar.length > 0 && (
-                              <>
-                                <button
-                                  onClick={() => setExpandedGroups(prev => {
-                                    const next = new Set(prev);
-                                    if (next.has(groupKey)) next.delete(groupKey); else next.add(groupKey);
-                                    return next;
-                                  })}
-                                  className="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-accent bg-accent/5 hover:bg-accent/10 border border-accent/20 border-t-0 rounded-b-xl transition-colors -mt-1"
-                                >
-                                  {isGroupExpanded ? (
-                                    <>Hide Options <ChevronUp className="w-3.5 h-3.5" /></>
-                                  ) : (
-                                    <>{group.similar.length} More flight{group.similar.length > 1 ? "s" : ""} - View Option{group.similar.length > 1 ? "s" : ""} <ChevronDown className="w-3.5 h-3.5" /></>
-                                  )}
-                                </button>
-                                <AnimatePresence>
-                                  {isGroupExpanded && (
-                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
-                                      className="overflow-hidden space-y-3 mt-2 ml-4 border-l-2 border-accent/20 pl-3">
-                                      {group.similar.map((sf: any) => (
-                                        <FlightCard key={sf.id} flight={sf} cheapest={cheapest}
-                                          isExpanded={expandedFlight === sf.id} onToggleExpand={() => setExpandedFlight(expandedFlight === sf.id ? null : sf.id)} />
-                                      ))}
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </>
-                            )}
-                          </div>
-                        );
-                      });
-                    })()}
+                    ) : (
+                      filteredAll.map((flight: any, idx: number) => (
+                        <FlightCard
+                          key={`${flight.id}-${idx}`}
+                          flight={flight}
+                          cheapest={cheapest}
+                          isExpanded={expandedFlight === flight.id}
+                          onToggleExpand={() => setExpandedFlight(expandedFlight === flight.id ? null : flight.id)}
+                        />
+                      ))
+                    )}
                   </>
                 )}
               </DataLoader>
