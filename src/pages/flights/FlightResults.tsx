@@ -2494,15 +2494,15 @@ const FlightResults = () => {
   // For round-trip mode, compute price bounds from pair totalPrices; for one-way from individual prices
   const maxPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.max(...roundTripPairs.map(p => p.totalPrice || 0));
+      return Math.max(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
     }
-    return allFlightsForFilters.length > 0 ? Math.max(...allFlightsForFilters.map((f: any) => f.price || 0)) : 200000;
+    return allFlightsForFilters.length > 0 ? Math.max(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 200000;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
   const minPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.min(...roundTripPairs.map(p => p.totalPrice || 0));
+      return Math.min(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
     }
-    return allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => f.price || 0)) : 0;
+    return allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 0;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
 
   // Duration bounds for slider init
