@@ -351,6 +351,22 @@ function normalizeSabreResponse(raw, params) {
       const taxesAmt = parseFloat(totalFare.Taxes?.Tax?.[0]?.Amount || totalFare.Taxes?.Amount || 0) || (totalAmount - baseFareAmt);
       const currency = totalFare.TotalFare?.CurrencyCode || totalFare.CurrencyCode || 'BDT';
 
+      // ── Extract per-passenger-type pricing from PTC_FareBreakdowns ──
+      const ptcBreakdowns = pricingInfo.PTC_FareBreakdowns?.PTC_FareBreakdown || [];
+      const classicPaxPricing = [];
+      for (const ptc of (Array.isArray(ptcBreakdowns) ? ptcBreakdowns : [ptcBreakdowns])) {
+        const ptcCode = ptc.PassengerTypeQuantity?.Code || 'ADT';
+        const ptcQty = parseInt(ptc.PassengerTypeQuantity?.Quantity || 1);
+        const ptcFare = ptc.PassengerFare || {};
+        const ptcBase = parseFloat(ptcFare.BaseFare?.Amount || 0);
+        const ptcTax = parseFloat(ptcFare.Taxes?.TotalAmount || ptcFare.Taxes?.Tax?.[0]?.Amount || 0);
+        const ptcTotal = parseFloat(ptcFare.TotalFare?.Amount || 0) || (ptcBase + ptcTax);
+        let paxLabel = 'Adult';
+        if (ptcCode === 'CNN' || ptcCode === 'CHD' || ptcCode.startsWith('C')) paxLabel = 'Child';
+        else if (ptcCode === 'INF' || ptcCode === 'INS') paxLabel = 'Infant';
+        classicPaxPricing.push({ type: ptcCode, label: paxLabel, count: ptcQty, baseFare: ptcBase, taxes: ptcTax, total: ptcTotal, currency });
+      }
+
       // Extract fare rules
       let isRefundable = false;
       let cancellationPolicy = null;
