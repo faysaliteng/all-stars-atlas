@@ -847,7 +847,36 @@ function normalizeGroupedResponse(response, params) {
 
         const pricing = sortedPricing[0];
         const fare = pricing.fare || {};
-        const { total: totalAmount, baseFare: baseFareAmt, taxes: taxesAmt, currency } = extractFareTotals(fare);
+        let { total: totalAmount, baseFare: baseFareAmt, taxes: taxesAmt, currency } = extractFareTotals(fare);
+
+        // ── SAFETY NET: If extractFareTotals returned 0, reconstruct from paxPricing ──
+        // Some airlines (MH, CZ etc.) have pricing only in passengerInfo.currencyConversion
+        // but NOT in totalFare — this prevents BDT 0 display.
+        if (totalAmount <= 0) {
+          const paxList = fare.passengerInfoList || [];
+          let paxSum = 0, paxBase = 0, paxTax = 0;
+          for (const pax of paxList) {
+            const pInfo = pax?.passengerInfo || {};
+            const cc = pInfo.currencyConversion || {};
+            const ptf = pInfo.passengerTotalFare || {};
+            const qty = Math.max(1, parseInt(pInfo.passengerNumber || 1, 10) || 1);
+            const t = parseFloat(cc.totalPrice || ptf.totalPrice || cc.equivalentAmount || ptf.equivalentAmount || 0);
+            const b = parseFloat(cc.baseFareAmount || ptf.baseFareAmount || cc.baseFare || ptf.baseFare || 0);
+            const x = parseFloat(cc.totalTaxAmount || ptf.totalTaxAmount || cc.taxAmount || ptf.taxAmount || 0);
+            paxSum += (t || (b + x)) * qty;
+            paxBase += b * qty;
+            paxTax += x * qty;
+          }
+          if (paxSum > 0) {
+            totalAmount = paxSum;
+            baseFareAmt = paxBase;
+            taxesAmt = paxTax;
+            console.log(`[Sabre] Price recovered from paxPricing: total=${totalAmount}, base=${baseFareAmt}, tax=${taxesAmt}`);
+          }
+        }
+        if (totalAmount <= 0) {
+          console.warn(`[Sabre] WARNING: Flight itin ${groupIdx}-${idx} has price=0. Raw fare keys: ${Object.keys(fare).join(',')}, totalFare keys: ${Object.keys(fare.totalFare || {}).join(',')}`);
+        }
 
         // Extract baggage per segment from passengerInfoList
         const passengerInfoList = fare.passengerInfoList || [];
