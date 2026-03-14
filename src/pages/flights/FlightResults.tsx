@@ -957,7 +957,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         {/* Origin */}
         <div className="text-center shrink-0">
           <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
-          <p className="text-xs sm:text-sm lg:text-base font-black tracking-tight flight-time">{departTime}</p>
+          <p className="text-[11px] sm:text-xs font-black tracking-tight flight-time">{departTime}</p>
         </div>
 
         {/* Duration bar */}
@@ -1002,7 +1002,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         {/* Destination */}
         <div className="text-center shrink-0">
           <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{toCode}</p>
-          <p className="text-xs sm:text-sm lg:text-base font-black tracking-tight flight-time">
+          <p className="text-[11px] sm:text-xs font-black tracking-tight flight-time">
             {arriveTime}
             {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
@@ -2029,7 +2029,7 @@ const FlightCard = ({
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* Departure */}
               <div className="text-center shrink-0">
-                <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
+                <p className="text-xs sm:text-sm font-black tracking-tight flight-time">{departTime}</p>
                 <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{departDateStr}</p>
               </div>
 
@@ -2081,7 +2081,7 @@ const FlightCard = ({
 
               {/* Arrival */}
               <div className="text-center shrink-0">
-                <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">
+                <p className="text-xs sm:text-sm font-black tracking-tight flight-time">
                   {arriveTime}
                   {nextDay && <sup className="text-[7px] sm:text-[8px] text-destructive font-bold ml-0.5">+1 days</sup>}
                 </p>
