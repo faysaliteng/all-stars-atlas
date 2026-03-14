@@ -1,7 +1,7 @@
 # Seven Trip — Troubleshooting Guide
 
 > Solutions for every known issue encountered during development and production.
-> Last updated: 2026-03-13 (v3.9.9.9 — Sabre Cancel Hardening + Host TA Recovery)
+> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features)
 
 ---
 

@@ -111,7 +111,7 @@ GET /flights/search?from=DAC&to=DXB&date=2026-04-15&adults=1
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Sabre Integration                         │
+│                    Sabre Integration (26/26 ✅)               │
 │                                                             │
 │  REST API (sabre-flights.js)          SOAP API (sabre-soap.js)
 │  ┌─────────────────────────┐         ┌─────────────────────┐
@@ -122,7 +122,11 @@ GET /flights/search?from=DAC&to=DXB&date=2026-04-15&adults=1
 │  │ CreatePNR + SSR + DOCS  │         │ EnhancedSeatMapRQ   │
 │  │ AirTicketRQ             │         │ GetAncillaryOffersRQ│
 │  │ Cancel/Void             │         │ Cancel (fallback)   │
-│  │                         │         │ SessionCloseRQ      │
+│  │ Refund (price+fulfill)  │         │ StructureFareRulesRQ│
+│  │ FLIFO Flight Status     │         │ ExchangeBookingRQ   │
+│  │ Stateless Ancillaries   │         │ SessionCloseRQ      │
+│  │ Fulfill Tickets (EMD)   │         │                     │
+│  │ FF Update (FQTV SSR)    │         │                     │
 │  └─────────────────────────┘         └─────────────────────┘
 │                                                             │
 │  PNR Schema Rules:                                          │
@@ -134,6 +138,7 @@ GET /flights/search?from=DAC&to=DXB&date=2026-04-15&adults=1
 │  •   passport docs exist (prevents silent DOCS omission)    │
 │  • No CompressResponse flag in BFM request                  │
 │  • Airline PNR extracted from CreatePNR + GetBooking         │
+│  • All 26 Sabre sections implemented (v4.0.0)               │
 └─────────────────────────────────────────────────────────────┘
 ```
 

@@ -1,7 +1,30 @@
 # Seven Trip — API Changelog
 
 > All backend API changes, new endpoints, breaking changes, and schema updates per version.
-> Last updated: 2026-03-13 (v3.9.9.9)
+> Last updated: 2026-03-14 (v4.0.0)
+
+---
+
+## v4.0.0 — 2026-03-14
+
+### Added — 10 New Endpoints (Sabre Sections 17–26 Complete)
+
+| Method | Endpoint | Sabre API | Section |
+|--------|----------|-----------|---------|
+| `POST` | `/flights/void` | `POST /v1/trip/orders/voidFlightTickets` | 24 |
+| `POST` | `/flights/refund/price` | `POST /v1/offers/refund/price` | 23 |
+| `POST` | `/flights/refund/fulfill` | `POST /v1/offers/refund/fulfill` | 23 |
+| `POST` | `/flights/exchange` | SOAP `ExchangeBookingRQ v1.1.0` | 22 |
+| `GET` | `/flights/fare-rules` | SOAP `StructureFareRulesRQ v3.0.1` | 20 |
+| `GET` | `/flights/status` | `GET /products/air/flight/status` | 25 |
+| `POST` | `/flights/ancillaries-stateless` | `POST /v1/offers/getAncillaries` | 17 |
+| `POST` | `/flights/add-ancillary-stateless` | `POST /v1/offers/addAncillaries` | 18 |
+| `POST` | `/flights/fulfill-tickets` | `POST /v1/trip/orders/fulfillOrder` | 18 |
+| `POST` | `/flights/update-frequent-flyer` | UpdatePNR v2.4.0 FQTV SSR | 26 |
+
+### New Backend Functions
+- `sabre-flights.js` (8 new): `voidTickets()`, `refundPrice()`, `refundFulfill()`, `getFlightStatus()`, `getAncillariesStateless()`, `addAncillaryStateless()`, `fulfillTickets()`, `updateFrequentFlyer()`
+- `sabre-soap.js` (2 new): `getStructuredFareRules()`, `exchangeBooking()`
 
 ---
 
