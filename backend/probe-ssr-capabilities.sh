@@ -199,10 +199,10 @@ if [ "$TTI_TOTAL" -gt 0 ]; then
       }
     }" 2>/dev/null)
 
-  TTI_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.booking.pnr // .pnr // .gdsPnr // "null"')
-  TTI_AIRLINE_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.booking.airlinePnr // "null"')
+  TTI_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.pnr // .booking.pnr // .gdsPnr // "null"')
+  TTI_AIRLINE_PNR=$(echo "$TTI_BOOK_RESP" | jq -r '.airlinePnr // .booking.airlinePnr // "null"')
   TTI_ERROR=$(echo "$TTI_BOOK_RESP" | jq -r '.message // .error // "none"')
-  TTI_BOOKING_ID=$(echo "$TTI_BOOK_RESP" | jq -r '.booking.id // "null"')
+  TTI_BOOKING_ID=$(echo "$TTI_BOOK_RESP" | jq -r '.id // .booking.id // "null"')
 
   echo ""
   if [ "$TTI_PNR" != "null" ] && [ -n "$TTI_PNR" ]; then
