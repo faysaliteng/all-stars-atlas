@@ -41,8 +41,8 @@
 | **Airports Database** | 740+ |
 | **Frontend Components** | 100+ |
 | **Backend Route Files** | 25 |
-| **Changelog Versions** | 40+ releases |
-| **Documentation Files** | 20 (.md files) |
+| **Changelog Versions** | 45+ releases |
+| **Documentation Files** | 20+ (.md files) |
 
 ---
 
