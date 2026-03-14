@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features Implemented)
+> Last updated: 2026-03-14 (v4.1.0 — UI/UX Overhaul: SearchWidget, AnimatedFlightArc, Sabre PTC)
 
 ---
 

@@ -1,7 +1,7 @@
 # Seven Trip — Security Documentation
 
 > All security measures, authentication flow, and best practices implemented in the platform.
-> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features)
+> Last updated: 2026-03-14 (v4.1.0)
 
 ---
 

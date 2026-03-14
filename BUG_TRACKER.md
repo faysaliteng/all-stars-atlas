@@ -1,7 +1,7 @@
 # Seven Trip — Bug Tracker & Root Cause Analysis
 
 > Complete record of all bugs discovered and fixed during development.
-> Last updated: 2026-03-14 (v4.0.0)
+> Last updated: 2026-03-14 (v4.1.0)
 
 ---
 
@@ -9,6 +9,7 @@
 
 | # | Version | Bug | Root Cause | Fix | Impact |
 |---|---------|-----|-----------|-----|--------|
+| C00y | v4.1.0 | Sabre PNR created with all passengers as ADT — children/infants missing PTC codes | `createBooking()` didn't map `type: "child"/"infant"` to Sabre PTC codes (CNN/INF) or Infant indicator | Age-based PTC `C05`–`C11` for children, `Infant: { Ind: true, DateOfBirth }` for infants, `NumberInParty` excludes infants | Multi-pax bookings with children/infants had incorrect GDS records |
 | C00z | v3.9.9.9 | Sabre cancel failing — Host TA exhaustion blocks all SOAP sessions | Too many concurrent SOAP sessions (seat maps + cancel retries) leaked without proper close, exhausting Sabre's TA pool allocation | `resetSoapSessionCacheWithClose()` + retry-only on session/auth errors + proper session close in finally block | All cancellations blocked until TA pool auto-recovers (~30 min) |
 | C00 | v3.9.9.7 | Sabre DOCS silently dropped — PNR created without passport data | `passport` field contained upload path not number; `no_special_req` fallback succeeded without DOCS | Smart passport field detection + DOCS strict mode (disable no_special_req fallback when DOCS exist) | Passport data missing from airline records |
 | C00a | v3.9.9.7 | Sabre booking fails with AreaCityCode validation | `AreaCityCode` not allowed in `ContactNumber` schema | Removed `AreaCityCode` from phone mapping | Bookings blocked |

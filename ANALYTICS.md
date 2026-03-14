@@ -1,7 +1,7 @@
 # Seven Trip — Complete Development Analytics & Project History
 
-> Comprehensive analytical overview of the Seven Trip platform — from first commit to production v4.0.0.
-> Last updated: 2026-03-14 (v4.0.0)
+> Comprehensive analytical overview of the Seven Trip platform — from first commit to production v4.1.0.
+> Last updated: 2026-03-14 (v4.1.0)
 
 ---
 
@@ -18,6 +18,7 @@
 | **GDS Integration** | v3.1–v3.9 | Mar 10–13, 2026 | 4 days | Sabre REST+SOAP, multi-city, branded fares, seat maps, SSR |
 | **Full Endpoint Coverage** | v3.9.8–v3.9.9.9 | Mar 13, 2026 | 1 day | Post-booking ancillaries, price revalidation, REST seat map, ticket status, ticketing v1.3.0, passport DOCS SSR, DOCS strict mode, airline PNR from CreatePNR, cancel hardening + Host TA recovery |
 | **Complete Sabre GDS** | v4.0.0 | Mar 14, 2026 | 1 day | All 26 Sabre sections: void, refund, exchange, fare rules, FLIFO, stateless ancillaries, EMD, FF update |
+| **UI/UX Overhaul** | v4.1.0 | Mar 14, 2026 | 1 day | SearchWidget props refactor, compact pill bar, AnimatedFlightArc redesign, Sabre child/infant PTC fix, session timeout redirect |
 
 **Total Development Time:** ~19 days (Mar 1–14, 2026)
 
@@ -41,7 +42,7 @@
 | **Airports Database** | 740+ |
 | **Frontend Components** | 100+ |
 | **Backend Route Files** | 25 |
-| **Changelog Versions** | 45+ releases |
+| **Changelog Versions** | 50+ releases |
 | **Documentation Files** | 20+ (.md files) |
 
 ---

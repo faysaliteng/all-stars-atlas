@@ -2,7 +2,7 @@
 
 > Complete timeline of all development conversations, decisions made, bugs discovered, and features implemented.
 > This serves as the institutional memory of the project — every significant interaction is recorded.
-> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features Implemented)
+> Last updated: 2026-03-14 (v4.1.0 — UI/UX Overhaul + Sabre PTC)
 
 ---
 
@@ -11,11 +11,11 @@
 | Metric | Count |
 |--------|-------|
 | **Development Days** | 19 (Mar 1–14, 2026) |
-| **Total Versions Released** | 45+ |
-| **Bugs Discovered & Fixed** | 44 |
+| **Total Versions Released** | 50+ |
+| **Bugs Discovered & Fixed** | 45 |
 | **GDS Providers Integrated** | 5 (TTI, BDFare, FlyHub, Sabre REST, Sabre SOAP) |
 | **Sabre Features** | 26/26 (100% coverage) |
-| **VPS Deployments** | 9 |
+| **VPS Deployments** | 10 |
 | **Documentation Files** | 20+ |
 
 ---

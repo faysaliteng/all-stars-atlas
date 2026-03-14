@@ -1,7 +1,7 @@
-# Seven Trip — Complete Backend API Specification (v4.0.0)
+# Seven Trip — Complete Backend API Specification (v4.1.0)
 
 > **Purpose**: This document is the ONLY reference your backend developer needs. It defines every API endpoint, database table, authentication logic, request/response schema, and business rule. The frontend is already 100% built and expects these exact endpoints and response shapes.
-> Last updated: 2026-03-14 (v4.0.0 — All 26 Sabre GDS Features Implemented)
+> Last updated: 2026-03-14 (v4.1.0 — Sabre Child/Infant PTC fix + UI overhaul)
 
 ---
 
