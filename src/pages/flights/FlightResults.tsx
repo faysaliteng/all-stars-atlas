@@ -1556,8 +1556,8 @@ const MultiCityExpandedDetails = ({ flight, segments }: { flight: any; segments:
                       {/* Times with arc and full airport names */}
                       <div className="flex items-start justify-between pt-2 pb-1">
                         <div className="text-left shrink-0 max-w-[38%]">
-                          <p className="text-xl font-black">{formatTime(leg.departureTime || seg.departureTime)}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{formatShortDate(leg.departureTime || seg.departureTime)}</p>
+                          <p className="text-xl font-black flight-time">{formatTime(leg.departureTime || seg.departureTime)}</p>
+                          <p className="text-xs flight-date mt-0.5">{formatShortDate(leg.departureTime || seg.departureTime)}</p>
                           <p className="text-[11px] text-muted-foreground mt-1">{getAirportName(leg.origin || seg.origin)} ({leg.origin || seg.origin})</p>
                         </div>
                         <div className="flex-1 flex flex-col items-center justify-center pt-1 px-4">
