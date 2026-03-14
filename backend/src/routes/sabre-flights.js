@@ -336,6 +336,47 @@ async function searchFlights(params) {
     };
   };
 
+  const getResponseStats = (rawResponse) => {
+    const grouped = rawResponse?.groupedItineraryResponse;
+    if (grouped) {
+      const itinGroups = Array.isArray(grouped.itineraryGroups) ? grouped.itineraryGroups : [];
+      const itinCount = itinGroups.reduce((sum, g) => sum + ((g?.itineraries || []).length), 0);
+      const groupedMessages = [
+        ...(Array.isArray(grouped?.messages) ? grouped.messages : []),
+        ...(Array.isArray(rawResponse?.messages) ? rawResponse.messages : []),
+      ];
+      const hasNoAvailability = groupedMessages.some((m) => {
+        const text = String(m?.text || m?.message || '').toLowerCase();
+        return text.includes('no availability') || text.includes('no fares') || text.includes('no flights');
+      });
+      return { itinCount, hasNoAvailability };
+    }
+
+    const classic = rawResponse?.OTA_AirLowFareSearchRS || rawResponse || {};
+    const pricedItins = classic?.PricedItineraries?.PricedItinerary;
+    const itinCount = Array.isArray(pricedItins) ? pricedItins.length : (pricedItins ? 1 : 0);
+    const errors = classic?.Errors?.Error || classic?.errors || [];
+    const errorList = Array.isArray(errors) ? errors : [errors];
+    const hasNoAvailability = errorList.some((e) => {
+      const text = String(e?.ShortText || e?.Message || e?.message || '').toLowerCase();
+      return text.includes('no availability') || text.includes('no fares') || text.includes('no flights');
+    });
+    return { itinCount, hasNoAvailability };
+  };
+
+  const normalizeParams = {
+    origin: originCode,
+    destination: destinationCode,
+    departDate: isMultiCity ? preparedSegments[0]?.date : departDateValue,
+    returnDate: !isMultiCity && ISO_DATE_RE.test(returnDateValue) ? returnDateValue : undefined,
+    adults: parseInt(adults) || 1,
+    children: parseInt(children) || 0,
+    infants: parseInt(infants) || 0,
+    cabinClass: sabreCabin,
+    isMultiCity,
+    segments: preparedSegments,
+  };
+
   try {
     const requestProfiles = [
       {

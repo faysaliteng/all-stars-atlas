@@ -1,13 +1,14 @@
 # Seven Trip — Developer Documentation
 
-> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v4.1.2 (2026-03-14 — Sabre syntax hotfix).
+> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v4.1.3 (2026-03-14 — Sabre search recovery hotfix).
 
 ---
 
-## 🔧 Hotfix Notes (v4.1.2)
+## 🔧 Hotfix Notes (v4.1.3)
 
-- Removed accidental literal `...` token in `backend/src/routes/sabre-flights.js` that caused `SyntaxError: Unexpected token '...'` and 502 errors on search.
-- Kept real API pricing + broad airline coverage logic unchanged (no mock fare fallback).
+- Restored missing `getResponseStats` and `normalizeParams` helpers inside `searchFlights()` in `backend/src/routes/sabre-flights.js` after emergency syntax cleanups.
+- Fixed fallback flow to use direct `sabreRequest(...)` JSON response and avoid undefined decoder references.
+- Outcome: `/api/flights/search` no longer short-circuits fallback attempts due runtime reference errors.
 
 ## Table of Contents
 
