@@ -619,7 +619,7 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
       fareBasis: primary.fareDetails?.[0]?.fareBasis || "",
       bookingClass: primary.fareDetails?.[0]?.bookingClass || primary.bookingClass || primary.cabinClass?.charAt(0) || "",
       availableSeats: primary.fareDetails?.[0]?.availableSeats ?? primary.availableSeats ?? null,
-      handBaggage: primary.fareDetails?.[0]?.handBaggage || primary.handBaggage || null,
+      handBaggage: primary.fareDetails?.[0]?.handBaggage || primary.handBaggage || "7KG",
       checkedBaggage: primary.fareDetails?.[0]?.baggage || primary.baggage || null,
       meal: (primary.fareDetails?.[0]?.mealIncluded || primary.mealIncluded) ? "Included" : null,
       seatSelection: primary.fareDetails?.[0]?.seatSelection ?? false,
