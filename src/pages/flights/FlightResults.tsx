@@ -901,13 +901,16 @@ const RoundTripFlightCard = ({
               <Luggage className="w-3.5 h-3.5" /> {outbound.baggage}
             </span>
           )}
-          {(outbound.availableSeats ?? null) !== null && outbound.availableSeats <= 9 && (
-            <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 dark:text-orange-400">
-              <Users className="w-3.5 h-3.5" /> {outbound.availableSeats} Seat{outbound.availableSeats !== 1 ? "s" : ""} Left
-            </span>
-          )}
-          {(outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass) && (
-            <span className="text-xs text-muted-foreground font-medium">Class: {outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass}</span>
+          {(() => {
+            const seats = getDisplayAvailableSeats(outbound);
+            return seats !== null && seats <= 9 ? (
+              <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 dark:text-orange-400">
+                <Users className="w-3.5 h-3.5" /> {seats} Seat{seats !== 1 ? "s" : ""} Left
+              </span>
+            ) : null;
+          })()}
+          {getDisplayBookingClass(outbound) && (
+            <span className="text-xs text-muted-foreground font-medium">Class: {getDisplayBookingClass(outbound)}</span>
           )}
         </div>
 
