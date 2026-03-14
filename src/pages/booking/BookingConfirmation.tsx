@@ -214,14 +214,15 @@ const BookingConfirmation = () => {
                  <Plane className="w-5 h-5 text-primary" />}
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {isRoundTrip && (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 text-accent border border-accent/20 text-[10px] font-bold">
-                      <Plane className="w-3 h-3" />
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/15 text-accent border border-accent/30 text-[11px] font-bold shadow-sm">
+                      <Plane className="w-3.5 h-3.5" />
                       <span>Outbound</span>
                     </div>
                   )}
                   <p className="text-sm font-bold">{isRoundTrip ? `${booking.outbound?.origin || route.split(/[→⇄]/)[0]?.trim()} → ${booking.outbound?.destination || route.split(/[→⇄]/)[1]?.trim()}` : route}</p>
+                  {date && <span className="flight-date text-xs">· {date}</span>}
                 </div>
                 <p className="text-xs text-muted-foreground">{date}{flightNo !== "—" ? ` · ${flightNo}` : ""}{cabin !== "Economy" || serviceType === "Flight" ? ` · ${cabin}` : ""}</p>
               </div>
