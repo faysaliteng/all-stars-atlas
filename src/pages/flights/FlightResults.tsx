@@ -1204,29 +1204,30 @@ const RoundTripFlightCard = ({
         </div>
 
         {/* Info bar */}
-        <div className="flex items-center px-3 sm:px-5 py-2.5 bg-muted/30 border-t border-border/50">
-          <button className="flex items-center gap-1 text-accent font-bold text-xs sm:text-sm hover:underline shrink-0" onClick={onToggleExpand}>
-            Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        <div className="flex items-center px-2.5 sm:px-4 py-2 bg-muted/30 border-t border-border/50">
+          <button className="flex items-center gap-1 text-accent font-bold text-[11px] sm:text-xs hover:underline shrink-0" onClick={onToggleExpand}>
+            Flight Details {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
-          <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
-            <span className={`font-bold text-xs sm:text-sm ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
+          <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4">
+            <span className={`font-bold text-[11px] sm:text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {outbound.airlineCode?.toUpperCase() !== "BG" && (
-              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs sm:text-sm">Book &amp; Hold</span>
+              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-[11px] sm:text-xs hidden sm:inline">Book &amp; Hold</span>
             )}
-            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1 text-[10px] font-bold text-accent">
+            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[9px] font-bold text-accent">
               Single Booking · One PNR
             </span>
           </div>
           <div className="shrink-0">
-            <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground"
+            <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs"
               onClick={() => setShowFareOptions(!showFareOptions)}>
-              View Round-Trip Prices
+              <span className="hidden sm:inline">View Round-Trip Prices</span>
+              <span className="sm:hidden">View Prices</span>
               {roundTripFarePanelFlights[0]?.fareDetails?.length > 1 && (
-                <Badge className="ml-1.5 bg-accent-foreground/20 text-accent-foreground border-0 text-[10px] px-1.5 py-0">
+                <Badge className="ml-1 bg-accent-foreground/20 text-accent-foreground border-0 text-[9px] px-1 py-0">
                   {roundTripFarePanelFlights[0].fareDetails.length}
                 </Badge>
               )}
-              {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+              {showFareOptions ? <ChevronUp className="w-3 h-3 ml-0.5" /> : <ChevronDown className="w-3 h-3 ml-0.5" />}
             </Button>
           </div>
         </div>
