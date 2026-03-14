@@ -974,15 +974,22 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
 
   // ── Inject user-requested SSRs: meal, wheelchair, medical, pet, frequent flyer, free text ──
   // TTI requires RefSegment on all SSRs — expand each SSR per-segment
+  // Air Astra (2A) only supports a limited set of SSR codes — skip unsupported ones gracefully
+  const TTI_ALLOWED_SSRS = new Set(['WCHR', 'WCHS', 'WCHC', 'BLND', 'DEAF', 'MEDA', 'PETC', 'AVIH', 'XBAG', 'FQTV', 'CHLD', 'INFT']);
   const ssrData = ssrInput || {};
   const perPax = ssrData.perPassenger || [];
   const segmentRefs = segments.map(s => s.Ref).filter(Boolean);
+  const skippedSSRs = [];
   
   ttiPassengers.forEach((tp, idx) => {
     const paxSSR = perPax[idx] || {};
     
     // Helper: push SSR for each segment (TTI requires RefSegment)
     const pushSSR = (code, text, data = null) => {
+      if (!TTI_ALLOWED_SSRS.has(code)) {
+        skippedSSRs.push(code);
+        return; // Skip unsupported SSR codes for TTI/Air Astra
+      }
       if (segmentRefs.length > 0) {
         for (const segRef of segmentRefs) {
           specialServices.push({
@@ -991,7 +998,6 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
           });
         }
       } else {
-        // Fallback: single SSR without RefSegment (shouldn't happen with valid data)
         specialServices.push({
           Code: code, RefPassenger: tp.Ref, RefSegment: null, Data: data, Status: null,
           Text: text, TechnicalType: null, Extensions: null, Available: null,
@@ -999,7 +1005,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       }
     };
     
-    // Meal SSR (MOML, AVML, VGML, etc.)
+    // Meal SSR (MOML, AVML, VGML, etc.) — NOT supported by Air Astra
     if (paxSSR.meal) {
       pushSSR(String(paxSSR.meal).toUpperCase(), `Meal request: ${paxSSR.meal}`);
     }
@@ -1024,7 +1030,7 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       pushSSR('FQTV', `${paxSSR.frequentFlyer.airline || ''} ${paxSSR.frequentFlyer.number}`.trim());
     }
     
-    // Free text special request
+    // Free text special request — NOT supported by Air Astra
     if (paxSSR.specialRequest) {
       pushSSR('OTHS', String(paxSSR.specialRequest).substring(0, 200));
     }
@@ -1034,6 +1040,10 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
       pushSSR('XBAG', `Extra baggage: ${paxSSR.extraBaggage}`);
     }
   });
+
+  if (skippedSSRs.length > 0) {
+    console.log(`[TTI BOOKING] Skipped unsupported SSR codes for Air Astra: ${[...new Set(skippedSSRs)].join(', ')}`);
+  }
 
   if (specialServices.length > 0) {
     console.log('[TTI BOOKING] SpecialServices:', JSON.stringify(specialServices.map(s => ({ Code: s.Code, RefPassenger: s.RefPassenger, Text: s.Text }))));
