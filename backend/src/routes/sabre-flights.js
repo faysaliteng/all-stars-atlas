@@ -899,7 +899,7 @@ function normalizeGroupedResponse(response, params) {
           const isRefundable = fare.passengerInfoList?.[0]?.passengerInfo?.nonRefundable === false;
 
           flights.push({
-            id: `sabre-mc-${idx}`,
+            id: `sabre-mc-${groupIdx}-${idx}`,
             source: 'sabre',
             direction: 'multicity',
             isMultiCity: true,
@@ -932,7 +932,7 @@ function normalizeGroupedResponse(response, params) {
             fareDetails: fareDetailsArr,
             timeLimit: fare.lastTicketDate || null,
             validatingAirline: fare.validatingCarrierCode || firstSeg.airlineCode,
-            _sabreSeqNumber: idx,
+            _sabreSeqNumber: `${groupIdx}-${idx}`,
           });
         } else {
           // ── ONE-WAY / ROUND-TRIP: per-leg emission (original logic) ──
