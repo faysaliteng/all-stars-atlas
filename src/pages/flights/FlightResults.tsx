@@ -1683,11 +1683,17 @@ const FlightCard = ({
   const availableSeats = getDisplayAvailableSeats(flight);
   const duration = flight.duration || "";
   const stops = flight.stops ?? 0;
-  const price = flight.price ?? 0;
+  const grossPrice = flight.price ?? 0;
   const taxes = flight.taxes ?? 0;
   // CRITICAL: baseFare from API may be in foreign currency (e.g. USD from Sabre).
   // Always derive baseFare in BDT as (price - taxes) to ensure the breakdown sums correctly.
-  const baseFare = Math.max(0, Math.round(price - taxes));
+  const baseFare = Math.max(0, Math.round(grossPrice - taxes));
+  // Calculate payable price (with discount and AIT VAT applied)
+  const DISCOUNT_PCT = flight.fareRules?.discount ?? 6.30;
+  const AIT_VAT_PCT = flight.fareRules?.aitVat ?? 0.3;
+  const discount = Math.round(baseFare * DISCOUNT_PCT / 100);
+  const aitVat = Math.round((baseFare - discount) * AIT_VAT_PCT / 100);
+  const price = baseFare - discount + taxes + aitVat;
   const refundable = flight.refundable ?? false;
   const fareType = flight.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const nextDay = isNextDay(flight.departureTime, flight.arrivalTime);
