@@ -2942,7 +2942,7 @@ const FlightResults = () => {
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-0.5" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-3" align="start">
+                <PopoverContent className="w-80 p-3 z-[60]" align="start">
                   <p className="text-xs font-bold text-muted-foreground mb-2">Edit Route</p>
                   {/* Scope toggle */}
                   <div className="flex gap-1.5 mb-3">
