@@ -1397,11 +1397,9 @@ async function createBooking({ flightData, passengers, contactInfo, specialServi
         const adultPersonIndex = adultPersonNameIndexes[Math.min(infIdx, adultPersonNameIndexes.length - 1)];
         const adultPerson = travelersInfo[adultPersonIndex]?.PersonName;
         if (!adultPerson) return;
-        adultPerson.Infant = {
-          Ind: true,
-          ...(infDob ? { DateOfBirth: infDob } : {}),
-        };
-        console.log(`[Sabre] Infant ${infIdx + 1} associated with adult NameNumber ${adultPerson.NameNumber}`);
+        // Sabre requires Infant as boolean true (not object) on PersonName
+        adultPerson.Infant = true;
+        console.log(`[Sabre] Infant ${infIdx + 1} (DOB: ${infDob}) associated with adult NameNumber ${adultPerson.NameNumber} | Infant=true`);
       });
     }
 
