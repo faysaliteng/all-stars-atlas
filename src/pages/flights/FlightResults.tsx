@@ -903,6 +903,49 @@ const RoundTripFlightCard = ({
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
 
+  const roundTripFarePanelFlights = useMemo(() => {
+    const outboundFareDetails = Array.isArray(outbound?.fareDetails) && outbound.fareDetails.length > 0
+      ? outbound.fareDetails
+      : [{
+          brandName: "Round Trip Package",
+          bookingClass: outbound.bookingClass,
+          cabinClass: outbound.cabinClass,
+          handBaggage: outbound.handBaggage,
+          baggage: outbound.baggage,
+          refundable: outbound.refundable,
+          price: outbound.price || 0,
+          taxes: outbound.taxes || 0,
+        }];
+
+    const combinedFareDetails = outboundFareDetails.map((fare: any) => {
+      const outboundGross = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
+      const outboundTaxes = fare?.taxes ?? outbound.taxes ?? 0;
+      const returnGross = returnFlight?.price ?? 0;
+      const returnTaxes = returnFlight?.taxes ?? 0;
+
+      return {
+        ...fare,
+        price: outboundGross + returnGross,
+        taxes: outboundTaxes + returnTaxes,
+        _outboundGrossPrice: outboundGross,
+        _outboundTaxes: outboundTaxes,
+        _outboundFareDetail: fare,
+        _isRoundTripCombinedFare: true,
+      };
+    });
+
+    return [{
+      ...outbound,
+      price: (outbound?.price || 0) + (returnFlight?.price || 0),
+      taxes: (outbound?.taxes || 0) + (returnFlight?.taxes || 0),
+      baggage: outbound?.baggage || returnFlight?.baggage,
+      handBaggage: outbound?.handBaggage || returnFlight?.handBaggage,
+      fareDetails: combinedFareDetails,
+      _baseOutboundFlight: outbound,
+      _baseReturnFlight: returnFlight,
+    }];
+  }, [outbound, returnFlight]);
+
   return (
     <Card className={`overflow-hidden transition-all border ${isExpanded ? "border-accent/30 shadow-md" : "border-border hover:shadow-md"}`}>
       <CardContent className="p-0">
@@ -1039,11 +1082,20 @@ const RoundTripFlightCard = ({
             {outbound.airlineCode?.toUpperCase() !== "BG" && (
               <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs sm:text-sm">Book &amp; Hold</span>
             )}
+            <span className="hidden sm:inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1 text-[10px] font-bold text-accent">
+              Single Booking · One PNR
+            </span>
           </div>
           <div className="shrink-0">
             <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground"
               onClick={() => setShowFareOptions(!showFareOptions)}>
-              View Prices {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+              View Round-Trip Prices
+              {roundTripFarePanelFlights[0]?.fareDetails?.length > 1 && (
+                <Badge className="ml-1.5 bg-accent-foreground/20 text-accent-foreground border-0 text-[10px] px-1.5 py-0">
+                  {roundTripFarePanelFlights[0].fareDetails.length}
+                </Badge>
+              )}
+              {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
             </Button>
           </div>
         </div>
@@ -1051,8 +1103,31 @@ const RoundTripFlightCard = ({
         {/* Fare Options Panel */}
         <AnimatePresence>
           {showFareOptions && (
-            <FareOptionsPanel flights={[{ ...outbound, price: totalPrice, baggage: outbound.baggage, handBaggage: outbound.handBaggage, fareDetails: outbound.fareDetails }]}
-              onBook={() => cardNavigate(`/flights/book?roundTrip=true&adults=${cardSearchParams.get("adults") || "1"}&children=${cardSearchParams.get("children") || "0"}&infants=${cardSearchParams.get("infants") || "0"}&cabin=${cardSearchParams.get("cabin") || "economy"}`, { state: { outboundFlight: outbound, returnFlight } })} />
+            <FareOptionsPanel
+              flights={roundTripFarePanelFlights}
+              onBook={(selectedFlight) => {
+                const selectedFare = selectedFlight?.fareDetails?.[0];
+                const baseOutbound = selectedFlight?._baseOutboundFlight || outbound;
+                const selectedOutbound = selectedFare
+                  ? {
+                      ...baseOutbound,
+                      price: selectedFare._outboundGrossPrice ?? baseOutbound.price,
+                      taxes: selectedFare._outboundTaxes ?? baseOutbound.taxes,
+                      fareDetails: [selectedFare._outboundFareDetail || selectedFare],
+                      bookingClass: selectedFare.bookingClass || baseOutbound.bookingClass,
+                      cabinClass: selectedFare.cabinClass || baseOutbound.cabinClass,
+                      handBaggage: selectedFare.handBaggage || baseOutbound.handBaggage,
+                      baggage: selectedFare.checkedBaggage || selectedFare.baggage || baseOutbound.baggage,
+                      refundable: typeof selectedFare.refundable === 'boolean' ? selectedFare.refundable : baseOutbound.refundable,
+                    }
+                  : baseOutbound;
+
+                cardNavigate(
+                  `/flights/book?roundTrip=true&adults=${cardSearchParams.get("adults") || "1"}&children=${cardSearchParams.get("children") || "0"}&infants=${cardSearchParams.get("infants") || "0"}&cabin=${cardSearchParams.get("cabin") || "economy"}`,
+                  { state: { outboundFlight: selectedOutbound, returnFlight: selectedFlight?._baseReturnFlight || returnFlight } },
+                );
+              }}
+            />
           )}
         </AnimatePresence>
 
@@ -2018,8 +2093,13 @@ const FlightCard = ({
         {/* Fare Options Panel */}
         <AnimatePresence>
           {showFareOptions && (
-            <FareOptionsPanel flights={[flight]}
-              onBook={() => cardNavigate(`/flights/book?adults=${cardSearchParams.get("adults") || "1"}&children=${cardSearchParams.get("children") || "0"}&infants=${cardSearchParams.get("infants") || "0"}&cabin=${cardSearchParams.get("cabin") || "economy"}`, { state: { outboundFlight: flight } })} />
+            <FareOptionsPanel
+              flights={[flight]}
+              onBook={(selectedFlight) => cardNavigate(
+                `/flights/book?adults=${cardSearchParams.get("adults") || "1"}&children=${cardSearchParams.get("children") || "0"}&infants=${cardSearchParams.get("infants") || "0"}&cabin=${cardSearchParams.get("cabin") || "economy"}`,
+                { state: { outboundFlight: selectedFlight || flight } },
+              )}
+            />
           )}
         </AnimatePresence>
 
