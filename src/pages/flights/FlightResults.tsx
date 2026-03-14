@@ -102,6 +102,29 @@ function isNextDay(depart?: string, arrive?: string): boolean {
   return new Date(arrive).getDate() !== new Date(depart).getDate();
 }
 
+function getBestFareDetail(flight: any) {
+  const fareDetails = Array.isArray(flight?.fareDetails) ? flight.fareDetails : [];
+  if (fareDetails.length === 0) return null;
+  return [...fareDetails].sort((a, b) => (a?.price || 0) - (b?.price || 0))[0] || null;
+}
+
+function getDisplayBookingClass(flight: any): string {
+  const best = getBestFareDetail(flight);
+  return best?.bookingClass || flight?.bookingClass || "";
+}
+
+function getDisplayAvailableSeats(flight: any): number | null {
+  const fareDetails = Array.isArray(flight?.fareDetails) ? flight.fareDetails : [];
+  const fareSeats = fareDetails
+    .map((d: any) => d?.availableSeats)
+    .filter((v: any) => v !== null && v !== undefined)
+    .map((v: any) => Number(v))
+    .filter((v: number) => !Number.isNaN(v));
+  if (fareSeats.length > 0) return Math.min(...fareSeats);
+  const top = flight?.availableSeats;
+  return top !== null && top !== undefined ? Number(top) : null;
+}
+
 /* ─── Airport coordinates for distance calculation ─── */
 const AIRPORT_COORDS: Record<string, [number, number]> = {
   DAC:[23.8433,90.3978],CXB:[21.4522,91.9639],CGP:[22.2496,91.8133],ZYL:[24.9632,91.8668],
@@ -878,13 +901,16 @@ const RoundTripFlightCard = ({
               <Luggage className="w-3.5 h-3.5" /> {outbound.baggage}
             </span>
           )}
-          {(outbound.availableSeats ?? null) !== null && outbound.availableSeats <= 9 && (
-            <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 dark:text-orange-400">
-              <Users className="w-3.5 h-3.5" /> {outbound.availableSeats} Seat{outbound.availableSeats !== 1 ? "s" : ""} Left
-            </span>
-          )}
-          {(outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass) && (
-            <span className="text-xs text-muted-foreground font-medium">Class: {outbound.bookingClass || outbound.fareDetails?.[0]?.bookingClass}</span>
+          {(() => {
+            const seats = getDisplayAvailableSeats(outbound);
+            return seats !== null && seats <= 9 ? (
+              <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 dark:text-orange-400">
+                <Users className="w-3.5 h-3.5" /> {seats} Seat{seats !== 1 ? "s" : ""} Left
+              </span>
+            ) : null;
+          })()}
+          {getDisplayBookingClass(outbound) && (
+            <span className="text-xs text-muted-foreground font-medium">Class: {getDisplayBookingClass(outbound)}</span>
           )}
         </div>
 
@@ -1637,10 +1663,10 @@ const FlightCard = ({
   const fromCode = flight.origin || "";
   const toCode = flight.destination || "";
   const flightNo = flight.flightNumber || "";
-  // Always use the REAL cabin class from the API — never override with searched cabin
+  // Always use the REAL cabin class/class seats from API fare details first
   const cabin = flight.cabinClass || "Economy";
-  const bookingClass = flight.bookingClass || "";
-  const availableSeats = flight.availableSeats ?? null;
+  const bookingClass = getDisplayBookingClass(flight);
+  const availableSeats = getDisplayAvailableSeats(flight);
   const duration = flight.duration || "";
   const stops = flight.stops ?? 0;
   const price = flight.price ?? 0;
@@ -1769,7 +1795,7 @@ const FlightCard = ({
                   <Users className="w-3.5 h-3.5" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""}
                 </span>
               )}
-              <span className="text-xs text-muted-foreground font-medium">Class: {bookingClass || cabin.charAt(0)}</span>
+              {bookingClass && <span className="text-xs text-muted-foreground font-medium">Class: {bookingClass}</span>}
             </div>
           </div>
 
