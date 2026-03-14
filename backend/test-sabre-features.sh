@@ -125,6 +125,9 @@ if [ "$TOTAL" -gt 0 ] && [ "$SABRE_COUNT" -gt 0 ]; then
       log_fail "2a-iii. Fare details extraction" "fareDetails empty on $SAMPLE_FN"
     fi
   fi
+else
+  log_fail "2a. One-way search DAC→DXB" "total=$TOTAL, sabre=$SABRE_COUNT"
+fi
 
 # 2b. Round-trip search
 RT_RESULT=$(curl -s "$API_BASE/flights/search?origin=DAC&destination=DXB&departDate=${TEST_DATE}&returnDate=$(date -d "+10 days" +%Y-%m-%d 2>/dev/null || echo "2026-05-07")&adults=1")
