@@ -854,11 +854,13 @@ function normalizeGroupedResponse(response, params) {
           let minSeats = Infinity;
           let bookingClass = '';
           const fareComponents = passengerInfoList[0]?.passengerInfo?.fareComponents || [];
-          for (const fc of fareComponents) {
-            for (const seg of (fc.segments || [])) {
-              if (seg.seatsAvailable !== undefined && seg.seatsAvailable < minSeats) minSeats = seg.seatsAvailable;
-              if (seg.bookingCode) bookingClass = seg.bookingCode;
+          const mcResolvedSegs = resolveFareComponentSegments(fareComponents);
+          for (const rs of mcResolvedSegs) {
+            if (rs.seatsAvailable !== null && rs.seatsAvailable !== undefined) {
+              const s = parseInt(rs.seatsAvailable);
+              if (!isNaN(s) && s < minSeats) minSeats = s;
             }
+            if (rs.bookingCode) bookingClass = rs.bookingCode;
           }
 
           const isRefundable = fare.passengerInfoList?.[0]?.passengerInfo?.nonRefundable === false;
