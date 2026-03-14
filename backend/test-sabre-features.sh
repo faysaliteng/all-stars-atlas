@@ -51,8 +51,16 @@ log_skip() {
 }
 
 # ── Step 0: Get auth token ──
+echo -e "${CYAN}▸ Waiting for server to be ready...${NC}"
+for i in 1 2 3 4 5; do
+  HEALTH=$(curl -s --max-time 3 "$API_BASE/health" | jq -r '.status // empty' 2>/dev/null)
+  if [ "$HEALTH" = "ok" ]; then break; fi
+  echo "  Waiting... (attempt $i)"
+  sleep 2
+done
+
 echo -e "${CYAN}▸ Authenticating...${NC}"
-AUTH_RESPONSE=$(curl -s -X POST "$API_BASE/auth/login" \
+AUTH_RESPONSE=$(curl -s --max-time 10 -X POST "$API_BASE/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"rahim@gmail.com","password":"User@123456"}')
 
