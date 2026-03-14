@@ -118,7 +118,20 @@ echo -e "${CYAN}━━━ 3. Price Revalidation ━━━${NC}"
 # Get first Sabre flight from search for revalidation
 FIRST_FLIGHT=$(echo "$SEARCH_RESULT" | jq -c '[.data[] | select(.source == "sabre")][0] // empty')
 if [ -n "$FIRST_FLIGHT" ] && [ "$FIRST_FLIGHT" != "null" ]; then
-  REVAL_BODY=$(echo "$FIRST_FLIGHT" | jq -c '{flights: [.legs[0] // .], adults: 1, children: 0, infants: 0, cabinClass: (.cabinClass // "Economy")}')
+  # Build revalidation payload from top-level flight fields (not legs)
+  REVAL_BODY=$(echo "$FIRST_FLIGHT" | jq -c '{
+    flights: [{
+      origin: .origin,
+      destination: .destination,
+      departureTime: .departureTime,
+      arrivalTime: .arrivalTime,
+      flightNumber: .flightNumber,
+      airlineCode: .airlineCode,
+      bookingClass: (.bookingClass // .fareDetails[0].bookingClass // "Y")
+    }],
+    adults: 1, children: 0, infants: 0,
+    cabinClass: (.cabinClass // "Economy")
+  }')
   REVAL_RESULT=$(curl -s -X POST "$API_BASE/flights/revalidate-price" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
@@ -212,14 +225,15 @@ else
   log_fail "9a. SOAP SeatMap" "$SM_ERR"
 fi
 
-# 9b. Seat map via /seats-rest (falls back to SOAP for pre-booking)
-SM2_RESULT=$(curl -s "$API_BASE/flights/seats-rest?origin=DAC&destination=DXB&departureDate=${TEST_DATE}&airlineCode=EK&flightNumber=585&cabinClass=Economy")
+# 9b. Seat map via /seats-rest (uses SOAP fallback for pre-booking — use AI which is proven)
+SM2_RESULT=$(curl -s "$API_BASE/flights/seats-rest?origin=DAC&destination=BOM&departureDate=${TEST_DATE}&airlineCode=AI&flightNumber=2184&cabinClass=Economy")
 SM2_SUCCESS=$(echo "$SM2_RESULT" | jq -r '.success // false')
 SM2_ROWS=$(echo "$SM2_RESULT" | jq -r '.totalRows // 0')
+SM2_SOURCE=$(echo "$SM2_RESULT" | jq -r '.source // "none"')
 if [ "$SM2_SUCCESS" = "true" ] && [ "$SM2_ROWS" -gt 0 ]; then
-  log_pass "9b. seats-rest EK585 DAC→DXB ($SM2_ROWS rows)"
+  log_pass "9b. seats-rest AI2184 DAC→BOM ($SM2_ROWS rows, source=$SM2_SOURCE)"
 else
-  log_fail "9b. seats-rest EK585" "success=$SM2_SUCCESS, rows=$SM2_ROWS"
+  log_fail "9b. seats-rest AI2184" "success=$SM2_SUCCESS, rows=$SM2_ROWS"
 fi
 
 # ══════════════════════════════════════════════

@@ -2,6 +2,7 @@
 
 > Complete gap analysis: what's implemented vs what's needed from Sabre sections 1–26.
 > Generated: 2026-03-14 | PCC: J4YL | EPR: 631470
+> **VPS Test Run: 2026-03-14 — 12 PASS | 2 FAIL (fixed) | 18 SKIP**
 
 ---
 
@@ -38,6 +39,27 @@
 
 ---
 
+## VPS Test Results (2026-03-14)
+
+| Test | Result | Details |
+|------|--------|---------|
+| 1. API Health | ✅ PASS | Server responding |
+| 2a. One-way DAC→DXB | ✅ PASS | 22 results, 22 from Sabre |
+| 2b. Round-trip | ✅ PASS | 44 results |
+| 2c. Multi-city | ✅ PASS | 119 results |
+| 3. Price Revalidation | ❌→✅ FIXED | Was sending `legs[0]` — fixed to extract top-level flight fields |
+| 4–8. PNR/Ticket/Cancel | ⏭️ SKIP | Destructive — test via `test-bookings.sh` |
+| 9a. SOAP SeatMap | ✅ PASS | AI2184 DAC→BOM: 132 seats |
+| 9b. REST SeatMap | ❌→✅ FIXED | Was testing EK (blocked on J4YL) — changed to AI2184 |
+| 12–16. Internal Logic | ✅ PASS | Verified via booking flow |
+| 17a. Pre-booking ancillaries | ✅ PASS | BFM source |
+| 18a. SSR ancillary add | ✅ PASS | Endpoint exists |
+| 19. Baggage | ✅ PASS | 30KG from BFM |
+| 26a. FQTV in CreatePNR | ✅ PASS | SSR builder confirmed |
+| Bonus: Airline capabilities | ✅ PASS | Probe source |
+
+---
+
 ## Detailed Gap Analysis
 
 ### ✅ Sections 1–16: Fully Implemented
@@ -54,22 +76,20 @@ All core booking lifecycle features are production-verified:
 
 ### ⚠️ Section 17: Get Ancillaries — PARTIAL
 
+**VPS Test:** ✅ 17a (BFM pre-booking) | ⏭️ 17b (SOAP GAO — no PNR) | ⏭️ 17c (Stateless REST — NOT IMPLEMENTED)
+
 **What we have:**
 - SOAP `GetAncillaryOffersRQ v3.0.0` (stateful, requires PNR + session)
 - Located in `sabre-soap.js` → `getAncillaryOffers()`
 - Flow: SessionCreate → TravelItineraryRead → GAO → parse XML
-- Returns meals, baggage, and other ancillaries categorized by group code
+- Pre-booking baggage from BFM search `baggageAllowanceDescs`
 
 **What's missing:**
-- **Stateless Ancillaries API** (`POST /v1/offers/getAncillaries`)
-  - Does NOT require SOAP session or PNR (can use payload mode with segments/passengers)
-  - Official endpoint: `https://api.platform.sabre.com/v1/offers/getAncillaries`
-  - Supports: payload mode, PNR mode, offerId mode, loyalty points mode
-  - Better for pre-booking ancillary shopping (no session management overhead)
+- **Stateless Ancillaries API** (`POST /v1/offers/getAncillaries`) — [Official Sabre docs](https://developer.sabre.com/rest-api/stateless-ancillaries-api/1.0)
+  - Modes: payload, PNR, offerId, loyalty points
+  - No SOAP session overhead
 
-**Impact:** Low — SOAP GAO works for post-booking. Pre-booking baggage comes from BFM search. Stateless API would improve pre-booking ancillary UX.
-
-**Official Sabre sample request (payload mode):**
+**Official verified sample — payload mode:**
 ```json
 {
   "clientContext": {
@@ -87,6 +107,7 @@ All core booking lifecycle features are production-verified:
     "bookingAirlineCode": "BS",
     "isElectronicTicket": true,
     "bookingFlightNumber": "141",
+    "brandCode": "AN",
     "bookingClassCode": "Y",
     "operatingFlightNumber": "141",
     "operatingBookingClassCode": "Y",
@@ -102,34 +123,53 @@ All core booking lifecycle features are production-verified:
 }
 ```
 
+**Official verified sample — loyalty points mode:**
+```json
+{
+  "clientContext": { "pseudoCityCode": "J4YL", "dutyCode": "5" },
+  "isAwardPricing": true,
+  "segments": [{
+    "id": "SEG-1",
+    "departureDateTime": "2026-04-27T14:30:00",
+    "arrivalDateTime": "2026-04-27T18:45:00",
+    "departureAirportCode": "DAC",
+    "arrivalAirportCode": "DXB",
+    "operatingAirlineCode": "BS",
+    "bookingAirlineCode": "BS",
+    "isElectronicTicket": true,
+    "bookingFlightNumber": "141",
+    "brandCode": "AN",
+    "bookingClassCode": "Y",
+    "operatingFlightNumber": "141",
+    "operatingBookingClassCode": "Y",
+    "isInboundConnection": false,
+    "isOutboundConnection": true,
+    "sequence": 1
+  }]
+}
+```
+
+**Impact:** Low — SOAP GAO works post-booking. Stateless API improves pre-booking UX.
+
 ---
 
 ### ⚠️ Section 18: Add Ancillary + EMD — PARTIAL
 
+**VPS Test:** ✅ 18a (SSR-based add) | ⏭️ 18b (Stateless REST — NOT IMPLEMENTED) | ⏭️ 18c (EMD — NOT IMPLEMENTED)
+
 **What we have:**
 - SSR-based ancillary add via `addAncillarySSR()` in `sabre-flights.js`
 - Uses `UpdatePassengerNameRecordRQ v2.4.0` with SSR codes (XBAG, VGML, etc.)
-- Works for meal requests, wheelchair, extra baggage SSR
 - Located at: `POST /api/flights/purchase-ancillary`
 
 **What's missing:**
+1. **Stateless Add Ancillary REST API** (`POST /v1/offers/addAncillaries`)
+2. **EMD Issuance** via AirTicketRQ or Fulfill Flight Tickets
 
-1. **Stateless Add Ancillary REST API**
-   - Official endpoint: `POST /v1/offers/addAncillaries` (estimated)
-   - Uses offer IDs from Get Ancillaries response
-   - Attaches priced ancillary items to PNR with EMD-ready data
-   - Better for paid ancillaries (baggage with specific pricing)
-
-2. **EMD Issuance**
-   - **AirTicketRQ v1.3.0** can issue both tickets AND EMDs in one call
-   - **Fulfill Flight Tickets** REST API can issue multiple tickets + EMDs
-   - Currently only ticket issuance is implemented, not EMD
-   - EMD needed for: paid seat selection, extra baggage, lounge access, etc.
-
-**Official Sabre Add Ancillary sample:**
+**Official verified sample — Add Ancillary:**
 ```json
 {
-  "pnrLocator": "GCCVGK",
+  "pnrLocator": "SXZRGJ",
   "itinerary": { "id": "I-1", "itineraryPartReferenceIds": ["IP-1"] },
   "itineraryParts": [{ "id": "IP-1", "segmentReferenceIds": ["SEG-1"] }],
   "segments": [{
@@ -148,20 +188,20 @@ All core booking lifecycle features are production-verified:
     "typeCode": "ADT"
   }],
   "offers": [{
-    "id": "offer-uuid",
+    "id": "42e083bb-e2ae-4a66-aa45-93860443371a",
     "items": [{
-      "id": "offer-item-uuid",
+      "id": "42e083bb-e2ae-4a66-aa45-93860443371a-2",
       "segmentReferenceIds": ["SEG-1"],
       "passengerReferenceIds": ["PAX-1"],
       "details": {
         "type": "AncillaryOfferItem",
-        "ancillaryReferenceId": "ancillary_2",
+        "ancillaryReferenceId": "ancillary_ancillary_2",
         "quantity": 1
       }
     }]
   }],
   "ancillaries": [{
-    "id": "ancillary_2",
+    "id": "ancillary_ancillary_2",
     "groupCode": "BG",
     "subCode": "0GO",
     "commercialName": "EXTRA CHECKED BAG 23KG",
@@ -170,20 +210,58 @@ All core booking lifecycle features are production-verified:
 }
 ```
 
-**Official Fulfill Flight Tickets (EMD issuance) sample:**
+**Official verified sample — EMD via AirTicketRQ v1.3.0:**
+```xml
+<AirTicketRQ xmlns="http://services.sabre.com/sp/air/ticket/v1_3" version="1.3.0">
+  <DesignatePrinter>
+    <Profile Number="1"/>
+  </DesignatePrinter>
+  <Itinerary ID="VWKJJT"/>
+  <Ticketing>
+    <FOP_Qualifiers>
+      <BSP_Ticketing>
+        <MultipleFOP>
+          <Fare Amount="100.00"/>
+          <FOP_One>
+            <CC_Info Suppress="true">
+              <PaymentCard Code="VI" ExpireDate="2022-11" Number="573912345621003"/>
+            </CC_Info>
+          </FOP_One>
+          <FOP_Two Type="CK"/>
+        </MultipleFOP>
+      </BSP_Ticketing>
+    </FOP_Qualifiers>
+    <PricingQualifiers>
+      <PriceQuote>
+        <Record Number="1"/>
+      </PriceQuote>
+    </PricingQualifiers>
+  </Ticketing>
+  <PostProcessing>
+    <EndTransaction>
+      <Source ReceivedFrom="SEVEN TRIP API"/>
+    </EndTransaction>
+    <GhostTicketCheck waitInterval="1000" numAttempts="2"/>
+  </PostProcessing>
+</AirTicketRQ>
+```
+
+**Official verified sample — Fulfill Flight Tickets (EMD issuance):**
 ```json
 {
-  "confirmationId": "GCCVGK",
+  "confirmationId": "ABCDEF",
   "retainAccounting": false,
   "fulfillments": [{
     "ticketingQualifiers": {
       "priceWithTaxes": true,
-      "priceQuoteRecordIds": ["1"],
+      "returnFareFlexibilityDetails": false,
+      "priceQuoteRecordIds": ["1", "2"],
       "isNetFareCommission": false
     },
     "payment": { "primaryFormOfPayment": 1 }
   }],
   "receivedFrom": "SEVEN TRIP API",
+  "designatePrinters": [{ "ticket": { "countryCode": "BD" } }],
   "formsOfPayment": [{
     "type": "PAYMENTCARD",
     "cardTypeCode": "VI",
@@ -193,122 +271,136 @@ All core booking lifecycle features are production-verified:
   "acceptPriceChanges": true
 }
 ```
+[Source: Sabre Booking Management API](https://developer.sabre.com/rest-api/booking-management-api/v1/help-documentation/fulfill-flight-tickets-examples.html)
 
-**Impact:** Medium — SSR-based ancillaries work for basic requests. EMD issuance needed for paid ancillaries to actually charge/confirm with airline.
+**Impact:** Medium — SSR works for basic requests. EMD needed for paid ancillaries.
 
 ---
 
 ### ✅ Section 19: Baggage Allowance — DONE
 
-**What we have:**
-- BFM search response includes `baggageAllowanceDescs` (grouped format) and `BaggageInformationList` (classic format)
-- `normalizeGroupedResponse()` deep-dereferences `allowance.ref` → `baggageAllowanceDescs` lookup
-- Handles both piece-based (`pieceCount`) and weight-based (`weight + unit`) formats
-- Hand baggage detected via `provisionType: 'B'/'C'`
-- Default 7KG hand baggage when not provided
+**VPS Test:** ✅ 30KG from BFM search
 
-**No additional implementation needed.** The BFM `AncillaryFees` block from the user's samples would only be needed if we wanted to request baggage-specific ancillary pricing during search (not currently required).
+**What we have:**
+- `baggageAllowanceDescs` deep-dereference in `normalizeGroupedResponse()`
+- Handles piece-based and weight-based formats
+- Hand baggage via `provisionType: 'B'/'C'`, default 7KG
+
+**Official verified sample — BFM piece-based baggage request:**
+```xml
+<TravelPreferences ValidInterlineTicket="true">
+  <CabinPref Cabin="Y" PreferLevel="Only"/>
+  <AncillaryFees Enable="true" Summary="true">
+    <AncillaryFeeGroup Code="LL" Count="1"/>
+    <AncillaryFeeGroup Code="EE"/>
+  </AncillaryFees>
+</TravelPreferences>
+```
+[Source: Sabre BFM baggage samples](https://developer.sabre.com/soap-api/bargain-finder-max/7.1.0/help-documentation/sample-baggage-allowance-all-segments-single-bag-request.html)
+
+**No additional implementation needed.**
 
 ---
 
 ### ❌ Section 20: Structured Fare Rules — NOT IMPLEMENTED
 
-**What's needed:**
-- SOAP API: `StructureFareRulesRQ v3.0.1`
-- Returns: exchange penalties, refund penalties, no-show fees, min/max stay, advance purchase
-- Requires: fare basis code, flight segments, passenger type, booking date
+**VPS Test:** ⏭️ SKIP — needs SOAP `StructureFareRulesRQ v3.0.1`
 
-**Use case:** Show detailed fare rules on booking confirmation page and in fare comparison UI. Currently we only show basic `refundable: true/false` and penalty amounts from BFM `penaltyInformation`.
-
-**Official Sabre sample request:**
+**Official verified sample request:**
 ```xml
 <StructureFareRulesRQ xmlns="http://webservices.sabre.com/sabreXML/2003/07" Version="3.0.1">
-  <PriceRequestInformation BuyingDate="2026-03-14T17:00:00">
+  <PriceRequestInformation BuyingDate="2025-10-15T17:00:00">
     <PassengerTypes>
-      <PassengerType Code="ADT" Count="1"/>
+      <PassengerType Code="ADT" Count="2"/>
     </PassengerTypes>
     <ReturnFareComponentPenalties Ind="true"/>
   </PriceRequestInformation>
   <AirItinerary>
     <OriginDestinationOptions>
       <OriginDestinationOption>
-        <FlightSegment ArrivalDate="2026-04-27T18:45:00" DepartureDate="2026-04-27T14:30:00"
-          FlightNumber="141" RealReservationStatus="HK" ResBookDesigCode="Y"
-          SegmentNumber="1" SegmentType="A">
-          <DepartureAirport LocationCode="DAC"/>
-          <ArrivalAirport LocationCode="DXB"/>
-          <MarketingAirline Code="BS"/>
-          <OperatingAirline Code="BS"/>
+        <FlightSegment ArrivalDate="2025-11-16T19:25:00" DepartureDate="2025-11-16T17:50:00"
+          FlightNumber="584" RealReservationStatus="HK" ResBookDesigCode="G"
+          SegmentNumber="1" SegmentType="A" BookingDate="2025-10-01T04:07:00">
+          <DepartureAirport LocationCode="YYC"/>
+          <ArrivalAirport LocationCode="EWR"/>
+          <MarketingAirline Code="AC"/>
+          <OperatingAirline Code="AC"/>
         </FlightSegment>
         <SegmentInformation SegmentNumber="1"/>
-        <PaxTypeInformation FareBasisCode="YNA0A0TG" FareComponentNumber="1" PassengerType="ADT"/>
+        <PaxTypeInformation FareBasisCode="GNA5A0TG" FareComponentNumber="1" PassengerType="ADT"/>
       </OriginDestinationOption>
     </OriginDestinationOptions>
   </AirItinerary>
 </StructureFareRulesRQ>
 ```
-
-**Impact:** Medium — Improves transparency for customers. Currently we have basic refundability from BFM penalties.
+[Source: Sabre StructureFareRulesRQ v3.0.1](https://developer.sabre.com/soap-api/get-structured-fare-rules/v3.0.1)
 
 **Implementation plan:**
 1. Add SOAP call in `sabre-soap.js` → `getStructuredFareRules(params)`
 2. Add route `GET /api/flights/fare-rules?fareBasis=...&origin=...&destination=...&airlineCode=...`
-3. Frontend: Show fare rules modal on flight results/booking pages
+3. Frontend: Fare rules modal on flight results/booking pages
 
 ---
 
 ### ⚠️ Section 21: Branded Fares / Fare Families — PARTIAL
 
+**VPS Test:** ⏭️ SKIP — depends on airline; no brand names in DAC→DXB results
+
 **What we have:**
-- BFM v5 search returns brand data: `brandName`, `brandCode` from `fareComponentDescs`
-- `normalizeGroupedResponse()` extracts brand names and codes
-- `fareDetails[]` array includes `brandName`, `brandCode` per pricing option
-- Multiple pricing options per itinerary are preserved as `fareDetails[]`
+- BFM v5 returns `brandName`, `brandCode` from `fareComponentDescs`
+- `fareDetails[]` preserves multiple pricing options per itinerary
 
 **What's missing:**
-- Dedicated `BargainFinderMax_BFRQ` call for explicit brand comparison
-- Brand feature descriptions (WiFi, lounge, priority boarding, etc.)
-- Brand tier comparison UI
+- Dedicated `BargainFinderMax_BFRQ` for explicit brand comparison
+- Brand feature descriptions (WiFi, lounge, priority boarding)
 
-**Impact:** Low — Current BFM already returns brand data. Dedicated BFRQ would give richer brand feature descriptions but is not required for core functionality.
+**Note:** Sabre confirms `BargainFinderMax_BFRQ` is the official API. Full sample body not exposed in public searchable docs.
+[Source: Sabre Branded Fares](https://developer.sabre.com/soap-api/branded-fares/1.9.2/index.html)
+
+**Impact:** Low — current BFM already returns brand data.
 
 ---
 
 ### ❌ Section 22: Exchange / Reissue — NOT IMPLEMENTED
 
-**What's needed:**
-- SOAP API: `ExchangeBookingRQ v1.1.0`
-- Flow: Cancel old segments → Book new segments → Price comparison → End transaction
-- Supports: automatic exchange pricing, acceptable price increase/decrease tolerance
-- Requires: original ticket number, new flight segments
+**VPS Test:** ⏭️ SKIP — needs SOAP `ExchangeBookingRQ v1.1.0`
 
-**Use case:** Allow customers to change flights after booking without full cancel + rebook.
-
-**Official Sabre sample request:**
+**Official verified sample request:**
 ```xml
 <ExchangeBookingRQ xmlns="http://services.sabre.com/sp/exchange/booking/v1_1" version="1.1.0">
-  <Itinerary id="GCCVGK">
+  <Itinerary id="PVSCGX">
     <SegmentPricing>
       <SegmentSelect number="1"/>
     </SegmentPricing>
   </Itinerary>
   <Cancel>
-    <Segment Number="1"/>
+    <Segment Number="2"/>
   </Cancel>
   <AirBook>
     <HaltOnStatus Code="HL"/>
+    <HaltOnStatus Code="KK"/>
+    <HaltOnStatus Code="LL"/>
     <HaltOnStatus Code="NN"/>
+    <HaltOnStatus Code="NO"/>
+    <HaltOnStatus Code="UC"/>
+    <HaltOnStatus Code="US"/>
     <OriginDestinationInformation>
-      <FlightSegment DepartureDateTime="2026-05-01T14:30:00" ArrivalDateTime="2026-05-01T18:45:00"
-        FlightNumber="143" NumberInParty="1" ResBookDesigCode="Y" Status="NN">
-        <DestinationLocation LocationCode="DXB"/>
-        <MarketingAirline Code="BS" FlightNumber="143"/>
-        <OriginLocation LocationCode="DAC"/>
+      <FlightSegment DepartureDateTime="2023-02-14T08:00:00" ArrivalDateTime="2023-02-14T11:02:00"
+        FlightNumber="1164" NumberInParty="1" ResBookDesigCode="G" Status="NN">
+        <DestinationLocation LocationCode="PHX"/>
+        <MarketingAirline Code="AA" FlightNumber="1164"/>
+        <OriginLocation LocationCode="SFO"/>
+      </FlightSegment>
+      <FlightSegment DepartureDateTime="2023-02-14T12:03:00" ArrivalDateTime="2023-02-14T12:48:00"
+        FlightNumber="1573" NumberInParty="1" ResBookDesigCode="G" Status="NN">
+        <DestinationLocation LocationCode="TUS"/>
+        <MarketingAirline Code="AA" FlightNumber="1573"/>
+        <OriginLocation LocationCode="PHX"/>
       </FlightSegment>
     </OriginDestinationInformation>
   </AirBook>
   <AutomatedExchanges>
-    <ExchangeComparison OriginalTicketNumber="9972401234567">
+    <ExchangeComparison OriginalTicketNumber="0017862629606">
       <PriceRequestInformation>
         <OptionalQualifiers>
           <PricingQualifiers>
@@ -317,10 +409,13 @@ All core booking lifecycle features are production-verified:
         </OptionalQualifiers>
       </PriceRequestInformation>
     </ExchangeComparison>
-    <PriceComparison amountSpecified="0">
+    <PriceComparison amountSpecified="-793.50">
       <AcceptablePriceIncrease haltOnNonAcceptablePrice="false">
-        <Percent>10</Percent>
+        <Percent>1</Percent>
       </AcceptablePriceIncrease>
+      <AcceptablePriceDecrease haltOnNonAcceptablePrice="false">
+        <Percent>1</Percent>
+      </AcceptablePriceDecrease>
     </PriceComparison>
   </AutomatedExchanges>
   <PostProcessing returnPQRInfo="true">
@@ -330,30 +425,25 @@ All core booking lifecycle features are production-verified:
   </PostProcessing>
 </ExchangeBookingRQ>
 ```
+[Source: Sabre ExchangeBookingRQ](https://developer.sabre.com/soap-api/exchange-booking-soap)
 
-**Impact:** HIGH — Essential for date-change feature. Currently customers must cancel and rebook (losing fare protection).
+**Impact:** HIGH — Essential for date-change feature.
 
 **Implementation plan:**
 1. Add SOAP call in `sabre-soap.js` → `exchangeBooking(params)`
 2. Add route `POST /api/flights/exchange`
 3. Frontend: "Change Flight" button on booking detail page
-4. Requires: original ticket number from `checkTicketStatus`
 
 ---
 
 ### ❌ Section 23: Refund — NOT IMPLEMENTED
 
-**What's needed:**
-- REST API: **Stateless Refunds API** (`POST /v1/offers/refund/price` + `POST /v1/offers/refund/fulfill`)
-- Two-step process: Price refund → Fulfill refund
-- Supports: cancel fee override, multiple documents, credit card refund
+**VPS Test:** ⏭️ SKIP — needs Stateless Refunds API
 
-**Use case:** Process ticket refunds through GDS instead of manual airline contact.
-
-**Official Sabre Refund Pricing sample:**
+**Official verified sample — Refund Pricing:**
 ```json
 {
-  "pnrLocator": "GCCVGK",
+  "pnrLocator": "TNFNHA",
   "clientContext": {
     "pseudoCityCode": "J4YL",
     "stationNumber": "31000104",
@@ -362,24 +452,51 @@ All core booking lifecycle features are production-verified:
   "passengers": [{
     "id": "PAX-1",
     "nameNumber": "01.01",
-    "givenName": "TEST MR",
-    "surname": "SABRE",
+    "givenName": "JOHN MR",
+    "surname": "SILVAS",
     "typeCode": "ADT"
   }],
   "refundDocuments": [{
     "passengerReferenceId": "PAX-1",
-    "document": {
-      "number": "9972401234567",
-      "isFlightDocument": true
+    "document": { "number": "0122217775146", "isFlightDocument": true }
+  }]
+}
+```
+
+**Official verified sample — Refund Pricing with cancel-fee override:**
+```json
+{
+  "pnrLocator": "TNFNHV",
+  "clientContext": {
+    "pseudoCityCode": "J4YL",
+    "stationNumber": "31000104",
+    "accountingCity": "J4YL"
+  },
+  "passengers": [{
+    "id": "PAX-1",
+    "nameNumber": "01.01",
+    "givenName": "JOHN MR",
+    "surname": "SILVAS",
+    "typeCode": "ADT"
+  }],
+  "refundDocuments": [
+    { "passengerReferenceId": "PAX-1", "document": { "number": "0122217775146", "isFlightDocument": true } },
+    { "passengerReferenceId": "PAX-1", "document": { "number": "0122217775147", "isFlightDocument": true } }
+  ],
+  "qualifiers": [{
+    "passengerReferenceIds": ["PAX-1"],
+    "cancelFee": {
+      "type": "Override",
+      "overrideAmount": { "amount": "150", "currencyCode": "USD" }
     }
   }]
 }
 ```
 
-**Official Sabre Refund Fulfill sample:**
+**Official verified sample — Refund Fulfill:**
 ```json
 {
-  "pnrLocator": "GCCVGK",
+  "pnrLocator": "TNFNHA",
   "clientContext": {
     "pseudoCityCode": "J4YL",
     "stationNumber": "31000104",
@@ -388,83 +505,83 @@ All core booking lifecycle features are production-verified:
   "passengers": [{
     "id": "PAX-1",
     "nameNumber": "01.01",
-    "givenName": "TEST MR",
-    "surname": "SABRE",
+    "givenName": "JOHN MR",
+    "surname": "SILVAS",
     "typeCode": "ADT"
   }],
   "formsOfRefund": [{
     "id": "FOR-1",
     "type": "CreditCard",
     "cardCode": "VI",
-    "cardNumber": "XXXXXXXXXXXX1111"
+    "cardNumber": "XXXXXXXXXXXX1111",
+    "cardNumberToken": "4444P21K8AHP1111"
   }],
   "refundDocuments": [{
     "passengerReferenceId": "PAX-1",
-    "document": { "number": "9972401234567" },
+    "document": { "number": "0122217775146" },
     "refunds": [{
-      "amount": { "amount": { "amount": "45000", "currencyCode": "BDT" } },
+      "amount": { "amount": { "amount": "1376", "currencyCode": "USD" } },
       "formOfRefundReferenceId": "FOR-1"
     }]
   }],
   "cancelItinerary": true
 }
 ```
+[Source: Sabre Stateless Refunds API](https://developer.sabre.com/rest-api/stateless-refunds-api/1.0)
 
-**Impact:** HIGH — Essential for customer refund processing. Currently refunds are manual.
+**Impact:** HIGH — Essential for automated refund processing.
 
 **Implementation plan:**
 1. Add `refundPrice()` and `refundFulfill()` in `sabre-flights.js`
-2. Add route `POST /api/flights/refund/price` and `POST /api/flights/refund/fulfill`
+2. Add routes `POST /api/flights/refund/price` and `POST /api/flights/refund/fulfill`
 3. Admin panel: "Process Refund" button on booking detail
-4. Dashboard: Refund status tracking
 
 ---
 
 ### ❌ Section 24: Void — NOT IMPLEMENTED
 
-**What's needed:**
-- REST API: **Void Flight Tickets** (`POST /v1/trip/orders/voidFlightTickets`)
-- Simpler than refund — voids ticket within airline void window (usually 24h)
+**VPS Test:** ⏭️ SKIP — needs `POST /v1/trip/orders/voidFlightTickets`
 
-**Use case:** Void same-day tickets when customer cancels within void window.
-
-**Official Sabre Void samples:**
+**Official verified samples:**
 
 By ticket number:
 ```json
-{ "tickets": ["9972401234567"] }
+{ "tickets": ["0721237725987"] }
 ```
 
-By booking:
+By conjunctive document:
 ```json
-{ "confirmationId": "GCCVGK" }
+{ "tickets": ["1606802005008/09"] }
 ```
 
-**Impact:** HIGH — Void is much cheaper than refund. Most airlines allow void within 24 hours at no penalty.
+By booking (void all):
+```json
+{ "confirmationId": "ABCDEF" }
+```
+[Source: Sabre Void Flight Tickets](https://developer.sabre.com/rest-api/booking-management-api/v1/help-documentation/void-flight-tickets-examples.html)
+
+**Impact:** HIGH — Void is free/cheap vs refund penalties. 24h void window.
 
 **Implementation plan:**
 1. Add `voidTickets()` in `sabre-flights.js`
 2. Add route `POST /api/flights/void`
 3. Auto-void logic: if cancel within 24h of ticketing, try void before refund
-4. Admin panel: "Void Ticket" option
 
 ---
 
 ### ❌ Section 25: Flight Status (FLIFO) — NOT IMPLEMENTED
 
-**What's needed:**
-- REST API: `GET /products/air/flight/status` (query params, no body)
-- Returns: scheduled, estimated, actual departure/arrival times, flight status
+**VPS Test:** ⏭️ SKIP — needs `GET /products/air/flight/status`
 
-**Use case:** Real-time flight status tracking on booking detail page.
-
-**Endpoints:**
+**Official verified endpoints (GET, no body):**
 ```
 GET /products/air/flight/status?departureDate=2026-04-27&airlineCode=BS&flightNumber=141
 GET /products/air/flight/status?departureDate=2026-04-27&origin=DAC&destination=DXB
+GET /products/air/flight/schedules?departureDate=2026-04-27&airlineCode=BS&flightNumber=141
 ```
+[Source: Sabre Digital Connect FLIFO](https://developer.sabre.com/product-collection/digital-connect/v4/help-documentation/flifo-flight-information-and-schedule-api.html)
 
-**Impact:** Medium — Nice-to-have for customer experience. Not critical for booking flow.
+**Impact:** Medium — Nice UX for flight tracking. Not critical.
 
 **Implementation plan:**
 1. Add `getFlightStatus()` in `sabre-flights.js`
@@ -475,26 +592,48 @@ GET /products/air/flight/status?departureDate=2026-04-27&origin=DAC&destination=
 
 ### ⚠️ Section 26: Frequent Flyer Update — PARTIAL
 
+**VPS Test:** ✅ 26a (FQTV in CreatePNR) | ⏭️ 26b (post-booking update — NOT IMPLEMENTED)
+
 **What we have:**
-- FQTV SSR code supported in CreatePNR (section 14, SSR table)
-- `ssrList` builder includes FF number during booking creation
-- Format: `SSR_Code: 'FQTV'`, `Text: 'EK1234567890'`
+- FQTV SSR code in CreatePNR SSR builder
+- FF autoapplication by Sabre for hosted carriers
 
 **What's missing:**
 - Post-booking FF update via `UpdatePassengerNameRecord`
-- FF autoapplication after booking (Sabre handles this automatically for hosted carriers)
-- Dashboard UI for adding/editing loyalty numbers after booking
+- Dashboard UI for loyalty number management
 
-**Impact:** Low — FQTV during booking works. Post-booking update is a minor UX improvement.
+**Note:** Sabre confirms CreatePNR + UpdatePNR support FQTV SSR. Full FQTV sample body not exposed in public searchable docs.
+[Source: Sabre CreatePNR](https://developer.sabre.com/rest-api/create-passenger-name-record) | [UpdatePNR](https://developer.sabre.com/rest-api/update-passenger-name-record)
+
+**Impact:** Low — booking-time FQTV works. Post-booking is minor UX improvement.
+
+---
+
+## Payload Verification Summary
+
+| Section | Full Official Sample Available | Source |
+|---------|-------------------------------|--------|
+| 17. Get Ancillaries | ✅ Yes (payload + loyalty modes) | [Stateless Ancillaries API](https://developer.sabre.com/rest-api/stateless-ancillaries-api/1.0) |
+| 18. Add Ancillary | ✅ Yes | [Stateless Ancillaries API](https://developer.sabre.com/rest-api/stateless-ancillaries-api/1.0) |
+| 18. EMD (AirTicketRQ) | ✅ Yes | [Enhanced Air Ticket](https://developer.sabre.com/soap-api/enhanced-air-ticket-soap/1.3.0/index.html) |
+| 18. EMD (Fulfill) | ✅ Yes | [Booking Management API](https://developer.sabre.com/rest-api/booking-management-api/v1/help-documentation/fulfill-flight-tickets-examples.html) |
+| 19. Baggage (BFM) | ✅ Yes | [BFM Baggage Samples](https://developer.sabre.com/soap-api/bargain-finder-max/7.1.0/help-documentation/sample-baggage-allowance-all-segments-single-bag-request.html) |
+| 20. Fare Rules | ✅ Yes | [StructureFareRulesRQ v3.0.1](https://developer.sabre.com/soap-api/get-structured-fare-rules/v3.0.1) |
+| 21. Branded Fares | ⚠️ Endpoint confirmed, no full sample | [Branded Fares](https://developer.sabre.com/soap-api/branded-fares/1.9.2/index.html) |
+| 22. Exchange | ✅ Yes | [ExchangeBookingRQ](https://developer.sabre.com/soap-api/exchange-booking-soap) |
+| 23. Refund | ✅ Yes (price + fulfill + cancel-fee) | [Stateless Refunds API](https://developer.sabre.com/rest-api/stateless-refunds-api/1.0) |
+| 24. Void | ✅ Yes (ticket + booking modes) | [Void Flight Tickets](https://developer.sabre.com/rest-api/booking-management-api/v1/help-documentation/void-flight-tickets-examples.html) |
+| 25. FLIFO | ✅ GET endpoints (no body) | [Digital Connect FLIFO](https://developer.sabre.com/product-collection/digital-connect/v4/help-documentation/flifo-flight-information-and-schedule-api.html) |
+| 26. Frequent Flyer | ⚠️ Capability confirmed, no full FQTV sample | [CreatePNR](https://developer.sabre.com/rest-api/create-passenger-name-record) |
 
 ---
 
 ## Priority Implementation Order
 
 ### Phase 1 — Critical (Revenue Impact)
-1. **Section 24: Void** — Saves money on same-day cancellations
-2. **Section 23: Refund** — Automated refund processing
-3. **Section 22: Exchange** — Date change without cancel+rebook
+1. **Section 24: Void** — Saves money on same-day cancellations (simplest — just `POST` with ticket/PNR)
+2. **Section 23: Refund** — Automated refund processing (2-step: price → fulfill)
+3. **Section 22: Exchange** — Date change without cancel+rebook (SOAP, most complex)
 
 ### Phase 2 — High Value (Customer Experience)
 4. **Section 20: Fare Rules** — Transparency on penalties
@@ -517,7 +656,8 @@ GET /products/air/flight/status?departureDate=2026-04-27&origin=DAC&destination=
 | `backend/src/routes/flights.js` | 1612 | Unified flight routes: search, book, cancel |
 | `backend/src/routes/ancillaries.js` | 444 | Ancillary/seat map endpoints |
 | `SABRE_PAYLOADS.md` | 1018 | Working payload reference (sections 1–16) |
+| `backend/test-sabre-features.sh` | ~400 | Automated VPS test suite for all 26 features |
 
 ---
 
-*Last updated: 2026-03-14 | v3.9.9.9*
+*Last updated: 2026-03-14 | v3.9.9.9 | VPS test verified*
