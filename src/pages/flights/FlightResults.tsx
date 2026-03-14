@@ -3262,7 +3262,12 @@ const FlightResults = () => {
               </Popover>
             )}
             {isMultiCity && (
-              <Popover>
+              <Popover open={showMultiCityEdit} onOpenChange={(open) => {
+                setShowMultiCityEdit(open);
+                if (open && editMcSegments.length === 0 && multiCitySegments.length > 0) {
+                  setEditMcSegments(JSON.parse(JSON.stringify(multiCitySegments)));
+                }
+              }}>
                 <PopoverTrigger asChild>
                   <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
                     <span className="text-sm font-bold text-foreground">
@@ -3271,24 +3276,90 @@ const FlightResults = () => {
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-96 p-4 z-[60]" align="start">
+                <PopoverContent className="w-[480px] p-4 z-[60]" align="start">
                   <p className="text-xs font-bold text-muted-foreground mb-3">Multi-City Segments</p>
                   <div className="space-y-2.5">
-                    {multiCitySegments.map((seg, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2 border border-border/50">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">Trip {i + 1}</span>
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="text-sm font-bold text-foreground">{seg.from}</span>
+                    {editMcSegments.map((seg, i) => {
+                      const fromAp = AIRPORTS.find(a => a.code === seg.from);
+                      const toAp = AIRPORTS.find(a => a.code === seg.to);
+                      return (
+                        <div key={i} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 border border-border/50">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0 w-10">Trip {i + 1}</span>
+                          {/* From */}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="flex-1 min-w-0 text-left bg-card border border-border rounded-md px-2 py-1.5 text-xs font-bold hover:border-primary/50 transition-colors truncate">
+                                {fromAp ? `${fromAp.city} - ${seg.from}` : seg.from || "From"}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 p-2 z-[70]" align="start">
+                              <input className="w-full border border-border rounded px-2 py-1.5 text-xs mb-2 bg-background" placeholder="Search airport..." value={mcEditSearch} onChange={e => setMcEditSearch(e.target.value)} autoFocus />
+                              <div className="max-h-48 overflow-y-auto space-y-0.5">
+                                {AIRPORTS.filter(a => !mcEditSearch || a.code.toLowerCase().includes(mcEditSearch.toLowerCase()) || a.city.toLowerCase().includes(mcEditSearch.toLowerCase()) || a.name.toLowerCase().includes(mcEditSearch.toLowerCase())).slice(0, 30).map(a => (
+                                  <button key={a.code} className="w-full text-left px-2 py-1.5 text-xs rounded hover:bg-muted flex items-center gap-2" onClick={() => { updateMcSegment(i, "from", a.code); setMcEditSearch(""); }}>
+                                    <span className="font-bold">{a.code}</span> <span className="text-muted-foreground truncate">{a.city}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                           <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-sm font-bold text-foreground">{seg.to}</span>
+                          {/* To */}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="flex-1 min-w-0 text-left bg-card border border-border rounded-md px-2 py-1.5 text-xs font-bold hover:border-primary/50 transition-colors truncate">
+                                {toAp ? `${toAp.city} - ${seg.to}` : seg.to || "To"}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 p-2 z-[70]" align="start">
+                              <input className="w-full border border-border rounded px-2 py-1.5 text-xs mb-2 bg-background" placeholder="Search airport..." value={mcEditSearch} onChange={e => setMcEditSearch(e.target.value)} autoFocus />
+                              <div className="max-h-48 overflow-y-auto space-y-0.5">
+                                {AIRPORTS.filter(a => a.code !== seg.from && (!mcEditSearch || a.code.toLowerCase().includes(mcEditSearch.toLowerCase()) || a.city.toLowerCase().includes(mcEditSearch.toLowerCase()) || a.name.toLowerCase().includes(mcEditSearch.toLowerCase()))).slice(0, 30).map(a => (
+                                  <button key={a.code} className="w-full text-left px-2 py-1.5 text-xs rounded hover:bg-muted flex items-center gap-2" onClick={() => { updateMcSegment(i, "to", a.code); setMcEditSearch(""); }}>
+                                    <span className="font-bold">{a.code}</span> <span className="text-muted-foreground truncate">{a.city}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          {/* Date */}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="shrink-0 bg-card border border-border rounded-md px-2 py-1.5 text-xs font-bold hover:border-primary/50 transition-colors whitespace-nowrap flight-date">
+                                {seg.date ? (() => { try { return format(new Date(seg.date), "dd MMM, EEE"); } catch { return seg.date; } })() : "Date"}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-2 z-[70]" align="end">
+                              <Calendar mode="single" selected={seg.date ? new Date(seg.date) : undefined} onSelect={(d) => {
+                                if (d) updateMcSegment(i, "date", format(d, "yyyy-MM-dd"));
+                              }} disabled={(date) => {
+                                if (date < new Date(new Date().toDateString())) return true;
+                                if (i > 0 && editMcSegments[i - 1]?.date) {
+                                  return date < new Date(editMcSegments[i - 1].date);
+                                }
+                                return false;
+                              }} />
+                            </PopoverContent>
+                          </Popover>
+                          {/* Remove */}
+                          {editMcSegments.length > 2 && (
+                            <button onClick={() => removeMcSegment(i)} className="text-destructive hover:text-destructive/80 shrink-0">
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
-                        <span className="text-xs flight-date shrink-0">
-                          {seg.date ? (() => { try { return format(new Date(seg.date), "dd MMM, EEE"); } catch { return seg.date; } })() : "—"}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                  <Button size="sm" className="w-full mt-3 bg-accent text-accent-foreground" onClick={() => navigate("/")}>
+                  {editMcSegments.length < 5 && (
+                    <button onClick={addMcSegment} className="flex items-center gap-1.5 text-accent font-bold text-xs mt-2 hover:underline">
+                      <span className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-accent text-sm">+</span>
+                      Add city
+                    </button>
+                  )}
+                  <Button size="sm" className="w-full mt-3 bg-accent text-accent-foreground font-bold"
+                    disabled={editMcSegments.filter(s => s.from && s.to && s.date).length < 2}
+                    onClick={applyMcSearch}>
                     <Search className="w-3.5 h-3.5 mr-1.5" /> New Multi-City Search
                   </Button>
                 </PopoverContent>
