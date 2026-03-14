@@ -1113,7 +1113,7 @@ const RoundTripFlightCard = ({
                                       <p className="text-[11px] text-muted-foreground mt-1">{getAirportName(segment.origin || leg.origin)} ({segment.origin || leg.origin})</p>
                                     </div>
                                     <div className="flex-1 flex flex-col items-center justify-center pt-1 px-4">
-                                      <AnimatedFlightArc height={12} />
+                                      <AnimatedFlightArc compact direction={label === "Return" ? "return" : "departure"} />
                                       <p className="text-xs text-muted-foreground font-medium -mt-0.5">{segment.duration || leg.duration}</p>
                                     </div>
                                     <div className="text-right shrink-0 max-w-[38%]">
