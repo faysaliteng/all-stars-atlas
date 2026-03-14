@@ -335,6 +335,7 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
 };
 
 const FlightBooking = () => {
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [step, setStep] = useState(1);
   const [authOpen, setAuthOpen] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
