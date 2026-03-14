@@ -279,10 +279,58 @@ const SearchWidget = ({ flightOnly, initialFlightValues, compact }: SearchWidget
     to: Airport | null;
     date?: Date;
   }
-  const [multiCitySegments, setMultiCitySegments] = useState<FlightSegment[]>([
-    { from: AIRPORTS[0], to: AIRPORTS[1], date: undefined },
-    { from: AIRPORTS[1], to: null, date: undefined },
-  ]);
+  const [multiCitySegments, setMultiCitySegments] = useState<FlightSegment[]>(() => {
+    if (initialFlightValues?.tripType === "multicity" && Array.isArray(initialFlightValues.segments) && initialFlightValues.segments.length >= 2) {
+      return initialFlightValues.segments.slice(0, 5).map(seg => ({
+        from: AIRPORTS.find(a => a.code === seg.from) ?? null,
+        to: AIRPORTS.find(a => a.code === seg.to) ?? null,
+        date: seg.date ? new Date(seg.date) : undefined,
+      }));
+    }
+    return [
+      { from: AIRPORTS[0], to: AIRPORTS[1], date: undefined },
+      { from: AIRPORTS[1], to: null, date: undefined },
+    ];
+  });
+
+  // Keep widget synced when parent updates URL-based initial values (results page modify search)
+  useEffect(() => {
+    if (!initialFlightValues) return;
+
+    const nextFrom = initialFlightValues.from ? AIRPORTS.find(a => a.code === initialFlightValues.from) || AIRPORTS[0] : AIRPORTS[0];
+    const nextTo = initialFlightValues.to ? AIRPORTS.find(a => a.code === initialFlightValues.to) || AIRPORTS[1] : AIRPORTS[1];
+    const nextTripType = initialFlightValues.tripType === "multicity"
+      ? "multicity"
+      : initialFlightValues.returnDate
+        ? "roundtrip"
+        : initialFlightValues.tripType === "oneway"
+          ? "oneway"
+          : "roundtrip";
+
+    setActiveTab("flight");
+    setTripType(nextTripType);
+    setFromAirport(nextFrom);
+    setToAirport(nextTo);
+    setDepartDate(initialFlightValues.depart ? new Date(initialFlightValues.depart) : undefined);
+    setReturnDate(initialFlightValues.returnDate ? new Date(initialFlightValues.returnDate) : undefined);
+    setPassengers({
+      adults: Math.max(1, initialFlightValues.adults || 1),
+      children: Math.max(0, initialFlightValues.children || 0),
+      infants: Math.max(0, initialFlightValues.infants || 0),
+    });
+    setCabinClass(initialFlightValues.cabin || "economy");
+    setFlightScope((nextFrom?.country === "BD" && nextTo?.country === "BD") ? "domestic" : "international");
+
+    if (initialFlightValues.tripType === "multicity" && Array.isArray(initialFlightValues.segments) && initialFlightValues.segments.length >= 2) {
+      setMultiCitySegments(
+        initialFlightValues.segments.slice(0, 5).map(seg => ({
+          from: AIRPORTS.find(a => a.code === seg.from) ?? null,
+          to: AIRPORTS.find(a => a.code === seg.to) ?? null,
+          date: seg.date ? new Date(seg.date) : undefined,
+        }))
+      );
+    }
+  }, [initialFlightValues]);
 
   const domesticAirports = useMemo(() => AIRPORTS.filter(a => a.country === "BD"), []);
   const internationalAirports = useMemo(() => AIRPORTS.filter(a => a.country !== "BD"), []);
