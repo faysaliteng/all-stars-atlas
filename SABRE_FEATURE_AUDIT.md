@@ -353,24 +353,11 @@ All core booking lifecycle features are production-verified:
 
 ---
 
-### ❌ Section 25: Flight Status (FLIFO) — NOT IMPLEMENTED
+### ✅ Section 25: Flight Status (FLIFO) — DONE (v4.0.0)
 
-**VPS Test:** ⏭️ SKIP — needs `GET /products/air/flight/status`
-
-**Official verified endpoints (GET, no body):**
-```
-GET /products/air/flight/status?departureDate=2026-04-27&airlineCode=BS&flightNumber=141
-GET /products/air/flight/status?departureDate=2026-04-27&origin=DAC&destination=DXB
-GET /products/air/flight/schedules?departureDate=2026-04-27&airlineCode=BS&flightNumber=141
-```
-[Source: Sabre Digital Connect FLIFO](https://developer.sabre.com/product-collection/digital-connect/v4/help-documentation/flifo-flight-information-and-schedule-api.html)
-
-**Impact:** Medium — Nice UX for flight tracking. Not critical.
-
-**Implementation plan:**
-1. Add `getFlightStatus()` in `sabre-flights.js`
-2. Add route `GET /api/flights/status?airlineCode=BS&flightNumber=141&date=2026-04-27`
-3. Frontend: Flight status widget on booking detail page
+**Implementation:** `sabre-flights.js` → `getFlightStatus()`
+**Route:** `GET /api/flights/status?airlineCode=BS&flightNumber=141&date=2026-04-27`
+**Features:** Real-time flight status with scheduled/estimated/actual departure+arrival, equipment, status parsing
 
 ---
 
