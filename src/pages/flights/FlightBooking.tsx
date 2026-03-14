@@ -1045,7 +1045,7 @@ const FlightBooking = () => {
               );
             })}
           </div>
-          <SessionTimer minutes={20} />
+          <SessionTimer minutes={20} onExpired={handleSessionExpired} />
         </div>
 
         {/* Biman notice */}
