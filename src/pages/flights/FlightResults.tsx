@@ -289,8 +289,8 @@ const FilterPanel = ({
     ];
     const depart: any[] = [], arrive: any[] = [];
     for (const slot of slots) {
-      const df = flights.filter((f: any) => { if (!f.departureTime) return false; const h = new Date(f.departureTime).getHours(); return h >= slot.minH && h < slot.maxH; });
-      const af = flights.filter((f: any) => { if (!f.arrivalTime) return false; const h = new Date(f.arrivalTime).getHours(); return h >= slot.minH && h < slot.maxH; });
+      const df = flights.filter((f: any) => { const h = getApiLocalHour(f.departureTime); return h !== null && h >= slot.minH && h < slot.maxH; });
+      const af = flights.filter((f: any) => { const h = getApiLocalHour(f.arrivalTime); return h !== null && h >= slot.minH && h < slot.maxH; });
       if (df.length > 0) depart.push({ ...slot, count: df.length, cheapest: Math.min(...df.map((f: any) => f.price || Infinity)) });
       if (af.length > 0) arrive.push({ ...slot, count: af.length, cheapest: Math.min(...af.map((f: any) => f.price || Infinity)) });
     }
