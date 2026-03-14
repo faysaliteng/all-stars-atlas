@@ -2489,11 +2489,24 @@ const FlightResults = () => {
     navigate(`/flights?${p.toString()}`);
   }, [departDate, returnDate, searchParams, navigate]);
 
+  // Scope-aware airport filtering — same logic as homepage SearchWidget
+  const domesticAirports = useMemo(() => AIRPORTS.filter(a => a.country === "BD"), []);
   const filteredAirports = useMemo(() => {
-    if (!airportSearch) return AIRPORTS.slice(0, 10);
+    // Apply scope filter: domestic = BD only; international: for "from" show all, for "to" show non-BD if from is BD
+    let pool = AIRPORTS;
+    if (editScope === "domestic") {
+      pool = domesticAirports;
+    } else if (editingField === "to") {
+      // International: if from is BD, only show non-BD destinations
+      const fromAp = AIRPORTS.find(a => a.code === editFrom);
+      if (fromAp?.country === "BD") {
+        pool = AIRPORTS.filter(a => a.country !== "BD");
+      }
+    }
+    if (!airportSearch) return pool.slice(0, 10);
     const q = airportSearch.toLowerCase();
-    return AIRPORTS.filter(a => a.code.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)).slice(0, 8);
-  }, [airportSearch]);
+    return pool.filter(a => a.code.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [airportSearch, editScope, editingField, editFrom, domesticAirports]);
 
 
   const carrierCode = searchParams.get("carrier") || "";
