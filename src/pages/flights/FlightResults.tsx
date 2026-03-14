@@ -2609,6 +2609,9 @@ const FlightResults = () => {
     setShowMultiCityEdit(false);
   };
 
+  const [multiCityResults, setMultiCityResults] = useState<Record<number, any[]>>({});
+  };
+
   const [multiCityLoading, setMultiCityLoading] = useState(false);
   const [multiCityError, setMultiCityError] = useState<string | null>(null);
   const [selectedMultiCityFlights, setSelectedMultiCityFlights] = useState<Record<number, any>>({});
