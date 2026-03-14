@@ -743,6 +743,287 @@ function clearSoapSessionCache() {
   _sessionCache = { token: null, conversationId: null, expiresAt: 0 };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SECTION 20: Structured Fare Rules (StructureFareRulesRQ v3.0.1)
+// ═══════════════════════════════════════════════════════════════
+async function getStructuredFareRules(params) {
+  const config = await getSabreConfig();
+  if (!config) return { success: false, error: 'Sabre SOAP not configured' };
+
+  let token, conversationId;
+  try {
+    ({ token, conversationId } = await createSession(config));
+  } catch (err) {
+    return { success: false, error: `Session failed: ${err.message}` };
+  }
+
+  const soapUrl = getSoapEndpoint(config);
+  const { origin, destination, departureDate, arrivalDate, airlineCode, flightNumber, fareBasis, bookingClass, passengerType = 'ADT', passengerCount = 1 } = params;
+
+  const rbd = bookingClass || 'Y';
+  const depDate = departureDate || '';
+  const arrDate = arrivalDate || depDate;
+
+  const envelope = `<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:eb="http://www.ebxml.org/namespaces/messageHeader"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <SOAP-ENV:Header>
+    <eb:MessageHeader SOAP-ENV:mustUnderstand="1" eb:version="1.0">
+      <eb:From><eb:PartyId>Agency</eb:PartyId></eb:From>
+      <eb:To><eb:PartyId>Sabre_API</eb:PartyId></eb:To>
+      <eb:CPAId>${config.pcc}</eb:CPAId>
+      <eb:ConversationId>${conversationId}</eb:ConversationId>
+      <eb:Service>StructureFareRulesRQ</eb:Service>
+      <eb:Action>StructureFareRulesRQ</eb:Action>
+    </eb:MessageHeader>
+    <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+      <wsse:BinarySecurityToken>${token}</wsse:BinarySecurityToken>
+    </wsse:Security>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <StructureFareRulesRQ xmlns="http://webservices.sabre.com/sabreXML/2003/07" Version="3.0.1">
+      <PriceRequestInformation BuyingDate="${new Date().toISOString().split('.')[0]}">
+        <PassengerTypes>
+          <PassengerType Code="${passengerType}" Count="${passengerCount}"/>
+        </PassengerTypes>
+        <ReturnFareComponentPenalties Ind="true"/>
+      </PriceRequestInformation>
+      <AirItinerary>
+        <OriginDestinationOptions>
+          <OriginDestinationOption>
+            <FlightSegment ArrivalDate="${arrDate}T23:59:00" DepartureDate="${depDate}T00:00:00"
+              FlightNumber="${String(flightNumber || '').replace(/\D/g, '')}" RealReservationStatus="HK"
+              ResBookDesigCode="${rbd}" SegmentNumber="1" SegmentType="A">
+              <DepartureAirport LocationCode="${origin}"/>
+              <ArrivalAirport LocationCode="${destination}"/>
+              <MarketingAirline Code="${airlineCode}"/>
+              <OperatingAirline Code="${airlineCode}"/>
+            </FlightSegment>
+            <SegmentInformation SegmentNumber="1"/>
+            <PaxTypeInformation FareBasisCode="${fareBasis || rbd + 'OW'}" FareComponentNumber="1" PassengerType="${passengerType}"/>
+          </OriginDestinationOption>
+        </OriginDestinationOptions>
+      </AirItinerary>
+    </StructureFareRulesRQ>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>`;
+
+  try {
+    const res = await fetch(soapUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'StructureFareRulesRQ' },
+      body: envelope,
+      signal: AbortSignal.timeout(20000),
+    });
+
+    const xml = await res.text();
+    console.log(`[Sabre SOAP] FareRules response length: ${xml.length}`);
+
+    // Check for SOAP fault
+    const faultMatch = xml.match(/faultstring>([^<]+)/);
+    if (faultMatch) {
+      return { success: false, error: faultMatch[1], source: 'sabre-soap' };
+    }
+
+    // Parse fare rules from XML
+    const rules = [];
+    const ruleRegex = /<Category[^>]*Number="(\d+)"[^>]*>[\s\S]*?<\/Category>/g;
+    let match;
+    while ((match = ruleRegex.exec(xml)) !== null) {
+      rules.push({ categoryNumber: match[1], rawXml: match[0] });
+    }
+
+    // Parse penalty information
+    const penalties = [];
+    const penaltyRegex = /<Penalty[^>]*Type="([^"]*)"[^>]*>[\s\S]*?<\/Penalty>/g;
+    while ((match = penaltyRegex.exec(xml)) !== null) {
+      const type = match[1];
+      const amountMatch = match[0].match(/Amount="([^"]*)"/);
+      const currencyMatch = match[0].match(/Currency[Cc]ode="([^"]*)"/);
+      const applicabilityMatch = match[0].match(/Applicability="([^"]*)"/);
+      penalties.push({
+        type,
+        amount: amountMatch ? parseFloat(amountMatch[1]) : null,
+        currency: currencyMatch ? currencyMatch[1] : 'BDT',
+        applicability: applicabilityMatch ? applicabilityMatch[1] : null,
+      });
+    }
+
+    // Parse specific rules text
+    const exchangePenalty = penalties.find(p => /exchange|reissue|change/i.test(p.type));
+    const refundPenalty = penalties.find(p => /refund|cancel/i.test(p.type));
+    const noShowPenalty = penalties.find(p => /no.?show/i.test(p.type));
+
+    return {
+      success: true,
+      source: 'sabre-soap',
+      fareRules: {
+        fareBasis: fareBasis || '',
+        airlineCode,
+        origin,
+        destination,
+        penalties,
+        exchangePenalty: exchangePenalty || null,
+        refundPenalty: refundPenalty || null,
+        noShowPenalty: noShowPenalty || null,
+        categories: rules.length,
+      },
+      rawXml: xml.substring(0, 5000),
+    };
+  } catch (err) {
+    console.error(`[Sabre SOAP] FareRules failed:`, err.message);
+    return { success: false, error: err.message, source: 'sabre-soap' };
+  } finally {
+    await closeSession(config, token, conversationId);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 22: Exchange / Reissue (ExchangeBookingRQ v1.1.0)
+// ═══════════════════════════════════════════════════════════════
+async function exchangeBooking(params) {
+  const config = await getSabreConfig();
+  if (!config) return { success: false, error: 'Sabre SOAP not configured' };
+
+  let token, conversationId;
+  try {
+    ({ token, conversationId } = await createSession(config));
+  } catch (err) {
+    return { success: false, error: `Session failed: ${err.message}` };
+  }
+
+  const soapUrl = getSoapEndpoint(config);
+  const {
+    pnr, originalTicketNumber, cancelSegments = [1],
+    newSegments = [], nameNumber = '1.1',
+    priceIncreaseTolerance = 10, priceDecreaseTolerance = 10,
+  } = params;
+
+  // Build new flight segments XML
+  const segmentsXml = newSegments.map(seg => `
+        <FlightSegment DepartureDateTime="${seg.departureTime || ''}" ArrivalDateTime="${seg.arrivalTime || ''}"
+          FlightNumber="${String(seg.flightNumber || '').replace(/\D/g, '')}" NumberInParty="${seg.partySize || 1}"
+          ResBookDesigCode="${seg.bookingClass || 'Y'}" Status="NN">
+          <DestinationLocation LocationCode="${seg.destination || ''}"/>
+          <MarketingAirline Code="${seg.airlineCode || ''}" FlightNumber="${String(seg.flightNumber || '').replace(/\D/g, '')}"/>
+          <OriginLocation LocationCode="${seg.origin || ''}"/>
+        </FlightSegment>`).join('');
+
+  const cancelXml = cancelSegments.map(n => `<Segment Number="${n}"/>`).join('');
+
+  const envelope = `<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:eb="http://www.ebxml.org/namespaces/messageHeader">
+  <SOAP-ENV:Header>
+    <eb:MessageHeader SOAP-ENV:mustUnderstand="1" eb:version="1.0">
+      <eb:From><eb:PartyId>Agency</eb:PartyId></eb:From>
+      <eb:To><eb:PartyId>Sabre_API</eb:PartyId></eb:To>
+      <eb:CPAId>${config.pcc}</eb:CPAId>
+      <eb:ConversationId>${conversationId}</eb:ConversationId>
+      <eb:Service>ExchangeBookingRQ</eb:Service>
+      <eb:Action>ExchangeBookingRQ</eb:Action>
+    </eb:MessageHeader>
+    <wsse:Security xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext">
+      <wsse:BinarySecurityToken>${token}</wsse:BinarySecurityToken>
+    </wsse:Security>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <ExchangeBookingRQ xmlns="http://services.sabre.com/sp/exchange/booking/v1_1" version="1.1.0">
+      <Itinerary id="${pnr}">
+        <SegmentPricing>
+          <SegmentSelect number="1"/>
+        </SegmentPricing>
+      </Itinerary>
+      <Cancel>${cancelXml}</Cancel>
+      <AirBook>
+        <HaltOnStatus Code="HL"/>
+        <HaltOnStatus Code="KK"/>
+        <HaltOnStatus Code="LL"/>
+        <HaltOnStatus Code="NN"/>
+        <HaltOnStatus Code="NO"/>
+        <HaltOnStatus Code="UC"/>
+        <HaltOnStatus Code="US"/>
+        <OriginDestinationInformation>${segmentsXml}
+        </OriginDestinationInformation>
+      </AirBook>
+      <AutomatedExchanges>
+        <ExchangeComparison OriginalTicketNumber="${originalTicketNumber || ''}">
+          <PriceRequestInformation>
+            <OptionalQualifiers>
+              <PricingQualifiers>
+                <NameSelect NameNumber="${nameNumber}"/>
+              </PricingQualifiers>
+            </OptionalQualifiers>
+          </PriceRequestInformation>
+        </ExchangeComparison>
+        <PriceComparison amountSpecified="0">
+          <AcceptablePriceIncrease haltOnNonAcceptablePrice="false">
+            <Percent>${priceIncreaseTolerance}</Percent>
+          </AcceptablePriceIncrease>
+          <AcceptablePriceDecrease haltOnNonAcceptablePrice="false">
+            <Percent>${priceDecreaseTolerance}</Percent>
+          </AcceptablePriceDecrease>
+        </PriceComparison>
+      </AutomatedExchanges>
+      <PostProcessing returnPQRInfo="true">
+        <EndTransaction>
+          <Source ReceivedFrom="SEVEN TRIP EXCHANGE"/>
+        </EndTransaction>
+      </PostProcessing>
+    </ExchangeBookingRQ>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>`;
+
+  try {
+    const res = await fetch(soapUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'ExchangeBookingRQ' },
+      body: envelope,
+      signal: AbortSignal.timeout(30000),
+    });
+
+    const xml = await res.text();
+    console.log(`[Sabre SOAP] Exchange response length: ${xml.length}`);
+    console.log(`[Sabre SOAP] Exchange XML (first 3000): ${xml.substring(0, 3000)}`);
+
+    // Check for SOAP fault
+    const faultMatch = xml.match(/faultstring>([^<]+)/);
+    if (faultMatch) {
+      return { success: false, error: faultMatch[1], source: 'sabre-soap' };
+    }
+
+    // Check for ExchangeBookingRS error
+    const errorMatch = xml.match(/ErrorMessage[^>]*>([^<]+)/) || xml.match(/Message[^>]*>([^<]+)/);
+
+    // Extract new PNR from response
+    const newPnrMatch = xml.match(/ItineraryRef[^>]*ID="([A-Z]{6})"/) || xml.match(/Locator[^>]*>([A-Z]{6})</);
+    const newTicketMatch = xml.match(/DocumentNumber[^>]*>(\d{13})</) || xml.match(/TicketNumber[^>]*>(\d{13})</);
+
+    if (newPnrMatch || !errorMatch) {
+      return {
+        success: true,
+        method: 'exchange',
+        pnr: newPnrMatch ? newPnrMatch[1] : pnr,
+        newTicketNumber: newTicketMatch ? newTicketMatch[1] : null,
+        rawXml: xml.substring(0, 5000),
+      };
+    } else {
+      return {
+        success: false,
+        error: errorMatch ? errorMatch[1] : 'Exchange failed — check response',
+        method: 'exchange',
+        rawXml: xml.substring(0, 5000),
+      };
+    }
+  } catch (err) {
+    console.error(`[Sabre SOAP] Exchange failed for PNR ${pnr}:`, err.message);
+    return { success: false, error: err.message, method: 'exchange' };
+  } finally {
+    await closeSession(config, token, conversationId);
+  }
+}
+
 module.exports = {
   createSession,
   closeSession,
@@ -750,4 +1031,8 @@ module.exports = {
   getAncillaryOffers,
   cancelPnrViaSoap,
   clearSoapSessionCache,
+  // Section 20: Fare Rules
+  getStructuredFareRules,
+  // Section 22: Exchange
+  exchangeBooking,
 };
