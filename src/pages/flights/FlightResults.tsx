@@ -860,7 +860,7 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
         {/* Origin */}
         <div className="text-center shrink-0">
           <p className="text-[10px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
-          <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight">{departTime}</p>
+          <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">{departTime}</p>
         </div>
 
         {/* Duration bar */}
