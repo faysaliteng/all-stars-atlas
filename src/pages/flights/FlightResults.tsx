@@ -564,72 +564,44 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
     const primary = flights[0];
     const fd = primary.fareDetails || [];
     
-    // If API returns multiple fare options (branded fares from Sabre/BDFare), use them
-    if (fd.length > 1) {
-      // Sort by price ascending
-      const sorted = [...fd].sort((a: any, b: any) => (a.price || a.amount || 0) - (b.price || b.amount || 0));
-      return sorted.map((f: any, i: number) => {
-        const label = f.brandName 
-          ? f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-          : f.label || `Fare Option ${i + 1}`;
-        return {
-          id: `option-${i}`,
-          label,
-          fareBasis: f.fareBasis || "",
-          bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
-          availableSeats: f.availableSeats ?? primary.availableSeats ?? null,
-          handBaggage: f.handBaggage || primary.handBaggage || "7KG",
-          checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
-          meal: f.mealIncluded ? "Included" : null,
-          seatSelection: f.seatSelection ?? false,
-          rebooking: f.rebookingAllowed !== false,
-          cancellation: f.cancellationAllowed !== false,
-          refundable: f.refundable ?? primary.refundable ?? false,
-          grossFare: f.price || f.amount || f.total || primary.price || 0,
-          flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
-          isBestValue: i === 0,
-        };
-      });
-    } else if (fd.length === 1 && fd[0].brandName) {
-      // Single branded fare
-      const f = fd[0];
-      return [{
-        id: "option-0",
-        label: f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
-        fareBasis: f.fareBasis || "",
-        bookingClass: f.bookingClass || primary.bookingClass || "",
-        availableSeats: f.availableSeats ?? primary.availableSeats ?? null,
+    const buildOption = (f: any, i: number, isSingle: boolean) => {
+      const label = f.brandName 
+        ? f.brandName.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+        : isSingle ? "Available Fare" : (f.label || `Fare Option ${i + 1}`);
+      return {
+        id: `option-${i}`,
+        label,
+        bookingClass: f.bookingClass || f.cabinClass || primary.bookingClass || "",
         handBaggage: f.handBaggage || primary.handBaggage || "7KG",
-        checkedBaggage: f.baggage || primary.baggage || null,
-        meal: f.mealIncluded ? "Included" : null,
+        checkedBaggage: f.baggage || f.checkedBaggage || primary.baggage || null,
+        meal: f.mealIncluded ? true : null,
         seatSelection: f.seatSelection ?? false,
         rebooking: f.rebookingAllowed !== false,
         cancellation: f.cancellationAllowed !== false,
-        refundable: f.refundable ?? primary.refundable ?? false,
-        grossFare: f.price || primary.price || 0,
-        flight: primary,
-        isBestValue: true,
-      }];
+        miles: true,
+        grossFare: f.price || f.amount || f.total || primary.price || 0,
+        flight: { ...primary, price: f.price || primary.price, fareDetails: [f] },
+        isBestValue: i === 0,
+      };
+    };
+
+    if (fd.length > 1) {
+      const sorted = [...fd].sort((a: any, b: any) => (a.price || a.amount || 0) - (b.price || b.amount || 0));
+      return sorted.map((f: any, i: number) => buildOption(f, i, false));
+    } else if (fd.length === 1) {
+      return [buildOption(fd[0], 0, true)];
     }
     
-    // Generate a single option from the flight data
-    return [{
-      id: "option-0",
-      label: "Available Fare",
-      fareBasis: primary.fareDetails?.[0]?.fareBasis || "",
-      bookingClass: primary.fareDetails?.[0]?.bookingClass || primary.bookingClass || primary.cabinClass?.charAt(0) || "",
-      availableSeats: primary.fareDetails?.[0]?.availableSeats ?? primary.availableSeats ?? null,
-      handBaggage: primary.fareDetails?.[0]?.handBaggage || primary.handBaggage || "7KG",
-      checkedBaggage: primary.fareDetails?.[0]?.baggage || primary.baggage || null,
-      meal: (primary.fareDetails?.[0]?.mealIncluded || primary.mealIncluded) ? "Included" : null,
-      seatSelection: primary.fareDetails?.[0]?.seatSelection ?? false,
-      rebooking: primary.fareDetails?.[0]?.rebookingAllowed ?? true,
-      cancellation: primary.fareDetails?.[0]?.cancellationAllowed ?? (primary.refundable ?? false),
-      refundable: primary.fareDetails?.[0]?.refundable ?? primary.refundable ?? false,
-      grossFare: primary.price || 0,
-      flight: primary,
-      isBestValue: true,
-    }];
+    // Generate from flight data
+    return [buildOption({
+      bookingClass: primary.bookingClass || primary.cabinClass?.charAt(0) || "",
+      handBaggage: primary.handBaggage || "7KG",
+      baggage: primary.baggage,
+      mealIncluded: primary.mealIncluded,
+      seatSelection: false,
+      rebookingAllowed: true,
+      cancellationAllowed: primary.refundable ?? false,
+    }, 0, true)];
   }, [flights]);
 
   const fareTypeLabels = [
