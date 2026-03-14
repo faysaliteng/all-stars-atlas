@@ -595,7 +595,7 @@ const FareOptionsPanel = ({ flights, onBook }: { flights: any[]; onBook: (flight
     // Generate from flight data
     return [buildOption({
       bookingClass: primary.bookingClass || primary.cabinClass?.charAt(0) || "",
-      handBaggage: primary.handBaggage || null,
+      handBaggage: primary.handBaggage || "7KG",
       baggage: primary.baggage,
       mealIncluded: primary.mealIncluded ?? null,
       seatSelection: primary.seatSelection ?? null,
