@@ -972,6 +972,7 @@ function normalizeGroupedResponse(response, params) {
             aircraft: firstSeg.aircraft,
             legs: allLegs,
             fareDetails: fareDetailsArr,
+            paxPricing,
             timeLimit: fare.lastTicketDate || null,
             validatingAirline: fare.validatingCarrierCode || firstSeg.airlineCode,
             _sabreSeqNumber: `${groupIdx}-${idx}`,
