@@ -492,7 +492,7 @@ function normalizeSabreResponse(raw, params) {
           currency,
           refundable: isRefundable,
           baggage: checkedBaggage || null,
-          handBaggage: '7KG',
+          handBaggage: null, // No hardcoded fallback — only real API data
           aircraft: firstLeg.aircraft,
           legs,
           fareDetails: fareInfos.map(fi => ({
@@ -630,10 +630,7 @@ function normalizeGroupedResponse(response, params) {
           }
         }
 
-        // Default hand baggage to 7KG if not provided (standard IATA cabin allowance)
-        if (!handBaggageGlobal) {
-          handBaggageGlobal = '7KG';
-        }
+        // Zero-mock: no hardcoded hand baggage fallback — null if API doesn't provide it
 
         // Debug baggage result for first itinerary
         if (idx === 0) {
