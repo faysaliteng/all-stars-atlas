@@ -442,7 +442,11 @@ const DashboardBookingDetail = () => {
               {booking.isRoundTrip && booking.returnFlight && (
                 <>
                   <Separator />
-                  <Badge className="bg-warning/10 text-warning border-0 text-xs">Return Flight</Badge>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30 text-sm font-bold shadow-sm">
+                    <Plane className="w-4 h-4 rotate-180" />
+                    <span>Return: {booking.returnFlight.origin} → {booking.returnFlight.destination}</span>
+                    <span className="flight-date text-xs ml-1">· {fmtDate(booking.returnFlight.departureTime)}</span>
+                  </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="border border-border rounded-xl overflow-hidden">
                       <div className="bg-warning/80 px-4 py-2"><p className="text-xs font-bold text-warning-foreground uppercase">Departure</p></div>
