@@ -3103,7 +3103,7 @@ const FlightResults = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 p-3" align="start">
+              <PopoverContent className="w-72 p-3 z-[60]" align="start">
                 <p className="text-xs font-bold text-muted-foreground mb-3">Passengers, Cabin & Preferences</p>
                 <div className="space-y-3">
                   {[
