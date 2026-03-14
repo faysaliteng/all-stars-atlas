@@ -654,7 +654,7 @@ const SearchWidget = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5 h-8 rounded-lg font-semibold flex-1 sm:flex-none">
-                  <Users className="w-3.5 h-3.5" />
+                  <UserRound className="w-3.5 h-3.5" />
                   {totalPax} Traveller{totalPax > 1 ? "s" : ""}
                   <ChevronDown className="w-3 h-3" />
                 </Button>
