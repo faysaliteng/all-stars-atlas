@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-14 (v4.1.1 — 100% Production Probe Verified: 10/10 Tests Passed)
+> Last updated: 2026-03-14 (v4.1.2 — Sabre syntax crash hotfix)
 
 ---
 
@@ -105,6 +105,16 @@ The gzip directives are in `/etc/nginx/nginx.conf` — do NOT add them in site c
 pm2 restart seventrip-api && pm2 logs seventrip-api --lines 50
 ```
 
+### SyntaxError: Unexpected token '...'
+Cause: accidental literal `...` left inside a JS file (commonly from partial patch markers).
+
+```bash
+cd ~/projects/all-stars-atlas
+grep -n "^\s*\.\.\.\s*$" backend/src/routes/sabre-flights.js
+# if found, remove it and restart
+pm2 restart seventrip-api && pm2 logs seventrip-api --lines 30 --err
+```
+
 ### Build fails
 ```bash
 cd ~/projects/all-stars-atlas && rm -rf node_modules && npm install && npm run build
@@ -135,6 +145,7 @@ pm2 logs seventrip-api --lines 30
 
 | Date | Change | Deploy Command |
 |------|--------|----------------|
+| 2026-03-14 | **v4.1.2** Sabre search crash hotfix: removed accidental `...` token in `backend/src/routes/sabre-flights.js` that caused Node startup `SyntaxError` and intermittent 502 on `/api/flights/search`. | Backend Only |
 | 2026-03-14 | **v4.1.1** 100% production probe verified: 10/10 tests, 34 assertions, 9 PNRs created+cancelled. UI pill badges for baggage/seats/class. Full documentation overhaul. | Standard Deployment |
 | 2026-03-14 | **v4.0.0** All 26 Sabre GDS features implemented: void, refund (price+fulfill), exchange, fare rules, FLIFO, stateless ancillaries, add ancillary, EMD fulfill, FF update. 10 new endpoints. | Backend Only |
 | 2026-03-13 | **v3.9.9.9** Sabre cancel hardening: enforce GDS PNR-only cancellation (blocks local cancel when missing), improved cancel logs (shows GDS vs airline PNR), SOAP seat-map retry now only on session/auth/network errors to prevent Host TA exhaustion; clearer TA-limit error message | Backend Only |
