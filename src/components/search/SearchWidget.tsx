@@ -728,7 +728,7 @@ const SearchWidget = () => {
             {multiCitySegments.map((segment, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-0 border border-border rounded-2xl bg-background shadow-sm relative">
                 <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
-                  <AirportInput label={`From (Flight ${index + 1})`} value={segment.from} onChange={(a) => updateSegment(index, 'from', a)} placeholder="Type city or airport..." airports={scopedMultiCityFromAirports} />
+                  <AirportInput label={`From (Flight ${index + 1})`} value={segment.from} onChange={(a) => updateSegment(index, 'from', a)} placeholder="Type city or airport..." airports={scopedMultiCityFromAirports} icon={<PlaneTakeoff className="w-5 h-5" />} />
                 </div>
 
                 <div className="md:col-span-4 search-field border-b md:border-b-0 flex-col items-start">
