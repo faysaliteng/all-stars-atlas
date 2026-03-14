@@ -690,6 +690,7 @@ const SearchWidget = () => {
 
             <Select value={cabinClass} onValueChange={setCabinClass}>
               <SelectTrigger className="h-8 w-auto text-xs border gap-1 rounded-lg font-semibold flex-1 sm:flex-none">
+                <Armchair className="w-3.5 h-3.5 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
