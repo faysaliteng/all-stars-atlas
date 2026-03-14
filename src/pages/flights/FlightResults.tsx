@@ -1792,7 +1792,7 @@ const FlightCard = ({
                   <Users className="w-3.5 h-3.5" /> {availableSeats} Seat{availableSeats !== 1 ? "s" : ""}
                 </span>
               )}
-              <span className="text-xs text-muted-foreground font-medium">Class: {bookingClass || cabin.charAt(0)}</span>
+              {bookingClass && <span className="text-xs text-muted-foreground font-medium">Class: {bookingClass}</span>}
             </div>
           </div>
 
