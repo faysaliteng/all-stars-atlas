@@ -1118,7 +1118,7 @@ const RoundTripFlightCard = ({
                                     </div>
                                     <div className="text-right shrink-0 max-w-[38%]">
                                       <p className="text-xl font-black">{formatTime(segment.arrivalTime)}</p>
-                                      <p className="text-xs text-muted-foreground mt-0.5">{formatDate(segment.arrivalTime)}</p>
+                                      <p className="text-xs flight-date mt-0.5">{formatDate(segment.arrivalTime)}</p>
                                       <p className="text-[11px] text-muted-foreground mt-1">{getAirportName(segment.destination || leg.destination)} ({segment.destination || leg.destination})</p>
                                     </div>
                                   </div>
