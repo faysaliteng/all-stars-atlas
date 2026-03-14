@@ -300,10 +300,18 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
 
   return (
     <Card className="overflow-hidden border-accent/20">
-      <div className="bg-accent px-4 py-2 flex items-center gap-2">
-        <Plane className={`w-4 h-4 text-accent-foreground ${label === "Return" ? "rotate-180" : ""}`} />
-        <span className="text-xs sm:text-sm font-bold text-accent-foreground">{label}: {flight.origin} → {flight.destination}</span>
-        <span className="text-[10px] sm:text-xs text-accent-foreground/70 ml-auto">{fmtDate(flight.departureTime)}</span>
+      <div className={`px-4 py-2.5 flex items-center gap-2 ${
+        label === "Return" 
+          ? "bg-amber-500/15 border-b border-amber-400/30" 
+          : label.startsWith("Segment") 
+            ? "bg-blue-500/15 border-b border-blue-400/30"
+            : "bg-accent/15 border-b border-accent/30"
+      }`}>
+        <Plane className={`w-4 h-4 ${label === "Return" ? "rotate-180 text-amber-700 dark:text-amber-300" : label.startsWith("Segment") ? "text-blue-700 dark:text-blue-300" : "text-accent"}`} />
+        <span className={`text-xs sm:text-sm font-bold ${
+          label === "Return" ? "text-amber-700 dark:text-amber-300" : label.startsWith("Segment") ? "text-blue-700 dark:text-blue-300" : "text-accent"
+        }`}>{label}: {flight.origin} → {flight.destination}</span>
+        <span className="flight-date text-[10px] sm:text-xs ml-auto">· {fmtDate(flight.departureTime)}</span>
       </div>
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-center gap-3 sm:gap-4">
