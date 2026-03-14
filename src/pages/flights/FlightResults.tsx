@@ -1111,19 +1111,19 @@ const RoundTripFlightCard = ({
         }];
 
     const combinedFareDetails = outboundFareDetails.map((fare: any) => {
-      const farePrice = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
-      const fareTaxes = fare?.taxes ?? outbound.taxes ?? 0;
+      const farePrice = Number(fare?.price ?? fare?.amount ?? outboundApiFare.grossPrice ?? 0) || 0;
+      const fareTaxes = Number(fare?.taxes ?? outboundApiFare.taxes ?? 0) || 0;
 
-      // For cross-product pairs, always sum outbound fare + return flight price
-      const combinedPrice = farePrice + (returnFlight?.price ?? 0);
-      const combinedTaxes = fareTaxes + (returnFlight?.taxes ?? 0);
+      // For cross-product pairs, always sum outbound fare + return API fare
+      const combinedPrice = farePrice + returnApiFare.grossPrice;
+      const combinedTaxes = fareTaxes + returnApiFare.taxes;
 
       return {
         ...fare,
         price: combinedPrice,
         taxes: combinedTaxes,
-        _outboundGrossPrice: outbound.price || 0,
-        _outboundTaxes: outbound.taxes || 0,
+        _outboundGrossPrice: outboundApiFare.grossPrice,
+        _outboundTaxes: outboundApiFare.taxes,
         _outboundFareDetail: fare,
         _isRoundTripCombinedFare: true,
       };
