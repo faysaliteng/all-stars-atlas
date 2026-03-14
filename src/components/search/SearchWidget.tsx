@@ -231,20 +231,46 @@ const tabs = [
   { id: "paybill", label: "Pay Bill", icon: Receipt },
 ];
 
-const SearchWidget = () => {
+interface SearchWidgetProps {
+  /** Show only the flight search tab (no other tabs) */
+  flightOnly?: boolean;
+  /** Pre-fill flight search from URL/state */
+  initialFlightValues?: {
+    from?: string;
+    to?: string;
+    depart?: string;
+    returnDate?: string;
+    adults?: number;
+    children?: number;
+    infants?: number;
+    cabin?: string;
+    tripType?: string; // "oneway" | "roundtrip" | "multicity"
+    segments?: { from: string; to: string; date: string }[];
+  };
+  /** Compact styling for results page */
+  compact?: boolean;
+}
+
+const SearchWidget = ({ flightOnly, initialFlightValues, compact }: SearchWidgetProps = {}) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("flight");
 
+  // Derive initial values from props
+  const initFrom = initialFlightValues?.from ? AIRPORTS.find(a => a.code === initialFlightValues.from) || AIRPORTS[0] : AIRPORTS[0];
+  const initTo = initialFlightValues?.to ? AIRPORTS.find(a => a.code === initialFlightValues.to) || AIRPORTS[1] : AIRPORTS[1];
+  const initTripType = initialFlightValues?.tripType === "multicity" ? "multicity" : initialFlightValues?.returnDate ? "roundtrip" : initialFlightValues?.tripType === "oneway" ? "oneway" : "roundtrip";
+  const initScope: "domestic" | "international" = (initFrom?.country === "BD" && initTo?.country === "BD") ? "domestic" : "international";
+
   // Flight state
-  const [tripType, setTripType] = useState("roundtrip");
-  const [fromAirport, setFromAirport] = useState<typeof AIRPORTS[0] | null>(AIRPORTS[0]); // DAC
-  const [toAirport, setToAirport] = useState<typeof AIRPORTS[0] | null>(AIRPORTS[1]); // CXB
-  const [departDate, setDepartDate] = useState<Date>();
-  const [returnDate, setReturnDate] = useState<Date>();
-  const [passengers, setPassengers] = useState({ adults: 1, children: 0, infants: 0 });
-  const [cabinClass, setCabinClass] = useState("economy");
+  const [tripType, setTripType] = useState(initTripType);
+  const [fromAirport, setFromAirport] = useState<typeof AIRPORTS[0] | null>(initFrom);
+  const [toAirport, setToAirport] = useState<typeof AIRPORTS[0] | null>(initTo);
+  const [departDate, setDepartDate] = useState<Date | undefined>(initialFlightValues?.depart ? new Date(initialFlightValues.depart) : undefined);
+  const [returnDate, setReturnDate] = useState<Date | undefined>(initialFlightValues?.returnDate ? new Date(initialFlightValues.returnDate) : undefined);
+  const [passengers, setPassengers] = useState({ adults: initialFlightValues?.adults || 1, children: initialFlightValues?.children || 0, infants: initialFlightValues?.infants || 0 });
+  const [cabinClass, setCabinClass] = useState(initialFlightValues?.cabin || "economy");
   const [fareType, setFareType] = useState("regular");
-  const [flightScope, setFlightScope] = useState<"domestic" | "international">("domestic");
+  const [flightScope, setFlightScope] = useState<"domestic" | "international">(initScope);
   const [preferredCarrier, setPreferredCarrier] = useState("any");
 
   // Multi-city segments
@@ -1385,38 +1411,40 @@ const SearchWidget = () => {
   };
 
   return (
-    <div className="glass-card-hero rounded-2xl">
-      {/* Tabs - Centered and colorful */}
-      <div className="flex items-center justify-center gap-0 px-2 sm:px-4 pt-2 sm:pt-3 overflow-x-auto scrollbar-none border-b border-border/40 -webkit-overflow-scrolling-touch">
-        <div className="flex items-center gap-1 sm:gap-1.5">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
-                activeTab === tab.id
-                  ? "text-primary bg-gradient-to-r from-primary/10 to-[hsl(280,70%,55%,0.06)] border border-primary/20 shadow-md shadow-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
-              }`}
-            >
-              <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary' : ''}`} />
-              <span className="hidden xs:inline sm:inline">{tab.label}</span>
-            </button>
-          ))}
+    <div className={`${compact ? 'bg-card border border-border rounded-xl shadow-sm' : 'glass-card-hero rounded-2xl'}`}>
+      {/* Tabs - Hidden in flightOnly mode */}
+      {!flightOnly && (
+        <div className="flex items-center justify-center gap-0 px-2 sm:px-4 pt-2 sm:pt-3 overflow-x-auto scrollbar-none border-b border-border/40 -webkit-overflow-scrolling-touch">
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+                  activeTab === tab.id
+                    ? "text-primary bg-gradient-to-r from-primary/10 to-[hsl(280,70%,55%,0.06)] border border-primary/20 shadow-md shadow-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60 border border-transparent"
+                }`}
+              >
+                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary' : ''}`} />
+                <span className="hidden xs:inline sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
-      <div className="p-3 sm:p-4 md:p-6">
+      <div className={compact ? "p-3 sm:p-4" : "p-3 sm:p-4 md:p-6"}>
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeTab}
+            key={flightOnly ? "flight" : activeTab}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.12 }}
           >
-            {tabContent[activeTab]}
+            {flightOnly ? tabContent["flight"] : tabContent[activeTab]}
           </motion.div>
         </AnimatePresence>
       </div>
