@@ -345,7 +345,7 @@ async function searchFlights(params) {
         includeBrandedFareIndicators: true,
       },
       {
-        name: 'fallback_no_multiticket',
+        name: 'fallback_diverse_relaxed',
         numTrips: 220,
         enableDiversity: true,
         additionalNonStops: null,
