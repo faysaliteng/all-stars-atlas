@@ -2610,7 +2610,6 @@ const FlightResults = () => {
   };
 
   const [multiCityResults, setMultiCityResults] = useState<Record<number, any[]>>({});
-  };
 
   const [multiCityLoading, setMultiCityLoading] = useState(false);
   const [multiCityError, setMultiCityError] = useState<string | null>(null);
