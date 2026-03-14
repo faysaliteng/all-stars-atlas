@@ -300,7 +300,7 @@ async function searchFlights(params) {
       },
       TPA_Extensions: {
         IntelliSellTransaction: {
-          RequestType: { Name: '200ITINS' },
+          RequestType: { Name: '250ITINS' },
         },
       },
       TravelerInfoSummary: {
