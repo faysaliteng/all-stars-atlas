@@ -483,6 +483,26 @@ const FlightBooking = () => {
   const multiCityFlights: any[] = locationState?.multiCityFlights || [];
   const isMultiCity = multiCityFlights.length >= 2;
 
+  // Session expired → redirect to search with same route
+  const handleSessionExpired = useCallback(() => {
+    setSessionExpired(true);
+    toast({ title: "Session Expired", description: "Your booking session has timed out. Please search again.", variant: "destructive" });
+    const origin = outboundFlight?.origin || searchParams.get("from") || "";
+    const dest = outboundFlight?.destination || searchParams.get("to") || "";
+    const p = new URLSearchParams();
+    if (origin) p.set("from", origin);
+    if (dest) p.set("to", dest);
+    const cabin = searchParams.get("cabin");
+    if (cabin) p.set("cabin", cabin);
+    const adults = searchParams.get("adults");
+    if (adults) p.set("adults", adults);
+    const children = searchParams.get("children");
+    if (children && children !== "0") p.set("children", children);
+    const infants = searchParams.get("infants");
+    if (infants && infants !== "0") p.set("infants", infants);
+    setTimeout(() => navigate(`/flights?${p.toString()}`), 2000);
+  }, [outboundFlight, searchParams, navigate, toast]);
+
   const serviceFlight = useMemo(() => {
     if (multiCityFlights.length > 0) return multiCityFlights[0];
     if (outboundFlight?.segments?.length > 0) return outboundFlight.segments[0];
