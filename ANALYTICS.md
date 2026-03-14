@@ -244,7 +244,9 @@
 | `ARCHITECTURE.md` | System architecture deep dive | — |
 | `SECURITY.md` | Security measures & best practices | — |
 | `API_CHANGELOG.md` | Backend API changes per version | — |
-| `BACKEND_API_SPEC.md` | 90+ endpoint specifications | ~1980 |
+| `BACKEND_API_SPEC.md` | 100+ endpoint specifications | ~2150 |
 | `Deployment.md` | VPS deployment guide (beginner-friendly) | ~795 |
-| `developer_documentation.md` | Developer handbook A-Z | ~976 |
-| `.lovable/plan.md` | Project plan & phase tracking | ~127 |
+| `developer_documentation.md` | Developer handbook A-Z | ~1020 |
+| `SABRE_FEATURE_AUDIT.md` | All 26 Sabre sections audit | ~670 |
+| `SABRE_PAYLOADS.md` | Working Sabre payload reference | ~1050 |
+| `.lovable/plan.md` | Project plan & phase tracking | ~130 |
