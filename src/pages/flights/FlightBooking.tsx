@@ -606,27 +606,53 @@ const FlightBooking = () => {
   const mealCost = mealOptions.find(m => m.id === selectedMeal)?.price || 0;
   const baggageCost = selectedBaggage.reduce((sum, id) => sum + (baggageOptions.find(b => b.id === id)?.price || 0), 0);
   const addOnTotal = (mealCost + baggageCost) * totalPaxCount + totalSeatCost;
-  const outboundPrice = outboundFlight?.price || 0;
-  const returnPrice = returnFlight?.price || 0;
 
-  // Multi-city: sum all segment prices — derive baseFare as (price - taxes) for BDT consistency
-  const multiCityTotalPrice = isMultiCity ? multiCityFlights.reduce((sum: number, f: any) => sum + (f?.price || 0), 0) : 0;
-  const multiCityTotalTaxes = isMultiCity ? multiCityFlights.reduce((sum: number, f: any) => sum + (f?.taxes ?? 0), 0) : 0;
-  const multiCityTotalBaseFare = isMultiCity ? Math.max(0, multiCityTotalPrice - multiCityTotalTaxes) : 0;
+  // ── Payable fare calculation (matches FlightResults logic) ──
+  // Applies discount + AIT VAT to derive what the customer actually pays
+  const calcFlightPayable = (f: any) => {
+    if (!f) return { grossPrice: 0, baseFare: 0, taxes: 0, discount: 0, aitVat: 0, payable: 0 };
+    const gross = f.price || 0;
+    const tx = f.taxes ?? 0;
+    const bf = Math.max(0, Math.round(gross - tx));
+    const discPct = f.fareRules?.discount ?? 6.30;
+    const aitPct = f.fareRules?.aitVat ?? 0.3;
+    const disc = Math.round(bf * discPct / 100);
+    const ait = Math.round((bf - disc) * aitPct / 100);
+    return { grossPrice: gross, baseFare: bf, taxes: tx, discount: disc, aitVat: ait, payable: bf - disc + tx + ait, discPct, aitPct };
+  };
 
-  // CRITICAL: Always derive baseFare in BDT as (price - taxes) to avoid currency mismatch
-  // Sabre returns baseFare in foreign currency (USD) but price/taxes in BDT
-  const outboundBaseFare = Math.max(0, outboundPrice - (outboundFlight?.taxes ?? 0));
-  const returnBaseFare = Math.max(0, returnPrice - (returnFlight?.taxes ?? 0));
-  const perPaxBaseFare = isMultiCity ? multiCityTotalBaseFare : (outboundBaseFare + returnBaseFare);
+  const outboundCalc = calcFlightPayable(outboundFlight);
+  const returnCalc = calcFlightPayable(returnFlight);
+  const multiCityCalcs = isMultiCity ? multiCityFlights.map((f: any) => calcFlightPayable(f)) : [];
+  const multiCityPayable = multiCityCalcs.reduce((sum: number, c: any) => sum + c.payable, 0);
+
+  const perPaxBaseFare = isMultiCity 
+    ? multiCityCalcs.reduce((s: number, c: any) => s + c.baseFare, 0) 
+    : (outboundCalc.baseFare + returnCalc.baseFare);
   const baseFare = perPaxBaseFare * totalPaxCount;
-  // Zero-mock: use ONLY real tax data from GDS. If unavailable, show 0 (included in fare)
-  const outboundTaxes = outboundFlight?.taxes ?? 0;
-  const returnTaxes = returnFlight?.taxes ?? 0;
-  const perPaxTaxes = isMultiCity ? multiCityTotalTaxes : (outboundTaxes + returnTaxes);
+  
+  const perPaxTaxes = isMultiCity
+    ? multiCityCalcs.reduce((s: number, c: any) => s + c.taxes, 0)
+    : (outboundCalc.taxes + returnCalc.taxes);
   const taxes = perPaxTaxes * totalPaxCount;
+
+  const perPaxDiscount = isMultiCity
+    ? multiCityCalcs.reduce((s: number, c: any) => s + c.discount, 0)
+    : (outboundCalc.discount + returnCalc.discount);
+  const totalDiscount = perPaxDiscount * totalPaxCount;
+
+  const perPaxAitVat = isMultiCity
+    ? multiCityCalcs.reduce((s: number, c: any) => s + c.aitVat, 0)
+    : (outboundCalc.aitVat + returnCalc.aitVat);
+  const totalAitVat = perPaxAitVat * totalPaxCount;
+
   const serviceCharge = outboundFlight?.serviceCharge ?? 0;
-  const grandTotal = baseFare + taxes + serviceCharge + addOnTotal;
+  const perPaxPayable = isMultiCity ? multiCityPayable : (outboundCalc.payable + returnCalc.payable);
+  const grandTotal = (perPaxPayable * totalPaxCount) + serviceCharge + addOnTotal;
+
+  // Discount/AIT percentages for display
+  const DISCOUNT_PCT = outboundFlight?.fareRules?.discount ?? 6.30;
+  const AIT_VAT_PCT = outboundFlight?.fareRules?.aitVat ?? 0.3;
 
   const deadlineInfo = resolveDeadlineInfo(bookingFlightData);
 
@@ -1720,20 +1746,23 @@ const FlightBooking = () => {
                   )}
                   {isMultiCity ? (
                     <>
-                      {multiCityFlights.map((mcf: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-xs"><span className="text-muted-foreground">Flight {idx + 1}{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{((mcf?.price || 0) * totalPaxCount).toLocaleString()}</span></div>
-                      ))}
+                      {multiCityFlights.map((mcf: any, idx: number) => {
+                        const mc = calcFlightPayable(mcf);
+                        return <div key={idx} className="flex justify-between text-xs"><span className="text-muted-foreground">Flight {idx + 1}{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(mc.payable * totalPaxCount).toLocaleString()}</span></div>;
+                      })}
                       <Separator />
                     </>
                   ) : isRoundTrip ? (
                     <>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Outbound{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(outboundPrice * totalPaxCount).toLocaleString()}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Return{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(returnPrice * totalPaxCount).toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Outbound{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(outboundCalc.payable * totalPaxCount).toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Return{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{(returnCalc.payable * totalPaxCount).toLocaleString()}</span></div>
                       <Separator />
                     </>
                   ) : null}
                   <div className="flex justify-between"><span className="text-muted-foreground">Base Fare{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">৳{baseFare.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Tax{totalPaxCount > 1 ? ` × ${totalPaxCount}` : ""}</span><span className="font-semibold">{taxes > 0 ? `৳${taxes.toLocaleString()}` : "Included"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Discount ({DISCOUNT_PCT}%)</span><span className="font-semibold text-accent">-৳{totalDiscount.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">AIT VAT ({AIT_VAT_PCT}%)</span><span className="font-semibold">৳{totalAitVat.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Service Charge</span><span className="font-semibold">{serviceCharge > 0 ? `৳${serviceCharge}` : "Free"}</span></div>
                 </div>
 

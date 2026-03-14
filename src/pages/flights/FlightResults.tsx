@@ -817,7 +817,8 @@ const RoundTripFlightCard = ({
   const [activeTab, setActiveTab] = useState("itinerary");
   const [showFareOptions, setShowFareOptions] = useState(false);
   const logo = getAirlineLogo(outbound.airlineCode);
-  const totalPrice = (outbound.price || 0) + (returnFlight.price || 0);
+  const grossTotalPrice = (outbound.price || 0) + (returnFlight.price || 0);
+  const totalPrice = flightPayable(outbound) + flightPayable(returnFlight);
   const refundable = outbound.refundable ?? false;
   const fareType = outbound.fareType || (refundable ? "Refundable" : "Non-Refundable");
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
@@ -876,10 +877,10 @@ const RoundTripFlightCard = ({
               <PopoverContent side="left" className="w-64 p-3">
                 <p className="text-xs font-bold mb-2">Fare Breakdown</p>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Outbound</span><span className="font-medium">BDT {(outbound.price || 0).toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Return</span><span className="font-medium">BDT {(returnFlight.price || 0).toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Outbound</span><span className="font-medium">BDT {flightPayable(outbound).toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Return</span><span className="font-medium">BDT {flightPayable(returnFlight).toLocaleString()}</span></div>
                   <Separator className="my-1" />
-                  <div className="flex justify-between font-bold"><span>Total</span><span>BDT {totalPrice.toLocaleString()}</span></div>
+                  <div className="flex justify-between font-bold"><span>Total Payable</span><span>BDT {totalPrice.toLocaleString()}</span></div>
                 </div>
               </PopoverContent>
             </Popover>
@@ -1516,7 +1517,10 @@ const MultiCityFlightCard = ({
   const cardNavigate = useNavigate();
   const [cardSearchParams] = useSearchParams();
   const segments = flight.segments || [];
-  const price = flight.price ?? 0;
+  const grossPrice = flight.price ?? 0;
+  const price = flight.isCombined
+    ? (flight.segments || []).reduce((s: number, seg: any) => s + flightPayable(seg), 0) || flightPayable(flight)
+    : flightPayable(flight);
   const refundable = flight.refundable ?? false;
   const fareType = flight.fareType || (refundable ? "Refundable" : "Non-Refundable");
 
@@ -2485,20 +2489,20 @@ const FlightResults = () => {
   const allFlightsForFilters = isMultiCity ? allMultiCityFlights : flights;
 
   const airlines = useMemo(() => apiData.airlines || [...new Set(allFlightsForFilters.map((f: any) => f.airline).filter(Boolean))], [apiData.airlines, allFlightsForFilters]);
-  const cheapest = useMemo(() => apiData.cheapest || (allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => f.price || Infinity)) : 0), [apiData.cheapest, allFlightsForFilters]);
+  const cheapest = useMemo(() => allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 0, [allFlightsForFilters]);
 
   // For round-trip mode, compute price bounds from pair totalPrices; for one-way from individual prices
   const maxPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.max(...roundTripPairs.map(p => p.totalPrice || 0));
+      return Math.max(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
     }
-    return allFlightsForFilters.length > 0 ? Math.max(...allFlightsForFilters.map((f: any) => f.price || 0)) : 200000;
+    return allFlightsForFilters.length > 0 ? Math.max(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 200000;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
   const minPrice = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      return Math.min(...roundTripPairs.map(p => p.totalPrice || 0));
+      return Math.min(...roundTripPairs.map(p => flightPayable(p.outbound) + flightPayable(p.returnFlight)));
     }
-    return allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => f.price || 0)) : 0;
+    return allFlightsForFilters.length > 0 ? Math.min(...allFlightsForFilters.map((f: any) => flightPayable(f))) : 0;
   }, [allFlightsForFilters, isRoundTrip, hasDirections, roundTripPairs]);
 
   // Duration bounds for slider init
@@ -2609,7 +2613,8 @@ const FlightResults = () => {
     return list.filter((f: any) => {
       if (airlineFilter && f.airlineCode !== airlineFilter) return false;
       if (selectedAirlines.length > 0 && !selectedAirlines.includes(f.airline)) return false;
-      if (f.price < priceRange[0] || f.price > priceRange[1]) return false;
+      const payable = flightPayable(f);
+      if (payable < priceRange[0] || payable > priceRange[1]) return false;
       if (stopsFilter !== "all") {
         const stops = f.stops ?? 0;
         if (stopsFilter === "0" && stops !== 0) return false;
