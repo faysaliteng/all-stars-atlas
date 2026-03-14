@@ -934,9 +934,10 @@ function mergePaxPricingArrays(arr1?: any[], arr2?: any[]): any[] | null {
 
 /* ─── Leg Mini — compact leg display for grouped cards ─── */
 const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; labelColor: string }) => {
-  const logo = getAirlineLogo(flight.airlineCode);
   const departTime = formatTime(flight.departureTime);
   const arriveTime = formatTime(flight.arrivalTime);
+  const departGmt = formatGMT(flight.departureTime);
+  const arriveGmt = formatGMT(flight.arrivalTime);
   const duration = flight.duration || "";
   const stops = flight.stops ?? 0;
   const stopsLabel = stops === 0 ? "Non-Stop" : `${stops} Stop${stops > 1 ? "s" : ""}`;
@@ -949,24 +950,25 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
 
   return (
     <div className="flex-1 min-w-0">
-      <div className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-1.5 text-[10px] sm:text-xs font-bold shadow-sm ${
+      <div className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg mb-2 text-[10px] sm:text-xs font-bold shadow-sm ${
         isReturn 
           ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30" 
           : "bg-accent/15 text-accent border border-accent/30"
       }`}>
         <Plane className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isReturn ? "rotate-180" : ""}`} />
-        <span>{label}: {fromCode} → {toCode}</span>
-        <span className="flight-date text-[10px] ml-0.5">· {formatShortDate(flight.departureTime)}</span>
+        <span>{isReturn ? "RETURN" : "DEPARTURE"}: {fromCode} → {toCode}</span>
+        <span className="flight-date text-[10px] ml-0.5">• {formatShortDate(flight.departureTime)}</span>
       </div>
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Origin */}
         <div className="text-center shrink-0">
-          <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{fromCode}</p>
-          <p className="text-[11px] sm:text-xs font-black tracking-tight flight-time">{departTime}</p>
+          <p className="text-xs sm:text-sm font-bold text-foreground">{fromCode}</p>
+          <p className="text-sm sm:text-base font-black tracking-tight flight-time">{departTime}</p>
+          {departGmt && <p className="text-[9px] sm:text-[10px] text-muted-foreground">{departGmt}</p>}
         </div>
 
         {/* Duration bar */}
-        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[36px]">
+        <div className="flex-1 flex flex-col items-center gap-0.5 min-w-[50px]">
           {stops > 0 && legs.length > 1 ? (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
@@ -1000,17 +1002,18 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
           ) : (
             <AnimatedFlightArc compact direction={isReturn ? "return" : "departure"} />
           )}
-          <p className="text-[8px] sm:text-[9px] text-muted-foreground">{duration}</p>
-          <p className={`text-[8px] sm:text-[9px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground font-medium">{duration}</p>
+          <p className={`text-[9px] sm:text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
         </div>
 
         {/* Destination */}
         <div className="text-center shrink-0">
-          <p className="text-[9px] sm:text-[10px] font-medium text-muted-foreground">{toCode}</p>
-          <p className="text-[11px] sm:text-xs font-black tracking-tight flight-time">
+          <p className="text-xs sm:text-sm font-bold text-foreground">{toCode}</p>
+          <p className="text-sm sm:text-base font-black tracking-tight flight-time">
             {arriveTime}
-            {nextDay && <sup className="text-[7px] text-destructive font-bold ml-0.5">+1</sup>}
+            {nextDay && <sup className="text-[8px] text-destructive font-bold ml-0.5">+1</sup>}
           </p>
+          {arriveGmt && <p className="text-[9px] sm:text-[10px] text-muted-foreground">{arriveGmt}</p>}
         </div>
       </div>
     </div>
