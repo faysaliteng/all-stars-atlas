@@ -3646,23 +3646,23 @@ const FlightResults = () => {
 
       {/* Results info bar */}
       <div className="bg-card border-b border-border">
-        <div className="container mx-auto px-3 sm:px-4 py-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-foreground font-semibold">
+        <div className="container mx-auto px-2 sm:px-4 py-1.5 sm:py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs sm:text-sm text-foreground font-semibold">
               {isMultiCity ? (
                 <>Showing <strong>{totalMultiCityFlights}</strong> flights</>
               ) : isRoundTrip && hasDirections ? (
-                <>Showing <strong>{filteredPairs.length} flights</strong> &amp; <strong>{airlineStats.length} Airlines</strong> <span className="text-muted-foreground font-normal text-xs">(Fares include. AIT VAT)</span></>
+                <>Showing <strong>{filteredPairs.length} flights</strong> &amp; <strong>{airlineStats.length} Airlines</strong> <span className="text-muted-foreground font-normal text-[10px] sm:text-xs">(Fares include. AIT VAT)</span></>
               ) : (
                 <>Showing <strong>{flights.length} flights</strong>
-                  {sources.tti > 0 && <span className="text-muted-foreground font-normal text-xs ml-1">({sources.tti} Air Astra)</span>}
-                  {sources.sabre > 0 && <span className="text-muted-foreground font-normal text-xs ml-1">({sources.sabre} Sabre)</span>}
-                  {sources.flyhub > 0 && <span className="text-muted-foreground font-normal text-xs ml-1">({sources.flyhub} FlyHub)</span>}
+                  {sources.tti > 0 && <span className="text-muted-foreground font-normal text-[10px] ml-1">({sources.tti} Air Astra)</span>}
+                  {sources.sabre > 0 && <span className="text-muted-foreground font-normal text-[10px] ml-1">({sources.sabre} Sabre)</span>}
+                  {sources.flyhub > 0 && <span className="text-muted-foreground font-normal text-[10px] ml-1">({sources.flyhub} FlyHub)</span>}
                 </>
               )}
             </p>
             {cheapest > 0 && (
-              <span className="text-xs text-muted-foreground">Sort by: <strong className="text-accent">{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</strong></span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">Sort by: <strong className="text-accent">{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</strong></span>
             )}
           </div>
         </div>
