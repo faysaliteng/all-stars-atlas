@@ -1875,6 +1875,15 @@ const MultiCityFlightCard = ({
 };
 
 
+/* ─── Round-trip pair payable — uses totalRoundTripPrice when available for accurate BFM pricing ─── */
+function pairPayable(p: { outbound: any; returnFlight: any }): number {
+  if (p.outbound.totalRoundTripPrice) {
+    const totalTaxes = (p.outbound.taxes || 0) + (p.returnFlight.taxes || 0);
+    return calcPayableFromGross(p.outbound.totalRoundTripPrice, totalTaxes, p.outbound.fareRules?.discount ?? 6.30, p.outbound.fareRules?.aitVat ?? 0.3);
+  }
+  return flightPayable(p.outbound) + flightPayable(p.returnFlight);
+}
+
 const FlightCard = ({
   flight, cheapest, isExpanded, onToggleExpand,
   selectionMode = false, isSelected = false, onSelect,
