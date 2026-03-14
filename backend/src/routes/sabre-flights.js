@@ -345,27 +345,13 @@ async function searchFlights(params) {
     console.log(`[Sabre] Searching ${logRoute}...`);
 
     let raw = decodeCompressedResponse(await sabreRequest(config, '/v5/offers/shop', buildBfmRequestBody()));
-    let { itinCount, hasNoAvailability } = getResponseStats(raw);
+    const { itinCount } = getResponseStats(raw);
 
     console.log(`[Sabre] BFM response keys: ${JSON.stringify(raw ? Object.keys(raw) : [])}`);
     console.log(`[Sabre] BFM itinerary count: ${itinCount}, hasStatistics: ${!!(raw?.OTA_AirLowFareSearchRS || raw?.groupedItineraryResponse || raw)?.statistics}`);
 
     if (itinCount === 0) {
       console.log(`[Sabre] BFM raw (truncated): ${JSON.stringify(raw).slice(0, 2000)}`);
-    }
-
-    // Fallback: retry once with a relaxed payload when Sabre returns explicit No Availability.
-    if (!isMultiCity && itinCount === 0 && hasNoAvailability) {
-      console.warn('[Sabre] Primary BFM returned NAV — retrying with relaxed payload');
-      const relaxedRaw = decodeCompressedResponse(await sabreRequest(config, '/v5/offers/shop', buildBfmRequestBody({ relaxed: true })));
-      const relaxedStats = getResponseStats(relaxedRaw);
-      console.log(`[Sabre] Relaxed BFM itinerary count: ${relaxedStats.itinCount}, hasStatistics: ${!!relaxedStats.rs?.statistics}`);
-      if (relaxedStats.itinCount > 0) {
-        raw = relaxedRaw;
-        itinCount = relaxedStats.itinCount;
-      } else {
-        console.log(`[Sabre] Relaxed BFM raw (truncated): ${JSON.stringify(relaxedRaw).slice(0, 2000)}`);
-      }
     }
 
     const results = normalizeSabreResponse(raw, {
