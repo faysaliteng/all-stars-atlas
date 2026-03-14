@@ -3679,7 +3679,7 @@ const FlightResults = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex gap-6">
+          <div className="flex gap-3 sm:gap-5">
             {/* Sidebar filters */}
             <aside className="hidden lg:block w-72 shrink-0">
               <Card className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto shadow-[0_4px_20px_-4px_hsl(var(--foreground)/0.08),0_1px_3px_hsl(var(--foreground)/0.06)] border-border/60">
