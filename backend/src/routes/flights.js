@@ -139,7 +139,16 @@ router.get('/seats-rest', async (req, res) => {
     // Pre-booking or REST fallback: use SOAP EnhancedSeatMapRQ (no PNR needed)
     try {
       const { getSeatMap } = require('./sabre-soap');
-      const soapResult = await getSeatMap({ origin, destination, departureDate, airlineCode, flightNumber, cabinClass });
+      const BD_AIRPORTS = ['DAC', 'CXB', 'CGP', 'ZYL', 'JSR', 'RJH', 'SPD', 'BZL', 'IRD', 'TKR'];
+      const isDomestic = BD_AIRPORTS.includes(origin) && BD_AIRPORTS.includes(destination);
+      const soapResult = await getSeatMap({
+        origin, destination, departureDate,
+        marketingCarrier: airlineCode,
+        operatingCarrier: airlineCode,
+        flightNumber: String(flightNumber).replace(/^[A-Z]{2}/i, ''),
+        cabinClass: cabinClass || 'Economy',
+        isDomestic,
+      });
       if (soapResult && (soapResult.rows?.length > 0 || soapResult.totalRows > 0)) {
         return res.json({ success: true, ...soapResult, source: 'sabre-soap' });
       }

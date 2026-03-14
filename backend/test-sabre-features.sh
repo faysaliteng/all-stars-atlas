@@ -115,23 +115,30 @@ fi
 # ══════════════════════════════════════════════
 echo -e "${CYAN}━━━ 3. Price Revalidation ━━━${NC}"
 
-# Get first Sabre flight from search for revalidation
-FIRST_FLIGHT=$(echo "$SEARCH_RESULT" | jq -c '[.data[] | select(.source == "sabre")][0] // empty')
+# Get first DIRECT Sabre flight from search for revalidation (avoid multi-stop)
+FIRST_FLIGHT=$(echo "$SEARCH_RESULT" | jq -c '[.data[] | select(.source == "sabre" and (.stops == 0 or .stops == null))][0] // empty')
+if [ -z "$FIRST_FLIGHT" ] || [ "$FIRST_FLIGHT" = "null" ]; then
+  # Fallback to any Sabre flight
+  FIRST_FLIGHT=$(echo "$SEARCH_RESULT" | jq -c '[.data[] | select(.source == "sabre")][0] // empty')
+fi
+
 if [ -n "$FIRST_FLIGHT" ] && [ "$FIRST_FLIGHT" != "null" ]; then
-  # Build revalidation payload from top-level flight fields (not legs)
+  # Build revalidation payload using legs array (each segment individually)
   REVAL_BODY=$(echo "$FIRST_FLIGHT" | jq -c '{
-    flights: [{
+    flights: [.legs[] | {
       origin: .origin,
       destination: .destination,
       departureTime: .departureTime,
       arrivalTime: .arrivalTime,
       flightNumber: .flightNumber,
       airlineCode: .airlineCode,
-      bookingClass: (.bookingClass // .fareDetails[0].bookingClass // "Y")
+      bookingClass: "Y"
     }],
     adults: 1, children: 0, infants: 0,
     cabinClass: (.cabinClass // "Economy")
   }')
+  # Debug: show what we're sending
+  echo "  [debug] Reval body: $(echo "$REVAL_BODY" | jq -c '.flights | length') segments"
   REVAL_RESULT=$(curl -s -X POST "$API_BASE/flights/revalidate-price" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
@@ -140,7 +147,7 @@ if [ -n "$FIRST_FLIGHT" ] && [ "$FIRST_FLIGHT" != "null" ]; then
   if [ -n "$REVAL_VALID" ]; then
     log_pass "3. Price revalidation (valid=$REVAL_VALID)"
   else
-    REVAL_ERR=$(echo "$REVAL_RESULT" | jq -r '.message // .error // "unknown"')
+    REVAL_ERR=$(echo "$REVAL_RESULT" | jq -r '.message // .error // "unknown"' | head -c 200)
     log_fail "3. Price revalidation" "$REVAL_ERR"
   fi
 else
