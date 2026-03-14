@@ -2890,7 +2890,7 @@ const FlightResults = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="start">
+              <PopoverContent className="w-48 p-2 z-[60]" align="start">
                 <div className="space-y-1">
                   {[
                     { label: "One Way", key: "oneway" },
