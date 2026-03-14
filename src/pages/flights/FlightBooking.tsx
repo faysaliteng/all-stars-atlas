@@ -319,7 +319,7 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
               <p className="text-[10px] text-accent font-semibold">{flight.stops === 0 ? "Non-stop" : `${flight.stops} Stop`}</p>
             </div>
             <div className="text-center shrink-0">
-              <p className="text-lg sm:text-xl font-black">{fmtTime(flight.arrivalTime)}</p>
+              <p className="text-lg sm:text-xl font-black flight-time">{fmtTime(flight.arrivalTime)}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">{flight.destination}</p>
             </div>
           </div>
