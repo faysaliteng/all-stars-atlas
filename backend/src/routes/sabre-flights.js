@@ -654,7 +654,15 @@ function normalizeGroupedResponse(response, params) {
         const pricingInfo = itin.pricingInformation || [];
         if (pricingInfo.length === 0) continue;
 
-        const pricing = pricingInfo[0];
+        // ── CRITICAL: Sort pricing options by total price ascending ──
+        // Ensures cheapest booking class (V, L, S etc.) is primary, not full-fare Y
+        const sortedPricing = [...pricingInfo].sort((a, b) => {
+          const priceA = parseFloat(a?.fare?.totalFare?.totalPrice || 0);
+          const priceB = parseFloat(b?.fare?.totalFare?.totalPrice || 0);
+          return priceA - priceB;
+        });
+
+        const pricing = sortedPricing[0];
         const fare = pricing.fare || {};
         const totalFare = fare.totalFare || {};
         const totalAmount = parseFloat(totalFare.totalPrice || 0);
