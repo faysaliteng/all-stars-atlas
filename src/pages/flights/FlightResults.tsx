@@ -3014,9 +3014,23 @@ const FlightResults = () => {
                 <PopoverContent className="w-80 p-3 z-[60]" align="start">
                   <p className="text-xs font-bold text-muted-foreground mb-2">Edit Route</p>
                   {/* Scope toggle */}
-                  <div className="flex gap-1.5 mb-3">
+                   <div className="flex gap-1.5 mb-3">
                     {(["domestic", "international"] as const).map(s => (
-                      <button key={s} onClick={() => setEditScope(s)}
+                      <button key={s} onClick={() => {
+                        setEditScope(s);
+                        // Auto-reset airports that violate the new scope — same as homepage
+                        if (s === "domestic") {
+                          const fromAp = AIRPORTS.find(a => a.code === editFrom);
+                          const toAp = AIRPORTS.find(a => a.code === editTo);
+                          if (fromAp?.country !== "BD") setEditFrom(domesticAirports[0]?.code || "DAC");
+                          if (toAp?.country !== "BD") setEditTo(domesticAirports[1]?.code || "CXB");
+                        } else {
+                          // International: if both are BD, reset destination
+                          const fromAp = AIRPORTS.find(a => a.code === editFrom);
+                          const toAp = AIRPORTS.find(a => a.code === editTo);
+                          if (fromAp?.country === "BD" && toAp?.country === "BD") setEditTo("");
+                        }
+                      }}
                         className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${editScope === s ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:border-primary/40"}`}>
                         {s === "domestic" ? "Domestic" : "International"}
                       </button>
