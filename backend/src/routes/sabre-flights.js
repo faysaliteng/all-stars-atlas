@@ -336,6 +336,7 @@ async function searchFlights(params) {
     };
   };
 
+  try {
     const requestProfiles = [
       {
         name: 'smart_diverse',
