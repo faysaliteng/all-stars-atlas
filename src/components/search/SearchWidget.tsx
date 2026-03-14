@@ -231,20 +231,46 @@ const tabs = [
   { id: "paybill", label: "Pay Bill", icon: Receipt },
 ];
 
-const SearchWidget = () => {
+interface SearchWidgetProps {
+  /** Show only the flight search tab (no other tabs) */
+  flightOnly?: boolean;
+  /** Pre-fill flight search from URL/state */
+  initialFlightValues?: {
+    from?: string;
+    to?: string;
+    depart?: string;
+    returnDate?: string;
+    adults?: number;
+    children?: number;
+    infants?: number;
+    cabin?: string;
+    tripType?: string; // "oneway" | "roundtrip" | "multicity"
+    segments?: { from: string; to: string; date: string }[];
+  };
+  /** Compact styling for results page */
+  compact?: boolean;
+}
+
+const SearchWidget = ({ flightOnly, initialFlightValues, compact }: SearchWidgetProps = {}) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("flight");
 
+  // Derive initial values from props
+  const initFrom = initialFlightValues?.from ? AIRPORTS.find(a => a.code === initialFlightValues.from) || AIRPORTS[0] : AIRPORTS[0];
+  const initTo = initialFlightValues?.to ? AIRPORTS.find(a => a.code === initialFlightValues.to) || AIRPORTS[1] : AIRPORTS[1];
+  const initTripType = initialFlightValues?.tripType === "multicity" ? "multicity" : initialFlightValues?.returnDate ? "roundtrip" : initialFlightValues?.tripType === "oneway" ? "oneway" : "roundtrip";
+  const initScope: "domestic" | "international" = (initFrom?.country === "BD" && initTo?.country === "BD") ? "domestic" : "international";
+
   // Flight state
-  const [tripType, setTripType] = useState("roundtrip");
-  const [fromAirport, setFromAirport] = useState<typeof AIRPORTS[0] | null>(AIRPORTS[0]); // DAC
-  const [toAirport, setToAirport] = useState<typeof AIRPORTS[0] | null>(AIRPORTS[1]); // CXB
-  const [departDate, setDepartDate] = useState<Date>();
-  const [returnDate, setReturnDate] = useState<Date>();
-  const [passengers, setPassengers] = useState({ adults: 1, children: 0, infants: 0 });
-  const [cabinClass, setCabinClass] = useState("economy");
+  const [tripType, setTripType] = useState(initTripType);
+  const [fromAirport, setFromAirport] = useState<typeof AIRPORTS[0] | null>(initFrom);
+  const [toAirport, setToAirport] = useState<typeof AIRPORTS[0] | null>(initTo);
+  const [departDate, setDepartDate] = useState<Date | undefined>(initialFlightValues?.depart ? new Date(initialFlightValues.depart) : undefined);
+  const [returnDate, setReturnDate] = useState<Date | undefined>(initialFlightValues?.returnDate ? new Date(initialFlightValues.returnDate) : undefined);
+  const [passengers, setPassengers] = useState({ adults: initialFlightValues?.adults || 1, children: initialFlightValues?.children || 0, infants: initialFlightValues?.infants || 0 });
+  const [cabinClass, setCabinClass] = useState(initialFlightValues?.cabin || "economy");
   const [fareType, setFareType] = useState("regular");
-  const [flightScope, setFlightScope] = useState<"domestic" | "international">("domestic");
+  const [flightScope, setFlightScope] = useState<"domestic" | "international">(initScope);
   const [preferredCarrier, setPreferredCarrier] = useState("any");
 
   // Multi-city segments
