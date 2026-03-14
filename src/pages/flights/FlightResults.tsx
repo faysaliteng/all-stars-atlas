@@ -3242,18 +3242,18 @@ const FlightResults = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* ─── Compact Pill Modification Bar with Full Features ─── */}
-      <div className="bg-card border-b border-border pt-20 sm:pt-28 lg:pt-36 pb-0">
-        <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex flex-wrap items-center gap-2.5 py-3">
+      <div className="bg-card border-b border-border pt-16 sm:pt-24 lg:pt-32 pb-0">
+        <div className="container mx-auto px-2 sm:px-4">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 py-2 sm:py-2.5">
             {/* Trip Type pill — clickable to switch */}
             <Popover>
               <PopoverTrigger asChild>
-                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
-                  <Plane className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold text-foreground">
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                  <Plane className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs sm:text-sm font-semibold text-foreground">
                     {isMultiCity ? "Multi-City" : isRoundTrip ? "Round Trip" : "One Way"}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-48 p-2 z-[60]" align="start">
