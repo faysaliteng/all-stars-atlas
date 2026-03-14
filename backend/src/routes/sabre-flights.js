@@ -1032,11 +1032,11 @@ function normalizeGroupedResponse(response, params) {
             }
 
             flights.push({
-              id: `sabre-g-${group.groupDescription?.legDescriptions?.[0]?.departureDate || idx}-${legIdx}-${idx}`,
+              id: `sabre-g-${groupIdx}-${idx}-${legIdx}`,
               source: 'sabre',
               direction,
               isRoundTrip: itinLegs.length > 1,
-              _itineraryId: `sabre-g-itin-${group.groupDescription?.legDescriptions?.[0]?.departureDate || 'x'}-${idx}`,
+              _itineraryId: `sabre-g-itin-${groupIdx}-${idx}`,
               airline: getAirlineName(firstLeg.airlineCode),
               airlineCode: firstLeg.airlineCode,
               airlineLogo: null,
@@ -1067,7 +1067,7 @@ function normalizeGroupedResponse(response, params) {
               cancellationPolicy,
               dateChangePolicy,
               validatingAirline: fare.validatingCarrierCode || firstLeg.airlineCode,
-              _sabreSeqNumber: idx,
+              _sabreSeqNumber: `${groupIdx}-${idx}`,
             });
           }
         }
