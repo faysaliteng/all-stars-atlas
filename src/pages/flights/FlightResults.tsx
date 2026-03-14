@@ -3553,20 +3553,20 @@ const FlightResults = () => {
 
             {/* Next Day */}
             {!isMultiCity && (
-              <button onClick={() => shiftDate(1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Next Day">
-                <ChevronRight className="w-4 h-4" />
+              <button onClick={() => shiftDate(1)} className="bg-muted border border-border hover:border-primary/50 rounded-lg p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors shrink-0" title="Next Day">
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             )}
 
             {/* Pax & Cabin pill */}
             <Popover open={showPaxEdit} onOpenChange={setShowPaxEdit}>
               <PopoverTrigger asChild>
-                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-4 py-2 flex items-center gap-2 shrink-0 transition-colors">
-                  <Users className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">
+                <button className="bg-muted border border-border hover:border-primary/50 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 transition-colors">
+                  <Users className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs sm:text-sm font-medium text-foreground">
                     {totalPax} Pax{cabinClass ? `, ${cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1)}` : ""}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-72 p-3 z-[60]" align="start">
