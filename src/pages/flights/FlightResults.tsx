@@ -2906,7 +2906,9 @@ const FlightResults = () => {
       const key = `${ob.id}__${rf.id}`;
       if (seen.has(key)) return;
       seen.add(key);
-      pairs.push({ outbound: ob, returnFlight: rf, totalPrice: (ob.price || 0) + (rf.price || 0) });
+      const obFare = getApiFareTotals(ob);
+      const rfFare = getApiFareTotals(rf);
+      pairs.push({ outbound: ob, returnFlight: rf, totalPrice: obFare.grossPrice + rfFare.grossPrice });
     };
 
     // 1) Exact itinerary linking from backend (Sabre BFM grouped itineraries)
