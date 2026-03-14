@@ -2911,7 +2911,7 @@ const FlightResults = () => {
   // Quick sort summaries — Cheapest, Fastest, Best from real data (payable prices)
   const quickSortSummary = useMemo(() => {
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: flightPayable(p.outbound) + flightPayable(p.returnFlight) }));
+      const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: pairPayable(p) }));
       const cheapestPair = [...withPayable].sort((a, b) => a.payableTotal - b.payableTotal)[0];
       const fastestPair = [...withPayable].sort((a, b) => 
         ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - 
