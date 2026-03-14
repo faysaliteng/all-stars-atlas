@@ -357,6 +357,21 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
               Aircraft: {flight.aircraft}
             </span>
           )}
+          {/* Sabre capability indicators */}
+          {(() => {
+            const isSabre = String(flight.source || '').toLowerCase().includes('sabre') || !!flight._sabreSource || !!flight._sabreSeqNumber;
+            if (!isSabre) return null;
+            return (
+              <>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] sm:text-[11px] font-bold text-accent">
+                  💺 Seat Map
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/5 border border-accent/20 text-[10px] sm:text-[11px] font-bold text-accent">
+                  🍽 Meal Options
+                </span>
+              </>
+            );
+          })()}
         </div>
       </CardContent>
     </Card>

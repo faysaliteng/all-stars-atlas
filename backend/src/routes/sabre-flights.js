@@ -504,6 +504,10 @@ function normalizeSabreResponse(raw, params) {
             bookingClass: fi.FareReference || '',
             cabinClass: fi.TPA_Extensions?.Cabin?.Cabin || '',
             availableSeats: fi.TPA_Extensions?.SeatsRemaining?.Number ?? null,
+            mealIncluded: 'available',
+            seatSelection: 'available',
+            rebookingAllowed: true,
+            cancellationAllowed: isRefundable,
           })),
           timeLimit,
           cancellationPolicy,
@@ -721,8 +725,8 @@ function normalizeGroupedResponse(response, params) {
           // Extract per-pax baggage for this fare option
           let piBaggage = checkedBaggageGlobal;
           let piHandBaggage = handBaggageGlobal;
-          let mealIncluded = false;
-          let seatSelection = false;
+          let mealIncluded = null; // null = unknown from BFM; 'available' = can be added via SSR
+          let seatSelection = null; // null = unknown; 'available' = can be selected via seat map
           let isNonRefundable = true;
 
           for (const paxInfo of piPassengers) {
@@ -784,8 +788,10 @@ function normalizeGroupedResponse(response, params) {
             refundable: !isNonRefundable,
             brandName: brandName || '',
             brandCode: brandCode || '',
-            mealIncluded,
-            seatSelection,
+            // Sabre supports meal SSR and seat map for virtually all flights
+            // If BFM didn't explicitly include/exclude, mark as 'available' (add-on)
+            mealIncluded: mealIncluded === true ? true : 'available',
+            seatSelection: seatSelection === true ? true : 'available',
             rebookingAllowed,
             cancellationAllowed,
           };
