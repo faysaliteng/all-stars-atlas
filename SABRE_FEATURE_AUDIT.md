@@ -361,22 +361,12 @@ All core booking lifecycle features are production-verified:
 
 ---
 
-### ⚠️ Section 26: Frequent Flyer Update — PARTIAL
-
-**VPS Test:** ✅ 26a (FQTV in CreatePNR) | ⏭️ 26b (post-booking update — NOT IMPLEMENTED)
+### ✅ Section 26: Frequent Flyer Update — DONE (v4.0.0)
 
 **What we have:**
-- FQTV SSR code in CreatePNR SSR builder
-- FF autoapplication by Sabre for hosted carriers
-
-**What's missing:**
-- Post-booking FF update via `UpdatePassengerNameRecord`
-- Dashboard UI for loyalty number management
-
-**Note:** Sabre confirms CreatePNR + UpdatePNR support FQTV SSR. Full FQTV sample body not exposed in public searchable docs.
-[Source: Sabre CreatePNR](https://developer.sabre.com/rest-api/create-passenger-name-record) | [UpdatePNR](https://developer.sabre.com/rest-api/update-passenger-name-record)
-
-**Impact:** Low — booking-time FQTV works. Post-booking is minor UX improvement.
+- FQTV SSR code in CreatePNR SSR builder (at booking time)
+- Post-booking FF update via `updateFrequentFlyer()` → UpdatePNR v2.4.0 with FQTV SSR
+- Route: `POST /api/flights/update-frequent-flyer`
 
 ---
 
