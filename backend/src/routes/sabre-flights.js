@@ -1062,7 +1062,16 @@ function normalizeGroupedResponse(response, params) {
               handBaggage: handBaggageGlobal,
               aircraft: firstLeg.aircraft,
               legs,
-              fareDetails: fareDetailsArr,
+              fareDetails: itinLegs.length > 1
+                ? fareDetailsArr.map(fd => ({
+                    ...fd,
+                    price: Math.round((fd.price || 0) / itinLegs.length),
+                    baseFare: Math.round((fd.baseFare || 0) / itinLegs.length),
+                    taxes: Math.round((fd.taxes || 0) / itinLegs.length),
+                    priceScope: 'per-direction',
+                    isTotalPrice: false,
+                  }))
+                : fareDetailsArr,
               timeLimit: fare.lastTicketDate || null,
               cancellationPolicy,
               dateChangePolicy,
