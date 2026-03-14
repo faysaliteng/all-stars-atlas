@@ -960,16 +960,20 @@ const RoundTripFlightCard = ({
         }];
 
     const combinedFareDetails = outboundFareDetails.map((fare: any) => {
-      // If fareDetails already has full-trip price (from grouped BFM), use it directly
-      // Otherwise sum outbound + return per-direction prices
       const farePrice = fare?.price ?? fare?.amount ?? outbound.price ?? 0;
       const fareTaxes = fare?.taxes ?? outbound.taxes ?? 0;
-      
-      // Detect if fareDetail price is full-trip (close to totalRoundTripPrice) or per-direction
-      const isFareFullTrip = hasTotalPrice && farePrice > 0 && Math.abs(farePrice - outbound.totalRoundTripPrice) < Math.abs(farePrice - outbound.price);
-      
+
+      // Prefer explicit backend metadata; keep a heuristic fallback for older payloads
+      const isExplicitFullTrip = fare?.priceScope === 'itinerary' || fare?.isTotalPrice === true || fare?._isRoundTripTotal === true;
+      const isHeuristicFullTrip = hasTotalPrice
+        && farePrice > 0
+        && Math.abs(farePrice - (outbound.totalRoundTripPrice || 0)) <= Math.abs(farePrice - (outbound.price || 0));
+      const isFareFullTrip = isExplicitFullTrip || isHeuristicFullTrip;
+
       const combinedPrice = isFareFullTrip ? farePrice : (farePrice + (returnFlight?.price ?? 0));
-      const combinedTaxes = isFareFullTrip ? fareTaxes : (fareTaxes + (returnFlight?.taxes ?? 0));
+      const combinedTaxes = isFareFullTrip
+        ? (fareTaxes > 0 ? fareTaxes : totalTaxes)
+        : (fareTaxes + (returnFlight?.taxes ?? 0));
 
       return {
         ...fare,
