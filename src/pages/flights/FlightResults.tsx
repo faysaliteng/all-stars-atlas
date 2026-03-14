@@ -1854,7 +1854,7 @@ const FlightCard = ({
           {/* Price section */}
           <div className="flex flex-col items-end gap-1 p-4 sm:p-5 sm:w-56 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-2">
-              {price === cheapest && price > 0 && (
+              {grossPrice === cheapest && price > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[9px] font-bold">Cheapest</Badge>
               )}
               {/* Reward Points Badge */}
