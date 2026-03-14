@@ -2196,30 +2196,30 @@ const FlightCard = ({
         </div>
 
         {/* ── Info bar: Flight Details ▲ | Refundable  Book & Hold | View Prices ▼ ── */}
-        <div className="flex items-center px-3 sm:px-5 py-2.5 bg-muted/30 border-t border-border/50">
+        <div className="flex items-center px-2.5 sm:px-4 py-2 bg-muted/30 border-t border-border/50">
           {/* Left: Flight Details toggle */}
-          <button className="flex items-center gap-1 text-accent font-bold text-xs sm:text-sm hover:underline shrink-0" onClick={onToggleExpand}>
-            Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          <button className="flex items-center gap-1 text-accent font-bold text-[11px] sm:text-xs hover:underline shrink-0" onClick={onToggleExpand}>
+            Flight Details {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
 
           {/* Center: Refundable + Book & Hold badges */}
-          <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
-            <span className={`font-bold text-xs sm:text-sm ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
+          <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4">
+            <span className={`font-bold text-[11px] sm:text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {flight.airlineCode?.toUpperCase() !== "BG" && (
-              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs sm:text-sm">Book &amp; Hold</span>
+              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-[11px] sm:text-xs hidden sm:inline">Book &amp; Hold</span>
             )}
           </div>
 
           {/* Right: View Prices / Select button */}
           <div className="shrink-0">
             {selectionMode ? (
-              <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={onSelect}>
-                {isSelected ? <><Check className="w-3.5 h-3.5 mr-1" /> Selected</> : "Select Flight"}
+              <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs" onClick={onSelect}>
+                {isSelected ? <><Check className="w-3 h-3 mr-1" /> Selected</> : "Select"}
               </Button>
             ) : (
-              <Button size="sm" className="font-bold h-9 px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground"
+              <Button size="sm" className="font-bold h-7 sm:h-8 px-3 sm:px-4 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-[11px] sm:text-xs"
                 onClick={() => setShowFareOptions(!showFareOptions)}>
-                View Prices {fareDetailsCount > 1 && <Badge className="ml-1.5 bg-accent-foreground/20 text-accent-foreground border-0 text-[10px] px-1.5 py-0">{fareDetailsCount}</Badge>} {showFareOptions ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+                View Prices {fareDetailsCount > 1 && <Badge className="ml-1 bg-accent-foreground/20 text-accent-foreground border-0 text-[9px] px-1 py-0">{fareDetailsCount}</Badge>} {showFareOptions ? <ChevronUp className="w-3 h-3 ml-0.5" /> : <ChevronDown className="w-3 h-3 ml-0.5" />}
               </Button>
             )}
           </div>
