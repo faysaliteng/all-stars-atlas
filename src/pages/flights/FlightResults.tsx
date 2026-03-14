@@ -2093,9 +2093,9 @@ const FlightCard = ({
             </div>
 
             {/* Baggage + Seats + Class info row — elegant pill badges */}
-            <div className="flex items-center flex-wrap gap-2 mt-2">
+            <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
               {handBaggage && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[10px] font-semibold text-amber-800 dark:text-amber-300">
                   <Briefcase className="w-3.5 h-3.5" /> {handBaggage}
                 </span>
               )}
