@@ -2730,57 +2730,58 @@ const FlightResults = () => {
   const outboundFlights = useMemo(() => flights.filter((f: any) => f.direction !== "return"), [flights]);
   const returnFlights = useMemo(() => flights.filter((f: any) => f.direction === "return"), [flights]);
 
-  // Round-trip: pair outbound+return — all valid combinations
-  // Sabre grouped format has independent indices per direction, so idx matching is unreliable.
-  // Instead: pair same-airline first, then cross-airline with cheapest counterpart.
+  // Round-trip: pair outbound+return from the SAME Sabre BFM itinerary using _itineraryId.
+  // This ensures each card represents one real bookable itinerary with accurate total pricing.
+  // Fallback: if no _itineraryId available, pair by _sabreSeqNumber or source+index matching.
   const roundTripPairs = useMemo(() => {
     if (!isRoundTrip || !hasDirections) return [];
     const pairs: { outbound: any; returnFlight: any; totalPrice: number }[] = [];
 
-    // Group outbound and return by airline
-    const outboundByAirline: Record<string, any[]> = {};
-    const returnByAirline: Record<string, any[]> = {};
+    // Group flights by _itineraryId for exact matching
+    const itineraryMap: Record<string, { outbound?: any; returnFlight?: any }> = {};
+    const unmatchedOutbound: any[] = [];
+    const unmatchedReturn: any[] = [];
+
     for (const f of outboundFlights) {
-      const code = f.airlineCode || 'XX';
-      if (!outboundByAirline[code]) outboundByAirline[code] = [];
-      outboundByAirline[code].push(f);
+      const itinId = f._itineraryId;
+      if (itinId) {
+        if (!itineraryMap[itinId]) itineraryMap[itinId] = {};
+        itineraryMap[itinId].outbound = f;
+      } else {
+        unmatchedOutbound.push(f);
+      }
     }
     for (const f of returnFlights) {
-      const code = f.airlineCode || 'XX';
-      if (!returnByAirline[code]) returnByAirline[code] = [];
-      returnByAirline[code].push(f);
+      const itinId = f._itineraryId;
+      if (itinId) {
+        if (!itineraryMap[itinId]) itineraryMap[itinId] = {};
+        itineraryMap[itinId].returnFlight = f;
+      } else {
+        unmatchedReturn.push(f);
+      }
     }
 
-    const allAirlines = new Set([...Object.keys(outboundByAirline), ...Object.keys(returnByAirline)]);
+    // Create pairs from matched itineraries (accurate BFM pricing)
+    for (const entry of Object.values(itineraryMap)) {
+      if (entry.outbound && entry.returnFlight) {
+        const total = entry.outbound.totalRoundTripPrice || ((entry.outbound.price || 0) + (entry.returnFlight.price || 0));
+        pairs.push({ outbound: entry.outbound, returnFlight: entry.returnFlight, totalPrice: total });
+      }
+    }
 
-    for (const airline of allAirlines) {
-      const obs = outboundByAirline[airline] || [];
-      const rets = returnByAirline[airline] || [];
-
-      if (obs.length > 0 && rets.length > 0) {
-        // Same-airline: pair each outbound with each return
-        for (const ob of obs) {
-          for (const ret of rets) {
-            // Use totalRoundTripPrice if both came from same itinerary, else sum
-            const total = ob.totalRoundTripPrice || ((ob.price || 0) + (ret.price || 0));
-            pairs.push({ outbound: ob, returnFlight: ret, totalPrice: total });
-          }
-        }
-      } else if (obs.length > 0) {
-        // Outbound-only airline: pair with cheapest return overall
-        const cheapestReturn = [...returnFlights].sort((a: any, b: any) => (a.price || 0) - (b.price || 0))[0];
-        if (cheapestReturn) {
-          for (const ob of obs) {
-            pairs.push({ outbound: ob, returnFlight: cheapestReturn, totalPrice: (ob.price || 0) + (cheapestReturn.price || 0) });
-          }
-        }
-      } else if (rets.length > 0) {
-        // Return-only airline: pair with cheapest outbound
-        const cheapestOutbound = [...outboundFlights].sort((a: any, b: any) => (a.price || 0) - (b.price || 0))[0];
-        if (cheapestOutbound) {
-          for (const ret of rets) {
-            pairs.push({ outbound: cheapestOutbound, returnFlight: ret, totalPrice: (cheapestOutbound.price || 0) + (ret.price || 0) });
-          }
+    // Fallback: pair unmatched flights by same airline (for non-Sabre providers)
+    if (unmatchedOutbound.length > 0 && unmatchedReturn.length > 0) {
+      for (const ob of unmatchedOutbound) {
+        // Find cheapest same-airline return
+        const sameAirlineReturn = unmatchedReturn
+          .filter(r => r.airlineCode === ob.airlineCode)
+          .sort((a: any, b: any) => (a.price || 0) - (b.price || 0))[0];
+        if (sameAirlineReturn) {
+          pairs.push({
+            outbound: ob,
+            returnFlight: sameAirlineReturn,
+            totalPrice: (ob.price || 0) + (sameAirlineReturn.price || 0),
+          });
         }
       }
     }
@@ -2792,7 +2793,7 @@ const FlightResults = () => {
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    });
+    }).sort((a, b) => a.totalPrice - b.totalPrice);
   }, [isRoundTrip, hasDirections, outboundFlights, returnFlights]);
 
   // Combine all multi-city flights for filter computation
