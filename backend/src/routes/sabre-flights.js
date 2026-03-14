@@ -1175,7 +1175,7 @@ function normalizeGroupedResponse(response, params) {
               durationMinutes: totalDurationMin,
               stops: legs.length - 1,
               stopCodes: legs.length > 1 ? legs.slice(0, -1).map(l => l.destination) : [],
-              cabinClass: getCabinName(fareComponents[0]?.segments?.[0]?.cabin?.cabin || 'Y'),
+              cabinClass: getCabinName(legFareComponents[0]?.segments?.[0]?.segment?.cabin?.cabin || legFareComponents[0]?.segments?.[0]?.cabin?.cabin || fareComponents[legIdx]?.segments?.[0]?.segment?.cabin?.cabin || fareComponents[0]?.segments?.[0]?.cabin?.cabin || 'Y'),
               bookingClass,
               availableSeats: minSeats === Infinity ? null : minSeats,
               price: pricePerDirection,
