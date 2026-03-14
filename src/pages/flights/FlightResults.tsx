@@ -1093,9 +1093,9 @@ const RoundTripFlightCard = ({
   const flightNo = [outbound.flightNumber, returnFlight.flightNumber].filter(Boolean).join(", ");
 
   const roundTripFarePanelFlights = useMemo(() => {
-    // Always sum per-direction prices (BDFare-style cross-product pairing)
-    const totalGross = (outbound.price || 0) + (returnFlight.price || 0);
-    const totalTaxes = (outbound.taxes || 0) + (returnFlight.taxes || 0);
+    // Always sum per-direction API prices (BDFare-style cross-product pairing)
+    const totalGross = outboundApiFare.grossPrice + returnApiFare.grossPrice;
+    const totalTaxes = outboundApiFare.taxes + returnApiFare.taxes;
 
     const outboundFareDetails = Array.isArray(outbound?.fareDetails) && outbound.fareDetails.length > 0
       ? outbound.fareDetails
@@ -1106,8 +1106,8 @@ const RoundTripFlightCard = ({
           handBaggage: outbound.handBaggage,
           baggage: outbound.baggage,
           refundable: outbound.refundable,
-          price: outbound.price || 0,
-          taxes: outbound.taxes || 0,
+          price: outboundApiFare.grossPrice,
+          taxes: outboundApiFare.taxes,
         }];
 
     const combinedFareDetails = outboundFareDetails.map((fare: any) => {
