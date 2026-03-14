@@ -1160,18 +1160,26 @@ const RoundTripFlightCard = ({
               onBook={(selectedFlight) => {
                 const selectedFare = selectedFlight?.fareDetails?.[0];
                 const baseOutbound = selectedFlight?._baseOutboundFlight || outbound;
+                const selectedClass = selectedFare?.bookingClass || baseOutbound.bookingClass || '';
                 const selectedOutbound = selectedFare
-                  ? {
-                      ...baseOutbound,
-                      price: selectedFare._outboundGrossPrice ?? baseOutbound.price,
-                      taxes: selectedFare._outboundTaxes ?? baseOutbound.taxes,
-                      fareDetails: [selectedFare._outboundFareDetail || selectedFare],
-                      bookingClass: selectedFare.bookingClass || baseOutbound.bookingClass,
-                      cabinClass: selectedFare.cabinClass || baseOutbound.cabinClass,
-                      handBaggage: selectedFare.handBaggage || baseOutbound.handBaggage,
-                      baggage: selectedFare.checkedBaggage || selectedFare.baggage || baseOutbound.baggage,
-                      refundable: typeof selectedFare.refundable === 'boolean' ? selectedFare.refundable : baseOutbound.refundable,
-                    }
+                  ? (() => {
+                      const ob = {
+                        ...baseOutbound,
+                        price: selectedFare._outboundGrossPrice ?? baseOutbound.price,
+                        taxes: selectedFare._outboundTaxes ?? baseOutbound.taxes,
+                        fareDetails: [selectedFare._outboundFareDetail || selectedFare],
+                        bookingClass: selectedClass,
+                        cabinClass: selectedFare.cabinClass || baseOutbound.cabinClass,
+                        handBaggage: selectedFare.handBaggage || baseOutbound.handBaggage,
+                        baggage: selectedFare.checkedBaggage || selectedFare.baggage || baseOutbound.baggage,
+                        refundable: typeof selectedFare.refundable === 'boolean' ? selectedFare.refundable : baseOutbound.refundable,
+                      };
+                      // Propagate bookingClass to legs
+                      if (selectedClass && Array.isArray(ob.legs)) {
+                        ob.legs = ob.legs.map((leg: any) => ({ ...leg, bookingClass: leg.bookingClass || selectedClass }));
+                      }
+                      return ob;
+                    })()
                   : baseOutbound;
 
                 cardNavigate(
