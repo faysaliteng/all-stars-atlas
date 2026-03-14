@@ -2459,6 +2459,13 @@ const FlightResults = () => {
   }, [fromCode, toCode, departDate, returnDate, adults, children, infants, cabinClass]);
 
   const applySearchEdit = useCallback(() => {
+    // Validate scope — same rules as homepage SearchWidget
+    const fromAp = AIRPORTS.find(a => a.code === editFrom);
+    const toAp = AIRPORTS.find(a => a.code === editTo);
+    if (editFrom === editTo) return;
+    if (editScope === "domestic" && (fromAp?.country !== "BD" || toAp?.country !== "BD")) return;
+    if (editScope === "international" && fromAp?.country === "BD" && toAp?.country === "BD") return;
+
     const p = new URLSearchParams();
     if (editFrom) p.set("from", editFrom);
     if (editTo) p.set("to", editTo);
@@ -2472,7 +2479,7 @@ const FlightResults = () => {
     if (isMultiCity) p.set("tripType", "multicity");
     navigate(`/flights?${p.toString()}`);
     setShowRouteEdit(false); setShowDateEdit(false); setShowPaxEdit(false); setShowModifyPanel(false);
-  }, [editFrom, editTo, editDepart, editReturn, editAdults, editChildren, editInfants, editCabin, editPreferredCarrier, isMultiCity, navigate]);
+  }, [editFrom, editTo, editDepart, editReturn, editAdults, editChildren, editInfants, editCabin, editPreferredCarrier, isMultiCity, editScope, navigate]);
 
   const shiftDate = useCallback((days: number) => {
     const p = new URLSearchParams(searchParams.toString());
