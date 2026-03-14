@@ -21,6 +21,7 @@ import TravelDocVerificationModal from "@/components/TravelDocVerificationModal"
 import BookingActions from "@/components/flights/BookingActions";
 import FlightStatusBadge from "@/components/flights/FlightStatusBadge";
 import FareRulesModal from "@/components/flights/FareRulesModal";
+import { formatApiDate, formatApiTime } from "@/lib/flight-time";
 
 const statusLabelMap: Record<string, string> = {
   on_hold: "Reserved", confirmed: "Confirmed", pending: "Pending", in_progress: "In Progress",

@@ -28,6 +28,7 @@ import { AIRPORTS } from "@/lib/airports";
 import { api } from "@/lib/api";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { format } from "date-fns";
+import { formatApiDate, formatApiShortDate, formatApiTime, getApiLocalHour, isApiNextDay } from "@/lib/flight-time";
 
 /* ─── Airline logo — dynamic CDN, no hardcoded map ─── */
 function getAirlineLogo(code?: string): string | null {

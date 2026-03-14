@@ -6,6 +6,7 @@ import { CheckCircle2, Download, Plane, ArrowRight, Printer, Mail, Home, Car, Bu
 import { Link, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { generateTicketPDF } from "@/lib/pdf-generator";
+import { formatApiTime } from "@/lib/flight-time";
 
 const BookingConfirmation = () => {
   const { toast } = useToast();
