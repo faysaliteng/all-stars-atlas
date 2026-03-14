@@ -1113,7 +1113,14 @@ function normalizeGroupedResponse(response, params) {
             let minSeats = Infinity;
             let bookingClass = '';
             const fareComponents = passengerInfoList[0]?.passengerInfo?.fareComponents || [];
-            const owResolvedSegs = resolveFareComponentSegments(fareComponents);
+            
+            // ── CRITICAL: Extract booking class PER-LEG, not from all fare components ──
+            // Each fareComponent in Sabre grouped response corresponds to a specific OD leg.
+            // fareComponents[0] = outbound, fareComponents[1] = return.
+            // Using all segments causes the last (return) bookingCode to overwrite outbound,
+            // and misses per-direction cheapest class resolution.
+            const legFareComponents = fareComponents[legIdx] ? [fareComponents[legIdx]] : fareComponents;
+            const owResolvedSegs = resolveFareComponentSegments(legFareComponents);
             for (const rs of owResolvedSegs) {
               if (rs.seatsAvailable !== null && rs.seatsAvailable !== undefined) {
                 const s = parseInt(rs.seatsAvailable);
@@ -1168,7 +1175,7 @@ function normalizeGroupedResponse(response, params) {
               durationMinutes: totalDurationMin,
               stops: legs.length - 1,
               stopCodes: legs.length > 1 ? legs.slice(0, -1).map(l => l.destination) : [],
-              cabinClass: getCabinName(fareComponents[0]?.segments?.[0]?.cabin?.cabin || 'Y'),
+              cabinClass: getCabinName(legFareComponents[0]?.segments?.[0]?.segment?.cabin?.cabin || legFareComponents[0]?.segments?.[0]?.cabin?.cabin || fareComponents[legIdx]?.segments?.[0]?.segment?.cabin?.cabin || fareComponents[0]?.segments?.[0]?.cabin?.cabin || 'Y'),
               bookingClass,
               availableSeats: minSeats === Infinity ? null : minSeats,
               price: pricePerDirection,
@@ -1182,14 +1189,19 @@ function normalizeGroupedResponse(response, params) {
               aircraft: firstLeg.aircraft,
               legs,
               fareDetails: itinLegs.length > 1
-                ? fareDetailsArr.map(fd => ({
-                    ...fd,
-                    price: Math.round((fd.price || 0) / itinLegs.length),
-                    baseFare: Math.round((fd.baseFare || 0) / itinLegs.length),
-                    taxes: Math.round((fd.taxes || 0) / itinLegs.length),
-                    priceScope: 'per-direction',
-                    isTotalPrice: false,
-                  }))
+                ? fareDetailsArr.map(fd => {
+                    // Per-leg: override bookingClass with the resolved per-direction class
+                    const legBookingClass = bookingClass || fd.bookingClass;
+                    return {
+                      ...fd,
+                      bookingClass: legBookingClass,
+                      price: Math.round((fd.price || 0) / itinLegs.length),
+                      baseFare: Math.round((fd.baseFare || 0) / itinLegs.length),
+                      taxes: Math.round((fd.taxes || 0) / itinLegs.length),
+                      priceScope: 'per-direction',
+                      isTotalPrice: false,
+                    };
+                  })
                 : fareDetailsArr,
               paxPricing: itinLegs.length > 1
                 ? paxPricing.map(pp => ({
