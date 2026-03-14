@@ -632,19 +632,20 @@ const SearchWidget = () => {
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3">
           <RadioGroup value={tripType} onValueChange={setTripType} className="flex gap-1.5 flex-wrap">
             {[
-              { value: "oneway", label: "One Way" },
-              { value: "roundtrip", label: "Round Trip" },
-              { value: "multicity", label: "Multi City" },
+              { value: "oneway", label: "One Way", icon: <SendHorizontal className="w-3.5 h-3.5" /> },
+              { value: "roundtrip", label: "Round Trip", icon: <Repeat2 className="w-3.5 h-3.5" /> },
+              { value: "multicity", label: "Multi City", icon: <Plane className="w-3.5 h-3.5" /> },
             ].map((t) => (
               <label
                 key={t.value}
-                className={`px-3 sm:px-4 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold cursor-pointer transition-all border ${
+                className={`px-3 sm:px-4 py-1.5 rounded-full text-[12px] sm:text-[13px] font-semibold cursor-pointer transition-all border flex items-center gap-1.5 ${
                   tripType === t.value
                     ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
                     : "bg-transparent text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
                 }`}
               >
                 <RadioGroupItem value={t.value} className="sr-only" />
+                {t.icon}
                 {t.label}
               </label>
             ))}
