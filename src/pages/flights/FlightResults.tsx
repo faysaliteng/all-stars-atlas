@@ -2067,7 +2067,7 @@ const FlightCard = ({
                               {/* Arrival info */}
                               <div className="text-right shrink-0 max-w-[38%]">
                                 <p className="text-xl sm:text-2xl font-black">{formatTime(leg.arrivalTime)}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{formatDate(leg.arrivalTime)}</p>
+                                <p className="text-xs flight-date mt-0.5">{formatDate(leg.arrivalTime)}</p>
                                 <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
                                   {leg.destinationTerminal ? `Terminal: ${leg.destinationTerminal}, ` : ""}{getAirportName(legDest)} ({legDest})
                                 </p>
