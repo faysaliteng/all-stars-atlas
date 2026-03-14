@@ -1667,7 +1667,7 @@ const FlightCard = ({
   const toCode = flight.destination || "";
   const flightNo = flight.flightNumber || "";
   // Always use the REAL cabin class/class seats from API fare details first
-  const cabin = flight.cabinClass || "Economy";
+  const cabin = flight.cabinClass || "";
   const bookingClass = getDisplayBookingClass(flight);
   const availableSeats = getDisplayAvailableSeats(flight);
   const duration = flight.duration || "";

@@ -317,7 +317,7 @@ const FlightSegmentCard = ({ flight, label, searchedCabinClass }: { flight: any;
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 text-[10px] sm:text-[11px] text-muted-foreground">
           <span>{flight.airline} · {flight.flightNumber}</span>
-          <span>· {searchedCabinClass || flight.cabinClass || "Economy"}</span>
+          <span>· {searchedCabinClass || flight.cabinClass || ""}</span>
           {flight.baggage && <span className="flex items-center gap-1"><Luggage className="w-3 h-3" /> {flight.baggage}</span>}
           {flight.aircraft && <span className="hidden sm:inline">· Aircraft: {flight.aircraft}</span>}
         </div>
