@@ -416,7 +416,8 @@ router.post('/update-frequent-flyer', authenticate, async (req, res) => {
   }
 });
 
-
+// TTI Diagnostics
+router.post('/tti-diagnostics', authenticate, async (req, res) => {
   try {
     const { getTTIConfig, ttiRequest } = require('./tti-flights');
     const dns = require('dns').promises;
