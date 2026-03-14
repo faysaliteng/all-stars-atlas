@@ -2071,11 +2071,11 @@ const FlightCard = ({
                 ) : (
                   <AnimatedFlightArc compact direction="departure" />
                 )}
-                <p className="text-xs text-muted-foreground font-medium">{duration}</p>
-                <div className="flex items-center gap-2">
-                  <p className={`text-[11px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">{duration}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className={`text-[10px] font-semibold ${stops === 0 ? "text-foreground" : "text-warning"}`}>{stopsLabel}</p>
                   {distanceKm && (
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
                       <MapPin className="w-2.5 h-2.5" /> {distanceKm.toLocaleString()} Km
                     </span>
                   )}
@@ -2084,11 +2084,11 @@ const FlightCard = ({
 
               {/* Arrival */}
               <div className="text-center shrink-0">
-                <p className="text-lg sm:text-2xl font-black tracking-tight flight-time">
+                <p className="text-sm sm:text-base lg:text-lg font-black tracking-tight flight-time">
                   {arriveTime}
-                  {nextDay && <sup className="text-[8px] sm:text-[9px] text-destructive font-bold ml-0.5">+1 days</sup>}
+                  {nextDay && <sup className="text-[7px] sm:text-[8px] text-destructive font-bold ml-0.5">+1 days</sup>}
                 </p>
-                <p className="text-[10px] sm:text-[11px] flight-date mt-0.5">{arriveDateStr}</p>
+                <p className="text-[9px] sm:text-[10px] flight-date mt-0.5">{arriveDateStr}</p>
               </div>
             </div>
 
