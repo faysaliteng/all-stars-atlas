@@ -49,7 +49,6 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
             height: planeSize,
             top: `calc(50% - ${planeSize / 2}px)`,
             left: 0,
-            "--plane-size": `${planeSize}px`,
             animation: "flight-fly 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite",
             willChange: "transform, opacity",
           }}
