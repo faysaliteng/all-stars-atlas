@@ -3508,57 +3508,7 @@ const FlightResults = () => {
       }
       return true;
     });
-    const pairDur = (p: any) => getPairDurationMinutes(p);
-    const pairStops = (p: any) => (Number(p.outbound?.stops) || 0) + (Number(p.returnFlight?.stops) || 0);
-    const pairDepartureTs = (p: any) => (p.outbound?.departureTime ? new Date(p.outbound.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
-
-    if (sortBy === "cheapest") {
-      filtered.sort((a, b) => {
-        const payableDiff = pairPayable(a) - pairPayable(b);
-        if (payableDiff !== 0) return payableDiff;
-
-        const durationDiff = pairDur(a) - pairDur(b);
-        if (durationDiff !== 0) return durationDiff;
-
-        return pairStops(a) - pairStops(b);
-      });
-    } else if (sortBy === "fastest") {
-      filtered.sort((a, b) => {
-        const dA = pairDur(a) || Number.MAX_SAFE_INTEGER;
-        const dB = pairDur(b) || Number.MAX_SAFE_INTEGER;
-        if (dA !== dB) return dA - dB;
-
-        const payableDiff = pairPayable(a) - pairPayable(b);
-        if (payableDiff !== 0) return payableDiff;
-
-        return pairStops(a) - pairStops(b);
-      });
-    } else if (sortBy === "best") {
-      const payables = filtered.map((p) => pairPayable(p));
-      const durations = filtered.map((p) => pairDur(p)).filter((d) => d > 0);
-      const minP = payables.length > 0 ? Math.min(...payables) : 0;
-      const maxP = payables.length > 0 ? Math.max(...payables) : 1;
-      const minD = durations.length > 0 ? Math.min(...durations) : 0;
-      const maxD = durations.length > 0 ? Math.max(...durations) : 1;
-      const priceSpread = maxP - minP || 1;
-      const durSpread = maxD - minD || 1;
-
-      filtered.sort((a, b) => {
-        const durA = pairDur(a) || maxD;
-        const durB = pairDur(b) || maxD;
-        const pA = pairPayable(a);
-        const pB = pairPayable(b);
-        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + pairStops(a) * 0.15;
-        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + pairStops(b) * 0.15;
-        if (scoreA !== scoreB) return scoreA - scoreB;
-
-        return pairDepartureTs(a) - pairDepartureTs(b);
-      });
-    } else if (sortBy === "departure") {
-      filtered.sort((a, b) => pairDepartureTs(a) - pairDepartureTs(b));
-    }
-
-    return filtered;
+    return sortRoundTripPairs(filtered, sortBy);
   }, [roundTripPairs, isRoundTrip, hasDirections, airlineFilter, selectedAirlines, priceRange, stopsFilter, departTimeRange, arrivalTimeRange, refundableOnly, selectedAlliances, durationRange, sortBy, selectedLayoverAirports, layoverDurationRange, selectedBaggage]);
 
   // Quick sort summaries — always from current filtered pool (matches visible result set)
