@@ -896,7 +896,7 @@ function normalizeGroupedResponse(response, params) {
             const pInfo = pax?.passengerInfo || {};
             const cc = pInfo.currencyConversion || {};
             const ptf = pInfo.passengerTotalFare || {};
-            const qty = Math.max(1, parseInt(pInfo.passengerNumber || 1, 10) || 1);
+            const qty = Math.max(1, Math.round(toNumber(pInfo.passengerNumber) || 1));
             const t = firstPositiveNumber(cc.totalPrice, ptf.totalPrice, cc.equivalentAmount, ptf.equivalentAmount);
             const b = firstPositiveNumber(cc.baseFareAmount, ptf.baseFareAmount, cc.baseFare, ptf.baseFare, cc.equivalentBaseFareAmount, ptf.equivalentBaseFareAmount);
             const x = firstPositiveNumber(cc.totalTaxAmount, ptf.totalTaxAmount, cc.taxAmount, ptf.taxAmount);
