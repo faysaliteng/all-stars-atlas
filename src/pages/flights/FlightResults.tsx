@@ -3190,22 +3190,22 @@ const FlightResults = () => {
 
   // Quick sort summaries — Cheapest, Fastest, Best from real data (payable prices)
   const quickSortSummary = useMemo(() => {
+    const pairDur = (p: any) => (Number(p.outbound.durationMinutes) || 0) + (Number(p.returnFlight.durationMinutes) || 0);
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
       const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: pairPayable(p) }));
       const cheapestPair = [...withPayable].sort((a, b) => a.payableTotal - b.payableTotal)[0];
-      const fastestPair = [...withPayable].sort((a, b) => 
-        ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - 
-        ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0))
-      )[0];
-      const minP = Math.min(...withPayable.map(p => p.payableTotal));
-      const maxP = Math.max(...withPayable.map(p => p.payableTotal));
-      const minD = Math.min(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
-      const maxD = Math.max(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
+      const fastestPair = [...withPayable].sort((a, b) => (pairDur(a) || Infinity) - (pairDur(b) || Infinity))[0];
+      const payables = withPayable.map(p => p.payableTotal);
+      const durations = withPayable.map(p => pairDur(p)).filter(d => d > 0);
+      const minP = Math.min(...payables);
+      const maxP = Math.max(...payables);
+      const minD = durations.length > 0 ? Math.min(...durations) : 0;
+      const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
       const bestPair = [...withPayable].sort((a, b) => {
-        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
-        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const durA = pairDur(a) || maxD;
+        const durB = pairDur(b) || maxD;
         const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
         const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
         const sa = ((a.payableTotal - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
