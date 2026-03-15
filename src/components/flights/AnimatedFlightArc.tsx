@@ -52,7 +52,7 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
           }}
         />
 
-        {/* Animated plane — right-facing SVG, flies left → right */}
+        {/* Animated plane — upward-pointing SVG rotated 90° to face right, flies left → right */}
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -65,20 +65,12 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
             marginTop: -(planeSize / 2),
             color: trackColor,
             filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.15))',
-            animation: `flightMoveRight 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite`,
+            animation: `flight-fly 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite`,
           }}
         >
-          {/* Right-facing airplane — no rotation needed */}
           <path
-            d="M22 12l-4-4v3H3v2h15v3z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="0"
-          />
-          <path
-            d="M16 2v2l5 8-5 8v2l8-5v-2l-8 2.5V14l8 2.5v-2L16 9.5V6.5l8 2.5v-2L16 2z"
+            d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
             fill="currentColor"
-            transform="scale(-1,1) translate(-24,0)"
           />
         </svg>
       </div>
