@@ -4083,7 +4083,7 @@ const FlightResults = () => {
                     return (
                       <button
                         key={s.key}
-                        onClick={() => setSortBy(s.key)}
+                        onClick={() => { setSortBy(s.key); setVisibleCount(20); }}
                         className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs whitespace-nowrap transition-all ${
                           isActive
                             ? "bg-card border border-accent shadow-[0_2px_10px_-3px_hsl(var(--accent)/0.3)]"
