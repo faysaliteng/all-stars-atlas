@@ -1,7 +1,7 @@
-# Seven Trip — Complete Backend API Specification (v4.1.0)
+# Seven Trip — Complete Backend API Specification (v4.1.3)
 
 > **Purpose**: This document is the ONLY reference your backend developer needs. It defines every API endpoint, database table, authentication logic, request/response schema, and business rule. The frontend is already 100% built and expects these exact endpoints and response shapes.
-> Last updated: 2026-03-14 (v4.1.0 — Sabre Child/Infant PTC fix + UI overhaul)
+> Last updated: 2026-03-15 (v4.1.3 — Flight UI fixes + TTI Payload Docs)
 
 ---
 

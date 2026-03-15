@@ -1,7 +1,7 @@
 # Seven Trip — GDS Integration History & Troubleshooting
 
 > Complete timeline of all GDS provider integrations, issues encountered, and solutions applied.
-> Last updated: 2026-03-14 (v4.1.0 — Sabre Child/Infant PTC Fix)
+> Last updated: 2026-03-15 (v4.1.3 — Flight UI fixes + TTI Payload Docs)
 
 ---
 

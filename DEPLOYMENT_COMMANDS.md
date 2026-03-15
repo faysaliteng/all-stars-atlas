@@ -1,7 +1,7 @@
 # Seven Trip — Working Deployment Commands
 
 > **Auto-updated** with every change. Copy-paste ready commands for your VPS.
-> Last updated: 2026-03-14 (v4.1.3 — Sabre search recovery hotfix)
+> Last updated: 2026-03-15 (v4.1.3 — Flight UI fixes + TTI Payload Docs)
 
 ---
 
