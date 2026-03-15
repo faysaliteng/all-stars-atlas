@@ -2189,6 +2189,90 @@ function pairPayable(p: { outbound: any; returnFlight: any }): number {
   return flightPayable(p.outbound) + flightPayable(p.returnFlight);
 }
 
+function sortRoundTripPairs(pairs: { outbound: any; returnFlight: any }[], sortBy: string) {
+  const sorted = [...pairs];
+  const pairDur = (p: { outbound: any; returnFlight: any }) => getPairDurationMinutes(p);
+  const pairStops = (p: { outbound: any; returnFlight: any }) => (Number(p.outbound?.stops) || 0) + (Number(p.returnFlight?.stops) || 0);
+  const pairDepartureTs = (p: { outbound: any; returnFlight: any }) => (p.outbound?.departureTime ? new Date(p.outbound.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+  const pairReturnDepartureTs = (p: { outbound: any; returnFlight: any }) => (p.returnFlight?.departureTime ? new Date(p.returnFlight.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+  const pairStableId = (p: { outbound: any; returnFlight: any }) => `${String(p.outbound?.id ?? "")}_${String(p.returnFlight?.id ?? "")}`;
+  const stableOrder = (a: { outbound: any; returnFlight: any }, b: { outbound: any; returnFlight: any }) => {
+    const outboundTsDiff = pairDepartureTs(a) - pairDepartureTs(b);
+    if (outboundTsDiff !== 0) return outboundTsDiff;
+
+    const returnTsDiff = pairReturnDepartureTs(a) - pairReturnDepartureTs(b);
+    if (returnTsDiff !== 0) return returnTsDiff;
+
+    return pairStableId(a).localeCompare(pairStableId(b));
+  };
+
+  if (sortBy === "cheapest") {
+    return sorted.sort((a, b) => {
+      const payableDiff = pairPayable(a) - pairPayable(b);
+      if (payableDiff !== 0) return payableDiff;
+
+      const durationDiff = pairDur(a) - pairDur(b);
+      if (durationDiff !== 0) return durationDiff;
+
+      const stopsDiff = pairStops(a) - pairStops(b);
+      if (stopsDiff !== 0) return stopsDiff;
+
+      return stableOrder(a, b);
+    });
+  }
+
+  if (sortBy === "fastest") {
+    return sorted.sort((a, b) => {
+      const dA = pairDur(a) || Number.MAX_SAFE_INTEGER;
+      const dB = pairDur(b) || Number.MAX_SAFE_INTEGER;
+      if (dA !== dB) return dA - dB;
+
+      const stopsDiff = pairStops(a) - pairStops(b);
+      if (stopsDiff !== 0) return stopsDiff;
+
+      const departureDiff = stableOrder(a, b);
+      if (departureDiff !== 0) return departureDiff;
+
+      return pairPayable(a) - pairPayable(b);
+    });
+  }
+
+  if (sortBy === "departure") {
+    return sorted.sort((a, b) => stableOrder(a, b));
+  }
+
+  // Best = normalized weighted balance: 40% price, 45% duration, 15% stops
+  const payables = sorted.map((p) => pairPayable(p));
+  const durations = sorted.map((p) => pairDur(p)).filter((d) => d > 0);
+  const minP = payables.length > 0 ? Math.min(...payables) : 0;
+  const maxP = payables.length > 0 ? Math.max(...payables) : 1;
+  const minD = durations.length > 0 ? Math.min(...durations) : 0;
+  const maxD = durations.length > 0 ? Math.max(...durations) : 1;
+  const priceSpread = maxP - minP || 1;
+  const durSpread = maxD - minD || 1;
+
+  return sorted.sort((a, b) => {
+    const durA = pairDur(a) || maxD;
+    const durB = pairDur(b) || maxD;
+    const pA = pairPayable(a);
+    const pB = pairPayable(b);
+    const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + pairStops(a) * 0.15;
+    const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + pairStops(b) * 0.15;
+    if (scoreA !== scoreB) return scoreA - scoreB;
+
+    const durationDiff = durA - durB;
+    if (durationDiff !== 0) return durationDiff;
+
+    const payableDiff = pA - pB;
+    if (payableDiff !== 0) return payableDiff;
+
+    const stopsDiff = pairStops(a) - pairStops(b);
+    if (stopsDiff !== 0) return stopsDiff;
+
+    return stableOrder(a, b);
+  });
+}
+
 const FlightCard = ({
   flight, cheapest, isExpanded, onToggleExpand,
   selectionMode = false, isSelected = false, onSelect,
