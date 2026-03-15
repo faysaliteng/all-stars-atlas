@@ -1258,14 +1258,14 @@ router.get('/search', async (req, res) => {
       flights = flights.filter(f => f.airlineCode === preferredCode || f.airline?.toLowerCase().includes(preferredCode.toLowerCase()));
       console.log(`[Search] Preferred airline filter: ${preferredCode} → ${flights.length} results`);
     }
-    if (priceMin) flights = flights.filter(f => f.price >= parseFloat(priceMin));
-    if (priceMax) flights = flights.filter(f => f.price <= parseFloat(priceMax));
+    if (priceMin) flights = flights.filter(f => (toMoney(f.price) || 0) >= parseFloat(priceMin));
+    if (priceMax) flights = flights.filter(f => (toMoney(f.price) || 0) <= parseFloat(priceMax));
 
     // Sort
     switch (sort) {
       case 'cheapest':
       case 'price':
-        flights.sort((a, b) => (a.price || 0) - (b.price || 0));
+        flights.sort((a, b) => (toMoney(a.price) || 0) - (toMoney(b.price) || 0));
         break;
       case 'earliest':
         flights.sort((a, b) => new Date(a.departureTime || 0) - new Date(b.departureTime || 0));
@@ -1276,8 +1276,8 @@ router.get('/search', async (req, res) => {
       case 'best':
       default:
         flights.sort((a, b) => {
-          const scoreA = (a.price || 0) + (a.durationMinutes || 0) * 50;
-          const scoreB = (b.price || 0) + (b.durationMinutes || 0) * 50;
+          const scoreA = (toMoney(a.price) || 0) + (a.durationMinutes || 0) * 50;
+          const scoreB = (toMoney(b.price) || 0) + (b.durationMinutes || 0) * 50;
           return scoreA - scoreB;
         });
         break;
