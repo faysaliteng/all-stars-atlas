@@ -3151,12 +3151,18 @@ const FlightResults = () => {
       rtByAirline[airline].push(f);
     }
 
-    // Cross-product per airline (all available outbound × return options)
+    // Cross-product per airline — capped to prevent combinatorial explosion
+    // Already sorted by price, so top N cheapest per direction are paired first
+    const MAX_PER_AIRLINE = 15; // top 15 outbound × top 15 return = max 225 pairs/airline
+    const MAX_TOTAL_PAIRS = 500; // hard cap on total pairs for browser performance
     for (const airline of Object.keys(obByAirline)) {
-      const obs = obByAirline[airline] || [];
-      const rts = rtByAirline[airline] || [];
+      if (pairs.length >= MAX_TOTAL_PAIRS) break;
+      const obs = (obByAirline[airline] || []).slice(0, MAX_PER_AIRLINE);
+      const rts = (rtByAirline[airline] || []).slice(0, MAX_PER_AIRLINE);
       for (const ob of obs) {
+        if (pairs.length >= MAX_TOTAL_PAIRS) break;
         for (const rf of rts) {
+          if (pairs.length >= MAX_TOTAL_PAIRS) break;
           addPair(ob, rf);
         }
       }
