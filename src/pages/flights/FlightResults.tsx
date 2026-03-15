@@ -1227,35 +1227,42 @@ const RoundTripFlightCard = ({
   return (
     <Card className={`overflow-hidden transition-all border ${isExpanded ? "border-accent/30 shadow-md" : "border-border hover:shadow-md"}`}>
       <CardContent className="p-0">
-        <div className="flex flex-col sm:flex-row min-w-0">
+        <div className="flex flex-col lg:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-2.5 p-3 sm:p-4 sm:w-36 lg:w-40 shrink-0 border-b sm:border-b-0 sm:border-r border-border/50">
+          <div className="flex items-center gap-2.5 p-2.5 sm:p-3 lg:w-36 xl:w-40 shrink-0 border-b lg:border-b-0 lg:border-r border-border/50">
             <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
-                <img src={logo} alt={outbound.airline} className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(outbound.airlineCode || "").toUpperCase()}</span></div>`; }} />
+                <img src={logo} alt={outbound.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center"><span class="text-[10px] font-bold text-muted-foreground">${(outbound.airlineCode || "").toUpperCase()}</span></div>`; }} />
               ) : (
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-muted flex items-center justify-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted flex items-center justify-center">
                   <span className="text-[10px] font-bold text-muted-foreground">{(outbound.airlineCode || "").toUpperCase()}</span>
                 </div>
               )}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-[13px] font-bold leading-tight truncate">{outbound.airline}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold leading-tight truncate">{outbound.airline}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
+            </div>
+            {/* Mobile-only price */}
+            <div className="lg:hidden text-right ml-auto shrink-0">
+              <p className="text-base sm:text-lg font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
+              {grossTotalPrice > totalPrice && (
+                <p className="text-[10px] font-bold text-amber-500 line-through">BDT {grossTotalPrice.toLocaleString()}</p>
+              )}
             </div>
           </div>
 
-          {/* Both legs side by side */}
-          <div className="flex-1 flex flex-col sm:flex-row p-3 sm:p-4 gap-3 sm:gap-3 min-w-0">
+          {/* Both legs — stack on mobile/tablet, side-by-side on lg+ */}
+          <div className="flex-1 flex flex-col md:flex-row p-2.5 sm:p-3 gap-2.5 sm:gap-3 min-w-0">
             <LegMini flight={outbound} label="Departure" labelColor="text-foreground" />
-            <div className="hidden sm:block w-px bg-border/60 self-stretch shrink-0" />
-            <div className="sm:hidden h-px bg-border/60" />
+            <div className="hidden md:block w-px bg-border/60 self-stretch shrink-0" />
+            <div className="md:hidden h-px bg-border/60" />
             <LegMini flight={returnFlight} label="Return" labelColor="text-foreground" />
           </div>
 
-          {/* Price + Airline info */}
-          <div className="flex flex-col items-end justify-center gap-1 p-3 sm:p-4 sm:w-44 lg:w-52 shrink-0 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+          {/* Price + Airline info — hidden on mobile (shown inline above) */}
+          <div className="hidden lg:flex flex-col items-end justify-center gap-1 p-3 lg:w-44 xl:w-52 shrink-0 border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-1.5">
               {totalPrice === cheapest && totalPrice > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
@@ -1268,22 +1275,22 @@ const RoundTripFlightCard = ({
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {logo ? (
-                <img src={logo} alt={outbound.airline} className="w-6 h-6 object-contain hidden sm:block"
+                <img src={logo} alt={outbound.airline} className="w-6 h-6 object-contain"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
               ) : null}
-              <div className="hidden sm:block text-right min-w-0">
+              <div className="text-right min-w-0">
                 <p className="text-[10px] font-bold leading-tight truncate max-w-[70px]">{outbound.airline}</p>
                 <p className="text-[9px] text-muted-foreground truncate">{flightNo}</p>
               </div>
             </div>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
+            <p className="text-lg xl:text-2xl font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
             {grossTotalPrice > totalPrice && (
               <p className="text-[11px] font-bold text-amber-500 line-through">BDT {grossTotalPrice.toLocaleString()}</p>
             )}
             <p className="text-[10px] text-muted-foreground">Price for {parseInt(new URLSearchParams(window.location.search).get("adults") || "1")} traveller{parseInt(new URLSearchParams(window.location.search).get("adults") || "1") > 1 ? "s" : ""}</p>
             <Popover>
               <PopoverTrigger asChild>
-                <button className="text-[11px] sm:text-xs text-accent font-semibold flex items-center gap-1 hover:underline">
+                <button className="text-[11px] text-accent font-semibold flex items-center gap-1 hover:underline">
                   Price Breakdown <ChevronRight className="w-3 h-3" />
                 </button>
               </PopoverTrigger>
@@ -1298,6 +1305,36 @@ const RoundTripFlightCard = ({
               </PopoverContent>
             </Popover>
           </div>
+        </div>
+
+        {/* Mobile/tablet points + price breakdown row */}
+        <div className="lg:hidden flex items-center justify-between px-2.5 sm:px-3 py-1.5 border-t border-border/30 bg-muted/10">
+          <div className="flex items-center gap-1.5">
+            {totalPrice === cheapest && totalPrice > 0 && (
+              <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
+            )}
+            {totalPrice > 0 && (
+              <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300/50 dark:border-amber-700/50 text-[9px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-full">
+                <span className="text-[11px]">🪙</span> +{calcRewardPoints(totalPrice).toLocaleString()} Points
+              </Badge>
+            )}
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="text-[10px] sm:text-[11px] text-accent font-semibold flex items-center gap-1 hover:underline">
+                Price Breakdown <ChevronRight className="w-3 h-3" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="left" className="w-64 p-3">
+              <p className="text-xs font-bold mb-2">Fare Breakdown</p>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between"><span className="text-muted-foreground">Outbound</span><span className="font-medium">BDT {flightPayable(outbound).toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Return</span><span className="font-medium">BDT {flightPayable(returnFlight).toLocaleString()}</span></div>
+                <Separator className="my-1" />
+                <div className="flex justify-between font-bold"><span>Total Payable</span><span>BDT {totalPrice.toLocaleString()}</span></div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Baggage + Seats + Class info row */}
@@ -2704,6 +2741,7 @@ function sortFlights(flights: any[], sortBy: string) {
     if (!payableCache.has(f)) payableCache.set(f, flightPayable(f));
     return payableCache.get(f)!;
   };
+  const getDur = (f: any) => Number(f.durationMinutes) || 0;
   switch (sortBy) {
     case "cheapest": return sorted.sort((a, b) => getPayable(a) - getPayable(b));
     case "earliest": return sorted.sort((a, b) => {
@@ -2711,11 +2749,15 @@ function sortFlights(flights: any[], sortBy: string) {
       const db = b.departureTime ? new Date(b.departureTime).getTime() : Infinity;
       return da - db;
     });
-    case "fastest": return sorted.sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity));
+    case "fastest": return sorted.sort((a, b) => {
+      const dA = getDur(a) || Infinity;
+      const dB = getDur(b) || Infinity;
+      return dA - dB;
+    });
     case "best": default: {
       // Best = normalized weighted balance: 40% price, 45% duration, 15% stops
       const prices = sorted.map(f => getPayable(f));
-      const durations = sorted.map(f => f.durationMinutes || 0).filter(d => d > 0);
+      const durations = sorted.map(f => getDur(f)).filter(d => d > 0);
       const minP = prices.length > 0 ? Math.min(...prices) : 0;
       const maxP = prices.length > 0 ? Math.max(...prices) : 1;
       const minD = durations.length > 0 ? Math.min(...durations) : 0;
@@ -2724,7 +2766,7 @@ function sortFlights(flights: any[], sortBy: string) {
       const durSpread = maxD - minD || 1;
       return sorted.sort((a, b) => {
         const pA = getPayable(a), pB = getPayable(b);
-        const dA = a.durationMinutes || 0, dB = b.durationMinutes || 0;
+        const dA = getDur(a) || maxD, dB = getDur(b) || maxD; // treat missing as worst
         const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((dA - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
         const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((dB - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
         return scoreA - scoreB;
@@ -3148,22 +3190,22 @@ const FlightResults = () => {
 
   // Quick sort summaries — Cheapest, Fastest, Best from real data (payable prices)
   const quickSortSummary = useMemo(() => {
+    const pairDur = (p: any) => (Number(p.outbound.durationMinutes) || 0) + (Number(p.returnFlight.durationMinutes) || 0);
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
       const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: pairPayable(p) }));
       const cheapestPair = [...withPayable].sort((a, b) => a.payableTotal - b.payableTotal)[0];
-      const fastestPair = [...withPayable].sort((a, b) => 
-        ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - 
-        ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0))
-      )[0];
-      const minP = Math.min(...withPayable.map(p => p.payableTotal));
-      const maxP = Math.max(...withPayable.map(p => p.payableTotal));
-      const minD = Math.min(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
-      const maxD = Math.max(...withPayable.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0)));
+      const fastestPair = [...withPayable].sort((a, b) => (pairDur(a) || Infinity) - (pairDur(b) || Infinity))[0];
+      const payables = withPayable.map(p => p.payableTotal);
+      const durations = withPayable.map(p => pairDur(p)).filter(d => d > 0);
+      const minP = Math.min(...payables);
+      const maxP = Math.max(...payables);
+      const minD = durations.length > 0 ? Math.min(...durations) : 0;
+      const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
       const bestPair = [...withPayable].sort((a, b) => {
-        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
-        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const durA = pairDur(a) || maxD;
+        const durB = pairDur(b) || maxD;
         const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
         const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
         const sa = ((a.payableTotal - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
@@ -3327,17 +3369,29 @@ const FlightResults = () => {
       }
       return true;
     });
+    // Helper for pair total duration with explicit Number coercion
+    const pairDur = (p: any) => (Number(p.outbound.durationMinutes) || 0) + (Number(p.returnFlight.durationMinutes) || 0);
+    
     if (sortBy === "cheapest") filtered.sort((a, b) => pairPayable(a) - pairPayable(b));
+    else if (sortBy === "fastest") {
+      filtered.sort((a, b) => {
+        const dA = pairDur(a) || Infinity;
+        const dB = pairDur(b) || Infinity;
+        return dA - dB;
+      });
+    }
     else if (sortBy === "best") {
-      const minP = Math.min(...filtered.map(p => pairPayable(p)));
-      const maxP = Math.max(...filtered.map(p => pairPayable(p)));
-      const minD = Math.min(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || Infinity));
-      const maxD = Math.max(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || 0));
+      const payables = filtered.map(p => pairPayable(p));
+      const durations = filtered.map(p => pairDur(p)).filter(d => d > 0);
+      const minP = payables.length > 0 ? Math.min(...payables) : 0;
+      const maxP = payables.length > 0 ? Math.max(...payables) : 1;
+      const minD = durations.length > 0 ? Math.min(...durations) : 0;
+      const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
       filtered.sort((a, b) => {
-        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
-        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const durA = pairDur(a) || maxD; // treat missing as worst
+        const durB = pairDur(b) || maxD;
         const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
         const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
         const pA = pairPayable(a), pB = pairPayable(b);
@@ -3346,7 +3400,6 @@ const FlightResults = () => {
         return scoreA - scoreB;
       });
     }
-    else if (sortBy === "fastest") filtered.sort((a, b) => ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)));
     else if (sortBy === "departure") filtered.sort((a, b) => new Date(a.outbound.departureTime).getTime() - new Date(b.outbound.departureTime).getTime());
     return filtered;
   }, [roundTripPairs, isRoundTrip, hasDirections, airlineFilter, selectedAirlines, priceRange, stopsFilter, departTimeRange, arrivalTimeRange, refundableOnly, selectedAlliances, durationRange, sortBy, selectedLayoverAirports, layoverDurationRange, selectedBaggage]);
