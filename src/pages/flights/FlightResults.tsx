@@ -258,7 +258,7 @@ const FilterPanel = ({
   // Compute all stats from real flight data
   const popularFilterStats = useMemo(() => {
     const stats: { key: string; label: string; count: number; cheapest: number }[] = [];
-    const cheapestOf = (arr: any[]) => arr.length > 0 ? Math.min(...arr.map((f: any) => f.price || Infinity)) : 0;
+    const cheapestOf = (arr: any[]) => arr.length > 0 ? Math.min(...arr.map((f: any) => flightPayable(f) || Infinity)) : 0;
     const nonStop = flights.filter((f: any) => (f.stops ?? 0) === 0);
     const oneStop = flights.filter((f: any) => (f.stops ?? 0) === 1);
     const multiStop = flights.filter((f: any) => (f.stops ?? 0) > 1);
