@@ -350,7 +350,8 @@ const FilterPanel = ({
       const name = f.airline || ''; const code = f.airlineCode || ''; if (!name) continue;
       if (!map[name]) map[name] = { name, code, count: 0, cheapest: Infinity };
       map[name].count++;
-      if ((f.price || Infinity) < map[name].cheapest) map[name].cheapest = f.price;
+      const payable = flightPayable(f);
+      if (payable < map[name].cheapest) map[name].cheapest = payable;
     }
     return Object.values(map).sort((a, b) => a.cheapest - b.cheapest);
   }, [flights]);
