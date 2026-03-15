@@ -67,6 +67,63 @@ function fmtDurationMins(mins: number): string {
   return `${h}h ${m}m`;
 }
 
+function parseDurationToMinutes(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) return Math.round(value);
+  if (typeof value !== "string") return 0;
+
+  const text = value.trim();
+  if (!text) return 0;
+
+  const hoursMatch = text.match(/(\d+)\s*h/i);
+  const minsMatch = text.match(/(\d+)\s*m/i);
+  if (hoursMatch || minsMatch) {
+    const hours = Number(hoursMatch?.[1] || 0);
+    const mins = Number(minsMatch?.[1] || 0);
+    const total = hours * 60 + mins;
+    if (total > 0) return total;
+  }
+
+  const clockMatch = text.match(/^(\d{1,2}):(\d{2})$/);
+  if (clockMatch) {
+    const hours = Number(clockMatch[1]);
+    const mins = Number(clockMatch[2]);
+    const total = hours * 60 + mins;
+    if (total > 0) return total;
+  }
+
+  const numeric = Number(text.replace(/[^\d.-]/g, ""));
+  return Number.isFinite(numeric) && numeric > 0 ? Math.round(numeric) : 0;
+}
+
+function getFlightDurationMinutes(flight: any): number {
+  const direct = [flight?.durationMinutes, flight?.durationMins, flight?.totalDurationMinutes]
+    .map((v) => Number(v))
+    .find((v) => Number.isFinite(v) && v > 0);
+  if (direct) return Math.round(direct);
+
+  const textDuration = [flight?.duration, flight?.totalDuration, flight?.elapsedTime]
+    .map(parseDurationToMinutes)
+    .find((v) => v > 0);
+  if (textDuration) return textDuration;
+
+  const legs = Array.isArray(flight?.legs) ? flight.legs : [];
+  if (legs.length > 0) {
+    const firstDep = legs[0]?.departureTime ? new Date(legs[0].departureTime).getTime() : 0;
+    const lastArr = legs[legs.length - 1]?.arrivalTime ? new Date(legs[legs.length - 1].arrivalTime).getTime() : 0;
+    if (firstDep > 0 && lastArr > firstDep) {
+      return Math.round((lastArr - firstDep) / 60000);
+    }
+  }
+
+  const dep = flight?.departureTime ? new Date(flight.departureTime).getTime() : 0;
+  const arr = flight?.arrivalTime ? new Date(flight.arrivalTime).getTime() : 0;
+  return dep > 0 && arr > dep ? Math.round((arr - dep) / 60000) : 0;
+}
+
+function getPairDurationMinutes(pair: { outbound: any; returnFlight: any }): number {
+  return getFlightDurationMinutes(pair.outbound) + getFlightDurationMinutes(pair.returnFlight);
+}
+
 /* ─── Per-airline fare calculation helper ─── */
 function getAirlineFareParams(
   airlineCode: string,
