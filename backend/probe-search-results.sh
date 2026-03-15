@@ -45,7 +45,7 @@ search_flights() {
   local from="$1" to="$2" date="$3" ret="$4" adults="${5:-1}" cabin="${6:-economy}"
   local url="$API_BASE/flights/search?from=$from&to=$to&date=$date&adults=$adults&cabinClass=$cabin"
   [ -n "$ret" ] && url="$url&return=$ret"
-  curl -s --max-time 120 "$url" 2>/dev/null
+  curl -s --compressed --max-time 120 "$url" 2>/dev/null
 }
 
 count_flights() {
