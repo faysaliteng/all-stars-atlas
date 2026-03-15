@@ -4,11 +4,10 @@
 
 ---
 
-## 🔧 Hotfix Notes (v4.1.3)
+## 🔧 Hotfix Notes (v4.1.4)
 
-- Restored missing `getResponseStats` and `normalizeParams` helpers inside `searchFlights()` in `backend/src/routes/sabre-flights.js` after emergency syntax cleanups.
-- Fixed fallback flow to use direct `sabreRequest(...)` JSON response and avoid undefined decoder references.
-- Outcome: `/api/flights/search` no longer short-circuits fallback attempts due runtime reference errors.
+- **Quick-Sort Filters**: Cheapest/Fastest/Best top chips now re-sort flight results correctly using `sortRoundTripPairs()` for round-trips and `sortFlights()` for one-way, with deterministic tie-breakers and payable-fare-based pricing.
+- **v4.1.3**: Restored missing `getResponseStats` and `normalizeParams` helpers in `backend/src/routes/sabre-flights.js`; fixed fallback JSON decoding.
 
 ## Table of Contents
 

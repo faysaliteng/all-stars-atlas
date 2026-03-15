@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [4.1.4] — 2026-03-15 — Quick-Sort Filters Fix (Cheapest/Fastest/Best)
+
+### Fixed — Quick-Sort Filters
+- **Cheapest/Fastest/Best** top filter chips now correctly re-sort the flight list on click
+- Sorting uses `pairPayable()` (Base Fare − Discount + Tax + AIT VAT) for price consistency with displayed card prices
+- Round-trip pairs sorted via dedicated `sortRoundTripPairs()` with total journey duration (outbound + return)
+- Deterministic tie-breakers: departure timestamp → stable flight ID to prevent identical-metric flickering
+- "Best" algorithm uses weighted score: 40% price spread, 45% duration spread, 15% stops
+- `quickSortSummary` chips now compute from `filteredPairs`/`filteredAll` so values update with active filters
+
+---
+
 ## [4.1.3] — 2026-03-15 — Flight UI Fixes + TTI Payload Docs + Documentation Overhaul
 
 ### Added — TTI/Air Astra Payload Reference
