@@ -19,8 +19,9 @@
 | **Full Endpoint Coverage** | v3.9.8–v3.9.9.9 | Mar 13, 2026 | 1 day | Post-booking ancillaries, price revalidation, REST seat map, ticket status, ticketing v1.3.0, passport DOCS SSR, DOCS strict mode, airline PNR from CreatePNR, cancel hardening + Host TA recovery |
 | **Complete Sabre GDS** | v4.0.0 | Mar 14, 2026 | 1 day | All 26 Sabre sections: void, refund, exchange, fare rules, FLIFO, stateless ancillaries, EMD, FF update |
 | **UI/UX Overhaul** | v4.1.0 | Mar 14, 2026 | 1 day | SearchWidget props refactor, compact pill bar, AnimatedFlightArc redesign, Sabre child/infant PTC fix, session timeout redirect |
+| **Documentation & Fixes** | v4.1.3 | Mar 15, 2026 | 1 day | Flight sorting/filter/responsiveness fixes, TTI payload docs, 20+ .md version bump |
 
-**Total Development Time:** ~19 days (Mar 1–14, 2026)
+**Total Development Time:** ~20 days (Mar 1–15, 2026)
 
 ---
 
