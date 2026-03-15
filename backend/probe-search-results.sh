@@ -92,6 +92,11 @@ analyze_prices() {
     ) | "      ⛔ \(.airlineCode // "??") \(.airline // "Unknown") | flight: \(.flightNumber // "?") | price=\(.price // 0) totalPrice=\(.totalPrice // 0) grossPrice=\(.grossPrice // 0) amount=\(.amount // 0) total=\(.total // 0) publishedFare=\(.publishedFare // 0)"' 2>/dev/null | head -10
   else
     echo -e "   ${GREEN}✅${NC} $label — ${BOLD}$count flights${NC} ($sources) | All have valid prices"
+    # Show provider source counts
+    echo "$json" | jq -r '
+      if .sources then "      Sources: " + (.sources | to_entries | map(select(.value > 0) | "\(.key)=\(.value)") | join(", "))
+      else empty end
+    ' 2>/dev/null
     PASS=$((PASS + 1))
   fi
 
