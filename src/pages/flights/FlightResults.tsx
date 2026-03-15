@@ -2865,6 +2865,12 @@ function sortFlights(flights: any[], sortBy: string) {
   const getDur = (f: any) => getFlightDurationMinutes(f);
   const getStops = (f: any) => Number(f?.stops) || 0;
   const getDepartureTs = (f: any) => (f?.departureTime ? new Date(f.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+  const getStableId = (f: any) => String(f?.id ?? "");
+  const stableOrder = (a: any, b: any) => {
+    const departureDiff = getDepartureTs(a) - getDepartureTs(b);
+    if (departureDiff !== 0) return departureDiff;
+    return getStableId(a).localeCompare(getStableId(b));
+  };
 
   switch (sortBy) {
     case "cheapest":
@@ -2878,11 +2884,12 @@ function sortFlights(flights: any[], sortBy: string) {
         const stopDiff = getStops(a) - getStops(b);
         if (stopDiff !== 0) return stopDiff;
 
-        return getDepartureTs(a) - getDepartureTs(b);
+        return stableOrder(a, b);
       });
 
     case "earliest":
-      return sorted.sort((a, b) => getDepartureTs(a) - getDepartureTs(b));
+    case "departure":
+      return sorted.sort((a, b) => stableOrder(a, b));
 
     case "fastest":
       return sorted.sort((a, b) => {
@@ -2890,10 +2897,13 @@ function sortFlights(flights: any[], sortBy: string) {
         const dB = getDur(b) || Number.MAX_SAFE_INTEGER;
         if (dA !== dB) return dA - dB;
 
-        const payableDiff = getPayable(a) - getPayable(b);
-        if (payableDiff !== 0) return payableDiff;
+        const stopDiff = getStops(a) - getStops(b);
+        if (stopDiff !== 0) return stopDiff;
 
-        return getStops(a) - getStops(b);
+        const departureDiff = stableOrder(a, b);
+        if (departureDiff !== 0) return departureDiff;
+
+        return getPayable(a) - getPayable(b);
       });
 
     case "best":
@@ -2917,7 +2927,16 @@ function sortFlights(flights: any[], sortBy: string) {
         const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((dB - minD) / durSpread) * 0.45 + getStops(b) * 0.15;
         if (scoreA !== scoreB) return scoreA - scoreB;
 
-        return getDepartureTs(a) - getDepartureTs(b);
+        const durationDiff = dA - dB;
+        if (durationDiff !== 0) return durationDiff;
+
+        const payableDiff = pA - pB;
+        if (payableDiff !== 0) return payableDiff;
+
+        const stopDiff = getStops(a) - getStops(b);
+        if (stopDiff !== 0) return stopDiff;
+
+        return stableOrder(a, b);
       });
     }
   }
