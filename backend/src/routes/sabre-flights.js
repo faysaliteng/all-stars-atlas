@@ -760,7 +760,7 @@ function normalizeGroupedResponse(response, params) {
         const pInfo = pax?.passengerInfo || {};
         const cc = pInfo.currencyConversion || {};
         const ptf = pInfo.passengerTotalFare || {};
-        const qty = Math.max(1, parseInt(pInfo.passengerNumber || 1, 10) || 1);
+        const qty = Math.max(1, Math.round(toNumber(pInfo.passengerNumber) || 1));
 
         const paxTotal = firstPositiveNumber(
           cc.totalPrice,
