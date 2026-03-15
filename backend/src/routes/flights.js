@@ -914,16 +914,136 @@ router.get('/search', async (req, res) => {
     // Deduplicate by itinerary key, but PRESERVE fare variants and prefer richer data (Sabre booking class/seats)
     const itineraryMap = new Map();
 
+    const toMoney = (value) => {
+      if (value === null || value === undefined || value === '') return NaN;
+      if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+      if (typeof value === 'string') {
+        const cleaned = value.replace(/,/g, '').replace(/\s+/g, '').replace(/[^\d.-]/g, '');
+        if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return NaN;
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : NaN;
+      }
+      if (typeof value === 'object') {
+        const candidates = [
+          value.amount,
+          value.value,
+          value.total,
+          value.totalAmount,
+          value.totalPrice,
+          value.equivalentAmount,
+          value.equivalentPrice,
+          value.baseFare,
+          value.baseFareAmount,
+          value.tax,
+          value.taxAmount,
+          value.totalTaxAmount,
+        ];
+        for (const c of candidates) {
+          const n = toMoney(c);
+          if (Number.isFinite(n)) return n;
+        }
+      }
+      return NaN;
+    };
+
+    const pickPositiveMoney = (...values) => {
+      for (const v of values) {
+        const n = toMoney(v);
+        if (Number.isFinite(n) && n > 0) return n;
+      }
+      return 0;
+    };
+
+    const computeFareSnapshot = (flight, detail = null) => {
+      const d = detail || {};
+
+      let price = pickPositiveMoney(
+        d.price,
+        d.totalPrice,
+        d.grossPrice,
+        d.amount,
+        d.total,
+        d.publishedFare,
+        flight.price,
+        flight.totalPrice,
+        flight.totalRoundTripPrice,
+        flight.grossPrice,
+        flight.amount,
+        flight.total,
+        flight.publishedFare,
+        flight.fareTotal,
+      );
+
+      let taxes = pickPositiveMoney(
+        d.taxes,
+        d.tax,
+        d.taxAmount,
+        d.totalTaxAmount,
+        flight.taxes,
+        flight.tax,
+        flight.taxAmount,
+        flight.totalTaxAmount,
+      );
+
+      let baseFare = pickPositiveMoney(
+        d.baseFare,
+        d.baseAmount,
+        d.equivalentBaseFareAmount,
+        flight.baseFare,
+        flight.baseAmount,
+      );
+
+      if ((price <= 0 || taxes <= 0) && Array.isArray(flight.paxPricing) && flight.paxPricing.length > 0) {
+        const paxTotal = flight.paxPricing.reduce((sum, p) => {
+          const count = Math.max(1, Math.round(toMoney(p?.count) || 1));
+          const pt = pickPositiveMoney(p?.total, p?.price, p?.grossPrice, p?.amount, p?.totalPrice);
+          return sum + (pt * count);
+        }, 0);
+        const paxTax = flight.paxPricing.reduce((sum, p) => {
+          const count = Math.max(1, Math.round(toMoney(p?.count) || 1));
+          const tx = pickPositiveMoney(p?.taxes, p?.tax, p?.taxAmount, p?.totalTaxAmount);
+          return sum + (tx * count);
+        }, 0);
+        if (price <= 0 && paxTotal > 0) price = paxTotal;
+        if (taxes <= 0 && paxTax > 0) taxes = paxTax;
+      }
+
+      if (price <= 0 && Array.isArray(flight.segments) && flight.segments.length > 0) {
+        const segTotal = flight.segments.reduce((sum, seg) => sum + pickPositiveMoney(seg?.price, seg?.totalPrice, seg?.grossPrice, seg?.amount, seg?.total), 0);
+        const segTax = flight.segments.reduce((sum, seg) => sum + pickPositiveMoney(seg?.taxes, seg?.tax, seg?.taxAmount, seg?.totalTaxAmount), 0);
+        if (segTotal > 0) {
+          price = segTotal;
+          if (taxes <= 0 && segTax > 0) taxes = segTax;
+        }
+      }
+
+      if (price <= 0 && Array.isArray(flight.fareDetails) && flight.fareDetails.length > 0) {
+        const fdPrices = flight.fareDetails
+          .map((fd) => pickPositiveMoney(fd?.price, fd?.totalPrice, fd?.grossPrice, fd?.amount, fd?.total, fd?.publishedFare))
+          .filter((n) => n > 0)
+          .sort((a, b) => a - b);
+        if (fdPrices.length > 0) price = fdPrices[0];
+      }
+
+      if (baseFare <= 0 && price > 0 && taxes > 0 && price >= taxes) baseFare = price - taxes;
+      if (taxes <= 0 && price > 0 && baseFare > 0 && price >= baseFare) taxes = price - baseFare;
+      if (price <= 0 && baseFare > 0) price = baseFare + Math.max(0, taxes);
+      if (taxes > price && price > 0) taxes = Math.max(0, price);
+
+      return { price, baseFare, taxes };
+    };
+
     const toFareOption = (flight, detail = null) => {
       const d = detail || {};
+      const fare = computeFareSnapshot(flight, d);
       return {
         fareBasis: d.fareBasis || flight.fareBasis || '',
         bookingClass: d.bookingClass || flight.bookingClass || '',
         cabinClass: d.cabinClass || flight.cabinClass || '',
         availableSeats: d.availableSeats ?? flight.availableSeats ?? null,
-        price: Number(d.price ?? flight.price ?? 0),
-        baseFare: Number(d.baseFare ?? flight.baseFare ?? 0),
-        taxes: Number(d.taxes ?? flight.taxes ?? 0),
+        price: fare.price,
+        baseFare: fare.baseFare,
+        taxes: fare.taxes,
         currency: d.currency || flight.currency || 'BDT',
         baggage: d.baggage ?? flight.baggage ?? null,
         handBaggage: d.handBaggage ?? flight.handBaggage ?? null,
