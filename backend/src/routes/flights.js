@@ -1089,6 +1089,13 @@ router.get('/search', async (req, res) => {
     };
 
     for (const f of flights) {
+      const normalizedTopFare = computeFareSnapshot(f);
+      if (normalizedTopFare.price > 0) {
+        f.price = normalizedTopFare.price;
+        if ((toMoney(f.baseFare) || 0) <= 0) f.baseFare = normalizedTopFare.baseFare;
+        if ((toMoney(f.taxes) || 0) <= 0) f.taxes = normalizedTopFare.taxes;
+      }
+
       const legsKey = (f.legs || []).map(l => `${l.flightNumber || ''}@${l.departureTime || ''}`).join('|');
       const stopKey = (f.stopCodes || []).join(',');
       const baseKey = `${f.source || ''}-${f.airlineCode || ''}-${f._itineraryId || ''}-${f.flightNumber || ''}-${f.origin || ''}-${f.destination || ''}-${f.departureTime || ''}-${f.arrivalTime || ''}-${f.stops ?? 0}-${stopKey}-${f.direction || ''}-${legsKey}`;
