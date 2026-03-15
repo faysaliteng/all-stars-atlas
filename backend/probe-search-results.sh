@@ -76,7 +76,7 @@ analyze_prices() {
   )] | length' 2>/dev/null)
   [ "$zero_count" = "null" ] && zero_count=0
 
-  local sources=$(echo "$json" | jq -r '[.flights[].source // "unknown"] | unique | join(", ")' 2>/dev/null)
+  local sources=$(echo "$json" | jq -r '[(.data // .flights // [])[].source // "unknown"] | unique | join(", ")' 2>/dev/null)
 
   if [ "$zero_count" -gt 0 ]; then
     echo -e "   ${RED}❌${NC} $label — ${BOLD}$count flights${NC} ($sources) | ${RED}$zero_count with BDT 0${NC}"
