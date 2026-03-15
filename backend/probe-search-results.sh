@@ -49,7 +49,7 @@ search_flights() {
 }
 
 count_flights() {
-  echo "$1" | jq -r '.flights | length' 2>/dev/null || echo "0"
+  echo "$1" | jq -r '(.data // .flights // []) | length' 2>/dev/null || echo "0"
 }
 
 # Extract per-airline price breakdown from search results
