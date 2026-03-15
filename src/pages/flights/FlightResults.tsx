@@ -258,7 +258,7 @@ const FilterPanel = ({
   // Compute all stats from real flight data
   const popularFilterStats = useMemo(() => {
     const stats: { key: string; label: string; count: number; cheapest: number }[] = [];
-    const cheapestOf = (arr: any[]) => arr.length > 0 ? Math.min(...arr.map((f: any) => f.price || Infinity)) : 0;
+    const cheapestOf = (arr: any[]) => arr.length > 0 ? Math.min(...arr.map((f: any) => flightPayable(f) || Infinity)) : 0;
     const nonStop = flights.filter((f: any) => (f.stops ?? 0) === 0);
     const oneStop = flights.filter((f: any) => (f.stops ?? 0) === 1);
     const multiStop = flights.filter((f: any) => (f.stops ?? 0) > 1);
@@ -296,8 +296,8 @@ const FilterPanel = ({
     for (const slot of slots) {
       const df = flights.filter((f: any) => { const h = getApiLocalHour(f.departureTime); return h !== null && h >= slot.minH && h < slot.maxH; });
       const af = flights.filter((f: any) => { const h = getApiLocalHour(f.arrivalTime); return h !== null && h >= slot.minH && h < slot.maxH; });
-      if (df.length > 0) depart.push({ ...slot, count: df.length, cheapest: Math.min(...df.map((f: any) => f.price || Infinity)) });
-      if (af.length > 0) arrive.push({ ...slot, count: af.length, cheapest: Math.min(...af.map((f: any) => f.price || Infinity)) });
+      if (df.length > 0) depart.push({ ...slot, count: df.length, cheapest: Math.min(...df.map((f: any) => flightPayable(f) || Infinity)) });
+      if (af.length > 0) arrive.push({ ...slot, count: af.length, cheapest: Math.min(...af.map((f: any) => flightPayable(f) || Infinity)) });
     }
     return { depart, arrive };
   }, [flights]);
@@ -310,7 +310,8 @@ const FilterPanel = ({
         if (!code) continue;
         if (!map[code]) map[code] = { code, name: getAirportName(code), count: 0, cheapest: Infinity };
         map[code].count++;
-        if ((f.price || Infinity) < map[code].cheapest) map[code].cheapest = f.price;
+        const payable = flightPayable(f);
+        if (payable < map[code].cheapest) map[code].cheapest = payable;
       }
     }
     return Object.values(map).sort((a, b) => b.count - a.count);
@@ -349,7 +350,8 @@ const FilterPanel = ({
       const name = f.airline || ''; const code = f.airlineCode || ''; if (!name) continue;
       if (!map[name]) map[name] = { name, code, count: 0, cheapest: Infinity };
       map[name].count++;
-      if ((f.price || Infinity) < map[name].cheapest) map[name].cheapest = f.price;
+      const payable = flightPayable(f);
+      if (payable < map[name].cheapest) map[name].cheapest = payable;
     }
     return Object.values(map).sort((a, b) => a.cheapest - b.cheapest);
   }, [flights]);
@@ -3209,19 +3211,15 @@ const FlightResults = () => {
         if (stopsFilter === "1" && stops !== 1) return false;
         if (stopsFilter === "2+" && stops < 2) return false;
       }
-      // Departure time
+      // Departure time — use getApiLocalHour for airport-local consistency
       if (departTimeRange[0] !== 0 || departTimeRange[1] !== 24) {
-        if (f.departureTime) {
-          const hour = new Date(f.departureTime).getHours();
-          if (hour < departTimeRange[0] || hour >= departTimeRange[1]) return false;
-        }
+        const hour = getApiLocalHour(f.departureTime);
+        if (hour !== null && (hour < departTimeRange[0] || hour >= departTimeRange[1])) return false;
       }
-      // Arrival time
+      // Arrival time — use getApiLocalHour for airport-local consistency
       if (arrivalTimeRange[0] !== 0 || arrivalTimeRange[1] !== 24) {
-        if (f.arrivalTime) {
-          const hour = new Date(f.arrivalTime).getHours();
-          if (hour < arrivalTimeRange[0] || hour >= arrivalTimeRange[1]) return false;
-        }
+        const hour = getApiLocalHour(f.arrivalTime);
+        if (hour !== null && (hour < arrivalTimeRange[0] || hour >= arrivalTimeRange[1])) return false;
       }
       // Refundable only
       if (refundableOnly && !f.refundable) return false;
@@ -3282,16 +3280,12 @@ const FlightResults = () => {
         if (stopsFilter === "2+" && stops < 2) return false;
       }
       if (departTimeRange[0] !== 0 || departTimeRange[1] !== 24) {
-        if (p.outbound.departureTime) {
-          const hour = new Date(p.outbound.departureTime).getHours();
-          if (hour < departTimeRange[0] || hour >= departTimeRange[1]) return false;
-        }
+        const hour = getApiLocalHour(p.outbound.departureTime);
+        if (hour !== null && (hour < departTimeRange[0] || hour >= departTimeRange[1])) return false;
       }
       if (arrivalTimeRange[0] !== 0 || arrivalTimeRange[1] !== 24) {
-        if (p.outbound.arrivalTime) {
-          const h = new Date(p.outbound.arrivalTime).getHours();
-          if (h < arrivalTimeRange[0] || h >= arrivalTimeRange[1]) return false;
-        }
+        const h = getApiLocalHour(p.outbound.arrivalTime);
+        if (h !== null && (h < arrivalTimeRange[0] || h >= arrivalTimeRange[1])) return false;
       }
       if (refundableOnly && !p.outbound.refundable) return false;
       if (selectedAlliances.length > 0) {
