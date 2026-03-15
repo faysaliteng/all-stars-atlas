@@ -55,7 +55,7 @@ count_flights() {
 # Extract per-airline price breakdown from search results
 analyze_prices() {
   local json="$1" label="$2" test_num="$3"
-  local count=$(echo "$json" | jq -r '.flights | length' 2>/dev/null)
+  local count=$(echo "$json" | jq -r '(.data // .flights // []) | length' 2>/dev/null)
   [ "$count" = "null" ] && count=0
 
   if [ "$count" -eq 0 ]; then
