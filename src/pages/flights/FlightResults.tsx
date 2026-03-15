@@ -1140,14 +1140,17 @@ const LegMini = ({ flight, label, labelColor }: { flight: any; label: string; la
   return (
     <div className="flex-1 min-w-0">
       {/* Route label badge */}
-      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2.5 text-[10px] sm:text-xs font-bold shadow-sm ${
+      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md mb-3 text-[11px] font-bold ${
         isReturn 
-          ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/30" 
-          : "bg-accent/15 text-accent border border-accent/30"
+          ? "bg-amber-50/80 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300" 
+          : "bg-accent/10 dark:bg-accent/20 text-accent"
       }`}>
         <Plane className={`w-3.5 h-3.5 ${isReturn ? "rotate-180" : ""}`} />
-        <span>{isReturn ? "RETURN" : "DEPARTURE"}: {fromCode} → {toCode}</span>
-        <span className="flight-date text-[10px] ml-0.5">• {formatShortDate(flight.departureTime)}</span>
+        <span>{isReturn ? "RETURN" : "DEPARTURE"}</span>
+        <span className={isReturn ? "text-amber-300 dark:text-amber-600 font-normal" : "text-accent/40 font-normal"}>|</span>
+        <span>{fromCode} → {toCode}</span>
+        <span className={isReturn ? "text-amber-300 dark:text-amber-600 font-normal" : "text-accent/40 font-normal"}>|</span>
+        <span className="flight-date">{formatShortDate(flight.departureTime)}</span>
       </div>
 
       {/* Time + Arc row */}
