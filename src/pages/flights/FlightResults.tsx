@@ -3426,7 +3426,7 @@ const FlightResults = () => {
         if (!alliance || !selectedAlliances.includes(alliance)) return false;
       }
       if (durationRange[0] > 0 || durationRange[1] < 5000) {
-        const dur = p.outbound.durationMinutes || 0;
+        const dur = getFlightDurationMinutes(p.outbound);
         if (dur > 0 && (dur < durationRange[0] || dur > durationRange[1])) return false;
       }
       // Layover airports filter
