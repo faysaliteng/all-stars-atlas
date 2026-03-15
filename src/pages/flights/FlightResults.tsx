@@ -2792,41 +2792,67 @@ const SORT_OPTIONS = [
 
 function sortFlights(flights: any[], sortBy: string) {
   const sorted = [...flights];
-  // Pre-compute payable prices for consistent sorting (avoid re-calc per comparison)
   const payableCache = new Map<any, number>();
   const getPayable = (f: any) => {
     if (!payableCache.has(f)) payableCache.set(f, flightPayable(f));
     return payableCache.get(f)!;
   };
-  const getDur = (f: any) => Number(f.durationMinutes) || 0;
+  const getDur = (f: any) => getFlightDurationMinutes(f);
+  const getStops = (f: any) => Number(f?.stops) || 0;
+  const getDepartureTs = (f: any) => (f?.departureTime ? new Date(f.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+
   switch (sortBy) {
-    case "cheapest": return sorted.sort((a, b) => getPayable(a) - getPayable(b));
-    case "earliest": return sorted.sort((a, b) => {
-      const da = a.departureTime ? new Date(a.departureTime).getTime() : Infinity;
-      const db = b.departureTime ? new Date(b.departureTime).getTime() : Infinity;
-      return da - db;
-    });
-    case "fastest": return sorted.sort((a, b) => {
-      const dA = getDur(a) || Infinity;
-      const dB = getDur(b) || Infinity;
-      return dA - dB;
-    });
-    case "best": default: {
+    case "cheapest":
+      return sorted.sort((a, b) => {
+        const payableDiff = getPayable(a) - getPayable(b);
+        if (payableDiff !== 0) return payableDiff;
+
+        const durationDiff = getDur(a) - getDur(b);
+        if (durationDiff !== 0) return durationDiff;
+
+        const stopDiff = getStops(a) - getStops(b);
+        if (stopDiff !== 0) return stopDiff;
+
+        return getDepartureTs(a) - getDepartureTs(b);
+      });
+
+    case "earliest":
+      return sorted.sort((a, b) => getDepartureTs(a) - getDepartureTs(b));
+
+    case "fastest":
+      return sorted.sort((a, b) => {
+        const dA = getDur(a) || Number.MAX_SAFE_INTEGER;
+        const dB = getDur(b) || Number.MAX_SAFE_INTEGER;
+        if (dA !== dB) return dA - dB;
+
+        const payableDiff = getPayable(a) - getPayable(b);
+        if (payableDiff !== 0) return payableDiff;
+
+        return getStops(a) - getStops(b);
+      });
+
+    case "best":
+    default: {
       // Best = normalized weighted balance: 40% price, 45% duration, 15% stops
-      const prices = sorted.map(f => getPayable(f));
-      const durations = sorted.map(f => getDur(f)).filter(d => d > 0);
+      const prices = sorted.map((f) => getPayable(f));
+      const durations = sorted.map((f) => getDur(f)).filter((d) => d > 0);
       const minP = prices.length > 0 ? Math.min(...prices) : 0;
       const maxP = prices.length > 0 ? Math.max(...prices) : 1;
       const minD = durations.length > 0 ? Math.min(...durations) : 0;
       const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
+
       return sorted.sort((a, b) => {
-        const pA = getPayable(a), pB = getPayable(b);
-        const dA = getDur(a) || maxD, dB = getDur(b) || maxD; // treat missing as worst
-        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((dA - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
-        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((dB - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
-        return scoreA - scoreB;
+        const pA = getPayable(a);
+        const pB = getPayable(b);
+        const dA = getDur(a) || maxD;
+        const dB = getDur(b) || maxD;
+        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((dA - minD) / durSpread) * 0.45 + getStops(a) * 0.15;
+        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((dB - minD) / durSpread) * 0.45 + getStops(b) * 0.15;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+
+        return getDepartureTs(a) - getDepartureTs(b);
       });
     }
   }
