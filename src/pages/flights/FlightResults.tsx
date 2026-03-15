@@ -2740,7 +2740,7 @@ function groupSimilarFlights(flights: any[]): { primary: any; similar: any[]; to
     groups[key].push(f);
   }
   return Object.values(groups).map(g => {
-    const sorted = g.sort((a, b) => (a.price || 0) - (b.price || 0));
+    const sorted = g.sort((a, b) => flightPayable(a) - flightPayable(b));
     return { primary: sorted[0], similar: sorted.slice(1), totalOptions: sorted.length };
   });
 }
