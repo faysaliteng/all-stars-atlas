@@ -11,16 +11,16 @@
 
 /* Flight path plane animation */
 @keyframes flight-fly {
-  0% { left: 0%; transform: rotate(90deg); opacity: 0; }
+  0% { transform: translateX(0) rotate(90deg); opacity: 0; }
   10% { opacity: 1; }
   90% { opacity: 1; }
-  100% { left: calc(100% - 22px); transform: rotate(90deg); opacity: 0; }
+  100% { transform: translateX(calc(100% - var(--plane-size, 22px))) rotate(90deg); opacity: 0; }
 }
 @keyframes flight-fly-reverse {
-  0% { right: 0%; left: auto; transform: rotate(-90deg); opacity: 0; }
+  0% { transform: translateX(calc(100% - var(--plane-size, 22px))) rotate(-90deg); opacity: 0; }
   10% { opacity: 1; }
   90% { opacity: 1; }
-  100% { right: calc(100% - 22px); left: auto; transform: rotate(-90deg); opacity: 0; }
+  100% { transform: translateX(0) rotate(-90deg); opacity: 0; }
 }
 
 @keyframes shake {
