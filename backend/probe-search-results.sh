@@ -279,7 +279,7 @@ echo "════════════════════════�
 echo -e "\n${CYAN}── Deep audit: Every flight's raw price fields${NC}"
 R=$(search_flights DAC DXB "$D3")
 echo "$R" | jq -r '
-  .flights[] |
+  (.data // .flights // [])[] |
   "\(.airlineCode)\t\(.flightNumber // "?")\t\(.source // "?")\tprice=\(.price // "null")\ttotalPrice=\(.totalPrice // "null")\tgrossPrice=\(.grossPrice // "null")\tamount=\(.amount // "null")\ttotal=\(.total // "null")\tpublishedFare=\(.publishedFare // "null")\tbaseFare=\(.baseFare // "null")\ttaxes=\(.taxes // "null")"
 ' 2>/dev/null | sort | head -50
 
