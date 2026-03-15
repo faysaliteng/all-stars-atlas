@@ -4230,15 +4230,28 @@ const FlightResults = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      filteredAll.map((flight: any, idx: number) => (
-                        <FlightCard
-                          key={`${flight.id}-${idx}`}
-                          flight={flight}
-                          cheapest={cheapest}
-                          isExpanded={expandedFlight === flight.id}
-                          onToggleExpand={() => setExpandedFlight(expandedFlight === flight.id ? null : flight.id)}
-                        />
-                      ))
+                      <>
+                        {filteredAll.slice(0, visibleCount).map((flight: any, idx: number) => (
+                          <FlightCard
+                            key={`${flight.id}-${idx}`}
+                            flight={flight}
+                            cheapest={cheapest}
+                            isExpanded={expandedFlight === flight.id}
+                            onToggleExpand={() => setExpandedFlight(expandedFlight === flight.id ? null : flight.id)}
+                          />
+                        ))}
+                        {visibleCount < filteredAll.length && (
+                          <div className="flex justify-center pt-4">
+                            <Button
+                              variant="outline"
+                              className="font-bold px-8 py-3 rounded-full border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all"
+                              onClick={() => setVisibleCount(prev => prev + LOAD_MORE_COUNT)}
+                            >
+                              Show More ({filteredAll.length - visibleCount} remaining)
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </>
                 )}
