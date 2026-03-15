@@ -9,57 +9,48 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
   const h = compact ? 28 : 36;
   const planeSize = compact ? 18 : 22;
 
-  // Dark blue for departure, dark orange for return
-  const trackColor = isReturn ? "hsl(25, 85%, 45%)" : "hsl(220, 70%, 35%)";
+  const trackColor = isReturn ? "hsl(var(--secondary))" : "hsl(var(--primary))";
 
   return (
-    <div
-      className="w-full relative flex items-center"
-      style={{ height: `${h}px`, minWidth: compact ? 80 : 120 }}
-    >
+    <div className="w-full relative flex items-center" style={{ height: `${h}px`, minWidth: compact ? 80 : 120 }}>
       <div className="relative flex-1 mx-1" style={{ height: `${h}px` }}>
-        {/* Dashed line */}
-        <div
-          className="absolute left-0 right-0 border-b-2 border-dashed"
-          style={{ top: '50%', borderColor: trackColor }}
-        />
+        <div className="absolute left-0 right-0 border-b-2 border-dashed" style={{ top: "50%", borderColor: trackColor }} />
 
-        {/* Origin dot */}
         <div
           className="absolute rounded-full z-10"
           style={{
             width: 8,
             height: 8,
-            top: '50%',
+            top: "50%",
             left: -4,
-            transform: 'translateY(-50%)',
+            transform: "translateY(-50%)",
             backgroundColor: trackColor,
-            boxShadow: '0 0 0 2px hsl(var(--card))',
+            boxShadow: "0 0 0 2px hsl(var(--card))",
           }}
         />
 
-        {/* Destination dot */}
         <div
           className="absolute rounded-full z-10"
           style={{
             width: 8,
             height: 8,
-            top: '50%',
+            top: "50%",
             right: -4,
-            transform: 'translateY(-50%)',
+            transform: "translateY(-50%)",
             backgroundColor: trackColor,
-            boxShadow: '0 0 0 2px hsl(var(--card))',
+            boxShadow: "0 0 0 2px hsl(var(--card))",
           }}
         />
 
-        {/* Plane wrapper — vertically centered, animation drives left + rotate via keyframe */}
         <div
           className="absolute z-20"
           style={{
             width: planeSize,
             height: planeSize,
             top: `calc(50% - ${planeSize / 2}px)`,
-            animation: `flight-fly 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite`,
+            left: 0,
+            animation: "flight-fly 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+            willChange: "transform, opacity",
           }}
         >
           <svg
@@ -67,10 +58,10 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: '100%',
-              height: '100%',
+              width: "100%",
+              height: "100%",
               color: trackColor,
-              filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.15))',
+              filter: "drop-shadow(0px 2px 2px rgba(0,0,0,0.15))",
             }}
           >
             <path
