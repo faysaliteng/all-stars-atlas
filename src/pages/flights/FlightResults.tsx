@@ -3209,19 +3209,15 @@ const FlightResults = () => {
         if (stopsFilter === "1" && stops !== 1) return false;
         if (stopsFilter === "2+" && stops < 2) return false;
       }
-      // Departure time
+      // Departure time — use getApiLocalHour for airport-local consistency
       if (departTimeRange[0] !== 0 || departTimeRange[1] !== 24) {
-        if (f.departureTime) {
-          const hour = new Date(f.departureTime).getHours();
-          if (hour < departTimeRange[0] || hour >= departTimeRange[1]) return false;
-        }
+        const hour = getApiLocalHour(f.departureTime);
+        if (hour !== null && (hour < departTimeRange[0] || hour >= departTimeRange[1])) return false;
       }
-      // Arrival time
+      // Arrival time — use getApiLocalHour for airport-local consistency
       if (arrivalTimeRange[0] !== 0 || arrivalTimeRange[1] !== 24) {
-        if (f.arrivalTime) {
-          const hour = new Date(f.arrivalTime).getHours();
-          if (hour < arrivalTimeRange[0] || hour >= arrivalTimeRange[1]) return false;
-        }
+        const hour = getApiLocalHour(f.arrivalTime);
+        if (hour !== null && (hour < arrivalTimeRange[0] || hour >= arrivalTimeRange[1])) return false;
       }
       // Refundable only
       if (refundableOnly && !f.refundable) return false;
