@@ -9,62 +9,17 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
   const h = compact ? 28 : 36;
   const planeSize = compact ? 14 : 16;
 
-  // Deep blue for departure, deep amber for return
-  const trackColor = isReturn ? "hsl(25, 85%, 45%)" : "hsl(220, 70%, 35%)";
-
   return (
     <div
       className="w-full relative flex items-center"
       style={{ height: `${h}px`, minWidth: compact ? 80 : 120 }}
     >
       <div
-        className="relative flex-1 mx-1"
-        style={{
-          height: "2px",
-          borderBottom: `2px dashed ${trackColor}`,
-        }}
+        className="flight-path-line relative flex-1 mx-1"
+        data-direction={isReturn ? "return" : "departure"}
       >
-        {/* Origin dot */}
-        <span
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: -3,
-            transform: "translateY(-50%)",
-            width: 6,
-            height: 6,
-            backgroundColor: trackColor,
-            borderRadius: "50%",
-          }}
-        />
-        {/* Destination dot */}
-        <span
-          style={{
-            position: "absolute",
-            top: "50%",
-            right: -3,
-            transform: "translateY(-50%)",
-            width: 6,
-            height: 6,
-            backgroundColor: trackColor,
-            borderRadius: "50%",
-          }}
-        />
-
-        {/* Animated plane — flies left → right */}
-        <span
-          style={{
-            position: "absolute",
-            top: "50%",
-            color: trackColor,
-            fontSize: planeSize,
-            background: "hsl(var(--card))",
-            padding: "0 4px",
-            animation: "flyForward 3.5s ease-in-out infinite",
-            zIndex: 10,
-          }}
-        >
-          {/* FontAwesome fa-plane SVG — naturally faces RIGHT */}
+        <span className="plane-icon" style={{ fontSize: planeSize }}>
+          {/* FontAwesome fa-plane (right-facing) */}
           <svg
             viewBox="0 0 576 512"
             fill="currentColor"
