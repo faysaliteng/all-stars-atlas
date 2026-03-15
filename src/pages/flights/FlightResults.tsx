@@ -1452,12 +1452,8 @@ const RoundTripFlightCard = ({
             Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           <div className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1 flex items-center justify-start sm:justify-center gap-3 sm:gap-5">
-            <span className={`font-bold text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {outbound.airlineCode?.toUpperCase() !== "BG" && (
-              <>
-                <Separator orientation="vertical" className="hidden sm:block h-4" />
-                <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs">Book &amp; Hold</span>
-              </>
+              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs">Book &amp; Hold</span>
             )}
           </div>
           <div className="order-2 sm:order-3 ml-auto sm:ml-0 shrink-0">
