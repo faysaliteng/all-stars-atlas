@@ -3332,17 +3332,29 @@ const FlightResults = () => {
       }
       return true;
     });
+    // Helper for pair total duration with explicit Number coercion
+    const pairDur = (p: any) => (Number(p.outbound.durationMinutes) || 0) + (Number(p.returnFlight.durationMinutes) || 0);
+    
     if (sortBy === "cheapest") filtered.sort((a, b) => pairPayable(a) - pairPayable(b));
+    else if (sortBy === "fastest") {
+      filtered.sort((a, b) => {
+        const dA = pairDur(a) || Infinity;
+        const dB = pairDur(b) || Infinity;
+        return dA - dB;
+      });
+    }
     else if (sortBy === "best") {
-      const minP = Math.min(...filtered.map(p => pairPayable(p)));
-      const maxP = Math.max(...filtered.map(p => pairPayable(p)));
-      const minD = Math.min(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || Infinity));
-      const maxD = Math.max(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || 0));
+      const payables = filtered.map(p => pairPayable(p));
+      const durations = filtered.map(p => pairDur(p)).filter(d => d > 0);
+      const minP = payables.length > 0 ? Math.min(...payables) : 0;
+      const maxP = payables.length > 0 ? Math.max(...payables) : 1;
+      const minD = durations.length > 0 ? Math.min(...durations) : 0;
+      const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
       filtered.sort((a, b) => {
-        const durA = (a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0);
-        const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
+        const durA = pairDur(a) || maxD; // treat missing as worst
+        const durB = pairDur(b) || maxD;
         const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
         const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
         const pA = pairPayable(a), pB = pairPayable(b);
@@ -3351,7 +3363,6 @@ const FlightResults = () => {
         return scoreA - scoreB;
       });
     }
-    else if (sortBy === "fastest") filtered.sort((a, b) => ((a.outbound.durationMinutes || 0) + (a.returnFlight.durationMinutes || 0)) - ((b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0)));
     else if (sortBy === "departure") filtered.sort((a, b) => new Date(a.outbound.departureTime).getTime() - new Date(b.outbound.departureTime).getTime());
     return filtered;
   }, [roundTripPairs, isRoundTrip, hasDirections, airlineFilter, selectedAirlines, priceRange, stopsFilter, departTimeRange, arrivalTimeRange, refundableOnly, selectedAlliances, durationRange, sortBy, selectedLayoverAirports, layoverDurationRange, selectedBaggage]);
