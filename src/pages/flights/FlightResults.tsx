@@ -1286,7 +1286,7 @@ const RoundTripFlightCard = ({
       <CardContent className="p-0">
         <div className="flex flex-col xl:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-2.5 p-2.5 sm:p-3 lg:w-36 xl:w-40 shrink-0 border-b lg:border-b-0 lg:border-r border-border/50">
+          <div className="flex items-center gap-2.5 p-2.5 sm:p-3 xl:w-36 2xl:w-40 shrink-0 border-b xl:border-b-0 xl:border-r border-border/50">
             <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
                 <img src={logo} alt={outbound.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
