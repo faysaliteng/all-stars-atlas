@@ -2450,12 +2450,8 @@ const FlightCard = ({
             Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
-            <span className={`font-bold text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {flight.airlineCode?.toUpperCase() !== "BG" && (
-              <>
-                <Separator orientation="vertical" className="h-4" />
-                <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs hidden sm:inline">Book &amp; Hold</span>
-              </>
+              <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs hidden sm:inline">Book &amp; Hold</span>
             )}
           </div>
           <div className="shrink-0">
