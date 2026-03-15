@@ -49,13 +49,13 @@ search_flights() {
 }
 
 count_flights() {
-  echo "$1" | jq -r '.flights | length' 2>/dev/null || echo "0"
+  echo "$1" | jq -r '(.data // .flights // []) | length' 2>/dev/null || echo "0"
 }
 
 # Extract per-airline price breakdown from search results
 analyze_prices() {
   local json="$1" label="$2" test_num="$3"
-  local count=$(echo "$json" | jq -r '.flights | length' 2>/dev/null)
+  local count=$(echo "$json" | jq -r '(.data // .flights // []) | length' 2>/dev/null)
   [ "$count" = "null" ] && count=0
 
   if [ "$count" -eq 0 ]; then
@@ -68,7 +68,7 @@ analyze_prices() {
   TOTAL_FLIGHTS=$((TOTAL_FLIGHTS + count))
 
   # Count zero-price flights
-  local zero_count=$(echo "$json" | jq '[.flights[] | select(
+  local zero_count=$(echo "$json" | jq '[(.data // .flights // [])[] | select(
     (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
     (.price == 0 or .price == null or .price == "0") and
     (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0") and
@@ -76,7 +76,7 @@ analyze_prices() {
   )] | length' 2>/dev/null)
   [ "$zero_count" = "null" ] && zero_count=0
 
-  local sources=$(echo "$json" | jq -r '[.flights[].source // "unknown"] | unique | join(", ")' 2>/dev/null)
+  local sources=$(echo "$json" | jq -r '[(.data // .flights // [])[].source // "unknown"] | unique | join(", ")' 2>/dev/null)
 
   if [ "$zero_count" -gt 0 ]; then
     echo -e "   ${RED}❌${NC} $label — ${BOLD}$count flights${NC} ($sources) | ${RED}$zero_count with BDT 0${NC}"
@@ -84,7 +84,7 @@ analyze_prices() {
     ZERO_PRICE_FLIGHTS=$((ZERO_PRICE_FLIGHTS + zero_count))
 
     # Show which airlines have zero prices
-    echo "$json" | jq -r '.flights[] | select(
+    echo "$json" | jq -r '(.data // .flights // [])[] | select(
       (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
       (.price == 0 or .price == null or .price == "0") and
       (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0") and
@@ -92,12 +92,17 @@ analyze_prices() {
     ) | "      ⛔ \(.airlineCode // "??") \(.airline // "Unknown") | flight: \(.flightNumber // "?") | price=\(.price // 0) totalPrice=\(.totalPrice // 0) grossPrice=\(.grossPrice // 0) amount=\(.amount // 0) total=\(.total // 0) publishedFare=\(.publishedFare // 0)"' 2>/dev/null | head -10
   else
     echo -e "   ${GREEN}✅${NC} $label — ${BOLD}$count flights${NC} ($sources) | All have valid prices"
+    # Show provider source counts
+    echo "$json" | jq -r '
+      if .sources then "      Sources: " + (.sources | to_entries | map(select(.value > 0) | "\(.key)=\(.value)") | join(", "))
+      else empty end
+    ' 2>/dev/null
     PASS=$((PASS + 1))
   fi
 
   # Per-airline summary
   echo "$json" | jq -r '
-    .flights | group_by(.airlineCode) | map({
+    (.data // .flights // []) | group_by(.airlineCode) | map({
       airline: .[0].airlineCode,
       name: .[0].airline,
       count: length,
@@ -118,17 +123,17 @@ analyze_fare_fields() {
   echo "$json" | jq -r '
     def countNonZero(arr): [arr[] | select(. != null and . != 0 and . != "0")] | length;
     {
-      total: (.flights | length),
-      has_price: countNonZero([.flights[].price]),
-      has_totalPrice: countNonZero([.flights[].totalPrice]),
-      has_grossPrice: countNonZero([.flights[].grossPrice]),
-      has_amount: countNonZero([.flights[].amount]),
-      has_total: countNonZero([.flights[].total]),
-      has_publishedFare: countNonZero([.flights[].publishedFare]),
-      has_baseFare: countNonZero([.flights[].baseFare]),
-      has_taxes: countNonZero([.flights[].taxes]),
-      has_fareDetails: ([.flights[] | select(.fareDetails != null and (.fareDetails | length) > 0)] | length),
-      has_paxPricing: ([.flights[] | select(.paxPricing != null and (.paxPricing | length) > 0)] | length)
+      total: ((.data // .flights // []) | length),
+      has_price: countNonZero([(.data // .flights // [])[].price]),
+      has_totalPrice: countNonZero([(.data // .flights // [])[].totalPrice]),
+      has_grossPrice: countNonZero([(.data // .flights // [])[].grossPrice]),
+      has_amount: countNonZero([(.data // .flights // [])[].amount]),
+      has_total: countNonZero([(.data // .flights // [])[].total]),
+      has_publishedFare: countNonZero([(.data // .flights // [])[].publishedFare]),
+      has_baseFare: countNonZero([(.data // .flights // [])[].baseFare]),
+      has_taxes: countNonZero([(.data // .flights // [])[].taxes]),
+      has_fareDetails: ([(.data // .flights // [])[] | select(.fareDetails != null and (.fareDetails | length) > 0)] | length),
+      has_paxPricing: ([(.data // .flights // [])[] | select(.paxPricing != null and (.paxPricing | length) > 0)] | length)
     } |
     "      price:\(.has_price)/\(.total) | totalPrice:\(.has_totalPrice)/\(.total) | grossPrice:\(.has_grossPrice)/\(.total) | amount:\(.has_amount)/\(.total) | total:\(.has_total)/\(.total) | publishedFare:\(.has_publishedFare)/\(.total) | baseFare:\(.has_baseFare)/\(.total) | taxes:\(.has_taxes)/\(.total) | fareDetails:\(.has_fareDetails)/\(.total) | paxPricing:\(.has_paxPricing)/\(.total)"
   ' 2>/dev/null
@@ -279,7 +284,7 @@ echo "════════════════════════�
 echo -e "\n${CYAN}── Deep audit: Every flight's raw price fields${NC}"
 R=$(search_flights DAC DXB "$D3")
 echo "$R" | jq -r '
-  .flights[] |
+  (.data // .flights // [])[] |
   "\(.airlineCode)\t\(.flightNumber // "?")\t\(.source // "?")\tprice=\(.price // "null")\ttotalPrice=\(.totalPrice // "null")\tgrossPrice=\(.grossPrice // "null")\tamount=\(.amount // "null")\ttotal=\(.total // "null")\tpublishedFare=\(.publishedFare // "null")\tbaseFare=\(.baseFare // "null")\ttaxes=\(.taxes // "null")"
 ' 2>/dev/null | sort | head -50
 
@@ -292,7 +297,7 @@ echo -e "${BOLD} SECTION 6: ZERO-PRICE FLIGHT DETAIL DUMP${NC}"
 echo "═══════════════════════════════════════════════════"
 
 echo -e "\n${CYAN}── Dumping first 3 zero-price flights (all fields)${NC}"
-echo "$R" | jq -r '[.flights[] | select(
+echo "$R" | jq -r '[(.data // .flights // [])[] | select(
   (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
   (.price == 0 or .price == null or .price == "0") and
   (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0") and
@@ -318,7 +323,7 @@ echo "$R" | jq -r '[.flights[] | select(
 }' 2>/dev/null
 
 # If no zero-price flights found, show a sample
-ZERO_CT=$(echo "$R" | jq '[.flights[] | select(
+ZERO_CT=$(echo "$R" | jq '[(.data // .flights // [])[] | select(
   (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
   (.price == 0 or .price == null or .price == "0") and
   (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0")
@@ -328,7 +333,7 @@ if [ "$ZERO_CT" = "0" ] || [ "$ZERO_CT" = "null" ]; then
   echo -e "   ${GREEN}No zero-price flights found in deep audit! ✅${NC}"
   echo -e "\n${CYAN}── Sample of lowest-priced flights:${NC}"
   echo "$R" | jq -r '
-    [.flights[] | {
+    [(.data // .flights // [])[] | {
       airline: "\(.airlineCode) \(.airline // "?")",
       flight: .flightNumber,
       source: .source,
