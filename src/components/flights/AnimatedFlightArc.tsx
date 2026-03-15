@@ -17,9 +17,8 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
       className="w-full relative flex items-center"
       style={{ height: `${h}px`, minWidth: compact ? 80 : 120 }}
     >
-      {/* The flight path line with dots via pseudo-elements is handled by the wrapper */}
       <div
-        className="relative flex-1 mx-1 flight-path-line"
+        className="relative flex-1 mx-1"
         style={{
           height: "2px",
           borderBottom: `2px dashed ${trackColor}`,
@@ -52,9 +51,8 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
           }}
         />
 
-        {/* Animated plane — uses left % + translate for smooth L→R flight */}
+        {/* Animated plane — flies left → right using left% animation */}
         <span
-          className="flight-plane-icon"
           style={{
             position: "absolute",
             top: "50%",
@@ -70,13 +68,13 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
             justifyContent: "center",
           }}
         >
-          {/* Right-facing plane SVG */}
+          {/* Right-facing plane (FA plane-departure style) */}
           <svg
-            viewBox="0 0 512 512"
+            viewBox="0 0 640 512"
             fill="currentColor"
             style={{ width: planeSize, height: planeSize }}
           >
-            <path d="M186.62 464H160V337.18L36.63 368.32 24 304.43l123.37-31.14L100.73 48h40.57l103.88 225.29L368.56 48h40.57L362.49 273.29 485.87 304.43l-12.63 63.89-123.37-31.14V464h-26.62L271.62 339.2 238.25 464h-51.63z" transform="rotate(-45, 256, 256)" />
+            <path d="M381 114.9L186.1 41.9c-16.7-6.2-35.2-5.3-51.1 2.7L89.1 67.4C78 73 77.2 88.5 87.6 95.2l85.6 55.2L115 192H43.8c-8.9 0-17.3 4.6-22.1 12.1l-23.4 36.4c-7.8 12.1 .5 28 14.8 29.8l98 12.2 189.7 118.6c5 3.1 10.8 4.8 16.7 4.8h27.3c12.8 0 21.3-13.2 16.1-24.9l-63.2-142.2L440 184.6c16.2-8.5 22.4-28.6 13.9-44.8S397.2 106.3 381 114.9z" />
           </svg>
         </span>
       </div>
