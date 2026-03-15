@@ -1454,20 +1454,20 @@ const RoundTripFlightCard = ({
         </div>
 
         {/* Info bar */}
-        <div className="flex items-center px-3 sm:px-4 py-2.5 bg-muted/30 border-t border-border/50">
-          <button className="flex items-center gap-1 text-accent font-bold text-xs hover:underline shrink-0" onClick={onToggleExpand}>
+        <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2.5 bg-muted/30 border-t border-border/50">
+          <button className="order-1 flex items-center gap-1 text-accent font-bold text-xs hover:underline shrink-0" onClick={onToggleExpand}>
             Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
-          <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
+          <div className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1 flex items-center justify-start sm:justify-center gap-3 sm:gap-5">
             <span className={`font-bold text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {outbound.airlineCode?.toUpperCase() !== "BG" && (
               <>
-                <Separator orientation="vertical" className="h-4" />
-                <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs hidden sm:inline">Book &amp; Hold</span>
+                <Separator orientation="vertical" className="hidden sm:block h-4" />
+                <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs">Book &amp; Hold</span>
               </>
             )}
           </div>
-          <div className="shrink-0">
+          <div className="order-2 sm:order-3 ml-auto sm:ml-0 shrink-0">
             <Button size="sm" className="font-bold h-8 sm:h-9 px-4 sm:px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-xs"
               onClick={() => setShowFareOptions(!showFareOptions)}>
               <span className="hidden sm:inline">View Round-Trip Prices</span>
