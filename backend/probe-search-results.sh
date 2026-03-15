@@ -97,7 +97,7 @@ analyze_prices() {
 
   # Per-airline summary
   echo "$json" | jq -r '
-    .flights | group_by(.airlineCode) | map({
+    (.data // .flights // []) | group_by(.airlineCode) | map({
       airline: .[0].airlineCode,
       name: .[0].airline,
       count: length,
