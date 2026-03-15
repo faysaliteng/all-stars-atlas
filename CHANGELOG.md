@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file.
 
+## [4.1.3] — 2026-03-15 — Flight UI Fixes + TTI Payload Docs + Documentation Overhaul
+
+### Added — TTI/Air Astra Payload Reference
+- **TTI_PAYLOADS.md**: Complete production-verified payload reference for Air Astra (TTI/ZENITH) — search, booking, cancel, void, ticketing with exact JSON examples
+- Mirrors SABRE_PAYLOADS.md structure for consistency
+
+### Fixed — Flight Results UI
+- **Sorting**: Cheapest/Fastest/Best sort now works correctly with robust duration parsing and deterministic tie-breakers
+- **Responsiveness**: Flight cards fully responsive across mobile (375px), tablet (768px), and desktop (1366px+)
+- **Filter consistency**: Sidebar time filters and airline stats use airport local time instead of browser time
+
+### Updated — All 20+ Documentation Files
+- Version bumped from v4.1.0/v4.1.1 → v4.1.3 across all .md files
+- Updated dates to 2026-03-15
+
+---
+
 ## [4.1.1] — 2026-03-14 — 100% Production Probe Verified + Documentation Overhaul
 
 ### Verified — Full Automated Production Probe (10/10 Tests Passed)
