@@ -9,12 +9,64 @@
   100% { background-position: 200px 0; }
 }
 
-/* Flight path plane animation — left-to-right with fade */
+/* Flight path animation standard (all cards/details) */
+.flight-path-line {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  border-bottom: 2px dashed var(--flight-path-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flight-path-line::before,
+.flight-path-line::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: var(--flight-path-color);
+}
+
+.flight-path-line::before { left: -3px; }
+.flight-path-line::after { right: -3px; }
+
+.flight-path-line[data-direction="departure"] {
+  --flight-path-color: hsl(220 70% 35%);
+}
+
+.flight-path-line[data-direction="return"] {
+  --flight-path-color: hsl(25 85% 45%);
+}
+
+.plane-icon {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  color: var(--flight-path-color);
+  background: hsl(var(--card));
+  padding: 0 4px;
+  line-height: 1;
+  z-index: 10;
+  will-change: left, transform, opacity;
+  animation: flyForward 3.5s ease-in-out infinite;
+}
+
 @keyframes flyForward {
   0% { left: 0%; transform: translate(-50%, -50%); opacity: 0; }
   10% { opacity: 1; }
   90% { opacity: 1; }
   100% { left: 100%; transform: translate(-50%, -50%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plane-icon {
+    animation: flyForward 3.5s ease-in-out infinite !important;
+  }
 }
 
 @keyframes shake {
