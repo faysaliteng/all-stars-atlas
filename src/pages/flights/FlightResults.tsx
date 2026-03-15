@@ -2902,6 +2902,8 @@ const FlightResults = () => {
   const [searchStartTime] = useState(Date.now());
   const [resultsExpired, setResultsExpired] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [visibleCount, setVisibleCount] = useState(20);
+  const LOAD_MORE_COUNT = 20;
 
   // Inline editing state
   const [editFrom, setEditFrom] = useState("");
