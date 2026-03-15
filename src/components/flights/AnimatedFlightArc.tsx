@@ -9,7 +9,7 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
   const h = compact ? 28 : 36;
   const planeSize = compact ? 14 : 16;
 
-  // Deep blue for departure, deep amber/orange for return
+  // Deep blue for departure, deep amber for return
   const trackColor = isReturn ? "hsl(25, 85%, 45%)" : "hsl(220, 70%, 35%)";
 
   return (
@@ -51,30 +51,26 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
           }}
         />
 
-        {/* Animated plane — flies left → right using left% animation */}
+        {/* Animated plane — flies left → right */}
         <span
           style={{
             position: "absolute",
             top: "50%",
-            fontSize: planeSize,
             color: trackColor,
+            fontSize: planeSize,
             background: "hsl(var(--card))",
-            padding: "0 3px",
+            padding: "0 4px",
             animation: "flyForward 3.5s ease-in-out infinite",
             zIndex: 10,
-            lineHeight: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
           }}
         >
-          {/* Right-facing plane (FA plane-departure style) */}
+          {/* FontAwesome fa-plane SVG — naturally faces RIGHT */}
           <svg
-            viewBox="0 0 640 512"
+            viewBox="0 0 576 512"
             fill="currentColor"
-            style={{ width: planeSize, height: planeSize }}
+            style={{ width: planeSize, height: planeSize, display: "block" }}
           >
-            <path d="M381 114.9L186.1 41.9c-16.7-6.2-35.2-5.3-51.1 2.7L89.1 67.4C78 73 77.2 88.5 87.6 95.2l85.6 55.2L115 192H43.8c-8.9 0-17.3 4.6-22.1 12.1l-23.4 36.4c-7.8 12.1 .5 28 14.8 29.8l98 12.2 189.7 118.6c5 3.1 10.8 4.8 16.7 4.8h27.3c12.8 0 21.3-13.2 16.1-24.9l-63.2-142.2L440 184.6c16.2-8.5 22.4-28.6 13.9-44.8S397.2 106.3 381 114.9z" />
+            <path d="M482.3 192c34.2 0 93.7 29 93.7 64c0 36-59.5 64-93.7 64l-116.6 0L265.2 495.9c-5.7 10-16.3 16.1-27.8 16.1l-56.2 0c-10.6 0-18.3-10.2-15.4-20.4l49-171.6L112 320 68.8 377.6c-3 4-7.8 6.4-12.8 6.4l-42 0c-7.8 0-14-6.3-14-14c0-1.3 .2-2.6 .5-3.9L32 256 .5 145.9c-.4-1.3-.5-2.6-.5-3.9c0-7.8 6.2-14 14-14l42 0c5 0 9.8 2.4 12.8 6.4L112 192l102.9 0-49-171.6C162.9 10.2 170.6 0 181.2 0l56.2 0c11.5 0 22.1 6.2 27.8 16.1L365.7 192l116.6 0z" />
           </svg>
         </span>
       </div>
