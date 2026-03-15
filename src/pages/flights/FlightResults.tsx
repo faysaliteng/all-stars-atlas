@@ -3151,19 +3151,35 @@ const FlightResults = () => {
       rtByAirline[airline].push(f);
     }
 
-    // Cross-product per airline — capped to prevent combinatorial explosion
-    // Already sorted by price, so top N cheapest per direction are paired first
-    const MAX_PER_AIRLINE = 15; // top 15 outbound × top 15 return = max 225 pairs/airline
-    const MAX_TOTAL_PAIRS = 500; // hard cap on total pairs for browser performance
-    for (const airline of Object.keys(obByAirline)) {
+    // Cross-product per airline — 2-pass approach to guarantee ALL airlines appear
+    // Pass 1: Give every airline a guaranteed minimum (top 5×5 = 25 pairs each)
+    // Pass 2: Fill remaining budget with extra combinations from each airline
+    const GUARANTEED_PER_AIRLINE = 5;
+    const EXTRA_PER_AIRLINE = 15;
+    const MAX_TOTAL_PAIRS = 800;
+    const allAirlines = Object.keys(obByAirline).filter(a => (rtByAirline[a] || []).length > 0);
+
+    // Pass 1: guaranteed minimum pairs for every airline
+    for (const airline of allAirlines) {
+      const obs = (obByAirline[airline] || []).slice(0, GUARANTEED_PER_AIRLINE);
+      const rts = (rtByAirline[airline] || []).slice(0, GUARANTEED_PER_AIRLINE);
+      for (const ob of obs) {
+        for (const rf of rts) {
+          addPair(ob, rf);
+        }
+      }
+    }
+
+    // Pass 2: fill up to budget with extra combinations (already sorted by price)
+    for (const airline of allAirlines) {
       if (pairs.length >= MAX_TOTAL_PAIRS) break;
-      const obs = (obByAirline[airline] || []).slice(0, MAX_PER_AIRLINE);
-      const rts = (rtByAirline[airline] || []).slice(0, MAX_PER_AIRLINE);
+      const obs = (obByAirline[airline] || []).slice(0, EXTRA_PER_AIRLINE);
+      const rts = (rtByAirline[airline] || []).slice(0, EXTRA_PER_AIRLINE);
       for (const ob of obs) {
         if (pairs.length >= MAX_TOTAL_PAIRS) break;
         for (const rf of rts) {
           if (pairs.length >= MAX_TOTAL_PAIRS) break;
-          addPair(ob, rf);
+          addPair(ob, rf); // dedup set prevents duplicates from pass 1
         }
       }
     }
