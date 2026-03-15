@@ -338,7 +338,7 @@ const FilterPanel = ({
   }, [flights]);
 
   const durationBounds = useMemo(() => {
-    const ds = flights.map((f: any) => f.durationMinutes || 0).filter((d: number) => d > 0);
+    const ds = flights.map((f: any) => getFlightDurationMinutes(f)).filter((d: number) => d > 0);
     return { min: ds.length > 0 ? Math.min(...ds) : 0, max: ds.length > 0 ? Math.max(...ds) : 1440 };
   }, [flights]);
 
