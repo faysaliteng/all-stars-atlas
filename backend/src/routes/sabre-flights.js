@@ -701,8 +701,45 @@ function normalizeGroupedResponse(response, params) {
 
     const toNumber = (value) => {
       if (value === null || value === undefined || value === '') return NaN;
-      const n = Number(value);
-      return Number.isFinite(n) ? n : NaN;
+
+      if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : NaN;
+      }
+
+      if (typeof value === 'string') {
+        const raw = value.trim();
+        if (!raw) return NaN;
+        const cleaned = raw
+          .replace(/,/g, '')
+          .replace(/\s+/g, '')
+          .replace(/[^\d.-]/g, '');
+        if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return NaN;
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : NaN;
+      }
+
+      if (typeof value === 'object') {
+        const candidates = [
+          value.amount,
+          value.value,
+          value.total,
+          value.totalAmount,
+          value.totalPrice,
+          value.equivalentAmount,
+          value.equivalentPrice,
+          value.baseFare,
+          value.baseFareAmount,
+          value.tax,
+          value.taxAmount,
+          value.totalTaxAmount,
+        ];
+        for (const c of candidates) {
+          const n = toNumber(c);
+          if (Number.isFinite(n)) return n;
+        }
+      }
+
+      return NaN;
     };
 
     const firstPositiveNumber = (...values) => {
