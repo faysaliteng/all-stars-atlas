@@ -2902,6 +2902,8 @@ const FlightResults = () => {
   const [searchStartTime] = useState(Date.now());
   const [resultsExpired, setResultsExpired] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [visibleCount, setVisibleCount] = useState(20);
+  const LOAD_MORE_COUNT = 20;
 
   // Inline editing state
   const [editFrom, setEditFrom] = useState("");
@@ -3510,7 +3512,7 @@ const FlightResults = () => {
     setDepartTimeRange([0, 24]); setArrivalTimeRange([0, 24]); setDurationRange([minDuration, maxDuration]);
     setSelectedAlliances([]); setRefundableOnly(false); setSelectedLayoverAirports([]);
     setLayoverDurationRange([0, maxLayoverDuration || 5000]); setAirlineFilter(null);
-    setSelectedBaggage([]);
+    setSelectedBaggage([]); setVisibleCount(20);
   }, [maxPrice, minDuration, maxDuration, maxLayoverDuration]);
 
   const sources = apiData.sources || {};
@@ -4081,7 +4083,7 @@ const FlightResults = () => {
                     return (
                       <button
                         key={s.key}
-                        onClick={() => setSortBy(s.key)}
+                        onClick={() => { setSortBy(s.key); setVisibleCount(20); }}
                         className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs whitespace-nowrap transition-all ${
                           isActive
                             ? "bg-card border border-accent shadow-[0_2px_10px_-3px_hsl(var(--accent)/0.3)]"
@@ -4176,19 +4178,38 @@ const FlightResults = () => {
 
                     {filteredPairs.length === 0 ? (
                       <Card><CardContent className="py-8 text-center text-muted-foreground"><p>No round-trip flights found matching your filters</p></CardContent></Card>
-                    ) : filteredPairs.map((pair, idx) => (
-                      <RoundTripFlightCard
-                        key={`${pair.outbound.id}-${pair.returnFlight.id}-${idx}`}
-                        outbound={pair.outbound}
-                        returnFlight={pair.returnFlight}
-                        cheapest={filteredPairs.length > 0 ? Math.min(...filteredPairs.map(p => p.totalPrice)) : 0}
-                        isExpanded={expandedFlight === `${pair.outbound.id}-${pair.returnFlight.id}`}
-                        onToggleExpand={() => {
-                          const pairId = `${pair.outbound.id}-${pair.returnFlight.id}`;
-                          setExpandedFlight(expandedFlight === pairId ? null : pairId);
-                        }}
-                      />
-                    ))}
+                    ) : (
+                      <>
+                        {(() => {
+                          const cheapest = Math.min(...filteredPairs.map(p => p.totalPrice));
+                          const visible = filteredPairs.slice(0, visibleCount);
+                          return visible.map((pair, idx) => (
+                            <RoundTripFlightCard
+                              key={`${pair.outbound.id}-${pair.returnFlight.id}-${idx}`}
+                              outbound={pair.outbound}
+                              returnFlight={pair.returnFlight}
+                              cheapest={cheapest}
+                              isExpanded={expandedFlight === `${pair.outbound.id}-${pair.returnFlight.id}`}
+                              onToggleExpand={() => {
+                                const pairId = `${pair.outbound.id}-${pair.returnFlight.id}`;
+                                setExpandedFlight(expandedFlight === pairId ? null : pairId);
+                              }}
+                            />
+                          ));
+                        })()}
+                        {visibleCount < filteredPairs.length && (
+                          <div className="flex justify-center pt-4">
+                            <Button
+                              variant="outline"
+                              className="font-bold px-8 py-3 rounded-full border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all"
+                              onClick={() => setVisibleCount(prev => prev + LOAD_MORE_COUNT)}
+                            >
+                              Show More ({filteredPairs.length - visibleCount} remaining)
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 ) : (
                   /* ONE-WAY with Similar Flights Grouping */
@@ -4209,15 +4230,28 @@ const FlightResults = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      filteredAll.map((flight: any, idx: number) => (
-                        <FlightCard
-                          key={`${flight.id}-${idx}`}
-                          flight={flight}
-                          cheapest={cheapest}
-                          isExpanded={expandedFlight === flight.id}
-                          onToggleExpand={() => setExpandedFlight(expandedFlight === flight.id ? null : flight.id)}
-                        />
-                      ))
+                      <>
+                        {filteredAll.slice(0, visibleCount).map((flight: any, idx: number) => (
+                          <FlightCard
+                            key={`${flight.id}-${idx}`}
+                            flight={flight}
+                            cheapest={cheapest}
+                            isExpanded={expandedFlight === flight.id}
+                            onToggleExpand={() => setExpandedFlight(expandedFlight === flight.id ? null : flight.id)}
+                          />
+                        ))}
+                        {visibleCount < filteredAll.length && (
+                          <div className="flex justify-center pt-4">
+                            <Button
+                              variant="outline"
+                              className="font-bold px-8 py-3 rounded-full border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all"
+                              onClick={() => setVisibleCount(prev => prev + LOAD_MORE_COUNT)}
+                            >
+                              Show More ({filteredAll.length - visibleCount} remaining)
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </>
                 )}
