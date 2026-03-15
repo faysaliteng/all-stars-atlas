@@ -52,7 +52,7 @@ export default function AnimatedFlightArc({ direction = "departure", compact = f
           }}
         />
 
-        {/* Animated plane — always flies left to right */}
+        {/* Animated plane — flies left to right using flight-fly keyframes */}
         <svg
           viewBox="0 0 24 24"
           fill="none"
