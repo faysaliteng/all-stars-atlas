@@ -1,6 +1,6 @@
 # Seven Trip — Developer Documentation
 
-> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v4.1.3 (2026-03-15 — Flight UI fixes + TTI Payload Docs).
+> This document explains **how the codebase works**, how to add features, and how every part connects. Written for developers who may be new to React or this project. Last updated: v4.1.4 (2026-03-15 — Quick-Sort Filters Fix).
 
 ---
 
