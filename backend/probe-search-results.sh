@@ -118,17 +118,17 @@ analyze_fare_fields() {
   echo "$json" | jq -r '
     def countNonZero(arr): [arr[] | select(. != null and . != 0 and . != "0")] | length;
     {
-      total: (.flights | length),
-      has_price: countNonZero([.flights[].price]),
-      has_totalPrice: countNonZero([.flights[].totalPrice]),
-      has_grossPrice: countNonZero([.flights[].grossPrice]),
-      has_amount: countNonZero([.flights[].amount]),
-      has_total: countNonZero([.flights[].total]),
-      has_publishedFare: countNonZero([.flights[].publishedFare]),
-      has_baseFare: countNonZero([.flights[].baseFare]),
-      has_taxes: countNonZero([.flights[].taxes]),
-      has_fareDetails: ([.flights[] | select(.fareDetails != null and (.fareDetails | length) > 0)] | length),
-      has_paxPricing: ([.flights[] | select(.paxPricing != null and (.paxPricing | length) > 0)] | length)
+      total: ((.data // .flights // []) | length),
+      has_price: countNonZero([(.data // .flights // [])[].price]),
+      has_totalPrice: countNonZero([(.data // .flights // [])[].totalPrice]),
+      has_grossPrice: countNonZero([(.data // .flights // [])[].grossPrice]),
+      has_amount: countNonZero([(.data // .flights // [])[].amount]),
+      has_total: countNonZero([(.data // .flights // [])[].total]),
+      has_publishedFare: countNonZero([(.data // .flights // [])[].publishedFare]),
+      has_baseFare: countNonZero([(.data // .flights // [])[].baseFare]),
+      has_taxes: countNonZero([(.data // .flights // [])[].taxes]),
+      has_fareDetails: ([(.data // .flights // [])[] | select(.fareDetails != null and (.fareDetails | length) > 0)] | length),
+      has_paxPricing: ([(.data // .flights // [])[] | select(.paxPricing != null and (.paxPricing | length) > 0)] | length)
     } |
     "      price:\(.has_price)/\(.total) | totalPrice:\(.has_totalPrice)/\(.total) | grossPrice:\(.has_grossPrice)/\(.total) | amount:\(.has_amount)/\(.total) | total:\(.has_total)/\(.total) | publishedFare:\(.has_publishedFare)/\(.total) | baseFare:\(.has_baseFare)/\(.total) | taxes:\(.has_taxes)/\(.total) | fareDetails:\(.has_fareDetails)/\(.total) | paxPricing:\(.has_paxPricing)/\(.total)"
   ' 2>/dev/null
