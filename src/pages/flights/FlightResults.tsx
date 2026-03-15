@@ -1284,7 +1284,7 @@ const RoundTripFlightCard = ({
   return (
     <Card className={`overflow-hidden transition-all border ${isExpanded ? "border-accent/30 shadow-md" : "border-border hover:shadow-md"}`}>
       <CardContent className="p-0">
-        <div className="flex flex-col lg:flex-row min-w-0">
+        <div className="flex flex-col xl:flex-row min-w-0">
           {/* Airline section */}
           <div className="flex items-center gap-2.5 p-2.5 sm:p-3 lg:w-36 xl:w-40 shrink-0 border-b lg:border-b-0 lg:border-r border-border/50">
             <div className="flex flex-col items-center gap-0.5 shrink-0">
