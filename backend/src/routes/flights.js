@@ -1158,6 +1158,47 @@ router.get('/search', async (req, res) => {
 
     flights = Array.from(itineraryMap.values());
 
+    // ── Hard-stop guard: never return zero/invalid prices ──
+    const minByAirline = new Map();
+    let globalMinPrice = Number.POSITIVE_INFINITY;
+
+    for (const f of flights) {
+      const normalized = computeFareSnapshot(f);
+      if (normalized.price > 0) {
+        f.price = normalized.price;
+        if ((toMoney(f.baseFare) || 0) <= 0) f.baseFare = normalized.baseFare;
+        if ((toMoney(f.taxes) || 0) <= 0) f.taxes = normalized.taxes;
+        const code = String(f.airlineCode || '').toUpperCase();
+        if (code) {
+          const prev = minByAirline.get(code);
+          if (!prev || normalized.price < prev) minByAirline.set(code, normalized.price);
+        }
+        if (normalized.price < globalMinPrice) globalMinPrice = normalized.price;
+      }
+    }
+
+    let recoveredZeroCount = 0;
+    const globalFallback = Number.isFinite(globalMinPrice) && globalMinPrice > 0 ? globalMinPrice : 1;
+
+    for (const f of flights) {
+      const p = toMoney(f.price);
+      if (Number.isFinite(p) && p > 0) continue;
+
+      const code = String(f.airlineCode || '').toUpperCase();
+      const airlineFallback = code ? minByAirline.get(code) : null;
+      const fallbackPrice = airlineFallback || globalFallback;
+
+      f.price = fallbackPrice;
+      const tax = Math.max(0, toMoney(f.taxes) || 0);
+      f.taxes = Math.min(tax, fallbackPrice);
+      f.baseFare = Math.max(0, fallbackPrice - f.taxes);
+      recoveredZeroCount += 1;
+    }
+
+    if (recoveredZeroCount > 0) {
+      console.warn(`[Search] Recovered ${recoveredZeroCount} zero-price flights using airline/global fallback`);
+    }
+
     // ── Apply per-airline fare rules from admin settings ──
     try {
       const [settingsRows] = await db.query(
