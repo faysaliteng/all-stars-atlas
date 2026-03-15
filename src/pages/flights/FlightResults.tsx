@@ -3335,10 +3335,8 @@ const FlightResults = () => {
     });
     if (sortBy === "cheapest") filtered.sort((a, b) => pairPayable(a) - pairPayable(b));
     else if (sortBy === "best") {
-      // Best = weighted balance of price, duration, and stops (like BDFare)
-      // Normalize price and duration to comparable scales, then weight
-      const minP = Math.min(...filtered.map(p => p.totalPrice || Infinity));
-      const maxP = Math.max(...filtered.map(p => p.totalPrice || 0));
+      const minP = Math.min(...filtered.map(p => pairPayable(p)));
+      const maxP = Math.max(...filtered.map(p => pairPayable(p)));
       const minD = Math.min(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || Infinity));
       const maxD = Math.max(...filtered.map(p => (p.outbound.durationMinutes || 0) + (p.returnFlight.durationMinutes || 0) || 0));
       const priceSpread = maxP - minP || 1;
@@ -3348,9 +3346,9 @@ const FlightResults = () => {
         const durB = (b.outbound.durationMinutes || 0) + (b.returnFlight.durationMinutes || 0);
         const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
         const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
-        // Normalized scores: 40% price, 45% duration, 15% stops
-        const scoreA = ((a.totalPrice - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
-        const scoreB = ((b.totalPrice - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
+        const pA = pairPayable(a), pB = pairPayable(b);
+        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
+        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
         return scoreA - scoreB;
       });
     }
