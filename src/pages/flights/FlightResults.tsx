@@ -67,6 +67,63 @@ function fmtDurationMins(mins: number): string {
   return `${h}h ${m}m`;
 }
 
+function parseDurationToMinutes(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) return Math.round(value);
+  if (typeof value !== "string") return 0;
+
+  const text = value.trim();
+  if (!text) return 0;
+
+  const hoursMatch = text.match(/(\d+)\s*h/i);
+  const minsMatch = text.match(/(\d+)\s*m/i);
+  if (hoursMatch || minsMatch) {
+    const hours = Number(hoursMatch?.[1] || 0);
+    const mins = Number(minsMatch?.[1] || 0);
+    const total = hours * 60 + mins;
+    if (total > 0) return total;
+  }
+
+  const clockMatch = text.match(/^(\d{1,2}):(\d{2})$/);
+  if (clockMatch) {
+    const hours = Number(clockMatch[1]);
+    const mins = Number(clockMatch[2]);
+    const total = hours * 60 + mins;
+    if (total > 0) return total;
+  }
+
+  const numeric = Number(text.replace(/[^\d.-]/g, ""));
+  return Number.isFinite(numeric) && numeric > 0 ? Math.round(numeric) : 0;
+}
+
+function getFlightDurationMinutes(flight: any): number {
+  const direct = [flight?.durationMinutes, flight?.durationMins, flight?.totalDurationMinutes]
+    .map((v) => Number(v))
+    .find((v) => Number.isFinite(v) && v > 0);
+  if (direct) return Math.round(direct);
+
+  const textDuration = [flight?.duration, flight?.totalDuration, flight?.elapsedTime]
+    .map(parseDurationToMinutes)
+    .find((v) => v > 0);
+  if (textDuration) return textDuration;
+
+  const legs = Array.isArray(flight?.legs) ? flight.legs : [];
+  if (legs.length > 0) {
+    const firstDep = legs[0]?.departureTime ? new Date(legs[0].departureTime).getTime() : 0;
+    const lastArr = legs[legs.length - 1]?.arrivalTime ? new Date(legs[legs.length - 1].arrivalTime).getTime() : 0;
+    if (firstDep > 0 && lastArr > firstDep) {
+      return Math.round((lastArr - firstDep) / 60000);
+    }
+  }
+
+  const dep = flight?.departureTime ? new Date(flight.departureTime).getTime() : 0;
+  const arr = flight?.arrivalTime ? new Date(flight.arrivalTime).getTime() : 0;
+  return dep > 0 && arr > dep ? Math.round((arr - dep) / 60000) : 0;
+}
+
+function getPairDurationMinutes(pair: { outbound: any; returnFlight: any }): number {
+  return getFlightDurationMinutes(pair.outbound) + getFlightDurationMinutes(pair.returnFlight);
+}
+
 /* ─── Per-airline fare calculation helper ─── */
 function getAirlineFareParams(
   airlineCode: string,
@@ -281,7 +338,7 @@ const FilterPanel = ({
   }, [flights]);
 
   const durationBounds = useMemo(() => {
-    const ds = flights.map((f: any) => f.durationMinutes || 0).filter((d: number) => d > 0);
+    const ds = flights.map((f: any) => getFlightDurationMinutes(f)).filter((d: number) => d > 0);
     return { min: ds.length > 0 ? Math.min(...ds) : 0, max: ds.length > 0 ? Math.max(...ds) : 1440 };
   }, [flights]);
 
@@ -1227,9 +1284,9 @@ const RoundTripFlightCard = ({
   return (
     <Card className={`overflow-hidden transition-all border ${isExpanded ? "border-accent/30 shadow-md" : "border-border hover:shadow-md"}`}>
       <CardContent className="p-0">
-        <div className="flex flex-col lg:flex-row min-w-0">
+        <div className="flex flex-col xl:flex-row min-w-0">
           {/* Airline section */}
-          <div className="flex items-center gap-2.5 p-2.5 sm:p-3 lg:w-36 xl:w-40 shrink-0 border-b lg:border-b-0 lg:border-r border-border/50">
+          <div className="flex items-center gap-2.5 p-2.5 sm:p-3 xl:w-36 2xl:w-40 shrink-0 border-b xl:border-b-0 xl:border-r border-border/50">
             <div className="flex flex-col items-center gap-0.5 shrink-0">
               {logo ? (
                 <img src={logo} alt={outbound.airline} className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
@@ -1245,7 +1302,7 @@ const RoundTripFlightCard = ({
               <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
             {/* Mobile-only price */}
-            <div className="lg:hidden text-right ml-auto shrink-0">
+            <div className="xl:hidden text-right ml-auto shrink-0">
               <p className="text-base sm:text-lg font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
               {grossTotalPrice > totalPrice && (
                 <p className="text-[10px] font-bold text-amber-500 line-through">BDT {grossTotalPrice.toLocaleString()}</p>
@@ -1262,7 +1319,7 @@ const RoundTripFlightCard = ({
           </div>
 
           {/* Price + Airline info — hidden on mobile (shown inline above) */}
-          <div className="hidden lg:flex flex-col items-end justify-center gap-1 p-3 lg:w-44 xl:w-52 shrink-0 border-l border-border/50 bg-muted/20">
+          <div className="hidden xl:flex flex-col items-end justify-center gap-1 p-3 xl:w-44 2xl:w-52 shrink-0 border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-1.5">
               {totalPrice === cheapest && totalPrice > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
@@ -1308,7 +1365,7 @@ const RoundTripFlightCard = ({
         </div>
 
         {/* Mobile/tablet points + price breakdown row */}
-        <div className="lg:hidden flex items-center justify-between px-2.5 sm:px-3 py-1.5 border-t border-border/30 bg-muted/10">
+        <div className="xl:hidden flex items-center justify-between px-2.5 sm:px-3 py-1.5 border-t border-border/30 bg-muted/10">
           <div className="flex items-center gap-1.5">
             {totalPrice === cheapest && totalPrice > 0 && (
               <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
@@ -1397,20 +1454,20 @@ const RoundTripFlightCard = ({
         </div>
 
         {/* Info bar */}
-        <div className="flex items-center px-3 sm:px-4 py-2.5 bg-muted/30 border-t border-border/50">
-          <button className="flex items-center gap-1 text-accent font-bold text-xs hover:underline shrink-0" onClick={onToggleExpand}>
+        <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-2.5 bg-muted/30 border-t border-border/50">
+          <button className="order-1 flex items-center gap-1 text-accent font-bold text-xs hover:underline shrink-0" onClick={onToggleExpand}>
             Flight Details {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
-          <div className="flex-1 flex items-center justify-center gap-3 sm:gap-5">
+          <div className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1 flex items-center justify-start sm:justify-center gap-3 sm:gap-5">
             <span className={`font-bold text-xs ${refundable ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{fareType}</span>
             {outbound.airlineCode?.toUpperCase() !== "BG" && (
               <>
-                <Separator orientation="vertical" className="h-4" />
-                <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs hidden sm:inline">Book &amp; Hold</span>
+                <Separator orientation="vertical" className="hidden sm:block h-4" />
+                <span className="text-emerald-800 dark:text-emerald-300 font-bold text-xs">Book &amp; Hold</span>
               </>
             )}
           </div>
-          <div className="shrink-0">
+          <div className="order-2 sm:order-3 ml-auto sm:ml-0 shrink-0">
             <Button size="sm" className="font-bold h-8 sm:h-9 px-4 sm:px-5 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground text-xs"
               onClick={() => setShowFareOptions(!showFareOptions)}>
               <span className="hidden sm:inline">View Round-Trip Prices</span>
@@ -2735,41 +2792,67 @@ const SORT_OPTIONS = [
 
 function sortFlights(flights: any[], sortBy: string) {
   const sorted = [...flights];
-  // Pre-compute payable prices for consistent sorting (avoid re-calc per comparison)
   const payableCache = new Map<any, number>();
   const getPayable = (f: any) => {
     if (!payableCache.has(f)) payableCache.set(f, flightPayable(f));
     return payableCache.get(f)!;
   };
-  const getDur = (f: any) => Number(f.durationMinutes) || 0;
+  const getDur = (f: any) => getFlightDurationMinutes(f);
+  const getStops = (f: any) => Number(f?.stops) || 0;
+  const getDepartureTs = (f: any) => (f?.departureTime ? new Date(f.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+
   switch (sortBy) {
-    case "cheapest": return sorted.sort((a, b) => getPayable(a) - getPayable(b));
-    case "earliest": return sorted.sort((a, b) => {
-      const da = a.departureTime ? new Date(a.departureTime).getTime() : Infinity;
-      const db = b.departureTime ? new Date(b.departureTime).getTime() : Infinity;
-      return da - db;
-    });
-    case "fastest": return sorted.sort((a, b) => {
-      const dA = getDur(a) || Infinity;
-      const dB = getDur(b) || Infinity;
-      return dA - dB;
-    });
-    case "best": default: {
+    case "cheapest":
+      return sorted.sort((a, b) => {
+        const payableDiff = getPayable(a) - getPayable(b);
+        if (payableDiff !== 0) return payableDiff;
+
+        const durationDiff = getDur(a) - getDur(b);
+        if (durationDiff !== 0) return durationDiff;
+
+        const stopDiff = getStops(a) - getStops(b);
+        if (stopDiff !== 0) return stopDiff;
+
+        return getDepartureTs(a) - getDepartureTs(b);
+      });
+
+    case "earliest":
+      return sorted.sort((a, b) => getDepartureTs(a) - getDepartureTs(b));
+
+    case "fastest":
+      return sorted.sort((a, b) => {
+        const dA = getDur(a) || Number.MAX_SAFE_INTEGER;
+        const dB = getDur(b) || Number.MAX_SAFE_INTEGER;
+        if (dA !== dB) return dA - dB;
+
+        const payableDiff = getPayable(a) - getPayable(b);
+        if (payableDiff !== 0) return payableDiff;
+
+        return getStops(a) - getStops(b);
+      });
+
+    case "best":
+    default: {
       // Best = normalized weighted balance: 40% price, 45% duration, 15% stops
-      const prices = sorted.map(f => getPayable(f));
-      const durations = sorted.map(f => getDur(f)).filter(d => d > 0);
+      const prices = sorted.map((f) => getPayable(f));
+      const durations = sorted.map((f) => getDur(f)).filter((d) => d > 0);
       const minP = prices.length > 0 ? Math.min(...prices) : 0;
       const maxP = prices.length > 0 ? Math.max(...prices) : 1;
       const minD = durations.length > 0 ? Math.min(...durations) : 0;
       const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
+
       return sorted.sort((a, b) => {
-        const pA = getPayable(a), pB = getPayable(b);
-        const dA = getDur(a) || maxD, dB = getDur(b) || maxD; // treat missing as worst
-        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((dA - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
-        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((dB - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
-        return scoreA - scoreB;
+        const pA = getPayable(a);
+        const pB = getPayable(b);
+        const dA = getDur(a) || maxD;
+        const dB = getDur(b) || maxD;
+        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((dA - minD) / durSpread) * 0.45 + getStops(a) * 0.15;
+        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((dB - minD) / durSpread) * 0.45 + getStops(b) * 0.15;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+
+        return getDepartureTs(a) - getDepartureTs(b);
       });
     }
   }
@@ -3123,11 +3206,11 @@ const FlightResults = () => {
 
   // Duration bounds for slider init
   const maxDuration = useMemo(() => {
-    const ds = allFlightsForFilters.map((f: any) => f.durationMinutes || 0).filter((d: number) => d > 0);
+    const ds = allFlightsForFilters.map((f: any) => getFlightDurationMinutes(f)).filter((d: number) => d > 0);
     return ds.length > 0 ? Math.max(...ds) : 1440;
   }, [allFlightsForFilters]);
   const minDuration = useMemo(() => {
-    const ds = allFlightsForFilters.map((f: any) => f.durationMinutes || 0).filter((d: number) => d > 0);
+    const ds = allFlightsForFilters.map((f: any) => getFlightDurationMinutes(f)).filter((d: number) => d > 0);
     return ds.length > 0 ? Math.min(...ds) : 0;
   }, [allFlightsForFilters]);
 
@@ -3190,54 +3273,62 @@ const FlightResults = () => {
 
   // Quick sort summaries — Cheapest, Fastest, Best from real data (payable prices)
   const quickSortSummary = useMemo(() => {
-    const pairDur = (p: any) => (Number(p.outbound.durationMinutes) || 0) + (Number(p.returnFlight.durationMinutes) || 0);
     if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      const withPayable = roundTripPairs.map(p => ({ ...p, payableTotal: pairPayable(p) }));
+      const withPayable = roundTripPairs.map((p) => ({ ...p, payableTotal: pairPayable(p), _duration: getPairDurationMinutes(p) }));
       const cheapestPair = [...withPayable].sort((a, b) => a.payableTotal - b.payableTotal)[0];
-      const fastestPair = [...withPayable].sort((a, b) => (pairDur(a) || Infinity) - (pairDur(b) || Infinity))[0];
-      const payables = withPayable.map(p => p.payableTotal);
-      const durations = withPayable.map(p => pairDur(p)).filter(d => d > 0);
+      const fastestPair = [...withPayable].sort((a, b) => (a._duration || Number.MAX_SAFE_INTEGER) - (b._duration || Number.MAX_SAFE_INTEGER))[0];
+      const payables = withPayable.map((p) => p.payableTotal);
+      const durations = withPayable.map((p) => p._duration).filter((d) => d > 0);
       const minP = Math.min(...payables);
       const maxP = Math.max(...payables);
       const minD = durations.length > 0 ? Math.min(...durations) : 0;
       const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
+
       const bestPair = [...withPayable].sort((a, b) => {
-        const durA = pairDur(a) || maxD;
-        const durB = pairDur(b) || maxD;
+        const durA = a._duration || maxD;
+        const durB = b._duration || maxD;
         const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
         const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
         const sa = ((a.payableTotal - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
         const sb = ((b.payableTotal - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
         return sa - sb;
       })[0];
+
       return {
-        cheapest: cheapestPair ? { price: cheapestPair.payableTotal, duration: cheapestPair.outbound.duration || '' } : null,
-        fastest: fastestPair ? { price: fastestPair.payableTotal, duration: fastestPair.outbound.duration || '' } : null,
-        best: bestPair ? { price: bestPair.payableTotal, duration: bestPair.outbound.duration || '' } : null,
+        cheapest: cheapestPair ? { price: cheapestPair.payableTotal, duration: cheapestPair.outbound.duration || "" } : null,
+        fastest: fastestPair ? { price: fastestPair.payableTotal, duration: fastestPair.outbound.duration || "" } : null,
+        best: bestPair ? { price: bestPair.payableTotal, duration: bestPair.outbound.duration || "" } : null,
       };
     }
+
     const relevantFlights = isMultiCity ? allMultiCityFlights : flights;
     if (relevantFlights.length === 0) return { cheapest: null, fastest: null, best: null };
-    const withPayable = relevantFlights.map((f: any) => ({ ...f, _payable: flightPayable(f) }));
+
+    const withPayable = relevantFlights.map((f: any) => ({ ...f, _payable: flightPayable(f), _duration: getFlightDurationMinutes(f) }));
     const cheapestFlight = [...withPayable].sort((a, b) => a._payable - b._payable)[0];
-    const fastestFlight = [...withPayable].sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity))[0];
-    const minP = Math.min(...withPayable.map(f => f._payable));
-    const maxP = Math.max(...withPayable.map(f => f._payable));
-    const minD = Math.min(...withPayable.map(f => f.durationMinutes || Infinity));
-    const maxD = Math.max(...withPayable.map(f => f.durationMinutes || 0));
+    const fastestFlight = [...withPayable].sort((a, b) => (a._duration || Number.MAX_SAFE_INTEGER) - (b._duration || Number.MAX_SAFE_INTEGER))[0];
+    const minP = Math.min(...withPayable.map((f) => f._payable));
+    const maxP = Math.max(...withPayable.map((f) => f._payable));
+    const durations = withPayable.map((f) => f._duration).filter((d) => d > 0);
+    const minD = durations.length > 0 ? Math.min(...durations) : 0;
+    const maxD = durations.length > 0 ? Math.max(...durations) : 1;
     const priceSpread = maxP - minP || 1;
     const durSpread = maxD - minD || 1;
+
     const bestFlight = [...withPayable].sort((a, b) => {
-      const sa = ((a._payable - minP) / priceSpread) * 0.4 + (((a.durationMinutes || 0) - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
-      const sb = ((b._payable - minP) / priceSpread) * 0.4 + (((b.durationMinutes || 0) - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
+      const durA = a._duration || maxD;
+      const durB = b._duration || maxD;
+      const sa = ((a._payable - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
+      const sb = ((b._payable - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
       return sa - sb;
     })[0];
+
     return {
-      cheapest: cheapestFlight ? { price: cheapestFlight._payable, duration: cheapestFlight.duration || '' } : null,
-      fastest: fastestFlight ? { price: fastestFlight._payable, duration: fastestFlight.duration || '' } : null,
-      best: bestFlight ? { price: bestFlight._payable, duration: bestFlight.duration || '' } : null,
+      cheapest: cheapestFlight ? { price: cheapestFlight._payable, duration: cheapestFlight.duration || "" } : null,
+      fastest: fastestFlight ? { price: fastestFlight._payable, duration: fastestFlight.duration || "" } : null,
+      best: bestFlight ? { price: bestFlight._payable, duration: bestFlight.duration || "" } : null,
     };
   }, [flights, roundTripPairs, isRoundTrip, hasDirections, isMultiCity, allMultiCityFlights]);
 
@@ -3272,7 +3363,7 @@ const FlightResults = () => {
       }
       // Duration filter
       if (durationRange[0] > 0 || durationRange[1] < 5000) {
-        const dur = f.durationMinutes || 0;
+        const dur = getFlightDurationMinutes(f);
         if (dur > 0 && (dur < durationRange[0] || dur > durationRange[1])) return false;
       }
       // Layover airports
@@ -3335,7 +3426,7 @@ const FlightResults = () => {
         if (!alliance || !selectedAlliances.includes(alliance)) return false;
       }
       if (durationRange[0] > 0 || durationRange[1] < 5000) {
-        const dur = p.outbound.durationMinutes || 0;
+        const dur = getFlightDurationMinutes(p.outbound);
         if (dur > 0 && (dur < durationRange[0] || dur > durationRange[1])) return false;
       }
       // Layover airports filter
@@ -3369,38 +3460,56 @@ const FlightResults = () => {
       }
       return true;
     });
-    // Helper for pair total duration with explicit Number coercion
-    const pairDur = (p: any) => (Number(p.outbound.durationMinutes) || 0) + (Number(p.returnFlight.durationMinutes) || 0);
-    
-    if (sortBy === "cheapest") filtered.sort((a, b) => pairPayable(a) - pairPayable(b));
-    else if (sortBy === "fastest") {
+    const pairDur = (p: any) => getPairDurationMinutes(p);
+    const pairStops = (p: any) => (Number(p.outbound?.stops) || 0) + (Number(p.returnFlight?.stops) || 0);
+    const pairDepartureTs = (p: any) => (p.outbound?.departureTime ? new Date(p.outbound.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+
+    if (sortBy === "cheapest") {
       filtered.sort((a, b) => {
-        const dA = pairDur(a) || Infinity;
-        const dB = pairDur(b) || Infinity;
-        return dA - dB;
+        const payableDiff = pairPayable(a) - pairPayable(b);
+        if (payableDiff !== 0) return payableDiff;
+
+        const durationDiff = pairDur(a) - pairDur(b);
+        if (durationDiff !== 0) return durationDiff;
+
+        return pairStops(a) - pairStops(b);
       });
-    }
-    else if (sortBy === "best") {
-      const payables = filtered.map(p => pairPayable(p));
-      const durations = filtered.map(p => pairDur(p)).filter(d => d > 0);
+    } else if (sortBy === "fastest") {
+      filtered.sort((a, b) => {
+        const dA = pairDur(a) || Number.MAX_SAFE_INTEGER;
+        const dB = pairDur(b) || Number.MAX_SAFE_INTEGER;
+        if (dA !== dB) return dA - dB;
+
+        const payableDiff = pairPayable(a) - pairPayable(b);
+        if (payableDiff !== 0) return payableDiff;
+
+        return pairStops(a) - pairStops(b);
+      });
+    } else if (sortBy === "best") {
+      const payables = filtered.map((p) => pairPayable(p));
+      const durations = filtered.map((p) => pairDur(p)).filter((d) => d > 0);
       const minP = payables.length > 0 ? Math.min(...payables) : 0;
       const maxP = payables.length > 0 ? Math.max(...payables) : 1;
       const minD = durations.length > 0 ? Math.min(...durations) : 0;
       const maxD = durations.length > 0 ? Math.max(...durations) : 1;
       const priceSpread = maxP - minP || 1;
       const durSpread = maxD - minD || 1;
+
       filtered.sort((a, b) => {
-        const durA = pairDur(a) || maxD; // treat missing as worst
+        const durA = pairDur(a) || maxD;
         const durB = pairDur(b) || maxD;
-        const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
-        const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
-        const pA = pairPayable(a), pB = pairPayable(b);
-        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
-        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
-        return scoreA - scoreB;
+        const pA = pairPayable(a);
+        const pB = pairPayable(b);
+        const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + pairStops(a) * 0.15;
+        const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + pairStops(b) * 0.15;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+
+        return pairDepartureTs(a) - pairDepartureTs(b);
       });
+    } else if (sortBy === "departure") {
+      filtered.sort((a, b) => pairDepartureTs(a) - pairDepartureTs(b));
     }
-    else if (sortBy === "departure") filtered.sort((a, b) => new Date(a.outbound.departureTime).getTime() - new Date(b.outbound.departureTime).getTime());
+
     return filtered;
   }, [roundTripPairs, isRoundTrip, hasDirections, airlineFilter, selectedAirlines, priceRange, stopsFilter, departTimeRange, arrivalTimeRange, refundableOnly, selectedAlliances, durationRange, sortBy, selectedLayoverAirports, layoverDurationRange, selectedBaggage]);
 
