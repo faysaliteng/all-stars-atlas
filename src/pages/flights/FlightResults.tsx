@@ -2351,16 +2351,6 @@ const FlightCard = ({
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              {logo ? (
-                <img src={logo} alt={flight.airline} className="w-6 h-6 object-contain hidden sm:block"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-              ) : null}
-              <div className="hidden sm:block text-right min-w-0">
-                <p className="text-[10px] font-bold leading-tight truncate max-w-[70px]">{flight.airline}</p>
-                <p className="text-[9px] text-muted-foreground truncate">{flightNo}</p>
-              </div>
-            </div>
             <p className="text-lg sm:text-xl lg:text-2xl font-black leading-none whitespace-nowrap">BDT {price.toLocaleString()}</p>
             {discount > 0 && (
               <p className="text-[11px] font-bold text-amber-500 line-through">BDT {grossPrice.toLocaleString()}</p>
