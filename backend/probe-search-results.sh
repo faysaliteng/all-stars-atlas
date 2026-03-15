@@ -84,7 +84,7 @@ analyze_prices() {
     ZERO_PRICE_FLIGHTS=$((ZERO_PRICE_FLIGHTS + zero_count))
 
     # Show which airlines have zero prices
-    echo "$json" | jq -r '.flights[] | select(
+    echo "$json" | jq -r '(.data // .flights // [])[] | select(
       (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
       (.price == 0 or .price == null or .price == "0") and
       (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0") and
