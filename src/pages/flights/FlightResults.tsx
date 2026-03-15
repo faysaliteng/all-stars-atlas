@@ -2704,6 +2704,7 @@ function sortFlights(flights: any[], sortBy: string) {
     if (!payableCache.has(f)) payableCache.set(f, flightPayable(f));
     return payableCache.get(f)!;
   };
+  const getDur = (f: any) => Number(f.durationMinutes) || 0;
   switch (sortBy) {
     case "cheapest": return sorted.sort((a, b) => getPayable(a) - getPayable(b));
     case "earliest": return sorted.sort((a, b) => {
@@ -2711,11 +2712,15 @@ function sortFlights(flights: any[], sortBy: string) {
       const db = b.departureTime ? new Date(b.departureTime).getTime() : Infinity;
       return da - db;
     });
-    case "fastest": return sorted.sort((a, b) => (a.durationMinutes || Infinity) - (b.durationMinutes || Infinity));
+    case "fastest": return sorted.sort((a, b) => {
+      const dA = getDur(a) || Infinity;
+      const dB = getDur(b) || Infinity;
+      return dA - dB;
+    });
     case "best": default: {
       // Best = normalized weighted balance: 40% price, 45% duration, 15% stops
       const prices = sorted.map(f => getPayable(f));
-      const durations = sorted.map(f => f.durationMinutes || 0).filter(d => d > 0);
+      const durations = sorted.map(f => getDur(f)).filter(d => d > 0);
       const minP = prices.length > 0 ? Math.min(...prices) : 0;
       const maxP = prices.length > 0 ? Math.max(...prices) : 1;
       const minD = durations.length > 0 ? Math.min(...durations) : 0;
@@ -2724,7 +2729,7 @@ function sortFlights(flights: any[], sortBy: string) {
       const durSpread = maxD - minD || 1;
       return sorted.sort((a, b) => {
         const pA = getPayable(a), pB = getPayable(b);
-        const dA = a.durationMinutes || 0, dB = b.durationMinutes || 0;
+        const dA = getDur(a) || maxD, dB = getDur(b) || maxD; // treat missing as worst
         const scoreA = ((pA - minP) / priceSpread) * 0.4 + ((dA - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
         const scoreB = ((pB - minP) / priceSpread) * 0.4 + ((dB - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
         return scoreA - scoreB;
