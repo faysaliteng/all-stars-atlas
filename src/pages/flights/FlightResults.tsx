@@ -2271,10 +2271,13 @@ const FlightCard = ({
           {/* Flight times */}
           <div className="flex-1 p-3 sm:p-4 min-w-0">
             {/* Route label header */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg mb-2.5 text-[10px] sm:text-xs font-bold shadow-sm bg-accent/15 text-accent border border-accent/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md mb-3 text-[11px] font-bold bg-accent/10 dark:bg-accent/20 text-accent">
               <Plane className="w-3.5 h-3.5" />
-              <span>DEPARTURE: {fromCode} → {toCode}</span>
-              <span className="flight-date text-[10px] ml-0.5">• {departDateStr}</span>
+              <span>DEPARTURE</span>
+              <span className="text-accent/40 font-normal">|</span>
+              <span>{fromCode} → {toCode}</span>
+              <span className="text-accent/40 font-normal">|</span>
+              <span className="flight-date">{departDateStr}</span>
             </div>
             <div className="flex items-center gap-3">
               {/* Departure */}
