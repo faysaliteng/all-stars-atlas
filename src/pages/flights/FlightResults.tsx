@@ -1319,7 +1319,7 @@ const RoundTripFlightCard = ({
           </div>
 
           {/* Price + Airline info — hidden on mobile (shown inline above) */}
-          <div className="hidden lg:flex flex-col items-end justify-center gap-1 p-3 lg:w-44 xl:w-52 shrink-0 border-l border-border/50 bg-muted/20">
+          <div className="hidden xl:flex flex-col items-end justify-center gap-1 p-3 xl:w-44 2xl:w-52 shrink-0 border-l border-border/50 bg-muted/20">
             <div className="flex items-center gap-1.5">
               {totalPrice === cheapest && totalPrice > 0 && (
                 <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
