@@ -146,6 +146,18 @@ echo -e " Dates: D1=$D1 D2=$D2 D3=$D3 D4=$D4"
 echo -e " Returns: R1=$R1 R2=$R2 R3=$R3"
 echo "═══════════════════════════════════════════════════"
 
+# ─── Quick diagnostic: test one search and show raw response shape ───
+echo ""
+echo -e "${CYAN}── PRE-CHECK: Raw API response shape (DAC→DXB)${NC}"
+DIAG=$(curl -s --compressed --max-time 60 "$API_BASE/flights/search?from=DAC&to=DXB&date=$D1&adults=1&cabinClass=economy" 2>/dev/null)
+echo -e "   Response length: ${#DIAG} bytes"
+echo -e "   First 300 chars: $(echo "$DIAG" | head -c 300)"
+echo -e "   Top-level keys: $(echo "$DIAG" | jq -r 'keys | join(", ")' 2>/dev/null)"
+echo -e "   data count: $(echo "$DIAG" | jq -r '(.data // []) | length' 2>/dev/null)"
+echo -e "   flights count: $(echo "$DIAG" | jq -r '(.flights // []) | length' 2>/dev/null)"
+echo -e "   sources: $(echo "$DIAG" | jq -r '.sources // empty' 2>/dev/null)"
+echo ""
+
 # ═══════════════════════════════════════════════════════════════
 # SECTION 1: ONE-WAY INTERNATIONAL (Various destinations)
 # ═══════════════════════════════════════════════════════════════
