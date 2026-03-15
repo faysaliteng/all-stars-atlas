@@ -1365,7 +1365,7 @@ const RoundTripFlightCard = ({
         </div>
 
         {/* Mobile/tablet points + price breakdown row */}
-        <div className="lg:hidden flex items-center justify-between px-2.5 sm:px-3 py-1.5 border-t border-border/30 bg-muted/10">
+        <div className="xl:hidden flex items-center justify-between px-2.5 sm:px-3 py-1.5 border-t border-border/30 bg-muted/10">
           <div className="flex items-center gap-1.5">
             {totalPrice === cheapest && totalPrice > 0 && (
               <Badge className="bg-accent/10 text-accent border-0 text-[8px] font-bold px-1.5 py-0">Cheapest</Badge>
