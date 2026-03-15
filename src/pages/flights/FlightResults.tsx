@@ -3363,7 +3363,7 @@ const FlightResults = () => {
       }
       // Duration filter
       if (durationRange[0] > 0 || durationRange[1] < 5000) {
-        const dur = f.durationMinutes || 0;
+        const dur = getFlightDurationMinutes(f);
         if (dur > 0 && (dur < durationRange[0] || dur > durationRange[1])) return false;
       }
       // Layover airports
