@@ -310,7 +310,8 @@ const FilterPanel = ({
         if (!code) continue;
         if (!map[code]) map[code] = { code, name: getAirportName(code), count: 0, cheapest: Infinity };
         map[code].count++;
-        if ((f.price || Infinity) < map[code].cheapest) map[code].cheapest = f.price;
+        const payable = flightPayable(f);
+        if (payable < map[code].cheapest) map[code].cheapest = payable;
       }
     }
     return Object.values(map).sort((a, b) => b.count - a.count);
