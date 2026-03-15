@@ -292,7 +292,7 @@ echo -e "${BOLD} SECTION 6: ZERO-PRICE FLIGHT DETAIL DUMP${NC}"
 echo "═══════════════════════════════════════════════════"
 
 echo -e "\n${CYAN}── Dumping first 3 zero-price flights (all fields)${NC}"
-echo "$R" | jq -r '[.flights[] | select(
+echo "$R" | jq -r '[(.data // .flights // [])[] | select(
   (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
   (.price == 0 or .price == null or .price == "0") and
   (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0") and
