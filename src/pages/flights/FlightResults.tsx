@@ -3276,66 +3276,6 @@ const FlightResults = () => {
     return Object.values(map).sort((a, b) => a.cheapest - b.cheapest);
   }, [flights, roundTripPairs, isRoundTrip, hasDirections, isMultiCity, allMultiCityFlights]);
 
-  // Quick sort summaries — Cheapest, Fastest, Best from real data (payable prices)
-  const quickSortSummary = useMemo(() => {
-    if (isRoundTrip && hasDirections && roundTripPairs.length > 0) {
-      const withPayable = roundTripPairs.map((p) => ({ ...p, payableTotal: pairPayable(p), _duration: getPairDurationMinutes(p) }));
-      const cheapestPair = [...withPayable].sort((a, b) => a.payableTotal - b.payableTotal)[0];
-      const fastestPair = [...withPayable].sort((a, b) => (a._duration || Number.MAX_SAFE_INTEGER) - (b._duration || Number.MAX_SAFE_INTEGER))[0];
-      const payables = withPayable.map((p) => p.payableTotal);
-      const durations = withPayable.map((p) => p._duration).filter((d) => d > 0);
-      const minP = Math.min(...payables);
-      const maxP = Math.max(...payables);
-      const minD = durations.length > 0 ? Math.min(...durations) : 0;
-      const maxD = durations.length > 0 ? Math.max(...durations) : 1;
-      const priceSpread = maxP - minP || 1;
-      const durSpread = maxD - minD || 1;
-
-      const bestPair = [...withPayable].sort((a, b) => {
-        const durA = a._duration || maxD;
-        const durB = b._duration || maxD;
-        const stopsA = (a.outbound.stops || 0) + (a.returnFlight.stops || 0);
-        const stopsB = (b.outbound.stops || 0) + (b.returnFlight.stops || 0);
-        const sa = ((a.payableTotal - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + stopsA * 0.15;
-        const sb = ((b.payableTotal - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + stopsB * 0.15;
-        return sa - sb;
-      })[0];
-
-      return {
-        cheapest: cheapestPair ? { price: cheapestPair.payableTotal, duration: cheapestPair.outbound.duration || "" } : null,
-        fastest: fastestPair ? { price: fastestPair.payableTotal, duration: fastestPair.outbound.duration || "" } : null,
-        best: bestPair ? { price: bestPair.payableTotal, duration: bestPair.outbound.duration || "" } : null,
-      };
-    }
-
-    const relevantFlights = isMultiCity ? allMultiCityFlights : flights;
-    if (relevantFlights.length === 0) return { cheapest: null, fastest: null, best: null };
-
-    const withPayable = relevantFlights.map((f: any) => ({ ...f, _payable: flightPayable(f), _duration: getFlightDurationMinutes(f) }));
-    const cheapestFlight = [...withPayable].sort((a, b) => a._payable - b._payable)[0];
-    const fastestFlight = [...withPayable].sort((a, b) => (a._duration || Number.MAX_SAFE_INTEGER) - (b._duration || Number.MAX_SAFE_INTEGER))[0];
-    const minP = Math.min(...withPayable.map((f) => f._payable));
-    const maxP = Math.max(...withPayable.map((f) => f._payable));
-    const durations = withPayable.map((f) => f._duration).filter((d) => d > 0);
-    const minD = durations.length > 0 ? Math.min(...durations) : 0;
-    const maxD = durations.length > 0 ? Math.max(...durations) : 1;
-    const priceSpread = maxP - minP || 1;
-    const durSpread = maxD - minD || 1;
-
-    const bestFlight = [...withPayable].sort((a, b) => {
-      const durA = a._duration || maxD;
-      const durB = b._duration || maxD;
-      const sa = ((a._payable - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + (a.stops || 0) * 0.15;
-      const sb = ((b._payable - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + (b.stops || 0) * 0.15;
-      return sa - sb;
-    })[0];
-
-    return {
-      cheapest: cheapestFlight ? { price: cheapestFlight._payable, duration: cheapestFlight.duration || "" } : null,
-      fastest: fastestFlight ? { price: fastestFlight._payable, duration: fastestFlight.duration || "" } : null,
-      best: bestFlight ? { price: bestFlight._payable, duration: bestFlight.duration || "" } : null,
-    };
-  }, [flights, roundTripPairs, isRoundTrip, hasDirections, isMultiCity, allMultiCityFlights]);
 
   const applyFilters = useCallback((list: any[]) => {
     return list.filter((f: any) => {
@@ -3517,6 +3457,81 @@ const FlightResults = () => {
 
     return filtered;
   }, [roundTripPairs, isRoundTrip, hasDirections, airlineFilter, selectedAirlines, priceRange, stopsFilter, departTimeRange, arrivalTimeRange, refundableOnly, selectedAlliances, durationRange, sortBy, selectedLayoverAirports, layoverDurationRange, selectedBaggage]);
+
+  // Quick sort summaries — always from current filtered pool (matches visible result set)
+  const quickSortSummary = useMemo(() => {
+    if (isRoundTrip && hasDirections) {
+      const pool = filteredPairs;
+      if (pool.length === 0) return { cheapest: null, fastest: null, best: null };
+
+      const withMetrics = pool.map((p) => ({
+        ...p,
+        payableTotal: pairPayable(p),
+        durationMins: getPairDurationMinutes(p),
+        totalStops: (Number(p.outbound?.stops) || 0) + (Number(p.returnFlight?.stops) || 0),
+      }));
+
+      const cheapestPair = [...withMetrics].sort((a, b) => a.payableTotal - b.payableTotal)[0];
+      const fastestPair = [...withMetrics].sort((a, b) => (a.durationMins || Number.MAX_SAFE_INTEGER) - (b.durationMins || Number.MAX_SAFE_INTEGER))[0];
+
+      const payables = withMetrics.map((p) => p.payableTotal);
+      const durations = withMetrics.map((p) => p.durationMins).filter((d) => d > 0);
+      const minP = Math.min(...payables);
+      const maxP = Math.max(...payables);
+      const minD = durations.length > 0 ? Math.min(...durations) : 0;
+      const maxD = durations.length > 0 ? Math.max(...durations) : 1;
+      const priceSpread = maxP - minP || 1;
+      const durSpread = maxD - minD || 1;
+
+      const bestPair = [...withMetrics].sort((a, b) => {
+        const durA = a.durationMins || maxD;
+        const durB = b.durationMins || maxD;
+        const scoreA = ((a.payableTotal - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + a.totalStops * 0.15;
+        const scoreB = ((b.payableTotal - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + b.totalStops * 0.15;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+        return (a.outbound?.departureTime ? new Date(a.outbound.departureTime).getTime() : Number.MAX_SAFE_INTEGER)
+          - (b.outbound?.departureTime ? new Date(b.outbound.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+      })[0];
+
+      return {
+        cheapest: cheapestPair ? { price: cheapestPair.payableTotal, duration: cheapestPair.durationMins > 0 ? fmtDurationMins(cheapestPair.durationMins) : (cheapestPair.outbound?.duration || "") } : null,
+        fastest: fastestPair ? { price: fastestPair.payableTotal, duration: fastestPair.durationMins > 0 ? fmtDurationMins(fastestPair.durationMins) : (fastestPair.outbound?.duration || "") } : null,
+        best: bestPair ? { price: bestPair.payableTotal, duration: bestPair.durationMins > 0 ? fmtDurationMins(bestPair.durationMins) : (bestPair.outbound?.duration || "") } : null,
+      };
+    }
+
+    const pool = isMultiCity ? sortFlights(applyFilters(allMultiCityFlights), sortBy) : filteredAll;
+    if (pool.length === 0) return { cheapest: null, fastest: null, best: null };
+
+    const withMetrics = pool.map((f: any) => ({ ...f, payable: flightPayable(f), durationMins: getFlightDurationMinutes(f), stops: Number(f?.stops) || 0 }));
+    const cheapestFlight = [...withMetrics].sort((a, b) => a.payable - b.payable)[0];
+    const fastestFlight = [...withMetrics].sort((a, b) => (a.durationMins || Number.MAX_SAFE_INTEGER) - (b.durationMins || Number.MAX_SAFE_INTEGER))[0];
+
+    const payables = withMetrics.map((f) => f.payable);
+    const durations = withMetrics.map((f) => f.durationMins).filter((d) => d > 0);
+    const minP = Math.min(...payables);
+    const maxP = Math.max(...payables);
+    const minD = durations.length > 0 ? Math.min(...durations) : 0;
+    const maxD = durations.length > 0 ? Math.max(...durations) : 1;
+    const priceSpread = maxP - minP || 1;
+    const durSpread = maxD - minD || 1;
+
+    const bestFlight = [...withMetrics].sort((a, b) => {
+      const durA = a.durationMins || maxD;
+      const durB = b.durationMins || maxD;
+      const scoreA = ((a.payable - minP) / priceSpread) * 0.4 + ((durA - minD) / durSpread) * 0.45 + a.stops * 0.15;
+      const scoreB = ((b.payable - minP) / priceSpread) * 0.4 + ((durB - minD) / durSpread) * 0.45 + b.stops * 0.15;
+      if (scoreA !== scoreB) return scoreA - scoreB;
+      return (a.departureTime ? new Date(a.departureTime).getTime() : Number.MAX_SAFE_INTEGER)
+        - (b.departureTime ? new Date(b.departureTime).getTime() : Number.MAX_SAFE_INTEGER);
+    })[0];
+
+    return {
+      cheapest: cheapestFlight ? { price: cheapestFlight.payable, duration: cheapestFlight.durationMins > 0 ? fmtDurationMins(cheapestFlight.durationMins) : (cheapestFlight.duration || "") } : null,
+      fastest: fastestFlight ? { price: fastestFlight.payable, duration: fastestFlight.durationMins > 0 ? fmtDurationMins(fastestFlight.durationMins) : (fastestFlight.duration || "") } : null,
+      best: bestFlight ? { price: bestFlight.payable, duration: bestFlight.durationMins > 0 ? fmtDurationMins(bestFlight.durationMins) : (bestFlight.duration || "") } : null,
+    };
+  }, [isRoundTrip, hasDirections, filteredPairs, isMultiCity, filteredAll, allMultiCityFlights, applyFilters, sortBy]);
 
   // Cabin class mismatch detection — searched for Business/First but API returned only Economy
   const searchedCabinNorm = (cabinClass || "").toLowerCase();
@@ -4203,7 +4218,7 @@ const FlightResults = () => {
                     ) : (
                       <>
                         {(() => {
-                          const cheapest = Math.min(...filteredPairs.map(p => p.totalPrice));
+                          const cheapest = Math.min(...filteredPairs.map((p) => pairPayable(p)));
                           const visible = filteredPairs.slice(0, visibleCount);
                           return visible.map((pair, idx) => (
                             <RoundTripFlightCard
