@@ -3278,16 +3278,12 @@ const FlightResults = () => {
         if (stopsFilter === "2+" && stops < 2) return false;
       }
       if (departTimeRange[0] !== 0 || departTimeRange[1] !== 24) {
-        if (p.outbound.departureTime) {
-          const hour = new Date(p.outbound.departureTime).getHours();
-          if (hour < departTimeRange[0] || hour >= departTimeRange[1]) return false;
-        }
+        const hour = getApiLocalHour(p.outbound.departureTime);
+        if (hour !== null && (hour < departTimeRange[0] || hour >= departTimeRange[1])) return false;
       }
       if (arrivalTimeRange[0] !== 0 || arrivalTimeRange[1] !== 24) {
-        if (p.outbound.arrivalTime) {
-          const h = new Date(p.outbound.arrivalTime).getHours();
-          if (h < arrivalTimeRange[0] || h >= arrivalTimeRange[1]) return false;
-        }
+        const h = getApiLocalHour(p.outbound.arrivalTime);
+        if (h !== null && (h < arrivalTimeRange[0] || h >= arrivalTimeRange[1])) return false;
       }
       if (refundableOnly && !p.outbound.refundable) return false;
       if (selectedAlliances.length > 0) {
