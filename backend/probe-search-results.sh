@@ -68,7 +68,7 @@ analyze_prices() {
   TOTAL_FLIGHTS=$((TOTAL_FLIGHTS + count))
 
   # Count zero-price flights
-  local zero_count=$(echo "$json" | jq '[.flights[] | select(
+  local zero_count=$(echo "$json" | jq '[(.data // .flights // [])[] | select(
     (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
     (.price == 0 or .price == null or .price == "0") and
     (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0") and
