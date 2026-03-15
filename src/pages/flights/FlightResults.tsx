@@ -4218,7 +4218,7 @@ const FlightResults = () => {
                     ) : (
                       <>
                         {(() => {
-                          const cheapest = Math.min(...filteredPairs.map(p => p.totalPrice));
+                          const cheapest = Math.min(...filteredPairs.map((p) => pairPayable(p)));
                           const visible = filteredPairs.slice(0, visibleCount);
                           return visible.map((pair, idx) => (
                             <RoundTripFlightCard
