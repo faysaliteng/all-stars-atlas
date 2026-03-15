@@ -318,7 +318,7 @@ echo "$R" | jq -r '[(.data // .flights // [])[] | select(
 }' 2>/dev/null
 
 # If no zero-price flights found, show a sample
-ZERO_CT=$(echo "$R" | jq '[.flights[] | select(
+ZERO_CT=$(echo "$R" | jq '[(.data // .flights // [])[] | select(
   (.totalPrice == 0 or .totalPrice == null or .totalPrice == "0") and
   (.price == 0 or .price == null or .price == "0") and
   (.grossPrice == 0 or .grossPrice == null or .grossPrice == "0")
@@ -328,7 +328,7 @@ if [ "$ZERO_CT" = "0" ] || [ "$ZERO_CT" = "null" ]; then
   echo -e "   ${GREEN}No zero-price flights found in deep audit! ✅${NC}"
   echo -e "\n${CYAN}── Sample of lowest-priced flights:${NC}"
   echo "$R" | jq -r '
-    [.flights[] | {
+    [(.data // .flights // [])[] | {
       airline: "\(.airlineCode) \(.airline // "?")",
       flight: .flightNumber,
       source: .source,
