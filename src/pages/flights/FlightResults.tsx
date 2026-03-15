@@ -1302,7 +1302,7 @@ const RoundTripFlightCard = ({
               <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{flightNo}</p>
             </div>
             {/* Mobile-only price */}
-            <div className="lg:hidden text-right ml-auto shrink-0">
+            <div className="xl:hidden text-right ml-auto shrink-0">
               <p className="text-base sm:text-lg font-black leading-none whitespace-nowrap">BDT {totalPrice.toLocaleString()}</p>
               {grossTotalPrice > totalPrice && (
                 <p className="text-[10px] font-bold text-amber-500 line-through">BDT {grossTotalPrice.toLocaleString()}</p>
