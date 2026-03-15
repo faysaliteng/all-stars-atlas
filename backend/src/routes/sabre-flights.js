@@ -701,8 +701,45 @@ function normalizeGroupedResponse(response, params) {
 
     const toNumber = (value) => {
       if (value === null || value === undefined || value === '') return NaN;
-      const n = Number(value);
-      return Number.isFinite(n) ? n : NaN;
+
+      if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : NaN;
+      }
+
+      if (typeof value === 'string') {
+        const raw = value.trim();
+        if (!raw) return NaN;
+        const cleaned = raw
+          .replace(/,/g, '')
+          .replace(/\s+/g, '')
+          .replace(/[^\d.-]/g, '');
+        if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return NaN;
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : NaN;
+      }
+
+      if (typeof value === 'object') {
+        const candidates = [
+          value.amount,
+          value.value,
+          value.total,
+          value.totalAmount,
+          value.totalPrice,
+          value.equivalentAmount,
+          value.equivalentPrice,
+          value.baseFare,
+          value.baseFareAmount,
+          value.tax,
+          value.taxAmount,
+          value.totalTaxAmount,
+        ];
+        for (const c of candidates) {
+          const n = toNumber(c);
+          if (Number.isFinite(n)) return n;
+        }
+      }
+
+      return NaN;
     };
 
     const firstPositiveNumber = (...values) => {
@@ -723,7 +760,7 @@ function normalizeGroupedResponse(response, params) {
         const pInfo = pax?.passengerInfo || {};
         const cc = pInfo.currencyConversion || {};
         const ptf = pInfo.passengerTotalFare || {};
-        const qty = Math.max(1, parseInt(pInfo.passengerNumber || 1, 10) || 1);
+        const qty = Math.max(1, Math.round(toNumber(pInfo.passengerNumber) || 1));
 
         const paxTotal = firstPositiveNumber(
           cc.totalPrice,
@@ -859,10 +896,10 @@ function normalizeGroupedResponse(response, params) {
             const pInfo = pax?.passengerInfo || {};
             const cc = pInfo.currencyConversion || {};
             const ptf = pInfo.passengerTotalFare || {};
-            const qty = Math.max(1, parseInt(pInfo.passengerNumber || 1, 10) || 1);
-            const t = parseFloat(cc.totalPrice || ptf.totalPrice || cc.equivalentAmount || ptf.equivalentAmount || 0);
-            const b = parseFloat(cc.baseFareAmount || ptf.baseFareAmount || cc.baseFare || ptf.baseFare || 0);
-            const x = parseFloat(cc.totalTaxAmount || ptf.totalTaxAmount || cc.taxAmount || ptf.taxAmount || 0);
+            const qty = Math.max(1, Math.round(toNumber(pInfo.passengerNumber) || 1));
+            const t = firstPositiveNumber(cc.totalPrice, ptf.totalPrice, cc.equivalentAmount, ptf.equivalentAmount);
+            const b = firstPositiveNumber(cc.baseFareAmount, ptf.baseFareAmount, cc.baseFare, ptf.baseFare, cc.equivalentBaseFareAmount, ptf.equivalentBaseFareAmount);
+            const x = firstPositiveNumber(cc.totalTaxAmount, ptf.totalTaxAmount, cc.taxAmount, ptf.taxAmount);
             paxSum += (t || (b + x)) * qty;
             paxBase += b * qty;
             paxTax += x * qty;

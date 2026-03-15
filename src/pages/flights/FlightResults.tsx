@@ -849,9 +849,36 @@ function calcPayableFromGross(grossPrice: number, taxes: number, discountPct = 6
 
 /* ─── API-first fare extraction (prevents zero-price leakage) ─── */
 function getApiFareTotals(f: any): { grossPrice: number; taxes: number } {
-  const toNum = (v: any) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
+  const toNum = (v: any): number => {
+    if (v === null || v === undefined || v === "") return 0;
+    if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+    if (typeof v === "string") {
+      const cleaned = v.replace(/,/g, "").replace(/\s+/g, "").replace(/[^\d.-]/g, "");
+      if (!cleaned || cleaned === "-" || cleaned === "." || cleaned === "-.") return 0;
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : 0;
+    }
+    if (typeof v === "object") {
+      const candidates = [
+        v.amount,
+        v.value,
+        v.total,
+        v.totalAmount,
+        v.totalPrice,
+        v.equivalentAmount,
+        v.equivalentPrice,
+        v.baseFare,
+        v.baseFareAmount,
+        v.tax,
+        v.taxAmount,
+        v.totalTaxAmount,
+      ];
+      for (const c of candidates) {
+        const n = toNum(c);
+        if (n > 0) return n;
+      }
+    }
+    return 0;
   };
 
   const pickPositive = (...values: any[]) => {
