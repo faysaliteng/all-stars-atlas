@@ -1859,11 +1859,15 @@ const MultiCityExpandedDetails = ({ flight, segments }: { flight: any; segments:
 
               return (
                 <div key={i}>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-3 text-sm font-bold shadow-sm bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-400/30">
-                    <Plane className="w-4 h-4" />
-                    Segment {i + 1}: {seg.origin} → {seg.destination}
-                    <span className="flight-date text-xs ml-1">· {formatShortDate(seg.departureTime)}</span>
-                    <span className="text-xs opacity-70">· {seg.stops === 0 ? "Non-Stop" : `${seg.stops} Stop${seg.stops > 1 ? "s" : ""}`}</span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md mb-3 text-[11px] font-bold bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">
+                    <Plane className="w-3.5 h-3.5" />
+                    <span>Segment {i + 1}</span>
+                    <span className="text-blue-300 dark:text-blue-600 font-normal">|</span>
+                    <span>{seg.origin} → {seg.destination}</span>
+                    <span className="text-blue-300 dark:text-blue-600 font-normal">|</span>
+                    <span className="flight-date">{formatShortDate(seg.departureTime)}</span>
+                    <span className="text-blue-300 dark:text-blue-600 font-normal">|</span>
+                    <span className="opacity-70">{seg.stops === 0 ? "Non-Stop" : `${seg.stops} Stop${seg.stops > 1 ? "s" : ""}`}</span>
                   </div>
                   {(segLegs.length > 0 ? segLegs : [{ origin: seg.origin, destination: seg.destination, departureTime: seg.departureTime, arrivalTime: seg.arrivalTime, duration: seg.duration, flightNumber: seg.flightNumber, airlineCode: seg.airlineCode, aircraft: ac }]).map((leg: any, li: number) => (
                     <div key={li} className="space-y-3 mb-4">
