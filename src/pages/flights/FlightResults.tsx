@@ -3206,11 +3206,11 @@ const FlightResults = () => {
 
   // Duration bounds for slider init
   const maxDuration = useMemo(() => {
-    const ds = allFlightsForFilters.map((f: any) => f.durationMinutes || 0).filter((d: number) => d > 0);
+    const ds = allFlightsForFilters.map((f: any) => getFlightDurationMinutes(f)).filter((d: number) => d > 0);
     return ds.length > 0 ? Math.max(...ds) : 1440;
   }, [allFlightsForFilters]);
   const minDuration = useMemo(() => {
-    const ds = allFlightsForFilters.map((f: any) => f.durationMinutes || 0).filter((d: number) => d > 0);
+    const ds = allFlightsForFilters.map((f: any) => getFlightDurationMinutes(f)).filter((d: number) => d > 0);
     return ds.length > 0 ? Math.min(...ds) : 0;
   }, [allFlightsForFilters]);
 
