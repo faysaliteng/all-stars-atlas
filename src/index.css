@@ -9,18 +9,12 @@
   100% { background-position: 200px 0; }
 }
 
-/* Flight path plane animation */
-@keyframes flight-fly {
-  0% { transform: translateX(0) rotate(90deg); opacity: 0; }
+/* Flight path plane animation — left-to-right with fade */
+@keyframes flyForward {
+  0% { left: 0%; transform: translate(-50%, -50%); opacity: 0; }
   10% { opacity: 1; }
   90% { opacity: 1; }
-  100% { transform: translateX(calc(100% - 22px)) rotate(90deg); opacity: 0; }
-}
-@keyframes flight-fly-reverse {
-  0% { transform: translateX(calc(100% - 22px)) rotate(-90deg); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateX(0) rotate(-90deg); opacity: 0; }
+  100% { left: 100%; transform: translate(-50%, -50%); opacity: 0; }
 }
 
 @keyframes shake {
