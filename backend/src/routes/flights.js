@@ -1285,7 +1285,10 @@ router.get('/search', async (req, res) => {
 
     // Extract unique airlines
     const airlines = [...new Set(flights.map(f => f.airline).filter(Boolean))];
-    const cheapest = flights.length > 0 ? Math.min(...flights.map(f => f.price || Infinity)) : 0;
+    const cheapest = flights.length > 0 ? Math.min(...flights.map(f => {
+      const p = toMoney(f.price);
+      return Number.isFinite(p) && p > 0 ? p : Infinity;
+    })) : 0;
 
     const responseData = {
       data: flights,
