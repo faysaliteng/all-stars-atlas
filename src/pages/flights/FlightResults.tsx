@@ -4178,19 +4178,38 @@ const FlightResults = () => {
 
                     {filteredPairs.length === 0 ? (
                       <Card><CardContent className="py-8 text-center text-muted-foreground"><p>No round-trip flights found matching your filters</p></CardContent></Card>
-                    ) : filteredPairs.map((pair, idx) => (
-                      <RoundTripFlightCard
-                        key={`${pair.outbound.id}-${pair.returnFlight.id}-${idx}`}
-                        outbound={pair.outbound}
-                        returnFlight={pair.returnFlight}
-                        cheapest={filteredPairs.length > 0 ? Math.min(...filteredPairs.map(p => p.totalPrice)) : 0}
-                        isExpanded={expandedFlight === `${pair.outbound.id}-${pair.returnFlight.id}`}
-                        onToggleExpand={() => {
-                          const pairId = `${pair.outbound.id}-${pair.returnFlight.id}`;
-                          setExpandedFlight(expandedFlight === pairId ? null : pairId);
-                        }}
-                      />
-                    ))}
+                    ) : (
+                      <>
+                        {(() => {
+                          const cheapest = Math.min(...filteredPairs.map(p => p.totalPrice));
+                          const visible = filteredPairs.slice(0, visibleCount);
+                          return visible.map((pair, idx) => (
+                            <RoundTripFlightCard
+                              key={`${pair.outbound.id}-${pair.returnFlight.id}-${idx}`}
+                              outbound={pair.outbound}
+                              returnFlight={pair.returnFlight}
+                              cheapest={cheapest}
+                              isExpanded={expandedFlight === `${pair.outbound.id}-${pair.returnFlight.id}`}
+                              onToggleExpand={() => {
+                                const pairId = `${pair.outbound.id}-${pair.returnFlight.id}`;
+                                setExpandedFlight(expandedFlight === pairId ? null : pairId);
+                              }}
+                            />
+                          ));
+                        })()}
+                        {visibleCount < filteredPairs.length && (
+                          <div className="flex justify-center pt-4">
+                            <Button
+                              variant="outline"
+                              className="font-bold px-8 py-3 rounded-full border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all"
+                              onClick={() => setVisibleCount(prev => prev + LOAD_MORE_COUNT)}
+                            >
+                              Show More ({filteredPairs.length - visibleCount} remaining)
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 ) : (
                   /* ONE-WAY with Similar Flights Grouping */
