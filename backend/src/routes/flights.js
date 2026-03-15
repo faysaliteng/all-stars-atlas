@@ -1127,9 +1127,13 @@ router.get('/search', async (req, res) => {
       const existingBestPrice = existing.fareDetails?.[0]?.price ?? existing.price ?? Infinity;
       const incomingBestPrice = (() => {
         if (Array.isArray(f.fareDetails) && f.fareDetails.length > 0) {
-          return Math.min(...f.fareDetails.map((d) => Number(d?.price ?? Infinity)));
+          return Math.min(...f.fareDetails.map((d) => {
+            const p = toMoney(d?.price);
+            return Number.isFinite(p) && p > 0 ? p : Infinity;
+          }));
         }
-        return Number(f.price ?? Infinity);
+        const p = toMoney(f.price);
+        return Number.isFinite(p) && p > 0 ? p : Infinity;
       })();
 
       const shouldPreferIncoming = qualityScore(f) > qualityScore(existing)
