@@ -451,4 +451,5 @@ Frontend (React/Vite) → src/lib/api.ts → Backend (Express :3001)
 
 ---
 
-*Last updated: 2026-03-14 | v4.1.1 | All 26 Sabre sections implemented | 100% probe pass rate (10/10 tests)*
+*Last updated: 2026-03-15 | v4.1.3 | All 26 Sabre sections implemented | 100% probe pass rate (10/10 tests)*
+*See also: TTI_PAYLOADS.md for Air Astra (TTI/ZENITH) payload reference*
